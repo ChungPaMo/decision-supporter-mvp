@@ -15,6 +15,7 @@ from app.batches.sql_repository import SqlBatchTx
 from app.config import get_settings
 from app.errors import ApiError, ErrorCode
 from app.forecast.runs import ForecastRuns
+from app.batches.capacity import planning_snapshot
 from contracts.interfaces.modules import PlanCommand, PlanningInput, PlanningOutput, PlanningReply
 
 
@@ -71,12 +72,12 @@ class SqlPlanningSourceProvider:
                     raise ApiError(409, ErrorCode.PLAN_INPUT_UNAVAILABLE, '승인된 제품 범위를 확인하세요.')
                 if {r.product_id for r in selected} != set(command.product_ids):
                     raise ApiError(409, ErrorCode.PLAN_INPUT_UNAVAILABLE, '선택 제품·월의 예측이 누락됐습니다. 제외 제품을 0 수요로 처리하지 않습니다.')
-                ids = {r.batch_id for r in [*products, *materials, *boms, *inventory]}
+                capacity, routing, capacity_ids, missing = planning_snapshot(c, command)
+                ids = {r.batch_id for r in [*products, *materials, *boms, *inventory]} | capacity_ids
                 sources = c.execute(text("""SELECT batch_id,version AS batch_version,entity,source_sha256,result_digest,approved_at
-FROM import_batch WHERE batch_id=ANY(CAST(:ids AS uuid[])) AND status='APPROVED' AND blocking_error_count=0"""), {'ids': list(ids)}).mappings().all()
+FROM import_batch WHERE batch_id=ANY(CAST(:ids AS uuid[])) AND status='APPROVED' AND blocking_error_count=0 ORDER BY batch_id"""), {'ids': sorted(ids)}).mappings().all()
                 if {r['batch_id'] for r in sources} != ids:
                     raise ApiError(409, ErrorCode.PLAN_INPUT_UNAVAILABLE, '승인 출처 스냅샷이 일치하지 않습니다.')
-                missing = ['CAPACITY_NOT_REGISTERED', 'ROUTING_NOT_REGISTERED', 'POLICY_NOT_CONFIRMED']
                 if any(not any(b.header.product_id == pid for b in boms) for pid in command.product_ids): missing.append('BOM_COVERAGE')
                 if any(not any(r.item_type == 'PRODUCT' and r.item_id == pid for r in inventory) for pid in command.product_ids): missing.append('INVENTORY_COVERAGE')
                 return PlanningInput.model_validate(json.loads(_json({
@@ -88,6 +89,7 @@ FROM import_batch WHERE batch_id=ANY(CAST(:ids AS uuid[])) AND status='APPROVED'
                     'approved_inputs': {'products': [asdict(r) for r in products], 'materials': [asdict(r) for r in materials],
                                         'boms': [asdict(r) for r in boms], 'inventory': [asdict(r) for r in inventory],
                                         'sources': [dict(r) for r in sources]}, 'missing_inputs': missing,
+                    'capacity_snapshot': capacity, 'routing_snapshot': routing,
                 })))
         except (OperationalError, InterfaceError):
             raise ApiError(503, ErrorCode.DB_UNAVAILABLE, '계획 입력 저장소에 연결할 수 없습니다.') from None

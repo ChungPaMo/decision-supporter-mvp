@@ -1,5 +1,7 @@
 # Module integration · draft 0.2
 
+> **2026-11-15 등록 확장:** CAPA/Routing은 더 이상 미등록 전용 경로가 아니다. `POST /batches`의 capacity/routing 승인 자료를 0006 테이블에 저장하고 `/capacity`, `/routings`로 조회한다. SQL provider는 실제 승인 자료가 있으면 capacity_snapshot/routing_snapshot과 출처 목록을 채운다. 아래 ‘null 스냅샷’ 설명은 해당 자료가 없는 경우에 적용된다. RoutingStep의 기존 필드는 유지하고 `resource_requirements`에 같은 공정의 추가 동시 자원 소요를 보존한다. [데이터 사전](CAPACITY_ROUTING_DATA_DICTIONARY.md)을 따른다. 새 마이그레이션은 0006이며 0001~0005는 보존했다. 분류기의 추천 entity와 엔진 알고리즘은 변경하지 않았다. 계획·What-if의 501과 미확정 정책 표시는 유지한다.
+
 이 문서는 실행 가능한 연결 **경계**다. 분류/계획 알고리즘은 미구현이며, 계획 저장·승인이 구현됐다는 뜻이 아니다. 기존 데이터 계약·승인 gate·0001~0005는 바꾸지 않았다. 세부 담당 파일·독립 명령은 [TEAM_HANDOFF](TEAM_HANDOFF.md)를 따른다.
 
 ## 실제 API 유지

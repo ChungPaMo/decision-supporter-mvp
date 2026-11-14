@@ -1,9 +1,12 @@
 """Offline candidate-file scan. Heuristics plus known local-secret comparison, not a guarantee."""
 import json
+import hashlib
 from pathlib import Path
 import re
 import subprocess
 from urllib.parse import urlsplit
+
+SYNTHETIC_TEMPLATES = {'contracts/examples/tissue_capacity/capacity_upload.xlsx': 'f370250ad8108425076055b19cb1d1a6b46aa9c0b7b4712fe4100d6f50fbd631', 'contracts/examples/tissue_capacity/routing_upload.xlsx': '087e01b11a088c171a7a33a9e8c65bccd09c0a66d79225dcf34e9e9cfd2fa2c4', 'contracts/examples/tissue_capacity/tissue_capacity_template.xlsx': 'eca1b890ad5409f771b7a1e339f81efdf4fd36555694c2eba3e6db789d7ff89d'}
 
 ROOT = Path(__file__).resolve().parents[1]
 
@@ -36,7 +39,8 @@ def main():
         source = ROOT / path
         if not source.is_file(): continue
         if ((source.name.startswith('.env') and source.name != '.env.example')
-                or source.suffix in {'.pptx', '.pem', '.key', '.dump', '.db', '.sqlite', '.xlsx', '.xls'}
+                or (source.suffix in {'.pptx', '.pem', '.key', '.dump', '.db', '.sqlite', '.xlsx', '.xls'}
+                    and not (path in SYNTHETIC_TEMPLATES and hashlib.sha256(source.read_bytes()).hexdigest() == SYNTHETIC_TEMPLATES[path]))
                 or any(part in {'.venv', 'node_modules', 'dist', '.artifacts', '.e2e'} for part in source.relative_to(ROOT).parts)):
             findings.append((path, 0, 'forbidden-artifact'))
         try: content = source.read_text(encoding='utf-8-sig')

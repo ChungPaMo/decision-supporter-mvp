@@ -173,6 +173,7 @@
             "type": "string"
           },
           "resource_name": {
+            "minLength": 1,
             "title": "Resource Name",
             "type": "string"
           },
@@ -194,6 +195,110 @@
           "parallel_units"
         ],
         "title": "Resource",
+        "type": "object"
+      },
+      "ResourceRequirement": {
+        "additionalProperties": false,
+        "properties": {
+          "alternative_group_ref": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Alternative Group Ref"
+          },
+          "concurrent_units": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Concurrent Units"
+          },
+          "quantity_unit": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Quantity Unit",
+            "type": "string"
+          },
+          "reference_qty": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Reference Qty",
+            "type": "string"
+          },
+          "resource_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "run_time": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Run Time",
+            "type": "string"
+          },
+          "setup_policy_ref": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Setup Policy Ref"
+          },
+          "setup_time": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Setup Time"
+          },
+          "time_basis": {
+            "enum": [
+              "ELAPSED",
+              "PERSON_HOUR",
+              "MACHINE_HOUR"
+            ],
+            "title": "Time Basis",
+            "type": "string"
+          },
+          "time_unit": {
+            "enum": [
+              "h",
+              "min"
+            ],
+            "title": "Time Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "resource_id",
+          "reference_qty",
+          "quantity_unit",
+          "run_time",
+          "time_unit",
+          "time_basis"
+        ],
+        "title": "ResourceRequirement",
         "type": "object"
       },
       "RoutingStep": {
@@ -257,6 +362,13 @@
             "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
             "title": "Resource Id",
             "type": "string"
+          },
+          "resource_requirements": {
+            "items": {
+              "$ref": "#/$defs/ResourceRequirement"
+            },
+            "title": "Resource Requirements",
+            "type": "array"
           },
           "routing_id": {
             "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
@@ -341,18 +453,18 @@
           }
         },
         "required": [
-          "routing_id",
-          "routing_version",
-          "step_id",
-          "product_id",
-          "operation_id",
           "resource_id",
-          "predecessor_step_ids",
           "reference_qty",
           "quantity_unit",
           "run_time",
           "time_unit",
           "time_basis",
+          "routing_id",
+          "routing_version",
+          "step_id",
+          "product_id",
+          "operation_id",
+          "predecessor_step_ids",
           "valid_from"
         ],
         "title": "RoutingStep",
@@ -1448,6 +1560,7 @@
             "type": "string"
           },
           "resource_name": {
+            "minLength": 1,
             "title": "Resource Name",
             "type": "string"
           },
@@ -1469,6 +1582,110 @@
           "parallel_units"
         ],
         "title": "Resource",
+        "type": "object"
+      },
+      "ResourceRequirement": {
+        "additionalProperties": false,
+        "properties": {
+          "alternative_group_ref": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Alternative Group Ref"
+          },
+          "concurrent_units": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Concurrent Units"
+          },
+          "quantity_unit": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Quantity Unit",
+            "type": "string"
+          },
+          "reference_qty": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Reference Qty",
+            "type": "string"
+          },
+          "resource_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "run_time": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Run Time",
+            "type": "string"
+          },
+          "setup_policy_ref": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Setup Policy Ref"
+          },
+          "setup_time": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Setup Time"
+          },
+          "time_basis": {
+            "enum": [
+              "ELAPSED",
+              "PERSON_HOUR",
+              "MACHINE_HOUR"
+            ],
+            "title": "Time Basis",
+            "type": "string"
+          },
+          "time_unit": {
+            "enum": [
+              "h",
+              "min"
+            ],
+            "title": "Time Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "resource_id",
+          "reference_qty",
+          "quantity_unit",
+          "run_time",
+          "time_unit",
+          "time_basis"
+        ],
+        "title": "ResourceRequirement",
         "type": "object"
       },
       "RoutingStep": {
@@ -1532,6 +1749,13 @@
             "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
             "title": "Resource Id",
             "type": "string"
+          },
+          "resource_requirements": {
+            "items": {
+              "$ref": "#/$defs/ResourceRequirement"
+            },
+            "title": "Resource Requirements",
+            "type": "array"
           },
           "routing_id": {
             "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
@@ -1616,18 +1840,18 @@
           }
         },
         "required": [
-          "routing_id",
-          "routing_version",
-          "step_id",
-          "product_id",
-          "operation_id",
           "resource_id",
-          "predecessor_step_ids",
           "reference_qty",
           "quantity_unit",
           "run_time",
           "time_unit",
           "time_basis",
+          "routing_id",
+          "routing_version",
+          "step_id",
+          "product_id",
+          "operation_id",
+          "predecessor_step_ids",
           "valid_from"
         ],
         "title": "RoutingStep",

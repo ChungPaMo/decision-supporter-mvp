@@ -1,5 +1,7 @@
 # 프론트엔드 연동 안내
 
+2026-11-15 CAPA/Routing: 기존 `/batches`의 entity에 capacity/routing을 추가했다. 승인된 조회는 `/capacity`, `/routings`이며 items/total/limit/offset을 반환한다. 새로운 entity UI·표시 타입은 정마나미 후속 작업이다. [데이터 사전](CAPACITY_ROUTING_DATA_DICTIONARY.md)과 [변경 요청](CAPACITY_ROUTING_CHANGE_REQUESTS.md)을 참고한다. 현재 모노레포의 frontend는 존재하며 아래 별도 프로젝트 설명은 초기 이관 전 안내다.
+
 React 화면을 별도 프로젝트로 만드는 담당자를 위한 문서다. 이 저장소에는 프론트엔드 코드가 없다.
 
 - 필드 규칙 상세: [api_contract_batches.md](api_contract_batches.md) (업로드·승인), [api_contract_exports.md](api_contract_exports.md) (Excel 출력, 초안)

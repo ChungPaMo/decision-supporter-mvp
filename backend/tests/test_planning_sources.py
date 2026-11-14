@@ -43,6 +43,7 @@ def sources(monkeypatch):
         result=SimpleNamespace(forecasts=[SimpleNamespace(product_id='TP-10R', target_month='2027-01', p50='10000', p80='12000', p90='13500')]))
     monkeypatch.setattr(adapter, 'SqlBatchTx', Tx)
     monkeypatch.setattr(adapter.ForecastRuns, '_detail', lambda c, id: forecast)
+    monkeypatch.setattr(adapter, 'planning_snapshot', lambda c, cmd: (None,None,set(),['CAPACITY_NOT_REGISTERED','ROUTING_NOT_REGISTERED','POLICY_NOT_CONFIRMED']))
     return adapter.SqlPlanningSourceProvider(Database()), forecast, seen
 
 

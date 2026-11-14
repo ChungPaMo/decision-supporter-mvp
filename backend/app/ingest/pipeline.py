@@ -16,7 +16,7 @@ from app.ingest.parsing import ParsedFile, parse_file
 from app.ingest.validation import MasterData, MaterialRecord, ProductRecord, Record, validate_materials, validate_products, validate_sheet
 from app.ingest.validation_supply import BomLineRecord, InventoryRecord, validate_bom, validate_inventory
 
-ENTITIES = ("monthly_demand", "product", "material", "bom", "inventory")
+ENTITIES = ("monthly_demand", "product", "material", "bom", "inventory", "capacity", "routing")
 VALIDATORS = {"monthly_demand": validate_sheet, "product": validate_products, "material": validate_materials,
               "bom": validate_bom, "inventory": validate_inventory}
 
@@ -114,6 +114,13 @@ class InventoryRecordOut(BaseModel):
     review_required: bool
 
 
+class CapacityRecordOut(BaseModel):
+    section: str
+    payload: dict
+    location: LocationOut
+    review_required: bool = False
+
+
 class SheetOut(BaseModel):
     name: str
     status: Literal["MAPPED", "HOLD", "IGNORED"]
@@ -126,7 +133,7 @@ class SheetOut(BaseModel):
     error_rows: int
     valid_records: int
     issues: list[IssueOut]
-    records: list[RecordOut | ProductRecordOut | MaterialRecordOut | BomLineRecordOut | InventoryRecordOut]      # entity 에 따라 형태가 다르다
+    records: list[RecordOut | ProductRecordOut | MaterialRecordOut | BomLineRecordOut | InventoryRecordOut | CapacityRecordOut]      # entity 에 따라 형태가 다르다
     issues_total: int | None = None      # 응답이 잘렸을 때 전체 건수 (issues/records 는 앞부분만 담길 수 있음)
     records_total: int | None = None
 

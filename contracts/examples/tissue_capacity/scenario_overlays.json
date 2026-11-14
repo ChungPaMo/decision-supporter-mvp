@@ -1,0 +1,33 @@
+{
+  "source_type": "SYNTHETIC",
+  "seed_by_default": false,
+  "scenarios": {
+    "shared_equipment": {
+      "note": "requires separately approved TP-SECOND; do not seed by default",
+      "product_ids": [
+        "TP-10R",
+        "TP-SECOND"
+      ],
+      "shared_resource": "M1"
+    },
+    "reduced_hours": {
+      "resource_id": "M1",
+      "regular_hours": "120"
+    },
+    "material_shortage": {
+      "note": "overlay on synthetic BOM/inventory; no approved source mutation",
+      "available_qty": "0"
+    },
+    "midmonth_version": {
+      "V1_valid_to": "2027-01-15",
+      "V2_valid_from": "2027-01-16",
+      "missing_input": "ROUTING_VERSION_POLICY_REQUIRED"
+    },
+    "invalid_unit": {
+      "quantity_unit": "KG"
+    },
+    "unapproved_resource": {
+      "resource_id": "UNKNOWN"
+    }
+  }
+}

@@ -1,0 +1,100 @@
+{
+  "source_type": "SYNTHETIC",
+  "scenario_id": "TISSUE-CAPACITY-BASE-01",
+  "generation_rule": "Integration-only fixed literals; not measured production data",
+  "payload": {
+    "contract_version": "capacity-registration-0.1-draft",
+    "resources": [
+      {
+        "resource_id": "M1",
+        "resource_name": "Synthetic packaging machine",
+        "kind": "EQUIPMENT",
+        "time_basis": "MACHINE_HOUR",
+        "parallel_units": 1
+      },
+      {
+        "resource_id": "L1",
+        "resource_name": "Synthetic two-person pool",
+        "kind": "LABOR_POOL",
+        "time_basis": "PERSON_HOUR",
+        "parallel_units": 2
+      }
+    ],
+    "quantity_limits": [
+      {
+        "capacity_id": "Q-TP",
+        "product_id": "TP-10R",
+        "period": "2027-01",
+        "limit_qty": "10500",
+        "unit": "EA",
+        "accounting_point": "FINISHED_OUTPUT",
+        "operation_id": null
+      }
+    ],
+    "hours_budgets": [
+      {
+        "capacity_id": "H-M1",
+        "resource_id": "M1",
+        "period": "2027-01",
+        "regular_hours": "160",
+        "overtime_hours_limit": "20",
+        "unit": "h",
+        "time_basis": "MACHINE_HOUR",
+        "availability_basis": "NET",
+        "calendar_ref": null
+      },
+      {
+        "capacity_id": "H-L1",
+        "resource_id": "L1",
+        "period": "2027-01",
+        "regular_hours": "170",
+        "overtime_hours_limit": "20",
+        "unit": "h",
+        "time_basis": "PERSON_HOUR",
+        "availability_basis": "NET",
+        "calendar_ref": null
+      }
+    ],
+    "routing_steps": [
+      {
+        "resource_id": "M1",
+        "reference_qty": "60",
+        "quantity_unit": "EA",
+        "run_time": "1",
+        "time_unit": "h",
+        "time_basis": "MACHINE_HOUR",
+        "concurrent_units": null,
+        "setup_time": null,
+        "setup_policy_ref": null,
+        "alternative_group_ref": null,
+        "routing_id": "RT-TP",
+        "routing_version": "V1",
+        "step_id": "PACK",
+        "product_id": "TP-10R",
+        "operation_id": "PACK",
+        "predecessor_step_ids": [],
+        "valid_from": "2025-01-01",
+        "valid_to": null,
+        "resource_requirements": [
+          {
+            "resource_id": "L1",
+            "reference_qty": "1000",
+            "quantity_unit": "EA",
+            "run_time": "18",
+            "time_unit": "h",
+            "time_basis": "PERSON_HOUR",
+            "concurrent_units": null,
+            "setup_time": null,
+            "setup_policy_ref": null,
+            "alternative_group_ref": null
+          }
+        ]
+      }
+    ],
+    "unresolved_policy_refs": [
+      "SETUP-POLICY",
+      "SHARED-RESOURCE",
+      "ALTERNATIVE-ALLOCATION"
+    ]
+  }
+}

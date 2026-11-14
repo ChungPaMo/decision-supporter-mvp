@@ -10,7 +10,7 @@ TimeBasis = Literal['ELAPSED', 'PERSON_HOUR', 'MACHINE_HOUR']
 
 class Resource(StrictModel):
     resource_id: Code
-    resource_name: str
+    resource_name: str = Field(min_length=1)
     kind: Literal['WORKCENTER', 'LABOR_POOL', 'EQUIPMENT', 'EQUIPMENT_POOL']
     time_basis: TimeBasis
     parallel_units: int = Field(ge=1)
@@ -44,7 +44,20 @@ class HoursBudget(StrictModel):
     calendar_ref: Code | None = None
 
 
-class RoutingStep(StrictModel):
+class ResourceRequirement(StrictModel):
+    resource_id: Code
+    reference_qty: DecimalValue
+    quantity_unit: Code
+    run_time: DecimalValue
+    time_unit: Literal['h', 'min']
+    time_basis: TimeBasis
+    concurrent_units: int | None = Field(default=None, ge=1)
+    setup_time: DecimalValue | None = None
+    setup_policy_ref: Code | None = None
+    alternative_group_ref: Code | None = None
+
+
+class RoutingStep(ResourceRequirement):
     routing_id: Code
     routing_version: Code
     step_id: Code
@@ -63,6 +76,8 @@ class RoutingStep(StrictModel):
     alternative_group_ref: Code | None = None
     valid_from: date
     valid_to: date | None = None
+    # Additional concurrent requirements of THIS step, never successor steps.
+    resource_requirements: list[ResourceRequirement] = Field(default_factory=list)
 
     @model_validator(mode='after')
     def explicit_usage(self):
@@ -112,6 +127,18 @@ class CapacityRegistrationDraft(StrictModel):
                 raise ValueError('Routing time basis mismatch')
             if any((step.routing_id, step.routing_version, p) not in steps for p in step.predecessor_step_ids):
                 raise ValueError('Unknown predecessor in this routing')
+            seen = {step.resource_id}
+            for requirement in step.resource_requirements:
+                if requirement.resource_id in seen:
+                    raise ValueError('Duplicate concurrent resource requirement')
+                seen.add(requirement.resource_id)
+                if requirement.resource_id not in resources:
+                    raise ValueError('Unknown concurrent resource')
+                if requirement.time_basis != 'ELAPSED' and requirement.time_basis != resources[requirement.resource_id].time_basis:
+                    raise ValueError('Concurrent resource time basis mismatch')
+                if requirement.quantity_unit != step.quantity_unit:
+                    raise ValueError('Concurrent requirement quantity unit mismatch')
+                RoutingStep.model_validate({**step.model_dump(exclude={'resource_requirements'}), **requirement.model_dump()})
         visiting, done = set(), set()
         def visit(key):
             if key in visiting: raise ValueError('Routing cycle')

@@ -45,7 +45,7 @@ Service = Annotated[BatchService, Depends(get_service)]
 async def create_batch(
     svc: Service,
     file: UploadFile = File(...),
-    entity: str = Form("monthly_demand", description="monthly_demand | product | material | bom | inventory"),
+    entity: str = Form("monthly_demand", description="monthly_demand | product | material | bom | inventory | capacity | routing"),
     default_unit: str | None = Form(None, description="월별 수요 파일에 단위 열이 없을 때 적용 (다른 entity 는 단위 열 필수)"),
     column_overrides: str | None = Form(None, description='JSON 객체. 예: {"demand_qty": "C"}'),
     sheet: str | None = Form(None),
@@ -129,3 +129,13 @@ def list_monthly_demand(svc: Service, product_id: str | None = None, period_from
                         limit: int = Query(100, ge=1, le=1000), offset: int = Query(0, ge=0)) -> DemandPage:
     items, total = svc.list_approved_demand(product_id, period_from, period_to, limit, offset)
     return DemandPage(items=[to_demand_item(i) for i in items], total=total, limit=limit, offset=offset)
+
+
+@router.get('/capacity', summary='Approved resources and monthly capacity; no calculation')
+def list_capacity(svc: Service, limit: int = Query(100, ge=1, le=1000), offset: int = Query(0, ge=0)) -> dict:
+    return svc.list_capacity(False, limit, offset)
+
+
+@router.get('/routings', summary='Approved routing steps with concurrent resource requirements')
+def list_routings(svc: Service, limit: int = Query(100, ge=1, le=1000), offset: int = Query(0, ge=0)) -> dict:
+    return svc.list_capacity(True, limit, offset)

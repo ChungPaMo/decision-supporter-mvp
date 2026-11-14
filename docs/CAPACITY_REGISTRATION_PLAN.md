@@ -1,5 +1,7 @@
 # CAPA·라우팅 등록 뼈대 — 검토용, 미구현 API
 
+> **2026-11-15 구현 갱신:** 아래 본문은 초기 설계 기록이다. 현재 `entity=capacity|routing`의 기존 배치 업로드·재검증·승인·반려와 `GET /capacity`, `GET /routings`, 신규 Alembic 0006 및 승인 PlanningInput 스냅샷이 구현됐다. 현재 계약·컬럼·제한·등록 절차는 [데이터 사전](CAPACITY_ROUTING_DATA_DICTIONARY.md)이 우선한다. 미확정 계산 정책은 여전히 미확정이다. CAPA UI와 계산 엔진은 이 작업에 포함하지 않았다.
+
 기존 승인 흐름은 재사용할 수 있지만 **entity 문자열만 추가해서는 안 된다**. BatchService/pipeline, 저장소 DTO·SQL, import_batch entity CHECK, 행 수/deferred trigger, 원본 보관, 승인 단위·참조 조회, UI 타입을 함께 검토해야 한다. 현재 `/batches`는 제품·자재·BOM·재고·수요 다섯 종류만 지원한다. 이번에는 DB/마이그레이션을 변경하지 않았다.
 
 ## 구조 검증 가능한 초안 DTO

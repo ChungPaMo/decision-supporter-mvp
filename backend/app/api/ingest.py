@@ -24,7 +24,7 @@ async def preview(
     column_overrides: str | None = Form(None, description='JSON. 예: {"demand_qty": "C"} — 매핑 보류를 풀 때 열 이름 또는 열 문자 지정'),
     sheet: str | None = Form(None, description="XLSX 에서 이 시트만 처리"),
 ) -> PreviewOut:
-    if entity not in ENTITIES:
+    if entity not in ENTITIES or entity in ("capacity", "routing"):
         raise HTTPException(422, {"code": "UNSUPPORTED_ENTITY", "message": f"지원하는 entity: {list(ENTITIES)}"})
     overrides = None
     if column_overrides:

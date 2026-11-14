@@ -79,6 +79,14 @@ class BatchService:
 
     @staticmethod
     def _run(tx: BatchTx, filename, data, entity, default_unit, overrides, sheet) -> PreviewOut:
+        if entity in ('capacity','routing'):
+            from app.batches.capacity import preview
+            try:
+                return preview(tx, filename, data, entity, overrides, sheet)
+            except FileError as exc:
+                raise ApiError(exc.http_status, ErrorCode(exc.code), exc.message) from exc
+            except ValueError:
+                raise ApiError(422, ErrorCode.REQUEST_INVALID, 'Invalid capacity workbook settings.') from None
         master = MasterData({p.product_id: p for p in tx.list_known_products()}, {m.material_id: m for m in tx.list_known_materials()},
                             sorted(tx.list_known_boms(), key=lambda b: b.bom_id))
         try:
@@ -92,7 +100,11 @@ class BatchService:
 
     @staticmethod
     def _check_overrides(overrides: dict | None, entity: str) -> None:
-        fields = ENTITY_FIELDS[entity]
+        if entity in ('capacity','routing'):
+            from app.batches.capacity import MODELS
+            fields = {k for m in MODELS.values() for k in m.model_fields}
+        else:
+            fields = ENTITY_FIELDS[entity]
         bad = sorted(set(overrides or {}) - set(fields))
         if bad:
             raise ApiError(422, ErrorCode.BAD_COLUMN_OVERRIDES, f"알 수 없는 필드: {bad}. 허용: {sorted(fields)}")
@@ -101,7 +113,7 @@ class BatchService:
     def create_batch(self, filename: str, data: bytes, *, entity: str = "monthly_demand", default_unit: str | None = None,
                      column_overrides: dict | None = None, sheet: str | None = None, source_type: str = SourceType.CLIENT_UPLOAD.value,
                      source_note: str | None = None, created_by: str | None = None) -> BatchRecord:
-        if entity not in ENTITIES:
+        if entity not in (*ENTITIES, 'capacity', 'routing'):
             raise ApiError(422, ErrorCode.UNSUPPORTED_ENTITY, f"지원하는 entity: {list(ENTITIES)}")
         if source_type not in {s.value for s in SourceType}:
             raise ApiError(422, ErrorCode.REQUEST_INVALID, f"source_type 은 {[s.value for s in SourceType]} 중 하나여야 합니다.")
@@ -127,6 +139,19 @@ class BatchService:
         return rec
 
     # ------------------------------------------------------------ 조회
+    def list_capacity(self, routing, limit, offset):
+        from app.batches.capacity import approved_rows
+        with self._tx() as tx:
+            sections = ('routing_steps',) if routing else ('resources','quantity_limits','hours_budgets')
+            items = []
+            for section in sections:
+                for r in approved_rows(tx.c,section):
+                    b = tx.get_batch(r['batch_id'])
+                    items.append({'section':section, 'payload':r['payload'], 'batch_id':str(b.batch_id),
+                                  'version':b.version, 'result_digest':b.result_digest, 'source_sha256':b.source_sha256,
+                                  'approved_at':b.approved_at.isoformat()})
+            return {'items':items[offset:offset+limit], 'total':len(items), 'limit':limit, 'offset':offset}
+
     def get_batch(self, batch_id: uuid.UUID) -> BatchRecord:
         with self._tx() as tx:
             b = tx.get_batch(batch_id)
@@ -203,7 +228,8 @@ class BatchService:
             records = [r for s in preview.sheets if s.status == "MAPPED" for r in s.records]
             if not records:
                 raise ApiError(409, ErrorCode.EMPTY_BATCH, "승인할 레코드가 없습니다.")
-            commit = {"product": self._commit_products, "material": self._commit_materials, "bom": self._commit_bom,
+            from app.batches.capacity import commit as commit_capacity
+            commit = {"capacity": commit_capacity, "routing": commit_capacity, "product": self._commit_products, "material": self._commit_materials, "bom": self._commit_bom,
                       "inventory": self._commit_inventory, "monthly_demand": self._commit_demand}[b.entity]
             written = commit(tx, batch_id, actor, records)
             if written != len(records):                   # 방어: 어긋나면 예외 → 전체 롤백

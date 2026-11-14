@@ -1,5 +1,7 @@
 # 충파모 MVP — 상세 작업 배분 및 파일 접근 범위
 
+> **2026-11-15 상태 갱신:** CAPA·Routing의 실제 업로드/승인/조회, 신규 0006 및 PlanningSourceProvider 연결은 구현됐다. 아래 작업표의 해당 항목은 후속 유지·확장 업무로 읽는다. [데이터 사전](CAPACITY_ROUTING_DATA_DICTIONARY.md)과 [팀원 변경 요청](CAPACITY_ROUTING_CHANGE_REQUESTS.md)을 우선 확인한다. 계산 알고리즘·프론트 신규 entity 화면은 미구현이며 기존 담당 경계는 유지한다.
+
 > 기준: `ChungPaMo/decision-supporter-mvp` `main` (`2071ce47`, 2026-11-14 확인). 이 문서는 기존 [TEAM_HANDOFF](TEAM_HANDOFF.md), [OWNERSHIP](OWNERSHIP.md), [INTEGRATION_CONTRACT](INTEGRATION_CONTRACT.md)를 보완하는 **팀 실행용 업무 분장표**다. 신규 브랜치·PR 없이 `main`에서 Pull → 담당 경로 수정 → 검증 → Commit → Push한다.
 
 기존 문서의 계약과 실제 코드가 우선한다. 아래 업무는 후속 개발 배분이며 구현 완료 선언이나 미확정 계산 정책의 승인으로 해석하지 않는다. Git 상세 안전 규칙은 [DEVELOPMENT_WORKFLOW](DEVELOPMENT_WORKFLOW.md)를 따른다. 경로는 별도 설명이 없으면 저장소 루트 기준이다.
