@@ -12,3 +12,5 @@
 `modules/planning_engine/engine/forecast/`가 예측 코드의 유일한 위치다. 별도 `forecast/` 복제품을 만들지 않는다. backend/app/models.py 및 sql_repository.py는 기존 위치를 유지했다.
 
 실제 GitHub 로그인과 담당자 매핑이 확인되지 않아 `.github/CODEOWNERS`에는 활성 소유자 규칙을 넣지 않았다. 확인 후 김대영 검토로 등록하고 PR 보호 설정을 별도로 결정한다. 파일 소유권은 협업 규칙이며 GitHub에서 폴더별 쓰기를 자동 제한하지 않는다.
+
+최종 뼈대의 함수·계약·fixture·독립 시험·금지 공통 파일·완료 기준은 [TEAM_HANDOFF](TEAM_HANDOFF.md)에 팀원별로 정리했다. `mps/rccp/mrp/what_if` 전용 패키지는 공통 packaging에 등록했으므로 담당자가 자기 폴더에 구현을 추가할 수 있다. API/스키마 생성물과 루트 E2E는 통합 담당이 관리하며 팀원이 생성물만 따로 수정하지 않는다.

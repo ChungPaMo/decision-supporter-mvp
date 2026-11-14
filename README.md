@@ -3,6 +3,10 @@
 충파모 공식 단일 모노레포 · 가상 휴지 제조기업 생산계획 지원 MVP.
 기존 backend/frontend의 실제 등록·승인·예측을 통합했으며 분류·계획 계산은 담당자가 구현할 연결점입니다.
 
+최종 뼈대의 팀원별 시작 파일·함수·입출력·fixture·독립 시험은 [TEAM_HANDOFF](docs/TEAM_HANDOFF.md)를 먼저 확인하세요. 분류 파일 API, 읽기 전용 계획 어댑터, CAPA·라우팅 DTO를 추가했으며 알고리즘과 계획 저장·정식 승인은 구현하지 않았습니다. 이번 후속 작업은 DB 초기화 없이 비DB·화면·계약 검증만 수행하며 아래 490/12 결과는 이전 PostgreSQL 검증 기록입니다. [이번 뼈대 검증 기록](docs/E2E_SCAFFOLD_VERIFICATION_20261114.md)을 별도로 확인하세요.
+
+이번 작업 결과: 비DB Python **464 passed / 0 failed / 55 skipped**, 독립 모듈 **36 passed**(전체 포함), 비DB UI/모듈 경계 브라우저 **8 passed**, TypeScript·빌드·계약·의존성·보안 검사 통과. DB 55개는 별도 승인이 필요해 실행하지 않았습니다.
+
 이관 후 전용 PostgreSQL 통합 검증: 전체 pytest **490 passed / 0 failed / 0 skipped**, PostgreSQL 브라우저 E2E **9 passed**, 비DB UI 브라우저 E2E **3 passed**, TypeScript·빌드·계약 동기화 통과. 승인된 새 55433 서버의 테스트 DB에서만 검증했습니다. [검증 보고서](docs/monorepo_postgresql_verification_20261114.md)를 참고하세요. 계획 계산·정식 승인은 아직 미구현으로, 전체 제조 E2E 완료 상태는 아닙니다.
 
 ## 현재 동작 범위

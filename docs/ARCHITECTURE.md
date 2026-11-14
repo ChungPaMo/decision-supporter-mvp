@@ -24,6 +24,7 @@ React `frontend/` → FastAPI `backend/app/api/` → 등록·검증·승인 서�
 - 실제: CSV/XLSX 파싱·수동 entity 선택·매핑·검증·명시적 승인/반려·DB 조회, 승인 수요 예측·중복/동시성·저장·복원, JSON→DEMO Excel formatter.
 - 미구현: 파일 자동 분류 알고리즘, CAPA·라우팅 업로드/승인, MPS/RCCP/MRP/What-if 계산, 계획 실행 영구 저장·정식 승인·정식 출력.
 - `/classifications`, `/plans`, `/plans/what-if`는 명시적 501 MODULE_NOT_IMPLEMENTED. `/integrations/modules`는 구현 경계를 알려 준다. API 성공을 흉내 내지 않는다.
+- 최종 뼈대에서는 `/classifications/file`이 같은 분류 DTO를 구성한다. 계획은 모듈 구현 후 SqlPlanningSourceProvider의 승인 입력 스냅샷 → 순수 함수 → PlanningReply(미저장/승인불가)로 연결된다. 현재 모듈은 미구현이어서 501이며, 계획 실행 저장·정식 승인과 별개다. 상세 핸드오프는 TEAM_HANDOFF.md와 INTEGRATION_CONTRACT.md를 따른다.
 - PPT 수치는 DEMO 화면의 고정 설명값. 화면 선택·슬라이더는 계산·승인·서버 저장이 아니다. 실제 예측과 자동 연결하지 않는다.
 
 ## 데이터 안전성
