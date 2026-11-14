@@ -1,6 +1,16 @@
 # 개발·협업 절차
 
-기능 브랜치: `feature/file-classifier`, `feature/planning-engine`, `feature/frontend`, `feature/backend-integration`. 각 담당은 OWNERSHIP.md의 경로에서 작업한다. 공유 계약·DB 스키마·루트 설정은 김대영 검토를 거쳐 PR로 통합한다. main 강제 Push 금지.
+모든 충파모 개발은 이 모노레포의 `main`에서 진행한다. 새 브랜치와 PR을 생성하지 않는다. 각 담당은 OWNERSHIP.md의 경로에서 작업하며, 공유 계약·DB 스키마·루트 설정 변경은 김대영과 검토한다.
+
+## Git 작업 순서
+
+1. 작업 시작 전 `git status`와 `git fetch origin`으로 미커밋 변경·원격 변경을 확인한다. 기존 미커밋 변경을 보존한다.
+2. `main`에서 `git pull --ff-only origin main`을 실행한다. 다른 팀원의 작업과 충돌하거나 fast-forward가 불가능하면 변경 내역과 원인을 확인하고, 임의로 덮어쓰지 않는다.
+3. 담당 경로에서 개발하고 Python·TypeScript·빌드·계약 동기화·보안 검사를 실행한다. DB 초기화가 필요한 테스트는 별도 승인을 받는다.
+4. 검증된 변경만 Commit하고 원격 최신 상태를 다시 확인한 뒤 `git push origin main`을 실행한다. Push가 거부되면 강제 Push하지 않고 원격 변경을 확인한다.
+5. 로컬 `main`과 원격 `main` HEAD가 일치하는지 확인한다. 충돌은 파일과 원인을 보고하고 무리하게 병합하지 않는다.
+
+`git push --force`, `git reset --hard`, `git clean -fd`를 사용하지 않는다. 출처 저장소와 다른 프로젝트 자원을 변경하지 않으며 비밀정보·실제 기업 데이터는 Commit하지 않는다.
 
 ## 기본 검증
 

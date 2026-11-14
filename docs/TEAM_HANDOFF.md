@@ -1,6 +1,6 @@
 # 팀원 전달 — 전체 E2E 개발 경계
 
-기준: feature/backend-integration / af5e4fd에서 시작한 최종 뼈대 작업. 이 문서는 알고리즘 구현 완료가 아닌 **각자 자기 폴더에서 시작할 수 있는 연결 지침**이다. 공통 API·DTO·DB 변경은 김대영 검토 PR로 통합한다. 실제 GitHub 로그인 미확인 때문에 CODEOWNERS 활성 규칙은 없다.
+이관 기준: feature/backend-integration / af5e4fd에서 시작한 최종 뼈대 작업. 이후 개발 기준은 이 모노레포의 `main`이다. 이 문서는 알고리즘 구현 완료가 아닌 **각자 자기 폴더에서 시작할 수 있는 연결 지침**이다. 공통 API·DTO·DB 변경은 김대영과 검토한다. 실제 GitHub 로그인 미확인 때문에 CODEOWNERS 활성 규칙은 없다.
 
 ## 함께 사용하는 구조와 규칙
 
@@ -11,7 +11,7 @@ frontend → API/어댑터 → 승인 스냅샷 provider → 순수 모듈 → �
 - 모듈 내부는 app/SQLAlchemy/psycopg/UI를 import하지 않는다. source_manifest/실제 UUID를 서버가 구성한다.
 - source repo 3개, 공통 migration 0001~0005, .env/비밀/기존 DB는 수정·복사하지 않는다.
 - fixture의 `_note`를 읽고 `payload`를 파싱한다. TEST-DOUBLE-ONLY/합성 UUID는 실제 승인·운영 검증의 증거가 아니다.
-- 팀원 브랜치에서 담당 폴더만 수정하고, 공유 변경이 필요하면 입출력 예시·버전/호환 영향·시험 결과를 김대영에게 요청한다. 다른 팀원의 폴더를 조용히 고치지 않는다.
+- `main`의 원격 최신 변경을 확인·Pull한 뒤 담당 폴더에서 작업한다. 공유 변경이 필요하면 입출력 예시·버전/호환 영향·시험 결과를 김대영에게 요청한다. 다른 팀원의 폴더를 조용히 고치지 않는다.
 
 ## 이훤 — 파일 분류
 
@@ -107,6 +107,6 @@ npm run test:e2e:ui
 
 계약 수정 시 backend에서 export_contract_schema.py / generate_api_examples.py 실행 후 동기화 테스트를 통과시킨다. DB 테스트는 이번 단계에서 실행하지 않으며, 신규 provider와 미래 CAPA/계획 저장의 실제 PostgreSQL 검증은 별도 승인·전용 55433 테스트 DB 식별이 필요하다. 과거 490/12 결과를 이번 작업의 통과 수로 재사용하지 않는다.
 
-## PR 전달 최소 항목
+## 변경 전달·검토 최소 항목
 
-담당 경로·문제/변경 동작·입출력 예시·fixture의 합성/실제 구분·실행 명령과 passed/failed/skipped·미지원 범위·정책 결정 번호·공통 파일 변경 요청·데이터/비밀 제외 확인을 적는다. 폴더 소유권은 협업 규칙이지 GitHub의 경로별 접근 권한이 아니다. main 직접 덮어쓰기·force push 금지, 기존 PR이 있으면 그 브랜치를 갱신한다.
+담당 경로·문제/변경 동작·입출력 예시·fixture의 합성/실제 구분·실행 명령과 passed/failed/skipped·미지원 범위·정책 결정 번호·공통 파일 변경 요청·데이터/비밀 제외 확인을 적는다. 폴더 소유권은 협업 규칙이지 GitHub의 경로별 접근 권한이 아니다. DEVELOPMENT_WORKFLOW.md에 따라 `main`에서 직접 테스트·Commit·Push하며 새 브랜치·PR은 생성하지 않는다. 강제 Push와 다른 팀원 변경 덮어쓰기는 금지한다.
