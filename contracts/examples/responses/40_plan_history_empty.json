@@ -1,0 +1,15 @@
+{
+  "_note": "합성 CSV 로 생성한 응답 형식 예시. /batches 계열은 테스트 전용 인메모리 저장소 결과이며 영구 저장 동작을 증명하지 않는다.",
+  "request": {
+    "method": "GET",
+    "path": "/plan-executions"
+  },
+  "status": 200,
+  "response": {
+    "items": [],
+    "total": 0,
+    "limit": 20,
+    "offset": 0
+  },
+  "_plan_note": "SYNTHETIC / TEST-DOUBLE-ONLY transport example. No real plan calculation, DB write or formal approval."
+}

@@ -19,8 +19,8 @@ def capabilities():
     return {'contract_version': 'module-capabilities-0.1', 'forecast': 'IMPLEMENTED',
             'file_classifier': 'IMPLEMENTED' if getattr(file_classifier, 'AVAILABLE', False) else 'NOT_IMPLEMENTED',
             'planning': 'IMPLEMENTED' if planning.AVAILABLE else 'NOT_IMPLEMENTED', 'planning_api': 'READ_ONLY_PREVIEW',
-            'capacity_registration': 'CONTRACT_ONLY',
-            'plan_persistence': 'NOT_IMPLEMENTED', 'formal_plan_approval': 'NOT_IMPLEMENTED'}
+            'capacity_registration': 'IMPLEMENTED',
+            'plan_persistence': 'ENGINE_GATED', 'formal_plan_approval': 'DISABLED_AUTH_POLICY'}
 
 
 @router.post('/classifications', response_model=ClassificationOutput,

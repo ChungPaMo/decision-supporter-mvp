@@ -15,7 +15,8 @@ def test_module_metadata_reflects_owned_module_availability(monkeypatch):
     with TestClient(app) as client: response = client.get('/integrations/modules')
     assert response.json()['file_classifier'] == 'IMPLEMENTED'
     assert response.json()['planning'] == 'IMPLEMENTED'
-    assert response.json()['plan_persistence'] == 'NOT_IMPLEMENTED'
+    assert response.json()['plan_persistence'] == 'ENGINE_GATED'
+    assert response.json()['formal_plan_approval'] == 'DISABLED_AUTH_POLICY'
 
 
 def test_unimplemented_modules_are_errors_and_never_forecast_or_plan_results():

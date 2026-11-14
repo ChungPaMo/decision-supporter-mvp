@@ -103,8 +103,12 @@ def test_provider_exception_does_not_leak_source_or_credentials(delivered, monke
     assert 'credentials' not in response.text
 
 
-def test_missing_saved_base_does_not_fabricate_what_if():
+def test_missing_saved_base_does_not_fabricate_what_if(monkeypatch):
+    from app.plans.repository import PlanRepository
+    def missing(self,id):
+        raise ApiError(404,ErrorCode.PLAN_NOT_FOUND,'Missing base execution')
+    monkeypatch.setattr(PlanRepository,'get',missing)
     command = PlanCommand.model_validate({**payload('planning_input.json')['command'], 'scenario': 'WHAT_IF',
         'base_plan_execution_id': str(UUID(int=3))})
     with pytest.raises(ApiError) as error: adapter.SqlPlanningSourceProvider(None).load(command)
-    assert error.value.code == ErrorCode.PLAN_HISTORY_NOT_IMPLEMENTED
+    assert error.value.status == 404 and error.value.code == ErrorCode.PLAN_NOT_FOUND

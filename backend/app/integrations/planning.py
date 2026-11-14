@@ -48,8 +48,8 @@ class SqlPlanningSourceProvider:
 
     def load(self, command: PlanCommand) -> PlanningInput:
         if command.scenario == 'WHAT_IF':
-            raise ApiError(501, ErrorCode.PLAN_HISTORY_NOT_IMPLEMENTED,
-                           '기준 계획 저장·조회가 아직 없어 What-if 실행에 연결할 수 없습니다.')
+            from app.plans.service import load_what_if
+            return load_what_if(self.database, command)
         try:
             with self.database.connect().execution_options(isolation_level='REPEATABLE READ') as c:
                 c.execute(text('SET TRANSACTION READ ONLY'))
@@ -117,6 +117,11 @@ def execute(command: PlanCommand, provider_factory=get_source_provider) -> Plann
         raise
     except Exception:
         raise ApiError(500, ErrorCode.MODULE_ERROR, '계획 입력 스냅샷 구성 또는 계약 검증에 실패했습니다.') from None
+    return run_snapshot(command, snapshot)
+
+
+def run_snapshot(command: PlanCommand, snapshot: PlanningInput) -> PlanningReply:
+    from engine import planning
     # Prevent a provider mismatch and module mutation from changing the authoritative command/provenance.
     if snapshot.command != command:
         raise ApiError(500, ErrorCode.MODULE_ERROR, '계획 입력 명령이 스냅샷과 일치하지 않습니다.')

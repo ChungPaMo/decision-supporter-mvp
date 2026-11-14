@@ -11,6 +11,8 @@
 
 ## 현재 동작 범위
 
+2026-11-15 후속: [계획 실행 저장·What-if 계보·검토·출력 기반](docs/PLAN_EXECUTION_PERSISTENCE.md)을 추가했습니다. Alembic 0007, 별도 `/plan-executions` API이며 기존 Preview는 유지합니다. 실제 계획 계산·정식 승인은 501, 정식 Excel은 인증된 승인 저장본만 허용합니다. 테스트 대역으로 저장 시스템을 검증했으며 실제 계획 생성 완료가 아닙니다.
+
 2026-11-15: **CAPA·Routing 등록·승인·PostgreSQL 조회·PlanningInput 승인 스냅샷 연결**을 추가했습니다. [데이터 사전·실행법](docs/CAPACITY_ROUTING_DATA_DICTIONARY.md), [합성 양식](contracts/examples/tissue_capacity/README.md), [검증 결과](docs/CAPACITY_ROUTING_VERIFICATION.md)를 확인하세요. 신규 Alembic 0006이며 기존 0001~0005는 보존했습니다. 프론트 신규 CAPA 업로드 화면과 계획 알고리즘은 구현하지 않았습니다. 앞선 490/12·464/8 수치는 각 당시 기록입니다.
 
 | 단계 | 상태 |

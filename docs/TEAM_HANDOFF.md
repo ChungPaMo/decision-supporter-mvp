@@ -1,5 +1,7 @@
 # 팀원 전달 — 전체 E2E 개발 경계
 
+> **2026-11-15 계획 저장 기반:** 새 [계획 실행 계약](PLAN_EXECUTION_PERSISTENCE.md)을 확인한다. 희원: PlanningInput/Output과 engine.planning.run은 유지했으며 새 알고리즘은 구현하지 않았다. What-if는 저장 입력·부모 결과·안전한 command.overrides를 전달하고 적용 공식은 미확정이다. 마나미: Preview(`/plans`)와 영구 실행(`/plan-executions`)을 구별하고 조회/검토/반려를 연결한다. APPROVE 501과 미승인 export 차단을 성공으로 표시하지 않는다. 서버 상태/version/digest를 사용하며 테스트 대역을 실제 계산으로 표시하지 않는다. 양쪽 담당 폴더는 이번에 수정하지 않았다. 아래 초기 계획 저장 미구현 설명은 이전 상태이며 계산/인증/정식 승인 미구현은 여전히 적용된다.
+
 > **2026-11-15 후속 통합:** CAPA/Routing 등록·승인·조회와 SQL provider의 승인 스냅샷 연결을 구현했다. 아래 최초 뼈대의 ‘CAPA 저장 미구현/null만 전달’은 과거 상태다. 현재 절차는 [데이터 사전](CAPACITY_ROUTING_DATA_DICTIONARY.md), 팀원 후속 요청은 [변경 요청](CAPACITY_ROUTING_CHANGE_REQUESTS.md)을 따른다. RoutingStep.resource_requirements는 동일 공정의 추가 동시 소요이며 순차 공정이 아니다. 모듈 폴더와 frontend는 수정하지 않았고, 계획 계산·계획 저장·정식 승인은 계속 미구현이다.
 
 이관 기준: feature/backend-integration / af5e4fd에서 시작한 최종 뼈대 작업. 이후 개발 기준은 이 모노레포의 `main`이다. 이 문서는 알고리즘 구현 완료가 아닌 **각자 자기 폴더에서 시작할 수 있는 연결 지침**이다. 공통 API·DTO·DB 변경은 김대영과 검토한다. 실제 GitHub 로그인 미확인 때문에 CODEOWNERS 활성 규칙은 없다.

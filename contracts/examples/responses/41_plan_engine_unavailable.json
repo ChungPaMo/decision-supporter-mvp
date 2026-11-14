@@ -1,0 +1,23 @@
+{
+  "_note": "합성 CSV 로 생성한 응답 형식 예시. /batches 계열은 테스트 전용 인메모리 저장소 결과이며 영구 저장 동작을 증명하지 않는다.",
+  "request": {
+    "method": "POST",
+    "path": "/plan-executions",
+    "json": {
+      "forecast_execution_id": "00000000-0000-4000-8000-000000000001",
+      "product_ids": [
+        "TP-10R"
+      ],
+      "target_month": "2027-01",
+      "as_of_date": "2026-12-31"
+    }
+  },
+  "status": 501,
+  "response": {
+    "detail": {
+      "code": "MODULE_NOT_IMPLEMENTED",
+      "message": "Planning algorithm is not implemented; no execution was fabricated."
+    }
+  },
+  "_plan_note": "SYNTHETIC / TEST-DOUBLE-ONLY transport example. No real plan calculation, DB write or formal approval."
+}

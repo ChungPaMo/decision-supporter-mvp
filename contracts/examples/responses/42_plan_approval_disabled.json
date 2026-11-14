@@ -1,0 +1,23 @@
+{
+  "_note": "합성 CSV 로 생성한 응답 형식 예시. /batches 계열은 테스트 전용 인메모리 저장소 결과이며 영구 저장 동작을 증명하지 않는다.",
+  "request": {
+    "method": "POST",
+    "path": "/plan-executions/00000000-0000-4000-8000-000000000010/decisions",
+    "json": {
+      "plan_id": "BASE",
+      "action": "APPROVE",
+      "actor_id": "TEST-REVIEWER",
+      "reason": "Example only",
+      "expected_version": 1,
+      "expected_input_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+    }
+  },
+  "status": 501,
+  "response": {
+    "detail": {
+      "code": "PLAN_APPROVAL_DISABLED",
+      "message": "Authentication, approver roles and final policy are not integrated."
+    }
+  },
+  "_plan_note": "SYNTHETIC / TEST-DOUBLE-ONLY transport example. No real plan calculation, DB write or formal approval."
+}

@@ -14,11 +14,14 @@ from app.config import Settings, get_settings
 from app.errors import ApiError, ErrorCode
 from app.exports.limits import ExportBodyLimit
 
+from app.api.plan_executions import router as plan_executions_router
+
 app = FastAPI(title="충파모 과제 7 MVP", version=get_settings().app_version)
 app.include_router(health_router)
 app.include_router(ingest_router)
 app.include_router(integrations_router)
 app.include_router(batches_router)
+app.include_router(plan_executions_router)
 app.include_router(exports_router)
 app.include_router(forecasts_router)
 app.include_router(forecast_history_router)
