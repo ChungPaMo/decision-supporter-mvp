@@ -1,0 +1,3 @@
+﻿resource_id,resource_name,kind,time_basis,parallel_units
+M1,Synthetic packaging machine,EQUIPMENT,MACHINE_HOUR,1
+L1,Synthetic two-person pool,LABOR_POOL,PERSON_HOUR,2

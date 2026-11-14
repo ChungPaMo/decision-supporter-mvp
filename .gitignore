@@ -36,6 +36,13 @@ uploads/
 *.xlsx
 *.xls
 !contracts/examples/*.csv
+!contracts/examples/tissue_capacity/resources.csv
+!contracts/examples/tissue_capacity/quantity_limits.csv
+!contracts/examples/tissue_capacity/hours_budgets.csv
+!contracts/examples/tissue_capacity/routing_steps.csv
+!contracts/examples/tissue_capacity/tissue_capacity_template.xlsx
+!contracts/examples/tissue_capacity/capacity_upload.xlsx
+!contracts/examples/tissue_capacity/routing_upload.xlsx
 
 # 로컬 도구·임시
 .claude/

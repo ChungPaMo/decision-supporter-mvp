@@ -1,0 +1,3 @@
+﻿capacity_id,resource_id,period,regular_hours,overtime_hours_limit,unit,time_basis,availability_basis,calendar_ref
+H-M1,M1,2027-01,160,20,h,MACHINE_HOUR,NET,
+H-L1,L1,2027-01,170,20,h,PERSON_HOUR,NET,
