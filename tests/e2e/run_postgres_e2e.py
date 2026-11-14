@@ -1,6 +1,6 @@
 """실제 브라우저 E2E. monorepo 백엔드의 chungpamo_test만 초기화한다.
 
-실행: ..\decision-supporter\.venv\Scripts\python.exe tests\run_postgres_e2e.py
+실행: .venv\Scripts\python.exe tests\e2e\run_postgres_e2e.py (모노레포 루트)
 개발 DB·기존 Docker 자원에는 쓰지 않는다. 비밀번호를 명령행/로그에 출력하지 않는다.
 """
 import csv
@@ -41,12 +41,18 @@ def main():
             assert sock.connect_ex(("127.0.0.1", port)) != 0, f"E2E port {port} occupied; refusing reuse"
     ARTIFACTS.mkdir(exist_ok=True)
     engine = create_engine(url.set(database="chungpamo_test"))
-    with engine.begin() as connection:
-        assert connection.execute(text("SELECT current_database()")).scalar_one() == "chungpamo_test"
-        connection.execute(text("DROP SCHEMA public CASCADE; CREATE SCHEMA public"))
     env = {**os.environ, "DATABASE_URL": url.set(database="chungpamo_test").render_as_string(hide_password=False),
            "PERSISTENCE": "postgres", "CORS_ALLOW_ORIGINS": "http://127.0.0.1:5174"}
-    subprocess.run([sys.executable, "-m", "alembic", "upgrade", "head"], cwd=BACK / "backend", env=env, check=True)
+
+    def recreate_test_database():
+        # Recheck identity and synthetic-only contents before each authorized reset.
+        authorize_reset(env['DATABASE_URL'])
+        with engine.begin() as connection:
+            assert connection.execute(text("SELECT current_database()")).scalar_one() == "chungpamo_test"
+            connection.execute(text("DROP SCHEMA public CASCADE; CREATE SCHEMA public"))
+        subprocess.run([sys.executable, "-m", "alembic", "upgrade", "head"], cwd=BACK / "backend", env=env, check=True)
+
+    recreate_test_database()
     wb = Workbook()
     for row in csv.reader(io.StringIO((BACK / "contracts/examples/sample_products.csv").read_text(encoding="utf-8-sig"))):
         wb.active.append(row)
@@ -103,14 +109,22 @@ def main():
             except OSError:
                 assert time.monotonic() < deadline, "E2E frontend health timeout"
                 time.sleep(0.1)
-        subprocess.run([node, str(cli), "test", 'registration.spec.ts', 'tissue.spec.ts', "--grep-invert", "restores after API process restart"], cwd=FRONT, env=test_env, check=True)
+        subprocess.run([node, str(cli), "test", 'registration.spec.ts', "--grep-invert", "restores after API process restart"], cwd=FRONT, env=test_env, check=True)
         process.terminate()
         process.wait(timeout=10)
         process = start()
         print("Restarted actual API process without touching database.", flush=True)
         subprocess.run([node, str(cli), "test", 'registration.spec.ts', "--grep", "restores after API process restart"], cwd=FRONT, env=test_env, check=True)
+        # The tissue scenario must prove one-product operation without legacy rows/training data.
+        process.terminate()
+        process.wait(timeout=10)
+        recreate_test_database()
+        process = start()
+        subprocess.run([node, str(cli), 'test', 'tissue.spec.ts'], cwd=FRONT, env=test_env, check=True)
         with engine.connect() as connection:
             assert connection.execute(text("SELECT DISTINCT source_type FROM import_batch")).scalars().all() == ["SYNTHETIC"]
+            assert connection.execute(text("SELECT product_id FROM product")).scalars().all() == ['TP-10R']
+            assert connection.execute(text("SELECT count(*) FROM monthly_demand")).scalar_one() == 24
             print("Test database approval states:", connection.execute(text("SELECT entity, status, count(*) FROM import_batch GROUP BY entity,status ORDER BY entity,status")).all())
     finally:
         if frontend is not None and frontend.poll() is None:

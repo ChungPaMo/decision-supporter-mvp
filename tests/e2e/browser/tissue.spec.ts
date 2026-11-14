@@ -20,10 +20,17 @@ test('single tissue product approval to stored forecast chart and reload', async
   await expect(page.getByRole('button', { name: '예측 실행', exact: true })).toBeEnabled();
   await page.getByLabel('학습 기준일 (월말)', { exact: true }).fill('2026-12-31');
   await page.getByLabel('예측 기간 (개월)', { exact: true }).selectOption('1');
+  // Provide every parameter explicitly: another saved run may restore different conditions.
+  await page.getByLabel('P50 방식', { exact: true }).selectOption('MA12');
+  await page.getByLabel('최소 이력 (개월)', { exact: true }).fill('12');
+  await page.getByLabel('재현 시드', { exact: true }).fill('42');
   const pending = page.waitForResponse(r => r.url().endsWith('/forecasts') && r.request().method() === 'POST');
   await page.getByRole('button', { name: '예측 실행', exact: true }).click();
   const response = await pending; expect(response.status()).toBe(201);
   const stored = (await response.json()).execution;
+  expect(stored.input_row_count).toBe(24);
+  expect(stored.forecast_count).toBe(1);
+  expect(stored.result.forecasts).toHaveLength(1);
   expect(stored.result.forecasts.some((row: { product_id: string; target_month: string }) => row.product_id === 'TP-10R' && row.target_month === '2027-01')).toBe(true);
   await page.getByLabel('차트 제품', { exact: true }).selectOption('TP-10R');
   await expect(page.getByRole('img', { name: 'TP-10R 월별 P50 P80 P90 예측', exact: true })).toBeVisible();

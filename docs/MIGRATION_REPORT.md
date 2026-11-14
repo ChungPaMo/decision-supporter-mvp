@@ -30,7 +30,7 @@
 
 ## 검증 기록
 
-현재 비DB pytest: 435 passed / 55 skipped / 0 failed. DB 테스트 55개는 미실행이며 성공으로 간주하지 않는다. TypeScript·프로덕션 빌드·pip check 통과. persistence-disabled 실제 API/PPT 화면/모바일 브라우저 E2E 3 passed.
+초기 DB 승인 대기 시 비DB pytest: 435 passed / 55 skipped / 0 failed. 이후 별도 승인과 전용 환경 식별을 거쳐 전체 pytest **490 passed / 0 failed / 0 skipped**, PostgreSQL 브라우저 E2E **9 passed**를 확인했다. persistence-disabled 실제 API/PPT 화면/모바일 브라우저 E2E도 **3 passed**다. TypeScript·프로덕션 빌드·pip check 통과. 상세 실행 근거는 [전용 DB 검증 보고서](monorepo_postgresql_verification_20261114.md)에 기록했다.
 
 이관 과정에서 의존성 파일의 이전 engine 경로, root browser spec의 Node 모듈 해석, Windows 기본 Playwright 변환 캐시 문제를 확인하고 수정했다. 전용 가상환경·tsconfig alias·전용 캐시를 사용한다. 기존 저장소 실행 환경은 변경하지 않았다.
 
@@ -38,12 +38,12 @@
 
 ## 현재 완료 범위와 보류
 
-2026-11-14 신규 서버 생성·테스트 DB 초기화의 별도 승인을 요청했으나 아직 답변이 없어 Docker/DB 실행·초기화는 하지 않았다. 기존 개발·테스트 DB에도 접속·변경하지 않았다. DB pytest 55개와 PostgreSQL 등록/예측 브라우저 E2E 9개(기존 8 + 휴지 1)는 이관 후 미실행이다. 새로운 전체 제조 E2E 완료로 표현하지 않는다.
+2026-11-14 사용자가 신규 chungpamo-monorepo 서버 생성과 **그 서버의 chungpamo_test public 스키마만** 초기화하도록 명시적으로 승인했다. 최초에는 Docker 엔진 연결 불가로 중단했고, 사용자가 엔진을 실행한 뒤 안전 점검을 다시 통과했다. 신규 55433 컨테이너·볼륨·네트워크를 생성하고 DB pytest 55개 및 PostgreSQL 등록/예측 브라우저 E2E 9개를 실제 실행했다. 기존 55432 DB와 sisicallcall DB에는 접속하지 않았고 자원 변경도 하지 않았다. 새 개발 DB도 빈 스키마 그대로 보존했다.
 
-독립 모듈 테스트는 27 passed(전체 pytest에 포함), 전체 비DB pytest는 435 passed / 55 skipped / 0 failed, 비DB 실제 API·화면 경계 브라우저 E2E는 3 passed다. 모듈 import·OpenAPI/Schema 동기화·소유 경계 검사·TypeScript·프로덕션 빌드·pip check를 통과했다. Starlette/httpx 사용 중단 예정 경고 1건은 남았다. CI 정의는 추가했으며 원격 CI 실행 결과는 로컬 검사와 별도다.
+독립 모듈 테스트는 27 passed(전체 pytest에 포함)다. 전체 DB 포함 결과는 490 passed / 0 failed / 0 skipped, 브라우저 결과는 PostgreSQL 9 + 비DB UI 3 = 12 passed다. 모듈 import·OpenAPI/Schema 동기화·소유 경계 검사·TypeScript·프로덕션 빌드·pip check를 통과했다. Starlette/httpx 사용 중단 예정 경고 1건은 남았다. CI의 기본 --no-db 검증은 여전히 DB 55개를 skip하는 비파괴 설정이며, 원격 CI 결과를 로컬 실제 PostgreSQL 결과와 혼동하지 않는다.
 
 오프라인 보안 스캔에서 비밀·토큰·개인 연락처·실사용자 로컬 경로 패턴이 검출되지 않았다. 가상 사용자 someone 경로 차단 회귀 테스트와 검사기 자체 정규식은 알려진 예외다. 6개 이관 이미지가 바이너리이며 기존 GitHub 자료를 그대로 보존했다. 새 PPT·추출 이미지·브라우저 로그·환경·의존성 캐시는 Git에서 제외했다. 이 검사는 휴리스틱이며 기업 운영 보안 감사를 의미하지 않는다.
 
 세 출처 저장소의 시작 대비 파일 SHA256은 모두 동일하다(PoC 403, backend 147, frontend 58개). 0001~0005 마이그레이션과 예측 계산 파일 contract/features/model/service도 원본과 바이트가 같다.
 
-검증된 초기 통합을 feature/backend-integration으로 반영한다. DB 재검증·담당자 알고리즘·정식 계획 저장/승인/출력은 남은 작업으로 유지한다.
+초기 통합과 실제 DB 검증 결과를 feature/backend-integration으로 반영한다. 분류·계획 알고리즘, CAPA·라우팅 반입, 정식 계획 저장/승인/출력은 남은 작업이다. 휴지 제품 1종의 승인 수요 예측까지 실제 실행했으며, PPT의 계획 예시가 계산 완료된 것은 아니다.
