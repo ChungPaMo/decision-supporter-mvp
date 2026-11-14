@@ -1,4 +1,418 @@
 {
+  "CapacityRegistrationDraft": {
+    "$defs": {
+      "HoursBudget": {
+        "additionalProperties": false,
+        "properties": {
+          "availability_basis": {
+            "enum": [
+              "GROSS",
+              "NET"
+            ],
+            "title": "Availability Basis",
+            "type": "string"
+          },
+          "calendar_ref": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Calendar Ref"
+          },
+          "capacity_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Capacity Id",
+            "type": "string"
+          },
+          "overtime_hours_limit": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Overtime Hours Limit"
+          },
+          "period": {
+            "pattern": "^([1-9][0-9]{3}|0[1-9][0-9]{2}|00[1-9][0-9]|000[1-9])-(0[1-9]|1[0-2])$",
+            "title": "Period",
+            "type": "string"
+          },
+          "regular_hours": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Regular Hours",
+            "type": "string"
+          },
+          "resource_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "time_basis": {
+            "enum": [
+              "ELAPSED",
+              "PERSON_HOUR",
+              "MACHINE_HOUR"
+            ],
+            "title": "Time Basis",
+            "type": "string"
+          },
+          "unit": {
+            "enum": [
+              "h",
+              "min"
+            ],
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "capacity_id",
+          "resource_id",
+          "period",
+          "regular_hours",
+          "unit",
+          "time_basis",
+          "availability_basis"
+        ],
+        "title": "HoursBudget",
+        "type": "object"
+      },
+      "QuantityLimit": {
+        "additionalProperties": false,
+        "properties": {
+          "accounting_point": {
+            "enum": [
+              "FINISHED_OUTPUT",
+              "OPERATION_OUTPUT"
+            ],
+            "title": "Accounting Point",
+            "type": "string"
+          },
+          "capacity_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Capacity Id",
+            "type": "string"
+          },
+          "limit_qty": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Limit Qty",
+            "type": "string"
+          },
+          "operation_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Operation Id"
+          },
+          "period": {
+            "pattern": "^([1-9][0-9]{3}|0[1-9][0-9]{2}|00[1-9][0-9]|000[1-9])-(0[1-9]|1[0-2])$",
+            "title": "Period",
+            "type": "string"
+          },
+          "product_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "unit": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "capacity_id",
+          "product_id",
+          "period",
+          "limit_qty",
+          "unit",
+          "accounting_point"
+        ],
+        "title": "QuantityLimit",
+        "type": "object"
+      },
+      "Resource": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "WORKCENTER",
+              "LABOR_POOL",
+              "EQUIPMENT",
+              "EQUIPMENT_POOL"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "parallel_units": {
+            "minimum": 1,
+            "title": "Parallel Units",
+            "type": "integer"
+          },
+          "resource_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "resource_name": {
+            "title": "Resource Name",
+            "type": "string"
+          },
+          "time_basis": {
+            "enum": [
+              "ELAPSED",
+              "PERSON_HOUR",
+              "MACHINE_HOUR"
+            ],
+            "title": "Time Basis",
+            "type": "string"
+          }
+        },
+        "required": [
+          "resource_id",
+          "resource_name",
+          "kind",
+          "time_basis",
+          "parallel_units"
+        ],
+        "title": "Resource",
+        "type": "object"
+      },
+      "RoutingStep": {
+        "additionalProperties": false,
+        "properties": {
+          "alternative_group_ref": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Alternative Group Ref"
+          },
+          "concurrent_units": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Concurrent Units"
+          },
+          "operation_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Operation Id",
+            "type": "string"
+          },
+          "predecessor_step_ids": {
+            "items": {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+              "type": "string"
+            },
+            "title": "Predecessor Step Ids",
+            "type": "array"
+          },
+          "product_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "quantity_unit": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Quantity Unit",
+            "type": "string"
+          },
+          "reference_qty": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Reference Qty",
+            "type": "string"
+          },
+          "resource_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "routing_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Routing Id",
+            "type": "string"
+          },
+          "routing_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Routing Version",
+            "type": "string"
+          },
+          "run_time": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Run Time",
+            "type": "string"
+          },
+          "setup_policy_ref": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Setup Policy Ref"
+          },
+          "setup_time": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Setup Time"
+          },
+          "step_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Step Id",
+            "type": "string"
+          },
+          "time_basis": {
+            "enum": [
+              "ELAPSED",
+              "PERSON_HOUR",
+              "MACHINE_HOUR"
+            ],
+            "title": "Time Basis",
+            "type": "string"
+          },
+          "time_unit": {
+            "enum": [
+              "h",
+              "min"
+            ],
+            "title": "Time Unit",
+            "type": "string"
+          },
+          "valid_from": {
+            "format": "date",
+            "title": "Valid From",
+            "type": "string"
+          },
+          "valid_to": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Valid To"
+          }
+        },
+        "required": [
+          "routing_id",
+          "routing_version",
+          "step_id",
+          "product_id",
+          "operation_id",
+          "resource_id",
+          "predecessor_step_ids",
+          "reference_qty",
+          "quantity_unit",
+          "run_time",
+          "time_unit",
+          "time_basis",
+          "valid_from"
+        ],
+        "title": "RoutingStep",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "contract_version": {
+        "const": "capacity-registration-0.1-draft",
+        "default": "capacity-registration-0.1-draft",
+        "title": "Contract Version",
+        "type": "string"
+      },
+      "hours_budgets": {
+        "items": {
+          "$ref": "#/$defs/HoursBudget"
+        },
+        "title": "Hours Budgets",
+        "type": "array"
+      },
+      "quantity_limits": {
+        "items": {
+          "$ref": "#/$defs/QuantityLimit"
+        },
+        "title": "Quantity Limits",
+        "type": "array"
+      },
+      "resources": {
+        "items": {
+          "$ref": "#/$defs/Resource"
+        },
+        "title": "Resources",
+        "type": "array"
+      },
+      "routing_steps": {
+        "items": {
+          "$ref": "#/$defs/RoutingStep"
+        },
+        "title": "Routing Steps",
+        "type": "array"
+      },
+      "unresolved_policy_refs": {
+        "items": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+          "type": "string"
+        },
+        "title": "Unresolved Policy Refs",
+        "type": "array"
+      }
+    },
+    "required": [
+      "resources",
+      "quantity_limits",
+      "hours_budgets",
+      "routing_steps"
+    ],
+    "title": "CapacityRegistrationDraft",
+    "type": "object"
+  },
   "ClassificationInput": {
     "$defs": {
       "SheetSample": {
@@ -14,10 +428,17 @@
             "type": "array"
           },
           "name": {
-            "maxLength": 200,
-            "minLength": 1,
-            "title": "Name",
-            "type": "string"
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
           },
           "sample_rows": {
             "default": [],
@@ -59,9 +480,25 @@
       "filename": {
         "maxLength": 200,
         "minLength": 1,
-        "pattern": "^[^/\\\\]+$",
+        "pattern": "^[^/\\\\:\\x00-\\x1f]+$",
         "title": "Filename",
         "type": "string"
+      },
+      "format": {
+        "anyOf": [
+          {
+            "enum": [
+              "csv",
+              "xlsx"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Format"
       },
       "sha256": {
         "pattern": "^[0-9a-f]{64}$",
@@ -145,6 +582,8 @@
         "type": "boolean"
       },
       "module_version": {
+        "maxLength": 80,
+        "minLength": 1,
         "title": "Module Version",
         "type": "string"
       },
@@ -243,7 +682,7 @@
         "type": "string"
       },
       "target_month": {
-        "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+        "pattern": "^([1-9][0-9]{3}|0[1-9][0-9]{2}|00[1-9][0-9]|000[1-9])-(0[1-9]|1[0-2])$",
         "title": "Target Month",
         "type": "string"
       }
@@ -259,6 +698,543 @@
   },
   "PlanningInput": {
     "$defs": {
+      "ApprovedInputs": {
+        "additionalProperties": false,
+        "properties": {
+          "boms": {
+            "items": {
+              "$ref": "#/$defs/BomFact"
+            },
+            "title": "Boms",
+            "type": "array"
+          },
+          "inventory": {
+            "items": {
+              "$ref": "#/$defs/InventoryFact"
+            },
+            "title": "Inventory",
+            "type": "array"
+          },
+          "materials": {
+            "items": {
+              "$ref": "#/$defs/MaterialFact"
+            },
+            "title": "Materials",
+            "type": "array"
+          },
+          "products": {
+            "items": {
+              "$ref": "#/$defs/ProductFact"
+            },
+            "title": "Products",
+            "type": "array"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/$defs/ApprovedSource"
+            },
+            "title": "Sources",
+            "type": "array"
+          }
+        },
+        "required": [
+          "products",
+          "materials",
+          "boms",
+          "inventory",
+          "sources"
+        ],
+        "title": "ApprovedInputs",
+        "type": "object"
+      },
+      "ApprovedSource": {
+        "additionalProperties": false,
+        "properties": {
+          "approved_at": {
+            "format": "date-time",
+            "title": "Approved At",
+            "type": "string"
+          },
+          "batch_id": {
+            "format": "uuid",
+            "title": "Batch Id",
+            "type": "string"
+          },
+          "batch_version": {
+            "minimum": 1,
+            "title": "Batch Version",
+            "type": "integer"
+          },
+          "entity": {
+            "title": "Entity",
+            "type": "string"
+          },
+          "result_digest": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Result Digest"
+          },
+          "source_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Source Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "batch_id",
+          "batch_version",
+          "entity",
+          "source_sha256",
+          "result_digest",
+          "approved_at"
+        ],
+        "title": "ApprovedSource",
+        "type": "object"
+      },
+      "BomFact": {
+        "additionalProperties": false,
+        "properties": {
+          "batch_id": {
+            "format": "uuid",
+            "title": "Batch Id",
+            "type": "string"
+          },
+          "header": {
+            "$ref": "#/$defs/BomHeaderFact"
+          },
+          "lines": {
+            "items": {
+              "$ref": "#/$defs/BomLineFact"
+            },
+            "title": "Lines",
+            "type": "array"
+          },
+          "source_type": {
+            "title": "Source Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "header",
+          "lines",
+          "source_type",
+          "batch_id"
+        ],
+        "title": "BomFact",
+        "type": "object"
+      },
+      "BomHeaderFact": {
+        "additionalProperties": false,
+        "properties": {
+          "base_qty": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Base Qty",
+            "type": "string"
+          },
+          "bom_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Bom Id",
+            "type": "string"
+          },
+          "bom_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Bom Version",
+            "type": "string"
+          },
+          "is_active": {
+            "title": "Is Active",
+            "type": "boolean"
+          },
+          "product_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "valid_from": {
+            "format": "date",
+            "title": "Valid From",
+            "type": "string"
+          },
+          "valid_to": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Valid To"
+          }
+        },
+        "required": [
+          "bom_id",
+          "product_id",
+          "bom_version",
+          "status",
+          "is_active",
+          "valid_from",
+          "valid_to",
+          "base_qty"
+        ],
+        "title": "BomHeaderFact",
+        "type": "object"
+      },
+      "BomLineFact": {
+        "additionalProperties": false,
+        "properties": {
+          "bom_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Bom Id",
+            "type": "string"
+          },
+          "component_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Component Id",
+            "type": "string"
+          },
+          "component_type": {
+            "enum": [
+              "PRODUCT",
+              "MATERIAL"
+            ],
+            "title": "Component Type",
+            "type": "string"
+          },
+          "line_no": {
+            "minimum": 1,
+            "title": "Line No",
+            "type": "integer"
+          },
+          "qty_per": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Qty Per",
+            "type": "string"
+          },
+          "scrap_rate": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Scrap Rate",
+            "type": "string"
+          },
+          "unit": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "bom_id",
+          "line_no",
+          "component_type",
+          "component_id",
+          "qty_per",
+          "unit",
+          "scrap_rate"
+        ],
+        "title": "BomLineFact",
+        "type": "object"
+      },
+      "CapacityRegistrationDraft": {
+        "additionalProperties": false,
+        "properties": {
+          "contract_version": {
+            "const": "capacity-registration-0.1-draft",
+            "default": "capacity-registration-0.1-draft",
+            "title": "Contract Version",
+            "type": "string"
+          },
+          "hours_budgets": {
+            "items": {
+              "$ref": "#/$defs/HoursBudget"
+            },
+            "title": "Hours Budgets",
+            "type": "array"
+          },
+          "quantity_limits": {
+            "items": {
+              "$ref": "#/$defs/QuantityLimit"
+            },
+            "title": "Quantity Limits",
+            "type": "array"
+          },
+          "resources": {
+            "items": {
+              "$ref": "#/$defs/Resource"
+            },
+            "title": "Resources",
+            "type": "array"
+          },
+          "routing_steps": {
+            "items": {
+              "$ref": "#/$defs/RoutingStep"
+            },
+            "title": "Routing Steps",
+            "type": "array"
+          },
+          "unresolved_policy_refs": {
+            "items": {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+              "type": "string"
+            },
+            "title": "Unresolved Policy Refs",
+            "type": "array"
+          }
+        },
+        "required": [
+          "resources",
+          "quantity_limits",
+          "hours_budgets",
+          "routing_steps"
+        ],
+        "title": "CapacityRegistrationDraft",
+        "type": "object"
+      },
+      "ForecastFact": {
+        "additionalProperties": false,
+        "properties": {
+          "p50": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "P50",
+            "type": "string"
+          },
+          "p80": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "P80",
+            "type": "string"
+          },
+          "p90": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "P90",
+            "type": "string"
+          },
+          "product_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "target_month": {
+            "pattern": "^([1-9][0-9]{3}|0[1-9][0-9]{2}|00[1-9][0-9]|000[1-9])-(0[1-9]|1[0-2])$",
+            "title": "Target Month",
+            "type": "string"
+          },
+          "unit": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_id",
+          "target_month",
+          "p50",
+          "p80",
+          "p90",
+          "unit"
+        ],
+        "title": "ForecastFact",
+        "type": "object"
+      },
+      "HoursBudget": {
+        "additionalProperties": false,
+        "properties": {
+          "availability_basis": {
+            "enum": [
+              "GROSS",
+              "NET"
+            ],
+            "title": "Availability Basis",
+            "type": "string"
+          },
+          "calendar_ref": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Calendar Ref"
+          },
+          "capacity_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Capacity Id",
+            "type": "string"
+          },
+          "overtime_hours_limit": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Overtime Hours Limit"
+          },
+          "period": {
+            "pattern": "^([1-9][0-9]{3}|0[1-9][0-9]{2}|00[1-9][0-9]|000[1-9])-(0[1-9]|1[0-2])$",
+            "title": "Period",
+            "type": "string"
+          },
+          "regular_hours": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Regular Hours",
+            "type": "string"
+          },
+          "resource_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "time_basis": {
+            "enum": [
+              "ELAPSED",
+              "PERSON_HOUR",
+              "MACHINE_HOUR"
+            ],
+            "title": "Time Basis",
+            "type": "string"
+          },
+          "unit": {
+            "enum": [
+              "h",
+              "min"
+            ],
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "capacity_id",
+          "resource_id",
+          "period",
+          "regular_hours",
+          "unit",
+          "time_basis",
+          "availability_basis"
+        ],
+        "title": "HoursBudget",
+        "type": "object"
+      },
+      "InventoryFact": {
+        "additionalProperties": false,
+        "properties": {
+          "allocated_qty": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Allocated Qty",
+            "type": "string"
+          },
+          "as_of_date": {
+            "format": "date",
+            "title": "As Of Date",
+            "type": "string"
+          },
+          "batch_id": {
+            "format": "uuid",
+            "title": "Batch Id",
+            "type": "string"
+          },
+          "item_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Item Id",
+            "type": "string"
+          },
+          "item_type": {
+            "enum": [
+              "PRODUCT",
+              "MATERIAL"
+            ],
+            "title": "Item Type",
+            "type": "string"
+          },
+          "on_hand_qty": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "On Hand Qty",
+            "type": "string"
+          },
+          "source_type": {
+            "title": "Source Type",
+            "type": "string"
+          },
+          "unit": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "item_type",
+          "item_id",
+          "as_of_date",
+          "on_hand_qty",
+          "allocated_qty",
+          "unit",
+          "source_type",
+          "batch_id"
+        ],
+        "title": "InventoryFact",
+        "type": "object"
+      },
+      "MaterialFact": {
+        "additionalProperties": false,
+        "properties": {
+          "base_unit": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Base Unit",
+            "type": "string"
+          },
+          "batch_id": {
+            "format": "uuid",
+            "title": "Batch Id",
+            "type": "string"
+          },
+          "material_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Material Id",
+            "type": "string"
+          },
+          "material_name": {
+            "title": "Material Name",
+            "type": "string"
+          },
+          "safety_stock_qty": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Safety Stock Qty",
+            "type": "string"
+          },
+          "source_type": {
+            "title": "Source Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "material_id",
+          "material_name",
+          "base_unit",
+          "safety_stock_qty",
+          "source_type",
+          "batch_id"
+        ],
+        "title": "MaterialFact",
+        "type": "object"
+      },
       "PlanCommand": {
         "additionalProperties": false,
         "properties": {
@@ -318,7 +1294,7 @@
             "type": "string"
           },
           "target_month": {
-            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+            "pattern": "^([1-9][0-9]{3}|0[1-9][0-9]{2}|00[1-9][0-9]|000[1-9])-(0[1-9]|1[0-2])$",
             "title": "Target Month",
             "type": "string"
           }
@@ -331,113 +1307,880 @@
         ],
         "title": "PlanCommand",
         "type": "object"
+      },
+      "ProductFact": {
+        "additionalProperties": false,
+        "properties": {
+          "base_unit": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Base Unit",
+            "type": "string"
+          },
+          "batch_id": {
+            "format": "uuid",
+            "title": "Batch Id",
+            "type": "string"
+          },
+          "product_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "product_name": {
+            "title": "Product Name",
+            "type": "string"
+          },
+          "product_type": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Type"
+          },
+          "safety_stock_qty": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Safety Stock Qty",
+            "type": "string"
+          },
+          "source_type": {
+            "title": "Source Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_id",
+          "product_name",
+          "base_unit",
+          "product_type",
+          "safety_stock_qty",
+          "source_type",
+          "batch_id"
+        ],
+        "title": "ProductFact",
+        "type": "object"
+      },
+      "QuantityLimit": {
+        "additionalProperties": false,
+        "properties": {
+          "accounting_point": {
+            "enum": [
+              "FINISHED_OUTPUT",
+              "OPERATION_OUTPUT"
+            ],
+            "title": "Accounting Point",
+            "type": "string"
+          },
+          "capacity_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Capacity Id",
+            "type": "string"
+          },
+          "limit_qty": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Limit Qty",
+            "type": "string"
+          },
+          "operation_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Operation Id"
+          },
+          "period": {
+            "pattern": "^([1-9][0-9]{3}|0[1-9][0-9]{2}|00[1-9][0-9]|000[1-9])-(0[1-9]|1[0-2])$",
+            "title": "Period",
+            "type": "string"
+          },
+          "product_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "unit": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "capacity_id",
+          "product_id",
+          "period",
+          "limit_qty",
+          "unit",
+          "accounting_point"
+        ],
+        "title": "QuantityLimit",
+        "type": "object"
+      },
+      "Resource": {
+        "additionalProperties": false,
+        "properties": {
+          "kind": {
+            "enum": [
+              "WORKCENTER",
+              "LABOR_POOL",
+              "EQUIPMENT",
+              "EQUIPMENT_POOL"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "parallel_units": {
+            "minimum": 1,
+            "title": "Parallel Units",
+            "type": "integer"
+          },
+          "resource_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "resource_name": {
+            "title": "Resource Name",
+            "type": "string"
+          },
+          "time_basis": {
+            "enum": [
+              "ELAPSED",
+              "PERSON_HOUR",
+              "MACHINE_HOUR"
+            ],
+            "title": "Time Basis",
+            "type": "string"
+          }
+        },
+        "required": [
+          "resource_id",
+          "resource_name",
+          "kind",
+          "time_basis",
+          "parallel_units"
+        ],
+        "title": "Resource",
+        "type": "object"
+      },
+      "RoutingStep": {
+        "additionalProperties": false,
+        "properties": {
+          "alternative_group_ref": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Alternative Group Ref"
+          },
+          "concurrent_units": {
+            "anyOf": [
+              {
+                "minimum": 1,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Concurrent Units"
+          },
+          "operation_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Operation Id",
+            "type": "string"
+          },
+          "predecessor_step_ids": {
+            "items": {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+              "type": "string"
+            },
+            "title": "Predecessor Step Ids",
+            "type": "array"
+          },
+          "product_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "quantity_unit": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Quantity Unit",
+            "type": "string"
+          },
+          "reference_qty": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Reference Qty",
+            "type": "string"
+          },
+          "resource_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Resource Id",
+            "type": "string"
+          },
+          "routing_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Routing Id",
+            "type": "string"
+          },
+          "routing_version": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Routing Version",
+            "type": "string"
+          },
+          "run_time": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Run Time",
+            "type": "string"
+          },
+          "setup_policy_ref": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Setup Policy Ref"
+          },
+          "setup_time": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Setup Time"
+          },
+          "step_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Step Id",
+            "type": "string"
+          },
+          "time_basis": {
+            "enum": [
+              "ELAPSED",
+              "PERSON_HOUR",
+              "MACHINE_HOUR"
+            ],
+            "title": "Time Basis",
+            "type": "string"
+          },
+          "time_unit": {
+            "enum": [
+              "h",
+              "min"
+            ],
+            "title": "Time Unit",
+            "type": "string"
+          },
+          "valid_from": {
+            "format": "date",
+            "title": "Valid From",
+            "type": "string"
+          },
+          "valid_to": {
+            "anyOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Valid To"
+          }
+        },
+        "required": [
+          "routing_id",
+          "routing_version",
+          "step_id",
+          "product_id",
+          "operation_id",
+          "resource_id",
+          "predecessor_step_ids",
+          "reference_qty",
+          "quantity_unit",
+          "run_time",
+          "time_unit",
+          "time_basis",
+          "valid_from"
+        ],
+        "title": "RoutingStep",
+        "type": "object"
       }
     },
     "additionalProperties": false,
     "properties": {
       "approved_inputs": {
-        "additionalProperties": {
-          "items": {
+        "$ref": "#/$defs/ApprovedInputs"
+      },
+      "base_plan_snapshot": {
+        "anyOf": [
+          {
             "additionalProperties": true,
             "type": "object"
           },
-          "type": "array"
-        },
-        "title": "Approved Inputs",
-        "type": "object"
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Base Plan Snapshot"
       },
       "capacity_snapshot": {
-        "additionalProperties": true,
-        "title": "Capacity Snapshot",
-        "type": "object"
+        "anyOf": [
+          {
+            "$ref": "#/$defs/CapacityRegistrationDraft"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
       },
       "command": {
         "$ref": "#/$defs/PlanCommand"
+      },
+      "contract_version": {
+        "const": "planning-handoff-0.2-draft",
+        "default": "planning-handoff-0.2-draft",
+        "title": "Contract Version",
+        "type": "string"
       },
       "forecast_input_digest": {
         "title": "Forecast Input Digest",
         "type": "string"
       },
+      "forecast_model_version": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Forecast Model Version"
+      },
       "forecast_rows": {
         "items": {
-          "additionalProperties": true,
-          "type": "object"
+          "$ref": "#/$defs/ForecastFact"
         },
         "title": "Forecast Rows",
         "type": "array"
       },
-      "policy_snapshot": {
+      "forecast_runtime_identity": {
         "additionalProperties": true,
+        "title": "Forecast Runtime Identity",
+        "type": "object"
+      },
+      "missing_inputs": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Missing Inputs",
+        "type": "array"
+      },
+      "policy_snapshot": {
+        "additionalProperties": {
+          "type": "string"
+        },
         "title": "Policy Snapshot",
         "type": "object"
       },
       "routing_snapshot": {
-        "additionalProperties": true,
-        "title": "Routing Snapshot",
-        "type": "object"
+        "anyOf": [
+          {
+            "$ref": "#/$defs/CapacityRegistrationDraft"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
       }
     },
     "required": [
       "command",
       "forecast_input_digest",
       "forecast_rows",
-      "approved_inputs",
-      "capacity_snapshot",
-      "routing_snapshot",
-      "policy_snapshot"
+      "approved_inputs"
     ],
     "title": "PlanningInput",
     "type": "object"
   },
   "PlanningOutput": {
+    "$defs": {
+      "ConstraintEvaluation": {
+        "additionalProperties": false,
+        "properties": {
+          "application_state": {
+            "default": "APPLIED",
+            "enum": [
+              "APPLIED",
+              "MISSING_INPUT",
+              "UNSUPPORTED"
+            ],
+            "title": "Application State",
+            "type": "string"
+          },
+          "constraint_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Constraint Id",
+            "type": "string"
+          },
+          "dimension": {
+            "enum": [
+              "QUANTITY",
+              "WORK_HOURS",
+              "EQUIPMENT_HOURS",
+              "MATERIAL",
+              "SAFETY_STOCK",
+              "OTHER"
+            ],
+            "title": "Dimension",
+            "type": "string"
+          },
+          "input_refs": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Input Refs",
+            "type": "array"
+          },
+          "limit_value": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit Value"
+          },
+          "period": {
+            "pattern": "^([1-9][0-9]{3}|0[1-9][0-9]{2}|00[1-9][0-9]|000[1-9])-(0[1-9]|1[0-2])$",
+            "title": "Period",
+            "type": "string"
+          },
+          "plan_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Plan Id",
+            "type": "string"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Product Id"
+          },
+          "reason_codes": {
+            "items": {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+              "type": "string"
+            },
+            "title": "Reason Codes",
+            "type": "array"
+          },
+          "resource_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Resource Id"
+          },
+          "status": {
+            "enum": [
+              "SATISFIED",
+              "VIOLATED",
+              "UNVERIFIED"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "step_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Step Id"
+          },
+          "strength": {
+            "anyOf": [
+              {
+                "enum": [
+                  "HARD",
+                  "SOFT"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Strength"
+          },
+          "time_basis": {
+            "anyOf": [
+              {
+                "enum": [
+                  "ELAPSED",
+                  "PERSON_HOUR",
+                  "MACHINE_HOUR"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Time Basis"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "used_value": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Used Value"
+          }
+        },
+        "required": [
+          "constraint_id",
+          "plan_id",
+          "dimension",
+          "period",
+          "status",
+          "limit_value",
+          "used_value",
+          "unit",
+          "input_refs",
+          "reason_codes"
+        ],
+        "title": "ConstraintEvaluation",
+        "type": "object"
+      },
+      "MaterialRequirement": {
+        "additionalProperties": false,
+        "properties": {
+          "available_qty": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Available Qty"
+          },
+          "input_refs": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Input Refs",
+            "type": "array"
+          },
+          "material_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Material Id",
+            "type": "string"
+          },
+          "period": {
+            "pattern": "^([1-9][0-9]{3}|0[1-9][0-9]{2}|00[1-9][0-9]|000[1-9])-(0[1-9]|1[0-2])$",
+            "title": "Period",
+            "type": "string"
+          },
+          "plan_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Plan Id",
+            "type": "string"
+          },
+          "required_qty": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Required Qty"
+          },
+          "shortage_qty": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shortage Qty"
+          },
+          "unit": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "plan_id",
+          "material_id",
+          "period",
+          "required_qty",
+          "available_qty",
+          "shortage_qty",
+          "unit",
+          "input_refs"
+        ],
+        "title": "MaterialRequirement",
+        "type": "object"
+      },
+      "PlanCandidate": {
+        "additionalProperties": false,
+        "properties": {
+          "feasibility": {
+            "enum": [
+              "FEASIBLE",
+              "UNVERIFIED",
+              "INFEASIBLE"
+            ],
+            "title": "Feasibility",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "plan_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Plan Id",
+            "type": "string"
+          },
+          "plan_type": {
+            "enum": [
+              "BASELINE",
+              "STABLE",
+              "COST_SAVING",
+              "CUSTOM"
+            ],
+            "title": "Plan Type",
+            "type": "string"
+          },
+          "policy_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Ref"
+          },
+          "production": {
+            "items": {
+              "$ref": "#/$defs/ProductionRow"
+            },
+            "minItems": 1,
+            "title": "Production",
+            "type": "array"
+          },
+          "unverified": {
+            "items": {
+              "$ref": "#/$defs/PlanningIssue"
+            },
+            "title": "Unverified",
+            "type": "array"
+          }
+        },
+        "required": [
+          "plan_id",
+          "plan_type",
+          "label",
+          "feasibility",
+          "production",
+          "policy_ref",
+          "unverified"
+        ],
+        "title": "PlanCandidate",
+        "type": "object"
+      },
+      "PlanningIssue": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Code",
+            "type": "string"
+          },
+          "input_refs": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Input Refs",
+            "type": "array"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "PlanningIssue",
+        "type": "object"
+      },
+      "ProductionRow": {
+        "additionalProperties": false,
+        "properties": {
+          "period": {
+            "pattern": "^([1-9][0-9]{3}|0[1-9][0-9]{2}|00[1-9][0-9]|000[1-9])-(0[1-9]|1[0-2])$",
+            "title": "Period",
+            "type": "string"
+          },
+          "product_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "production_qty": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Production Qty",
+            "type": "string"
+          },
+          "unit": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_id",
+          "period",
+          "production_qty",
+          "unit"
+        ],
+        "title": "ProductionRow",
+        "type": "object"
+      }
+    },
     "additionalProperties": false,
     "properties": {
       "constraint_evaluations": {
         "items": {
-          "additionalProperties": true,
-          "type": "object"
+          "$ref": "#/$defs/ConstraintEvaluation"
         },
         "title": "Constraint Evaluations",
         "type": "array"
       },
       "contract_version": {
-        "const": "planning-integration-0.1-draft",
-        "default": "planning-integration-0.1-draft",
+        "const": "planning-handoff-0.2-draft",
+        "default": "planning-handoff-0.2-draft",
         "title": "Contract Version",
         "type": "string"
       },
       "errors": {
         "items": {
-          "additionalProperties": true,
-          "type": "object"
+          "$ref": "#/$defs/PlanningIssue"
         },
         "title": "Errors",
         "type": "array"
       },
       "evidence": {
         "items": {
-          "additionalProperties": true,
-          "type": "object"
+          "$ref": "#/$defs/PlanningIssue"
         },
         "title": "Evidence",
         "type": "array"
       },
       "material_requirements": {
         "items": {
-          "additionalProperties": true,
-          "type": "object"
+          "$ref": "#/$defs/MaterialRequirement"
         },
         "title": "Material Requirements",
         "type": "array"
       },
       "module_version": {
+        "maxLength": 80,
+        "minLength": 1,
         "title": "Module Version",
         "type": "string"
       },
       "plans": {
         "items": {
-          "additionalProperties": true,
-          "type": "object"
+          "$ref": "#/$defs/PlanCandidate"
         },
         "title": "Plans",
         "type": "array"
@@ -455,16 +2198,14 @@
       },
       "unverified": {
         "items": {
-          "additionalProperties": true,
-          "type": "object"
+          "$ref": "#/$defs/PlanningIssue"
         },
         "title": "Unverified",
         "type": "array"
       },
       "warnings": {
         "items": {
-          "additionalProperties": true,
-          "type": "object"
+          "$ref": "#/$defs/PlanningIssue"
         },
         "title": "Warnings",
         "type": "array"
@@ -482,6 +2223,538 @@
       "module_version"
     ],
     "title": "PlanningOutput",
+    "type": "object"
+  },
+  "PlanningReply": {
+    "$defs": {
+      "ConstraintEvaluation": {
+        "additionalProperties": false,
+        "properties": {
+          "application_state": {
+            "default": "APPLIED",
+            "enum": [
+              "APPLIED",
+              "MISSING_INPUT",
+              "UNSUPPORTED"
+            ],
+            "title": "Application State",
+            "type": "string"
+          },
+          "constraint_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Constraint Id",
+            "type": "string"
+          },
+          "dimension": {
+            "enum": [
+              "QUANTITY",
+              "WORK_HOURS",
+              "EQUIPMENT_HOURS",
+              "MATERIAL",
+              "SAFETY_STOCK",
+              "OTHER"
+            ],
+            "title": "Dimension",
+            "type": "string"
+          },
+          "input_refs": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Input Refs",
+            "type": "array"
+          },
+          "limit_value": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit Value"
+          },
+          "period": {
+            "pattern": "^([1-9][0-9]{3}|0[1-9][0-9]{2}|00[1-9][0-9]|000[1-9])-(0[1-9]|1[0-2])$",
+            "title": "Period",
+            "type": "string"
+          },
+          "plan_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Plan Id",
+            "type": "string"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Product Id"
+          },
+          "reason_codes": {
+            "items": {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+              "type": "string"
+            },
+            "title": "Reason Codes",
+            "type": "array"
+          },
+          "resource_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Resource Id"
+          },
+          "status": {
+            "enum": [
+              "SATISFIED",
+              "VIOLATED",
+              "UNVERIFIED"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "step_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Step Id"
+          },
+          "strength": {
+            "anyOf": [
+              {
+                "enum": [
+                  "HARD",
+                  "SOFT"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Strength"
+          },
+          "time_basis": {
+            "anyOf": [
+              {
+                "enum": [
+                  "ELAPSED",
+                  "PERSON_HOUR",
+                  "MACHINE_HOUR"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Time Basis"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "used_value": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Used Value"
+          }
+        },
+        "required": [
+          "constraint_id",
+          "plan_id",
+          "dimension",
+          "period",
+          "status",
+          "limit_value",
+          "used_value",
+          "unit",
+          "input_refs",
+          "reason_codes"
+        ],
+        "title": "ConstraintEvaluation",
+        "type": "object"
+      },
+      "MaterialRequirement": {
+        "additionalProperties": false,
+        "properties": {
+          "available_qty": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Available Qty"
+          },
+          "input_refs": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Input Refs",
+            "type": "array"
+          },
+          "material_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Material Id",
+            "type": "string"
+          },
+          "period": {
+            "pattern": "^([1-9][0-9]{3}|0[1-9][0-9]{2}|00[1-9][0-9]|000[1-9])-(0[1-9]|1[0-2])$",
+            "title": "Period",
+            "type": "string"
+          },
+          "plan_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Plan Id",
+            "type": "string"
+          },
+          "required_qty": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Required Qty"
+          },
+          "shortage_qty": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shortage Qty"
+          },
+          "unit": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "plan_id",
+          "material_id",
+          "period",
+          "required_qty",
+          "available_qty",
+          "shortage_qty",
+          "unit",
+          "input_refs"
+        ],
+        "title": "MaterialRequirement",
+        "type": "object"
+      },
+      "PlanCandidate": {
+        "additionalProperties": false,
+        "properties": {
+          "feasibility": {
+            "enum": [
+              "FEASIBLE",
+              "UNVERIFIED",
+              "INFEASIBLE"
+            ],
+            "title": "Feasibility",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "plan_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Plan Id",
+            "type": "string"
+          },
+          "plan_type": {
+            "enum": [
+              "BASELINE",
+              "STABLE",
+              "COST_SAVING",
+              "CUSTOM"
+            ],
+            "title": "Plan Type",
+            "type": "string"
+          },
+          "policy_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Ref"
+          },
+          "production": {
+            "items": {
+              "$ref": "#/$defs/ProductionRow"
+            },
+            "minItems": 1,
+            "title": "Production",
+            "type": "array"
+          },
+          "unverified": {
+            "items": {
+              "$ref": "#/$defs/PlanningIssue"
+            },
+            "title": "Unverified",
+            "type": "array"
+          }
+        },
+        "required": [
+          "plan_id",
+          "plan_type",
+          "label",
+          "feasibility",
+          "production",
+          "policy_ref",
+          "unverified"
+        ],
+        "title": "PlanCandidate",
+        "type": "object"
+      },
+      "PlanningIssue": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Code",
+            "type": "string"
+          },
+          "input_refs": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Input Refs",
+            "type": "array"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "PlanningIssue",
+        "type": "object"
+      },
+      "PlanningOutput": {
+        "additionalProperties": false,
+        "properties": {
+          "constraint_evaluations": {
+            "items": {
+              "$ref": "#/$defs/ConstraintEvaluation"
+            },
+            "title": "Constraint Evaluations",
+            "type": "array"
+          },
+          "contract_version": {
+            "const": "planning-handoff-0.2-draft",
+            "default": "planning-handoff-0.2-draft",
+            "title": "Contract Version",
+            "type": "string"
+          },
+          "errors": {
+            "items": {
+              "$ref": "#/$defs/PlanningIssue"
+            },
+            "title": "Errors",
+            "type": "array"
+          },
+          "evidence": {
+            "items": {
+              "$ref": "#/$defs/PlanningIssue"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "material_requirements": {
+            "items": {
+              "$ref": "#/$defs/MaterialRequirement"
+            },
+            "title": "Material Requirements",
+            "type": "array"
+          },
+          "module_version": {
+            "maxLength": 80,
+            "minLength": 1,
+            "title": "Module Version",
+            "type": "string"
+          },
+          "plans": {
+            "items": {
+              "$ref": "#/$defs/PlanCandidate"
+            },
+            "title": "Plans",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "OK",
+              "PARTIAL",
+              "INPUT_INVALID",
+              "UNSUPPORTED",
+              "FAILED"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "unverified": {
+            "items": {
+              "$ref": "#/$defs/PlanningIssue"
+            },
+            "title": "Unverified",
+            "type": "array"
+          },
+          "warnings": {
+            "items": {
+              "$ref": "#/$defs/PlanningIssue"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "status",
+          "plans",
+          "constraint_evaluations",
+          "material_requirements",
+          "evidence",
+          "warnings",
+          "unverified",
+          "errors",
+          "module_version"
+        ],
+        "title": "PlanningOutput",
+        "type": "object"
+      },
+      "ProductionRow": {
+        "additionalProperties": false,
+        "properties": {
+          "period": {
+            "pattern": "^([1-9][0-9]{3}|0[1-9][0-9]{2}|00[1-9][0-9]|000[1-9])-(0[1-9]|1[0-2])$",
+            "title": "Period",
+            "type": "string"
+          },
+          "product_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "production_qty": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Production Qty",
+            "type": "string"
+          },
+          "unit": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_id",
+          "period",
+          "production_qty",
+          "unit"
+        ],
+        "title": "ProductionRow",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "approval_available": {
+        "const": false,
+        "default": false,
+        "title": "Approval Available",
+        "type": "boolean"
+      },
+      "contract_version": {
+        "const": "planning-preview-0.2-draft",
+        "default": "planning-preview-0.2-draft",
+        "title": "Contract Version",
+        "type": "string"
+      },
+      "forecast_execution_id": {
+        "format": "uuid",
+        "title": "Forecast Execution Id",
+        "type": "string"
+      },
+      "input_digest": {
+        "title": "Input Digest",
+        "type": "string"
+      },
+      "persisted": {
+        "const": false,
+        "default": false,
+        "title": "Persisted",
+        "type": "boolean"
+      },
+      "result": {
+        "$ref": "#/$defs/PlanningOutput"
+      }
+    },
+    "required": [
+      "forecast_execution_id",
+      "input_digest",
+      "result"
+    ],
+    "title": "PlanningReply",
     "type": "object"
   }
 }

@@ -1,0 +1,20 @@
+{
+  "_note": "SYNTHETIC CONTRACT TEST ONLY. UUIDs are placeholders, not database records. No actual algorithm or approval is proved.",
+  "payload": {
+    "recommended_entity": "monthly_demand",
+    "candidates": [
+      {
+        "entity": "monthly_demand",
+        "score": 0.7,
+        "reasons": [
+          "Synthetic contract example"
+        ]
+      }
+    ],
+    "hold": false,
+    "reasons": [
+      "Manual review required"
+    ],
+    "module_version": "TEST-DOUBLE-ONLY"
+  }
+}

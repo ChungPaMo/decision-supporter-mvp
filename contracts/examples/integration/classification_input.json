@@ -1,0 +1,24 @@
+{
+  "_note": "SYNTHETIC CONTRACT TEST ONLY. UUIDs are placeholders, not database records. No actual algorithm or approval is proved.",
+  "payload": {
+    "filename": "synthetic.csv",
+    "sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "sheets": [
+      {
+        "name": "Sheet1",
+        "columns": [
+          "product_id",
+          "period",
+          "demand_qty"
+        ],
+        "sample_rows": [
+          [
+            "TP-10R",
+            "2026-12",
+            "10000"
+          ]
+        ]
+      }
+    ]
+  }
+}

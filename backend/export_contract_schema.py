@@ -10,7 +10,8 @@ from app import contracts as c
 from app.exports.contract import EXPORT_CONTRACT_VERSION, PlanExportRequest
 from app.forecast.schemas import DevForecastRequest, ForecastResponse
 from app.forecast.runs_schemas import ForecastRunRequest, ForecastRunReply, ForecastHistory, ForecastExecution
-from contracts.interfaces.modules import ClassificationInput, ClassificationOutput, PlanCommand, PlanningInput, PlanningOutput
+from contracts.interfaces.modules import ClassificationInput, ClassificationOutput, PlanCommand, PlanningInput, PlanningOutput, PlanningReply
+from contracts.interfaces.capacity import CapacityRegistrationDraft
 
 ROWS = ["UnitRow", "ProductRow", "MaterialRow", "MonthlyDemandRow", "SalesOrderRow", "BomHeaderRow", "BomLineRow",
         "InventoryRow", "CapacityRow", "ForecastRow"]
@@ -46,7 +47,7 @@ def build_forecast_run() -> str:
 
 def build_modules() -> str:
     return json.dumps({m.__name__: m.model_json_schema() for m in
-                       (ClassificationInput, ClassificationOutput, PlanCommand, PlanningInput, PlanningOutput)},
+                       (ClassificationInput, ClassificationOutput, PlanCommand, PlanningInput, PlanningOutput, PlanningReply, CapacityRegistrationDraft)},
                       ensure_ascii=False, indent=2, sort_keys=True) + "\n"
 
 

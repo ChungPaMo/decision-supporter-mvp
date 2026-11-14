@@ -1,0 +1,75 @@
+{
+  "_note": "SYNTHETIC CONTRACT TEST ONLY. UUIDs are placeholders, not database records. No actual algorithm or approval is proved.",
+  "payload": {
+    "resources": [
+      {
+        "resource_id": "M1",
+        "resource_name": "Synthetic packaging machine",
+        "kind": "EQUIPMENT",
+        "time_basis": "MACHINE_HOUR",
+        "parallel_units": 1
+      },
+      {
+        "resource_id": "L1",
+        "resource_name": "Synthetic two-person pool",
+        "kind": "LABOR_POOL",
+        "time_basis": "PERSON_HOUR",
+        "parallel_units": 2
+      }
+    ],
+    "quantity_limits": [
+      {
+        "capacity_id": "Q-TP",
+        "product_id": "TP-10R",
+        "period": "2027-01",
+        "limit_qty": "10500",
+        "unit": "EA",
+        "accounting_point": "FINISHED_OUTPUT"
+      }
+    ],
+    "hours_budgets": [
+      {
+        "capacity_id": "H-M1",
+        "resource_id": "M1",
+        "period": "2027-01",
+        "regular_hours": "160",
+        "overtime_hours_limit": "20",
+        "unit": "h",
+        "time_basis": "MACHINE_HOUR",
+        "availability_basis": "NET"
+      },
+      {
+        "capacity_id": "H-L1",
+        "resource_id": "L1",
+        "period": "2027-01",
+        "regular_hours": "170",
+        "overtime_hours_limit": "20",
+        "unit": "h",
+        "time_basis": "PERSON_HOUR",
+        "availability_basis": "NET"
+      }
+    ],
+    "routing_steps": [
+      {
+        "routing_id": "RT-TP",
+        "routing_version": "V1",
+        "step_id": "PACK",
+        "product_id": "TP-10R",
+        "operation_id": "PACK",
+        "resource_id": "M1",
+        "predecessor_step_ids": [],
+        "reference_qty": "60",
+        "quantity_unit": "EA",
+        "run_time": "1",
+        "time_unit": "h",
+        "time_basis": "MACHINE_HOUR",
+        "valid_from": "2025-01-01"
+      }
+    ],
+    "unresolved_policy_refs": [
+      "SETUP-POLICY",
+      "SHARED-RESOURCE",
+      "ALTERNATIVE-ALLOCATION"
+    ]
+  }
+}

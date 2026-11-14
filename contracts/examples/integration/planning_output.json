@@ -1,0 +1,104 @@
+{
+  "_note": "SYNTHETIC CONTRACT TEST ONLY. UUIDs are placeholders, not database records. No actual algorithm or approval is proved.",
+  "payload": {
+    "status": "PARTIAL",
+    "plans": [
+      {
+        "plan_id": "BASE",
+        "plan_type": "BASELINE",
+        "label": "BASE",
+        "feasibility": "UNVERIFIED",
+        "production": [
+          {
+            "product_id": "TP-10R",
+            "period": "2027-01",
+            "production_qty": "9000",
+            "unit": "EA"
+          }
+        ],
+        "policy_ref": null,
+        "unverified": [
+          {
+            "code": "POLICY_NOT_CONFIRMED",
+            "message": "Synthetic test double; policy is not confirmed",
+            "input_refs": []
+          }
+        ]
+      },
+      {
+        "plan_id": "COST",
+        "plan_type": "COST_SAVING",
+        "label": "COST",
+        "feasibility": "UNVERIFIED",
+        "production": [
+          {
+            "product_id": "TP-10R",
+            "period": "2027-01",
+            "production_qty": "8000",
+            "unit": "EA"
+          }
+        ],
+        "policy_ref": null,
+        "unverified": [
+          {
+            "code": "POLICY_NOT_CONFIRMED",
+            "message": "Synthetic test double; policy is not confirmed",
+            "input_refs": []
+          }
+        ]
+      }
+    ],
+    "constraint_evaluations": [
+      {
+        "constraint_id": "CAPA-MISSING",
+        "plan_id": "BASE",
+        "dimension": "EQUIPMENT_HOURS",
+        "period": "2027-01",
+        "status": "UNVERIFIED",
+        "limit_value": null,
+        "used_value": null,
+        "unit": "h",
+        "time_basis": "MACHINE_HOUR",
+        "input_refs": [],
+        "reason_codes": [
+          "MISSING_INPUT"
+        ],
+        "application_state": "MISSING_INPUT"
+      },
+      {
+        "constraint_id": "CAPA-MISSING",
+        "plan_id": "COST",
+        "dimension": "EQUIPMENT_HOURS",
+        "period": "2027-01",
+        "status": "UNVERIFIED",
+        "limit_value": null,
+        "used_value": null,
+        "unit": "h",
+        "time_basis": "MACHINE_HOUR",
+        "input_refs": [],
+        "reason_codes": [
+          "MISSING_INPUT"
+        ],
+        "application_state": "MISSING_INPUT"
+      }
+    ],
+    "material_requirements": [],
+    "evidence": [],
+    "warnings": [
+      {
+        "code": "POLICY_NOT_CONFIRMED",
+        "message": "Synthetic test double; policy is not confirmed",
+        "input_refs": []
+      }
+    ],
+    "unverified": [
+      {
+        "code": "POLICY_NOT_CONFIRMED",
+        "message": "Synthetic test double; policy is not confirmed",
+        "input_refs": []
+      }
+    ],
+    "errors": [],
+    "module_version": "TEST-DOUBLE-ONLY"
+  }
+}

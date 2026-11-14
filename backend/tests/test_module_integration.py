@@ -7,6 +7,17 @@ def test_module_schema_is_generated_from_the_handoff_models():
     assert (OUT.parent / 'schemas' / 'module_interfaces_draft.json').read_text(encoding='utf-8') == build_modules()
 
 
+def test_module_metadata_reflects_owned_module_availability(monkeypatch):
+    import file_classifier
+    from engine import planning
+    monkeypatch.setattr(file_classifier, 'AVAILABLE', True)
+    monkeypatch.setattr(planning, 'AVAILABLE', True)
+    with TestClient(app) as client: response = client.get('/integrations/modules')
+    assert response.json()['file_classifier'] == 'IMPLEMENTED'
+    assert response.json()['planning'] == 'IMPLEMENTED'
+    assert response.json()['plan_persistence'] == 'NOT_IMPLEMENTED'
+
+
 def test_unimplemented_modules_are_errors_and_never_forecast_or_plan_results():
     with TestClient(app) as client:
         result = client.post('/classifications', json={'filename': 'synthetic.csv', 'sha256': '0' * 64,
@@ -40,3 +51,20 @@ def test_a_delivered_classifier_can_connect_without_bypassing_approval(monkeypat
         assert response.status_code == 200
         assert response.json()['recommended_entity'] == 'product'
         assert 'approved' not in response.text.lower() and 'batch_id' not in response.text
+
+
+def test_file_descriptor_omits_samples_without_consent_and_preserves_hold(monkeypatch):
+    import file_classifier
+    seen = []
+    def classify(request):
+        seen.append(request)
+        return {'recommended_entity': None, 'candidates': [], 'hold': True, 'reasons': ['ambiguous test double'], 'module_version': 'TEST-ONLY'}
+    monkeypatch.setattr(file_classifier, 'classify', classify)
+    with TestClient(app) as client:
+        for count in (0, 1):
+            result = client.post('/classifications/file', files={'file': ('a.csv', b'product_id,qty\nTP-10R,10\n')}, data={'sample_row_limit': count})
+            assert result.status_code == 200 and result.json()['hold'] is True
+    assert seen[0].sheets[0].sample_rows == []
+    assert seen[0].format == 'csv' and seen[0].sheets[0].name is None
+    assert seen[1].sheets[0].sample_rows == [['TP-10R', '10']]
+    assert seen[0].sha256 == seen[1].sha256

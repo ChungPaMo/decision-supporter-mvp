@@ -1,0 +1,55 @@
+{
+  "_note": "SYNTHETIC CONTRACT TEST ONLY. UUIDs are placeholders, not database records. No actual algorithm or approval is proved.",
+  "payload": {
+    "command": {
+      "forecast_execution_id": "00000000-0000-4000-8000-000000000001",
+      "product_ids": [
+        "TP-10R"
+      ],
+      "target_month": "2027-01",
+      "as_of_date": "2026-12-31"
+    },
+    "forecast_input_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "forecast_rows": [
+      {
+        "product_id": "TP-10R",
+        "target_month": "2027-01",
+        "p50": "10000",
+        "p80": "12000",
+        "p90": "13500",
+        "unit": "EA"
+      }
+    ],
+    "approved_inputs": {
+      "products": [
+        {
+          "product_id": "TP-10R",
+          "product_name": "Synthetic tissue pack",
+          "base_unit": "EA",
+          "product_type": null,
+          "safety_stock_qty": "1000",
+          "source_type": "SYNTHETIC",
+          "batch_id": "00000000-0000-4000-8000-000000000002"
+        }
+      ],
+      "materials": [],
+      "boms": [],
+      "inventory": [],
+      "sources": [
+        {
+          "batch_id": "00000000-0000-4000-8000-000000000002",
+          "batch_version": 1,
+          "entity": "product",
+          "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "result_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "approved_at": "2026-12-31T00:00:00Z"
+        }
+      ]
+    },
+    "missing_inputs": [
+      "CAPACITY_NOT_REGISTERED",
+      "ROUTING_NOT_REGISTERED",
+      "POLICY_NOT_CONFIRMED"
+    ]
+  }
+}

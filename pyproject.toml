@@ -10,5 +10,5 @@ dependencies = ["pydantic==2.14.2"]
 
 [tool.setuptools.packages.find]
 where = ["modules/planning_engine", "modules/file_classifier/src", "."]
-include = ["engine*", "file_classifier*", "contracts.interfaces*"]
+include = ["engine*", "mps*", "rccp*", "mrp*", "what_if*", "file_classifier*", "contracts.interfaces*"]
 namespaces = true

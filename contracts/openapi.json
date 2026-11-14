@@ -489,6 +489,27 @@
         "title": "Blocker",
         "type": "object"
       },
+      "Body_classify_file_classifications_file_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          },
+          "sample_row_limit": {
+            "default": 0,
+            "maximum": 20.0,
+            "minimum": 0.0,
+            "title": "Sample Row Limit",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_classify_file_classifications_file_post",
+        "type": "object"
+      },
       "Body_create_batch_batches_post": {
         "properties": {
           "column_overrides": {
@@ -927,9 +948,24 @@
           "filename": {
             "maxLength": 200,
             "minLength": 1,
-            "pattern": "^[^/\\\\]+$",
+            "pattern": "^[^/\\\\:\\x00-\\x1f]+$",
             "title": "Filename",
             "type": "string"
+          },
+          "format": {
+            "anyOf": [
+              {
+                "enum": [
+                  "csv",
+                  "xlsx"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Format"
           },
           "sha256": {
             "pattern": "^[0-9a-f]{64}$",
@@ -975,6 +1011,8 @@
             "type": "boolean"
           },
           "module_version": {
+            "maxLength": 80,
+            "minLength": 1,
             "title": "Module Version",
             "type": "string"
           },
@@ -1012,6 +1050,189 @@
           "module_version"
         ],
         "title": "ClassificationOutput",
+        "type": "object"
+      },
+      "ConstraintEvaluation": {
+        "additionalProperties": false,
+        "properties": {
+          "application_state": {
+            "default": "APPLIED",
+            "enum": [
+              "APPLIED",
+              "MISSING_INPUT",
+              "UNSUPPORTED"
+            ],
+            "title": "Application State",
+            "type": "string"
+          },
+          "constraint_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Constraint Id",
+            "type": "string"
+          },
+          "dimension": {
+            "enum": [
+              "QUANTITY",
+              "WORK_HOURS",
+              "EQUIPMENT_HOURS",
+              "MATERIAL",
+              "SAFETY_STOCK",
+              "OTHER"
+            ],
+            "title": "Dimension",
+            "type": "string"
+          },
+          "input_refs": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Input Refs",
+            "type": "array"
+          },
+          "limit_value": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Limit Value"
+          },
+          "period": {
+            "pattern": "^([1-9][0-9]{3}|0[1-9][0-9]{2}|00[1-9][0-9]|000[1-9])-(0[1-9]|1[0-2])$",
+            "title": "Period",
+            "type": "string"
+          },
+          "plan_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Plan Id",
+            "type": "string"
+          },
+          "product_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Product Id"
+          },
+          "reason_codes": {
+            "items": {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+              "type": "string"
+            },
+            "title": "Reason Codes",
+            "type": "array"
+          },
+          "resource_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resource Id"
+          },
+          "status": {
+            "enum": [
+              "SATISFIED",
+              "VIOLATED",
+              "UNVERIFIED"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "step_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Step Id"
+          },
+          "strength": {
+            "anyOf": [
+              {
+                "enum": [
+                  "HARD",
+                  "SOFT"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Strength"
+          },
+          "time_basis": {
+            "anyOf": [
+              {
+                "enum": [
+                  "ELAPSED",
+                  "PERSON_HOUR",
+                  "MACHINE_HOUR"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Time Basis"
+          },
+          "unit": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Unit"
+          },
+          "used_value": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Used Value"
+          }
+        },
+        "required": [
+          "constraint_id",
+          "plan_id",
+          "dimension",
+          "period",
+          "status",
+          "limit_value",
+          "used_value",
+          "unit",
+          "input_refs",
+          "reason_codes"
+        ],
+        "title": "ConstraintEvaluation",
         "type": "object"
       },
       "ConstraintResult": {
@@ -1346,6 +1567,8 @@
       },
       "ErrorCode": {
         "enum": [
+          "PLAN_INPUT_UNAVAILABLE",
+          "PLAN_HISTORY_NOT_IMPLEMENTED",
           "MODULE_NOT_IMPLEMENTED",
           "MODULE_ERROR",
           "REQUEST_INVALID",
@@ -2850,6 +3073,156 @@
         "title": "MaterialRecordOut",
         "type": "object"
       },
+      "MaterialRequirement": {
+        "additionalProperties": false,
+        "properties": {
+          "available_qty": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Available Qty"
+          },
+          "input_refs": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Input Refs",
+            "type": "array"
+          },
+          "material_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Material Id",
+            "type": "string"
+          },
+          "period": {
+            "pattern": "^([1-9][0-9]{3}|0[1-9][0-9]{2}|00[1-9][0-9]|000[1-9])-(0[1-9]|1[0-2])$",
+            "title": "Period",
+            "type": "string"
+          },
+          "plan_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Plan Id",
+            "type": "string"
+          },
+          "required_qty": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Required Qty"
+          },
+          "shortage_qty": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Shortage Qty"
+          },
+          "unit": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "plan_id",
+          "material_id",
+          "period",
+          "required_qty",
+          "available_qty",
+          "shortage_qty",
+          "unit",
+          "input_refs"
+        ],
+        "title": "MaterialRequirement",
+        "type": "object"
+      },
+      "PlanCandidate": {
+        "additionalProperties": false,
+        "properties": {
+          "feasibility": {
+            "enum": [
+              "FEASIBLE",
+              "UNVERIFIED",
+              "INFEASIBLE"
+            ],
+            "title": "Feasibility",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "plan_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Plan Id",
+            "type": "string"
+          },
+          "plan_type": {
+            "enum": [
+              "BASELINE",
+              "STABLE",
+              "COST_SAVING",
+              "CUSTOM"
+            ],
+            "title": "Plan Type",
+            "type": "string"
+          },
+          "policy_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Policy Ref"
+          },
+          "production": {
+            "items": {
+              "$ref": "#/components/schemas/ProductionRow"
+            },
+            "minItems": 1,
+            "title": "Production",
+            "type": "array"
+          },
+          "unverified": {
+            "items": {
+              "$ref": "#/components/schemas/PlanningIssue"
+            },
+            "title": "Unverified",
+            "type": "array"
+          }
+        },
+        "required": [
+          "plan_id",
+          "plan_type",
+          "label",
+          "feasibility",
+          "production",
+          "policy_ref",
+          "unverified"
+        ],
+        "title": "PlanCandidate",
+        "type": "object"
+      },
       "PlanCommand": {
         "additionalProperties": false,
         "properties": {
@@ -2908,7 +3281,7 @@
             "type": "string"
           },
           "target_month": {
-            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+            "pattern": "^([1-9][0-9]{3}|0[1-9][0-9]{2}|00[1-9][0-9]|000[1-9])-(0[1-9]|1[0-2])$",
             "title": "Target Month",
             "type": "string"
           }
@@ -3107,55 +3480,79 @@
         "title": "PlanResult",
         "type": "object"
       },
+      "PlanningIssue": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Code",
+            "type": "string"
+          },
+          "input_refs": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Input Refs",
+            "type": "array"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "message"
+        ],
+        "title": "PlanningIssue",
+        "type": "object"
+      },
       "PlanningOutput": {
         "additionalProperties": false,
         "properties": {
           "constraint_evaluations": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/ConstraintEvaluation"
             },
             "title": "Constraint Evaluations",
             "type": "array"
           },
           "contract_version": {
-            "const": "planning-integration-0.1-draft",
-            "default": "planning-integration-0.1-draft",
+            "const": "planning-handoff-0.2-draft",
+            "default": "planning-handoff-0.2-draft",
             "title": "Contract Version",
             "type": "string"
           },
           "errors": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/PlanningIssue"
             },
             "title": "Errors",
             "type": "array"
           },
           "evidence": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/PlanningIssue"
             },
             "title": "Evidence",
             "type": "array"
           },
           "material_requirements": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/MaterialRequirement"
             },
             "title": "Material Requirements",
             "type": "array"
           },
           "module_version": {
+            "maxLength": 80,
+            "minLength": 1,
             "title": "Module Version",
             "type": "string"
           },
           "plans": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/PlanCandidate"
             },
             "title": "Plans",
             "type": "array"
@@ -3173,16 +3570,14 @@
           },
           "unverified": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/PlanningIssue"
             },
             "title": "Unverified",
             "type": "array"
           },
           "warnings": {
             "items": {
-              "additionalProperties": true,
-              "type": "object"
+              "$ref": "#/components/schemas/PlanningIssue"
             },
             "title": "Warnings",
             "type": "array"
@@ -3200,6 +3595,48 @@
           "module_version"
         ],
         "title": "PlanningOutput",
+        "type": "object"
+      },
+      "PlanningReply": {
+        "additionalProperties": false,
+        "properties": {
+          "approval_available": {
+            "const": false,
+            "default": false,
+            "title": "Approval Available",
+            "type": "boolean"
+          },
+          "contract_version": {
+            "const": "planning-preview-0.2-draft",
+            "default": "planning-preview-0.2-draft",
+            "title": "Contract Version",
+            "type": "string"
+          },
+          "forecast_execution_id": {
+            "format": "uuid",
+            "title": "Forecast Execution Id",
+            "type": "string"
+          },
+          "input_digest": {
+            "title": "Input Digest",
+            "type": "string"
+          },
+          "persisted": {
+            "const": false,
+            "default": false,
+            "title": "Persisted",
+            "type": "boolean"
+          },
+          "result": {
+            "$ref": "#/components/schemas/PlanningOutput"
+          }
+        },
+        "required": [
+          "forecast_execution_id",
+          "input_digest",
+          "result"
+        ],
+        "title": "PlanningReply",
         "type": "object"
       },
       "PreviewOut": {
@@ -3506,6 +3943,39 @@
         "title": "ProductionLine",
         "type": "object"
       },
+      "ProductionRow": {
+        "additionalProperties": false,
+        "properties": {
+          "period": {
+            "pattern": "^([1-9][0-9]{3}|0[1-9][0-9]{2}|00[1-9][0-9]|000[1-9])-(0[1-9]|1[0-2])$",
+            "title": "Period",
+            "type": "string"
+          },
+          "product_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Product Id",
+            "type": "string"
+          },
+          "production_qty": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Production Qty",
+            "type": "string"
+          },
+          "unit": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_id",
+          "period",
+          "production_qty",
+          "unit"
+        ],
+        "title": "ProductionRow",
+        "type": "object"
+      },
       "Quantiles": {
         "additionalProperties": true,
         "properties": {
@@ -3788,10 +4258,17 @@
             "type": "array"
           },
           "name": {
-            "maxLength": 200,
-            "minLength": 1,
-            "title": "Name",
-            "type": "string"
+            "anyOf": [
+              {
+                "maxLength": 200,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
           },
           "sample_rows": {
             "default": [],
@@ -4976,6 +5453,117 @@
         ]
       }
     },
+    "/classifications/file": {
+      "post": {
+        "operationId": "classify_file_classifications_file_post",
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_classify_file_classifications_file_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClassificationOutput"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          }
+        },
+        "summary": "원본 파일을 분류 DTO로 변환 (샘플 행은 명시적으로 허용한 만큼만, 저장 없음)",
+        "tags": [
+          "module-integration"
+        ]
+      }
+    },
     "/demand/monthly": {
       "get": {
         "operationId": "list_monthly_demand_demand_monthly_get",
@@ -6126,7 +6714,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PlanningOutput"
+                  "$ref": "#/components/schemas/PlanningReply"
                 }
               }
             },
@@ -6176,21 +6764,37 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/PlanningReply"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    }
+                  ],
+                  "title": "Response 422 Create Plan Plans Post"
                 }
               }
             },
-            "description": "오류 (detail.code 참고)"
+            "description": "Unprocessable Entity"
           },
           "500": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/PlanningReply"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    }
+                  ],
+                  "title": "Response 500 Create Plan Plans Post"
                 }
               }
             },
-            "description": "오류 (detail.code 참고)"
+            "description": "Internal Server Error"
           },
           "501": {
             "content": {
@@ -6237,7 +6841,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/PlanningOutput"
+                  "$ref": "#/components/schemas/PlanningReply"
                 }
               }
             },
@@ -6287,21 +6891,37 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/PlanningReply"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    }
+                  ],
+                  "title": "Response 422 What If Plans What If Post"
                 }
               }
             },
-            "description": "오류 (detail.code 참고)"
+            "description": "Unprocessable Entity"
           },
           "500": {
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
+                  "anyOf": [
+                    {
+                      "$ref": "#/components/schemas/PlanningReply"
+                    },
+                    {
+                      "$ref": "#/components/schemas/ErrorResponse"
+                    }
+                  ],
+                  "title": "Response 500 What If Plans What If Post"
                 }
               }
             },
-            "description": "오류 (detail.code 참고)"
+            "description": "Internal Server Error"
           },
           "501": {
             "content": {

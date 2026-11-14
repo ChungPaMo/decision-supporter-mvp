@@ -200,3 +200,8 @@ CORS_ALLOW_ORIGINS=http://localhost:5173
 ## Monorepo module handoff (draft)
 
 `/integrations/modules`: capability metadata. `/classifications`: MODULE_NOT_IMPLEMENTED (501) until the classifier is delivered; MODULE_ERROR (500) on module failures. `/plans` and `/plans/what-if`: MODULE_NOT_IMPLEMENTED (501); no plan calculation, storage or formal approval. Manual entity selection and the existing batch/forecast APIs remain available. See INTEGRATION_CONTRACT.md.
+
+
+## Final handoff draft additions
+
+`/classifications/file` builds the bounded classification DTO from an uploaded file without saving. sample_row_limit=0 by default; maximum 20. `/plans` and `/plans/what-if` preserve their paths. Read-only successful replies explicitly set persisted=false and approval_available=false. MODULE_NOT_IMPLEMENTED remains 501 until a module is delivered; PLAN_INPUT_UNAVAILABLE is 409; PLAN_HISTORY_NOT_IMPLEMENTED is 501 until saved base plans exist. Failure statuses are 422/500, never successful plan approvals. See TEAM_HANDOFF.md.

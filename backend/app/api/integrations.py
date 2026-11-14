@@ -1,16 +1,25 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, File, Form, UploadFile
+from pydantic import ValidationError
+from fastapi.responses import JSONResponse
 
 from app.errors import ERROR_RESPONSES
 from app.integrations import modules
-from contracts.interfaces.modules import ClassificationInput, ClassificationOutput, PlanCommand, PlanningOutput
+from app.integrations import planning as plan_adapter
+from app.errors import ApiError, ErrorCode, ErrorResponse
+from contracts.interfaces.modules import ClassificationInput, ClassificationOutput, PlanCommand, PlanningReply
+from app.ingest.parsing import MAX_BYTES, FileError, parse_file
 
 router = APIRouter(tags=['module-integration'], responses=ERROR_RESPONSES)
 
 
 @router.get('/integrations/modules', summary='실제 연결 상태와 미구현 모듈 확인')
 def capabilities():
+    import file_classifier
+    from engine import planning
     return {'contract_version': 'module-capabilities-0.1', 'forecast': 'IMPLEMENTED',
-            'file_classifier': 'NOT_IMPLEMENTED', 'planning': 'NOT_IMPLEMENTED',
+            'file_classifier': 'IMPLEMENTED' if getattr(file_classifier, 'AVAILABLE', False) else 'NOT_IMPLEMENTED',
+            'planning': 'IMPLEMENTED' if planning.AVAILABLE else 'NOT_IMPLEMENTED', 'planning_api': 'READ_ONLY_PREVIEW',
+            'capacity_registration': 'CONTRACT_ONLY',
             'plan_persistence': 'NOT_IMPLEMENTED', 'formal_plan_approval': 'NOT_IMPLEMENTED'}
 
 
@@ -20,13 +29,39 @@ def classify(body: ClassificationInput):
     return modules.classify(body)
 
 
-@router.post('/plans', response_model=PlanningOutput,
+@router.post('/classifications/file', response_model=ClassificationOutput,
+             summary='원본 파일을 분류 DTO로 변환 (샘플 행은 명시적으로 허용한 만큼만, 저장 없음)')
+async def classify_file(file: UploadFile = File(...), sample_row_limit: int = Form(0, ge=0, le=20)):
+    try:
+        parsed = parse_file(file.filename or '', await file.read(MAX_BYTES + 1))
+        descriptor = ClassificationInput(filename=parsed.filename, sha256=parsed.sha256, format=parsed.format, sheets=[
+            {'name': sheet.name or None, 'columns': [col.display for col in sheet.header],
+             'sample_rows': [[cell.value for cell in row.cells] for row in sheet.rows[:sample_row_limit]]}
+            for sheet in parsed.sheets])
+    except FileError as exc:
+        raise ApiError(exc.http_status, ErrorCode(exc.code), exc.message) from None
+    except ValidationError:
+        raise ApiError(422, ErrorCode.REQUEST_INVALID, '분류 입력 한도(20시트·100열·20행·셀 500자)를 확인하세요.') from None
+    return modules.classify(descriptor)
+
+
+def plan_reply(body):
+    reply = plan_adapter.execute(body, provider_factory=plan_adapter.get_source_provider)
+    status = {'INPUT_INVALID': 422, 'UNSUPPORTED': 422, 'FAILED': 500}.get(reply.result.status, 200)
+    return JSONResponse(status_code=status, content=reply.model_dump(mode='json'))
+
+
+@router.post('/plans', response_model=PlanningReply,
+             responses={422: {'model': PlanningReply | ErrorResponse}, 500: {'model': PlanningReply | ErrorResponse}},
              summary='실제 예측 실행 ID를 참조하는 계획 진입점 (현재 501, 저장 없음)')
 def create_plan(body: PlanCommand):
-    modules.require_planning()
+    if body.scenario != 'BASE': raise ApiError(422, ErrorCode.REQUEST_INVALID, 'What-if는 /plans/what-if를 사용하세요.')
+    return plan_reply(body)
 
 
-@router.post('/plans/what-if', response_model=PlanningOutput,
+@router.post('/plans/what-if', response_model=PlanningReply,
+             responses={422: {'model': PlanningReply | ErrorResponse}, 500: {'model': PlanningReply | ErrorResponse}},
              summary='저장된 기준 계획의 What-if 진입점 (현재 501)')
 def what_if(body: PlanCommand):
-    modules.require_planning()
+    if body.scenario != 'WHAT_IF': raise ApiError(422, ErrorCode.REQUEST_INVALID, 'WHAT_IF 시나리오와 기준 계획 ID가 필요합니다.')
+    return plan_reply(body)
