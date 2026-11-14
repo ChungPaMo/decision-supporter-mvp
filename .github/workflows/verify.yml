@@ -1,0 +1,24 @@
+name: verify-monorepo
+on: [push, pull_request]
+jobs:
+  non-destructive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: pip install -c infrastructure/python-constraints.txt -r backend/requirements-forecast.txt
+      - run: python -m pytest --no-db -q --tb=short
+      - run: pip check
+      - run: python scripts/security_check.py
+      - run: npm ci --prefix frontend
+      - run: npm run type-check --prefix frontend
+      - run: npm run build --prefix frontend
+      - run: node frontend/node_modules/@playwright/test/cli.js install --with-deps chromium
+      - run: python tests/e2e/run_ui_e2e.py

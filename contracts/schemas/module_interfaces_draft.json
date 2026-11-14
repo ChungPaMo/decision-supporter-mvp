@@ -1,0 +1,487 @@
+{
+  "ClassificationInput": {
+    "$defs": {
+      "SheetSample": {
+        "additionalProperties": false,
+        "properties": {
+          "columns": {
+            "items": {
+              "maxLength": 200,
+              "type": "string"
+            },
+            "maxItems": 100,
+            "title": "Columns",
+            "type": "array"
+          },
+          "name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "sample_rows": {
+            "default": [],
+            "items": {
+              "items": {
+                "anyOf": [
+                  {
+                    "maxLength": 500,
+                    "type": "string"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "type": "array"
+            },
+            "maxItems": 20,
+            "title": "Sample Rows",
+            "type": "array"
+          }
+        },
+        "required": [
+          "name",
+          "columns"
+        ],
+        "title": "SheetSample",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "contract_version": {
+        "const": "classification-0.1-draft",
+        "default": "classification-0.1-draft",
+        "title": "Contract Version",
+        "type": "string"
+      },
+      "filename": {
+        "maxLength": 200,
+        "minLength": 1,
+        "pattern": "^[^/\\\\]+$",
+        "title": "Filename",
+        "type": "string"
+      },
+      "sha256": {
+        "pattern": "^[0-9a-f]{64}$",
+        "title": "Sha256",
+        "type": "string"
+      },
+      "sheets": {
+        "items": {
+          "$ref": "#/$defs/SheetSample"
+        },
+        "maxItems": 20,
+        "minItems": 1,
+        "title": "Sheets",
+        "type": "array"
+      }
+    },
+    "required": [
+      "filename",
+      "sha256",
+      "sheets"
+    ],
+    "title": "ClassificationInput",
+    "type": "object"
+  },
+  "ClassificationOutput": {
+    "$defs": {
+      "ClassificationCandidate": {
+        "additionalProperties": false,
+        "properties": {
+          "entity": {
+            "enum": [
+              "product",
+              "material",
+              "bom",
+              "inventory",
+              "monthly_demand"
+            ],
+            "title": "Entity",
+            "type": "string"
+          },
+          "reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Reasons",
+            "type": "array"
+          },
+          "score": {
+            "maximum": 1,
+            "minimum": 0,
+            "title": "Score",
+            "type": "number"
+          }
+        },
+        "required": [
+          "entity",
+          "score",
+          "reasons"
+        ],
+        "title": "ClassificationCandidate",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "candidates": {
+        "items": {
+          "$ref": "#/$defs/ClassificationCandidate"
+        },
+        "title": "Candidates",
+        "type": "array"
+      },
+      "contract_version": {
+        "const": "classification-0.1-draft",
+        "default": "classification-0.1-draft",
+        "title": "Contract Version",
+        "type": "string"
+      },
+      "hold": {
+        "title": "Hold",
+        "type": "boolean"
+      },
+      "module_version": {
+        "title": "Module Version",
+        "type": "string"
+      },
+      "reasons": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Reasons",
+        "type": "array"
+      },
+      "recommended_entity": {
+        "anyOf": [
+          {
+            "enum": [
+              "product",
+              "material",
+              "bom",
+              "inventory",
+              "monthly_demand"
+            ],
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Recommended Entity"
+      }
+    },
+    "required": [
+      "recommended_entity",
+      "candidates",
+      "hold",
+      "reasons",
+      "module_version"
+    ],
+    "title": "ClassificationOutput",
+    "type": "object"
+  },
+  "PlanCommand": {
+    "additionalProperties": false,
+    "properties": {
+      "as_of_date": {
+        "format": "date",
+        "title": "As Of Date",
+        "type": "string"
+      },
+      "base_plan_execution_id": {
+        "anyOf": [
+          {
+            "format": "uuid",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Base Plan Execution Id"
+      },
+      "contract_version": {
+        "const": "planning-integration-0.1-draft",
+        "default": "planning-integration-0.1-draft",
+        "title": "Contract Version",
+        "type": "string"
+      },
+      "forecast_execution_id": {
+        "format": "uuid",
+        "title": "Forecast Execution Id",
+        "type": "string"
+      },
+      "overrides": {
+        "additionalProperties": {
+          "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+          "type": "string"
+        },
+        "title": "Overrides",
+        "type": "object"
+      },
+      "product_ids": {
+        "items": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+          "type": "string"
+        },
+        "minItems": 1,
+        "title": "Product Ids",
+        "type": "array"
+      },
+      "scenario": {
+        "default": "BASE",
+        "enum": [
+          "BASE",
+          "WHAT_IF"
+        ],
+        "title": "Scenario",
+        "type": "string"
+      },
+      "target_month": {
+        "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+        "title": "Target Month",
+        "type": "string"
+      }
+    },
+    "required": [
+      "forecast_execution_id",
+      "product_ids",
+      "target_month",
+      "as_of_date"
+    ],
+    "title": "PlanCommand",
+    "type": "object"
+  },
+  "PlanningInput": {
+    "$defs": {
+      "PlanCommand": {
+        "additionalProperties": false,
+        "properties": {
+          "as_of_date": {
+            "format": "date",
+            "title": "As Of Date",
+            "type": "string"
+          },
+          "base_plan_execution_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Base Plan Execution Id"
+          },
+          "contract_version": {
+            "const": "planning-integration-0.1-draft",
+            "default": "planning-integration-0.1-draft",
+            "title": "Contract Version",
+            "type": "string"
+          },
+          "forecast_execution_id": {
+            "format": "uuid",
+            "title": "Forecast Execution Id",
+            "type": "string"
+          },
+          "overrides": {
+            "additionalProperties": {
+              "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+              "type": "string"
+            },
+            "title": "Overrides",
+            "type": "object"
+          },
+          "product_ids": {
+            "items": {
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Product Ids",
+            "type": "array"
+          },
+          "scenario": {
+            "default": "BASE",
+            "enum": [
+              "BASE",
+              "WHAT_IF"
+            ],
+            "title": "Scenario",
+            "type": "string"
+          },
+          "target_month": {
+            "pattern": "^\\d{4}-(0[1-9]|1[0-2])$",
+            "title": "Target Month",
+            "type": "string"
+          }
+        },
+        "required": [
+          "forecast_execution_id",
+          "product_ids",
+          "target_month",
+          "as_of_date"
+        ],
+        "title": "PlanCommand",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "approved_inputs": {
+        "additionalProperties": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "title": "Approved Inputs",
+        "type": "object"
+      },
+      "capacity_snapshot": {
+        "additionalProperties": true,
+        "title": "Capacity Snapshot",
+        "type": "object"
+      },
+      "command": {
+        "$ref": "#/$defs/PlanCommand"
+      },
+      "forecast_input_digest": {
+        "title": "Forecast Input Digest",
+        "type": "string"
+      },
+      "forecast_rows": {
+        "items": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Forecast Rows",
+        "type": "array"
+      },
+      "policy_snapshot": {
+        "additionalProperties": true,
+        "title": "Policy Snapshot",
+        "type": "object"
+      },
+      "routing_snapshot": {
+        "additionalProperties": true,
+        "title": "Routing Snapshot",
+        "type": "object"
+      }
+    },
+    "required": [
+      "command",
+      "forecast_input_digest",
+      "forecast_rows",
+      "approved_inputs",
+      "capacity_snapshot",
+      "routing_snapshot",
+      "policy_snapshot"
+    ],
+    "title": "PlanningInput",
+    "type": "object"
+  },
+  "PlanningOutput": {
+    "additionalProperties": false,
+    "properties": {
+      "constraint_evaluations": {
+        "items": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Constraint Evaluations",
+        "type": "array"
+      },
+      "contract_version": {
+        "const": "planning-integration-0.1-draft",
+        "default": "planning-integration-0.1-draft",
+        "title": "Contract Version",
+        "type": "string"
+      },
+      "errors": {
+        "items": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Errors",
+        "type": "array"
+      },
+      "evidence": {
+        "items": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Evidence",
+        "type": "array"
+      },
+      "material_requirements": {
+        "items": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Material Requirements",
+        "type": "array"
+      },
+      "module_version": {
+        "title": "Module Version",
+        "type": "string"
+      },
+      "plans": {
+        "items": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Plans",
+        "type": "array"
+      },
+      "status": {
+        "enum": [
+          "OK",
+          "PARTIAL",
+          "INPUT_INVALID",
+          "UNSUPPORTED",
+          "FAILED"
+        ],
+        "title": "Status",
+        "type": "string"
+      },
+      "unverified": {
+        "items": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Unverified",
+        "type": "array"
+      },
+      "warnings": {
+        "items": {
+          "additionalProperties": true,
+          "type": "object"
+        },
+        "title": "Warnings",
+        "type": "array"
+      }
+    },
+    "required": [
+      "status",
+      "plans",
+      "constraint_evaluations",
+      "material_requirements",
+      "evidence",
+      "warnings",
+      "unverified",
+      "errors",
+      "module_version"
+    ],
+    "title": "PlanningOutput",
+    "type": "object"
+  }
+}

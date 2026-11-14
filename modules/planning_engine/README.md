@@ -1,0 +1,11 @@
+# Planning engine · 이희원
+
+기존 예측 엔진은 `engine/forecast/` **한 벌**이다. `from engine.forecast import run`을 유지하며 루트 editable install로 import한다. `forecast/`를 새로 복제하지 않는다. 기존 계산식은 이관 중 바꾸지 않았다.
+
+```powershell
+./.venv/Scripts/python.exe -m pytest modules/planning_engine -q
+```
+
+MPS/RCCP/MRP/What-if 알고리즘은 미구현이다. 각 전용 폴더에서 개발하고 공유 진입점 `engine.planning.run(PlanningInput)`을 사용한다. 현재 진입점은 NotImplementedError다. AVAILABLE 설정만으로 backend 정식 계획 응답/승인 기능이 켜지지 않는다.
+
+DB/UI 접근 없이 DTO를 받아 반환한다. 스냅샷 생성·실제 forecast execution UUID 조회·실행 저장·승인·출력은 backend 소유다. 계약 변경은 docs/INTEGRATION_CONTRACT.md와 CAPA 질문을 통해 통합 담당에게 요청한다.

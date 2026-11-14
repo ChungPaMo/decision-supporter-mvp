@@ -1,0 +1,7 @@
+# 경로별 실제 GitHub 로그인 확인 전 활성 규칙 없음.
+# 확인 후 docs/OWNERSHIP.md에 따라 담당자와 매핑한다.
+# backend/, contracts/, infrastructure/, tests/e2e/, scripts/, 공통 설정: 김대영
+# modules/file_classifier/: 이훤
+# modules/planning_engine/: 이희원
+# frontend/: 정마나미
+# CODEOWNERS는 폴더 쓰기 권한을 강제하지 않는다. PR 검토 설정은 별도다.

@@ -1,0 +1,814 @@
+[
+  {
+    "source": "decision-supporter/.env.example",
+    "target": ".env.example"
+  },
+  {
+    "source": "decision-supporter/.gitattributes",
+    "target": ".gitattributes"
+  },
+  {
+    "source": "decision-supporter/.gitignore",
+    "target": ".gitignore"
+  },
+  {
+    "source": "decision-supporter/README.md",
+    "target": "docs/legacy/backend_README.md"
+  },
+  {
+    "source": "decision-supporter/backend/alembic.ini",
+    "target": "backend/alembic.ini"
+  },
+  {
+    "source": "decision-supporter/backend/app/__init__.py",
+    "target": "backend/app/__init__.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/api/__init__.py",
+    "target": "backend/app/api/__init__.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/api/batches.py",
+    "target": "backend/app/api/batches.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/api/exports.py",
+    "target": "backend/app/api/exports.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/api/forecasts.py",
+    "target": "backend/app/api/forecasts.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/api/health.py",
+    "target": "backend/app/api/health.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/api/ingest.py",
+    "target": "backend/app/api/ingest.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/batches/__init__.py",
+    "target": "backend/app/batches/__init__.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/batches/repository.py",
+    "target": "backend/app/batches/repository.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/batches/schemas.py",
+    "target": "backend/app/batches/schemas.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/batches/service.py",
+    "target": "backend/app/batches/service.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/batches/sql_repository.py",
+    "target": "backend/app/batches/sql_repository.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/config.py",
+    "target": "backend/app/config.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/contracts.py",
+    "target": "backend/app/contracts.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/db.py",
+    "target": "backend/app/db.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/errors.py",
+    "target": "backend/app/errors.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/exports/__init__.py",
+    "target": "backend/app/exports/__init__.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/exports/contract.py",
+    "target": "backend/app/exports/contract.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/exports/limits.py",
+    "target": "backend/app/exports/limits.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/exports/xlsx.py",
+    "target": "backend/app/exports/xlsx.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/forecast/__init__.py",
+    "target": "backend/app/forecast/__init__.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/forecast/runs.py",
+    "target": "backend/app/forecast/runs.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/forecast/runs_schemas.py",
+    "target": "backend/app/forecast/runs_schemas.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/forecast/schemas.py",
+    "target": "backend/app/forecast/schemas.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/forecast/service.py",
+    "target": "backend/app/forecast/service.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/ingest/__init__.py",
+    "target": "backend/app/ingest/__init__.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/ingest/mapping.py",
+    "target": "backend/app/ingest/mapping.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/ingest/parsing.py",
+    "target": "backend/app/ingest/parsing.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/ingest/pipeline.py",
+    "target": "backend/app/ingest/pipeline.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/ingest/validation.py",
+    "target": "backend/app/ingest/validation.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/ingest/validation_supply.py",
+    "target": "backend/app/ingest/validation_supply.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/main.py",
+    "target": "backend/app/main.py"
+  },
+  {
+    "source": "decision-supporter/backend/app/models.py",
+    "target": "backend/app/models.py"
+  },
+  {
+    "source": "decision-supporter/backend/export_contract_schema.py",
+    "target": "backend/export_contract_schema.py"
+  },
+  {
+    "source": "decision-supporter/backend/generate_api_examples.py",
+    "target": "backend/generate_api_examples.py"
+  },
+  {
+    "source": "decision-supporter/backend/migrations/env.py",
+    "target": "backend/migrations/env.py"
+  },
+  {
+    "source": "decision-supporter/backend/migrations/script.py.mako",
+    "target": "backend/migrations/script.py.mako"
+  },
+  {
+    "source": "decision-supporter/backend/migrations/versions/0001_initial_schema.py",
+    "target": "backend/migrations/versions/0001_initial_schema.py"
+  },
+  {
+    "source": "decision-supporter/backend/migrations/versions/0002_batch_staging_and_approval_gate.py",
+    "target": "backend/migrations/versions/0002_batch_staging_and_approval_gate.py"
+  },
+  {
+    "source": "decision-supporter/backend/migrations/versions/0003_product_master_batches.py",
+    "target": "backend/migrations/versions/0003_product_master_batches.py"
+  },
+  {
+    "source": "decision-supporter/backend/migrations/versions/0004_material_bom_inventory_batches.py",
+    "target": "backend/migrations/versions/0004_material_bom_inventory_batches.py"
+  },
+  {
+    "source": "decision-supporter/backend/migrations/versions/0005_forecast_execution_history.py",
+    "target": "backend/migrations/versions/0005_forecast_execution_history.py"
+  },
+  {
+    "source": "decision-supporter/backend/pytest.ini",
+    "target": "backend/pytest.ini"
+  },
+  {
+    "source": "decision-supporter/backend/requirements-forecast.txt",
+    "target": "backend/requirements-forecast.txt"
+  },
+  {
+    "source": "decision-supporter/backend/requirements.lock",
+    "target": "backend/requirements.lock"
+  },
+  {
+    "source": "decision-supporter/backend/requirements.txt",
+    "target": "backend/requirements.txt"
+  },
+  {
+    "source": "decision-supporter/backend/tests/conftest.py",
+    "target": "backend/tests/conftest.py"
+  },
+  {
+    "source": "decision-supporter/backend/tests/fakes.py",
+    "target": "backend/tests/fakes.py"
+  },
+  {
+    "source": "decision-supporter/backend/tests/test_batch_service.py",
+    "target": "backend/tests/test_batch_service.py"
+  },
+  {
+    "source": "decision-supporter/backend/tests/test_batches_api.py",
+    "target": "backend/tests/test_batches_api.py"
+  },
+  {
+    "source": "decision-supporter/backend/tests/test_bom_inventory.py",
+    "target": "backend/tests/test_bom_inventory.py"
+  },
+  {
+    "source": "decision-supporter/backend/tests/test_contract_schema_sync.py",
+    "target": "backend/tests/test_contract_schema_sync.py"
+  },
+  {
+    "source": "decision-supporter/backend/tests/test_contracts.py",
+    "target": "backend/tests/test_contracts.py"
+  },
+  {
+    "source": "decision-supporter/backend/tests/test_db_rules.py",
+    "target": "backend/tests/test_db_rules.py"
+  },
+  {
+    "source": "decision-supporter/backend/tests/test_exports.py",
+    "target": "backend/tests/test_exports.py"
+  },
+  {
+    "source": "decision-supporter/backend/tests/test_forecast_api.py",
+    "target": "backend/tests/test_forecast_api.py"
+  },
+  {
+    "source": "decision-supporter/backend/tests/test_forecast_runs.py",
+    "target": "backend/tests/test_forecast_runs.py"
+  },
+  {
+    "source": "decision-supporter/backend/tests/test_frontend_fixtures.py",
+    "target": "backend/tests/test_frontend_fixtures.py"
+  },
+  {
+    "source": "decision-supporter/backend/tests/test_health.py",
+    "target": "backend/tests/test_health.py"
+  },
+  {
+    "source": "decision-supporter/backend/tests/test_ingest.py",
+    "target": "backend/tests/test_ingest.py"
+  },
+  {
+    "source": "decision-supporter/backend/tests/test_ingest_api.py",
+    "target": "backend/tests/test_ingest_api.py"
+  },
+  {
+    "source": "decision-supporter/backend/tests/test_migration_consistency.py",
+    "target": "backend/tests/test_migration_consistency.py"
+  },
+  {
+    "source": "decision-supporter/backend/tests/test_postgres_integration.py",
+    "target": "backend/tests/test_postgres_integration.py"
+  },
+  {
+    "source": "decision-supporter/backend/tests/test_product_master.py",
+    "target": "backend/tests/test_product_master.py"
+  },
+  {
+    "source": "decision-supporter/backend/tests/test_settings.py",
+    "target": "backend/tests/test_settings.py"
+  },
+  {
+    "source": "decision-supporter/backend/tests/test_sql_repository.py",
+    "target": "backend/tests/test_sql_repository.py"
+  },
+  {
+    "source": "decision-supporter/compose.yaml",
+    "target": "infrastructure/compose.yaml"
+  },
+  {
+    "source": "decision-supporter/contracts/data_contract_v1.schema.json",
+    "target": "contracts/data_contract_v1.schema.json"
+  },
+  {
+    "source": "decision-supporter/contracts/dev_forecast_draft.schema.json",
+    "target": "contracts/dev_forecast_draft.schema.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/engine/forecast_request.json",
+    "target": "contracts/examples/engine/forecast_request.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/engine/forecast_response.json",
+    "target": "contracts/examples/engine/forecast_response.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/engine/plan_request.json",
+    "target": "contracts/examples/engine/plan_request.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/engine/plan_request_whatif_demand120.json",
+    "target": "contracts/examples/engine/plan_request_whatif_demand120.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/engine/plan_response.json",
+    "target": "contracts/examples/engine/plan_response.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/engine/plan_response_whatif_demand120.json",
+    "target": "contracts/examples/engine/plan_response_whatif_demand120.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/plan_export_sample.json",
+    "target": "contracts/examples/plan_export_sample.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/responses/01_upload_product_ready.json",
+    "target": "contracts/examples/responses/01_upload_product_ready.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/responses/02_approve_product.json",
+    "target": "contracts/examples/responses/02_approve_product.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/responses/03_upload_material_ready.json",
+    "target": "contracts/examples/responses/03_upload_material_ready.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/responses/04_approve_material.json",
+    "target": "contracts/examples/responses/04_approve_material.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/responses/05_upload_bom_ready.json",
+    "target": "contracts/examples/responses/05_upload_bom_ready.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/responses/06_approve_bom.json",
+    "target": "contracts/examples/responses/06_approve_bom.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/responses/07_upload_inventory_ready.json",
+    "target": "contracts/examples/responses/07_upload_inventory_ready.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/responses/08_approve_inventory.json",
+    "target": "contracts/examples/responses/08_approve_inventory.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/responses/09_upload_demand_mapping_hold.json",
+    "target": "contracts/examples/responses/09_upload_demand_mapping_hold.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/responses/10_revalidate_ready.json",
+    "target": "contracts/examples/responses/10_revalidate_ready.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/responses/11_approve_demand.json",
+    "target": "contracts/examples/responses/11_approve_demand.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/responses/12_error_already_approved.json",
+    "target": "contracts/examples/responses/12_error_already_approved.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/responses/13_upload_demand_has_errors.json",
+    "target": "contracts/examples/responses/13_upload_demand_has_errors.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/responses/14_error_approval_blocked.json",
+    "target": "contracts/examples/responses/14_error_approval_blocked.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/responses/15_reject.json",
+    "target": "contracts/examples/responses/15_reject.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/responses/16_error_duplicate_upload.json",
+    "target": "contracts/examples/responses/16_error_duplicate_upload.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/responses/20_list_batches.json",
+    "target": "contracts/examples/responses/20_list_batches.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/responses/21_list_products.json",
+    "target": "contracts/examples/responses/21_list_products.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/responses/22_list_materials.json",
+    "target": "contracts/examples/responses/22_list_materials.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/responses/23_list_boms.json",
+    "target": "contracts/examples/responses/23_list_boms.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/responses/24_list_inventory.json",
+    "target": "contracts/examples/responses/24_list_inventory.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/responses/25_list_demand.json",
+    "target": "contracts/examples/responses/25_list_demand.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/responses/26_error_batch_not_found.json",
+    "target": "contracts/examples/responses/26_error_batch_not_found.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/responses/27_error_request_invalid.json",
+    "target": "contracts/examples/responses/27_error_request_invalid.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/responses/28_error_persistence_disabled_default.json",
+    "target": "contracts/examples/responses/28_error_persistence_disabled_default.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/responses/29_preview_without_persistence.json",
+    "target": "contracts/examples/responses/29_preview_without_persistence.json"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/sample_bom.csv",
+    "target": "contracts/examples/sample_bom.csv"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/sample_demand_errors.csv",
+    "target": "contracts/examples/sample_demand_errors.csv"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/sample_demand_hold.csv",
+    "target": "contracts/examples/sample_demand_hold.csv"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/sample_inventory.csv",
+    "target": "contracts/examples/sample_inventory.csv"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/sample_materials.csv",
+    "target": "contracts/examples/sample_materials.csv"
+  },
+  {
+    "source": "decision-supporter/contracts/examples/sample_products.csv",
+    "target": "contracts/examples/sample_products.csv"
+  },
+  {
+    "source": "decision-supporter/contracts/forecast_run_v1.schema.json",
+    "target": "contracts/forecast_run_v1.schema.json"
+  },
+  {
+    "source": "decision-supporter/contracts/openapi.json",
+    "target": "contracts/openapi.json"
+  },
+  {
+    "source": "decision-supporter/contracts/plan_export_draft.schema.json",
+    "target": "contracts/plan_export_draft.schema.json"
+  },
+  {
+    "source": "decision-supporter/db/init/01-app-role.sh",
+    "target": "infrastructure/db/init/01-app-role.sh"
+  },
+  {
+    "source": "decision-supporter/docs/api_contract_batches.md",
+    "target": "docs/api_contract_batches.md"
+  },
+  {
+    "source": "decision-supporter/docs/api_contract_exports.md",
+    "target": "docs/api_contract_exports.md"
+  },
+  {
+    "source": "decision-supporter/docs/api_contract_forecast_runs.md",
+    "target": "docs/api_contract_forecast_runs.md"
+  },
+  {
+    "source": "decision-supporter/docs/api_contract_forecasts.md",
+    "target": "docs/api_contract_forecasts.md"
+  },
+  {
+    "source": "decision-supporter/docs/approved_forecast_integration_20261110.md",
+    "target": "docs/approved_forecast_integration_20261110.md"
+  },
+  {
+    "source": "decision-supporter/docs/data_contract_v1.md",
+    "target": "docs/data_contract_v1.md"
+  },
+  {
+    "source": "decision-supporter/docs/decisions.md",
+    "target": "docs/decisions.md"
+  },
+  {
+    "source": "decision-supporter/docs/engine_forecast_plan_contract.md",
+    "target": "docs/engine_forecast_plan_contract.md"
+  },
+  {
+    "source": "decision-supporter/docs/frontend_guide.md",
+    "target": "docs/frontend_guide.md"
+  },
+  {
+    "source": "decision-supporter/docs/multi_capacity_contract_draft.md",
+    "target": "docs/multi_capacity_contract_draft.md"
+  },
+  {
+    "source": "decision-supporter/docs/multi_capacity_decision_questions.md",
+    "target": "docs/multi_capacity_decision_questions.md"
+  },
+  {
+    "source": "decision-supporter/docs/postgresql_integration_verification_20261110.md",
+    "target": "docs/postgresql_integration_verification_20261110.md"
+  },
+  {
+    "source": "decision-supporter/docs/registration_integration_20261110.md",
+    "target": "docs/registration_integration_20261110.md"
+  },
+  {
+    "source": "decision-supporter/engine/README.md",
+    "target": "modules/planning_engine/engine/README.md"
+  },
+  {
+    "source": "decision-supporter/engine/__init__.py",
+    "target": "modules/planning_engine/engine/__init__.py"
+  },
+  {
+    "source": "decision-supporter/engine/backtest.py",
+    "target": "modules/planning_engine/engine/backtest.py"
+  },
+  {
+    "source": "decision-supporter/engine/datasets/__init__.py",
+    "target": "modules/planning_engine/engine/datasets/__init__.py"
+  },
+  {
+    "source": "decision-supporter/engine/datasets/kaggle_product_demand.py",
+    "target": "modules/planning_engine/engine/datasets/kaggle_product_demand.py"
+  },
+  {
+    "source": "decision-supporter/engine/forecast/__init__.py",
+    "target": "modules/planning_engine/engine/forecast/__init__.py"
+  },
+  {
+    "source": "decision-supporter/engine/forecast/__main__.py",
+    "target": "modules/planning_engine/engine/forecast/__main__.py"
+  },
+  {
+    "source": "decision-supporter/engine/forecast/contract.py",
+    "target": "modules/planning_engine/engine/forecast/contract.py"
+  },
+  {
+    "source": "decision-supporter/engine/forecast/features.py",
+    "target": "modules/planning_engine/engine/forecast/features.py"
+  },
+  {
+    "source": "decision-supporter/engine/forecast/model.py",
+    "target": "modules/planning_engine/engine/forecast/model.py"
+  },
+  {
+    "source": "decision-supporter/engine/forecast/service.py",
+    "target": "modules/planning_engine/engine/forecast/service.py"
+  },
+  {
+    "source": "decision-supporter/engine/requirements.txt",
+    "target": "modules/planning_engine/engine/requirements.txt"
+  },
+  {
+    "source": "decision-supporter/engine/tests/__init__.py",
+    "target": "modules/planning_engine/engine/tests/__init__.py"
+  },
+  {
+    "source": "decision-supporter/engine/tests/test_forecast.py",
+    "target": "modules/planning_engine/engine/tests/test_forecast.py"
+  },
+  {
+    "source": "decision-supporter/engine/tools/__init__.py",
+    "target": "modules/planning_engine/engine/tools/__init__.py"
+  },
+  {
+    "source": "decision-supporter/engine/tools/make_forecast_examples.py",
+    "target": "modules/planning_engine/engine/tools/make_forecast_examples.py"
+  },
+  {
+    "source": "decision-supporter/pyproject.toml",
+    "target": "pyproject.toml"
+  },
+  {
+    "source": "decision-supporter-frontend/.env.example",
+    "target": "frontend/.env.example"
+  },
+  {
+    "source": "decision-supporter-frontend/.gitignore",
+    "target": "frontend/.gitignore"
+  },
+  {
+    "source": "decision-supporter-frontend/DESIGN.md",
+    "target": "frontend/DESIGN.md"
+  },
+  {
+    "source": "decision-supporter-frontend/PRODUCT.md",
+    "target": "frontend/PRODUCT.md"
+  },
+  {
+    "source": "decision-supporter-frontend/README.md",
+    "target": "frontend/README.md"
+  },
+  {
+    "source": "decision-supporter-frontend/docs/assets/hero.png",
+    "target": "frontend/docs/assets/hero.png"
+  },
+  {
+    "source": "decision-supporter-frontend/docs/screenshots/01-data-registration.png",
+    "target": "frontend/docs/screenshots/01-data-registration.png"
+  },
+  {
+    "source": "decision-supporter-frontend/docs/screenshots/02-forecast.png",
+    "target": "frontend/docs/screenshots/02-forecast.png"
+  },
+  {
+    "source": "decision-supporter-frontend/docs/screenshots/03-plan-comparison.png",
+    "target": "frontend/docs/screenshots/03-plan-comparison.png"
+  },
+  {
+    "source": "decision-supporter-frontend/docs/screenshots/04-feasibility-diagnosis.png",
+    "target": "frontend/docs/screenshots/04-feasibility-diagnosis.png"
+  },
+  {
+    "source": "decision-supporter-frontend/docs/screenshots/05-approval-export.png",
+    "target": "frontend/docs/screenshots/05-approval-export.png"
+  },
+  {
+    "source": "decision-supporter-frontend/index.html",
+    "target": "frontend/index.html"
+  },
+  {
+    "source": "decision-supporter-frontend/package-lock.json",
+    "target": "frontend/package-lock.json"
+  },
+  {
+    "source": "decision-supporter-frontend/package.json",
+    "target": "frontend/package.json"
+  },
+  {
+    "source": "decision-supporter-frontend/playwright.config.ts",
+    "target": "frontend/playwright.config.ts"
+  },
+  {
+    "source": "decision-supporter-frontend/src/App.tsx",
+    "target": "frontend/src/App.tsx"
+  },
+  {
+    "source": "decision-supporter-frontend/src/components/ui.tsx",
+    "target": "frontend/src/components/ui.tsx"
+  },
+  {
+    "source": "decision-supporter-frontend/src/layouts/MainLayout.tsx",
+    "target": "frontend/src/layouts/MainLayout.tsx"
+  },
+  {
+    "source": "decision-supporter-frontend/src/main.tsx",
+    "target": "frontend/src/main.tsx"
+  },
+  {
+    "source": "decision-supporter-frontend/src/mocks/01_upload_product_ready.json",
+    "target": "frontend/src/mocks/01_upload_product_ready.json"
+  },
+  {
+    "source": "decision-supporter-frontend/src/mocks/02_approve_product.json",
+    "target": "frontend/src/mocks/02_approve_product.json"
+  },
+  {
+    "source": "decision-supporter-frontend/src/mocks/03_upload_material_ready.json",
+    "target": "frontend/src/mocks/03_upload_material_ready.json"
+  },
+  {
+    "source": "decision-supporter-frontend/src/mocks/04_approve_material.json",
+    "target": "frontend/src/mocks/04_approve_material.json"
+  },
+  {
+    "source": "decision-supporter-frontend/src/mocks/05_upload_bom_ready.json",
+    "target": "frontend/src/mocks/05_upload_bom_ready.json"
+  },
+  {
+    "source": "decision-supporter-frontend/src/mocks/06_approve_bom.json",
+    "target": "frontend/src/mocks/06_approve_bom.json"
+  },
+  {
+    "source": "decision-supporter-frontend/src/mocks/07_upload_inventory_ready.json",
+    "target": "frontend/src/mocks/07_upload_inventory_ready.json"
+  },
+  {
+    "source": "decision-supporter-frontend/src/mocks/08_approve_inventory.json",
+    "target": "frontend/src/mocks/08_approve_inventory.json"
+  },
+  {
+    "source": "decision-supporter-frontend/src/mocks/09_upload_demand_mapping_hold.json",
+    "target": "frontend/src/mocks/09_upload_demand_mapping_hold.json"
+  },
+  {
+    "source": "decision-supporter-frontend/src/mocks/10_revalidate_ready.json",
+    "target": "frontend/src/mocks/10_revalidate_ready.json"
+  },
+  {
+    "source": "decision-supporter-frontend/src/mocks/11_approve_demand.json",
+    "target": "frontend/src/mocks/11_approve_demand.json"
+  },
+  {
+    "source": "decision-supporter-frontend/src/mocks/13_upload_demand_has_errors.json",
+    "target": "frontend/src/mocks/13_upload_demand_has_errors.json"
+  },
+  {
+    "source": "decision-supporter-frontend/src/mocks/21_list_products.json",
+    "target": "frontend/src/mocks/21_list_products.json"
+  },
+  {
+    "source": "decision-supporter-frontend/src/mocks/22_list_materials.json",
+    "target": "frontend/src/mocks/22_list_materials.json"
+  },
+  {
+    "source": "decision-supporter-frontend/src/mocks/23_list_boms.json",
+    "target": "frontend/src/mocks/23_list_boms.json"
+  },
+  {
+    "source": "decision-supporter-frontend/src/mocks/24_list_inventory.json",
+    "target": "frontend/src/mocks/24_list_inventory.json"
+  },
+  {
+    "source": "decision-supporter-frontend/src/mocks/25_list_demand.json",
+    "target": "frontend/src/mocks/25_list_demand.json"
+  },
+  {
+    "source": "decision-supporter-frontend/src/mocks/forecast_response.json",
+    "target": "frontend/src/mocks/forecast_response.json"
+  },
+  {
+    "source": "decision-supporter-frontend/src/mocks/plan_response.json",
+    "target": "frontend/src/mocks/plan_response.json"
+  },
+  {
+    "source": "decision-supporter-frontend/src/mocks/plan_response_whatif_demand120.json",
+    "target": "frontend/src/mocks/plan_response_whatif_demand120.json"
+  },
+  {
+    "source": "decision-supporter-frontend/src/screens/ApprovalScreen.tsx",
+    "target": "frontend/src/screens/ApprovalScreen.tsx"
+  },
+  {
+    "source": "decision-supporter-frontend/src/screens/DataUploadScreen.tsx",
+    "target": "frontend/src/screens/DataUploadScreen.tsx"
+  },
+  {
+    "source": "decision-supporter-frontend/src/screens/DiagnosisScreen.tsx",
+    "target": "frontend/src/screens/DiagnosisScreen.tsx"
+  },
+  {
+    "source": "decision-supporter-frontend/src/screens/ForecastScreen.tsx",
+    "target": "frontend/src/screens/ForecastScreen.tsx"
+  },
+  {
+    "source": "decision-supporter-frontend/src/screens/PlanComparisonScreen.tsx",
+    "target": "frontend/src/screens/PlanComparisonScreen.tsx"
+  },
+  {
+    "source": "decision-supporter-frontend/src/services/api.ts",
+    "target": "frontend/src/services/api.ts"
+  },
+  {
+    "source": "decision-supporter-frontend/src/services/fixtures.ts",
+    "target": "frontend/src/services/fixtures.ts"
+  },
+  {
+    "source": "decision-supporter-frontend/src/store/productionStore.ts",
+    "target": "frontend/src/store/productionStore.ts"
+  },
+  {
+    "source": "decision-supporter-frontend/src/styles/app.css",
+    "target": "frontend/src/styles/app.css"
+  },
+  {
+    "source": "decision-supporter-frontend/src/types/api.ts",
+    "target": "frontend/src/types/api.ts"
+  },
+  {
+    "source": "decision-supporter-frontend/src/types/engine.ts",
+    "target": "frontend/src/types/engine.ts"
+  },
+  {
+    "source": "decision-supporter-frontend/src/vite-env.d.ts",
+    "target": "frontend/src/vite-env.d.ts"
+  },
+  {
+    "source": "decision-supporter-frontend/tests/e2e/registration.spec.ts",
+    "target": "frontend/tests/e2e/registration.spec.ts"
+  },
+  {
+    "source": "decision-supporter-frontend/tests/run_postgres_e2e.py",
+    "target": "frontend/tests/run_postgres_e2e.py"
+  },
+  {
+    "source": "decision-supporter-frontend/tsconfig.json",
+    "target": "frontend/tsconfig.json"
+  },
+  {
+    "source": "decision-supporter-frontend/tsconfig.node.json",
+    "target": "frontend/tsconfig.node.json"
+  },
+  {
+    "source": "decision-supporter-frontend/vite.config.ts",
+    "target": "frontend/vite.config.ts"
+  }
+]

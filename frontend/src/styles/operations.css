@@ -1,0 +1,38 @@
+/* PPT reference: navy masthead, blue process navigation, pale operational cards. */
+:root { --ground: #f5f8fc; --blue-900: #162d50; --blue-600: #1261dc; }
+.app-header { min-height: 112px; background: linear-gradient(105deg,#152943,#203d65); padding: 24px max(24px,calc((100vw - 1440px)/2)); align-items: center; }
+.app-header h1 { font-size: 22px; letter-spacing: -.04em; }
+.app-header h1::before { content: '충파모 | '; font-weight: 800; }
+.app-nav { width: min(1440px,calc(100% - 48px)); margin: 16px auto 0; border: 1px solid #d5e0ef; box-shadow: 0 4px 16px #16375a0a; }
+.app-nav ol { grid-template-columns: repeat(7,minmax(0,1fr)); }
+.app-nav button { min-height: 62px; font-size: 13px; padding: 10px 8px; }
+.app-main { padding: 28px 24px 48px; }
+.screen { max-width: 1440px; gap: 20px; }
+.screen-header h2 { font-size: 30px; color: #142c4e; letter-spacing: -.04em; }
+.screen-header p { margin-top: 8px; }
+.panel { border: 1px solid #d6e1ef; border-radius: 14px; box-shadow: 0 3px 12px #193d6208; }
+.panel h3 { color: #173657; font-size: 19px; margin-bottom: 16px; }
+th { background: #eaf0f8; color: #182e4b; }
+.workflow-tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.workflow-tabs button,.chart-legend button { border: 1px solid #cfdaea; background: white; padding: 10px 16px; border-radius: 8px; cursor: pointer; }
+.workflow-tabs button.active { background: #1763d4; color: white; border-color: #1763d4; }
+.chart-legend { display: flex; gap: 8px; margin: 12px 0; flex-wrap: wrap; }
+.chart-legend button[aria-pressed=false] { opacity: .45; text-decoration: line-through; }
+.chart-panel svg { width: 100%; max-height: 370px; overflow: visible; }
+.dashboard-grid { display: grid; grid-template-columns: minmax(230px,1fr) minmax(0,3fr); gap: 20px; }
+.fact-list { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 10px; margin-bottom: 24px; }
+.fact-list dt { color: #536984; }.fact-list dd { font-weight: 700; text-align: right; }
+.resource-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 18px; }
+.resource-card { border: 1px solid #dce5f0; border-radius: 12px; padding: 22px; background: #f9fbff; }
+.resource-card strong { display: block; color: #173a69; font-size: 26px; margin: 12px 0; }
+.capacity-track { border: 1px dashed #adbed3; height: 20px; border-radius: 6px; background: #eef3f9; }
+.capacity-track span { display: none; }
+.resource-card small { display: block; color: #5a6e86; margin-top: 10px; }
+.bom-tree { padding: 15px 0 10px 24px; margin-left: 15px; border-left: 2px solid #a9c0df; }
+.bom-tree li { padding: 8px; }
+.modal-backdrop { position: fixed; inset: 0; background: #0c1e3999; display: grid; place-items: center; z-index: 20; padding: 24px; }
+.modal-backdrop section { max-width: 560px; }
+input[type=range] { width: 100%; accent-color: #1d63d6; }
+output { font-size: 30px; font-weight: 700; color: #173a69; }
+@media (max-width: 1000px) { .app-nav ol { grid-template-columns: repeat(4,1fr); }.dashboard-grid { grid-template-columns: 1fr; }.resource-grid { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .app-main { padding: 20px 12px; }.app-nav { width: calc(100% - 24px); }.app-nav ol { grid-template-columns: repeat(2,1fr); }.app-header { padding: 20px; }.screen-header h2 { font-size: 24px; }.data-layout { grid-template-columns: 1fr; }.panel { padding: 16px; }.panel-heading { flex-wrap: wrap; } }
