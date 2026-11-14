@@ -27,6 +27,13 @@ th { background: #eaf0f8; color: #182e4b; }
 .resource-card strong { display: block; color: #173a69; font-size: 26px; margin: 12px 0; }
 .capacity-track { border: 1px dashed #adbed3; height: 20px; border-radius: 6px; background: #eef3f9; }
 .capacity-track span { display: none; }
+.usage-track { position: relative; height: 20px; background: #dce8f5; border-radius: 6px; margin: 12px 0; overflow: hidden; }
+.usage-track span { display: block; height: 100%; background: #239578; }
+.usage-track i { position: absolute; height: 100%; border-right: 2px dashed #52667c; right: 0; top: 0; }
+.resource-over { border-color: #df7b71; background: #fff7f5; }
+.resource-over .usage-track span { background: #d95a48; }
+.shortage-cell { color: #9d2424; background: #fff0ec; font-weight: 700; }
+.workflow-tabs button[aria-pressed=true] { color: white; background: #1763d4; }
 .resource-card small { display: block; color: #5a6e86; margin-top: 10px; }
 .bom-tree { padding: 15px 0 10px 24px; margin-left: 15px; border-left: 2px solid #a9c0df; }
 .bom-tree li { padding: 8px; }

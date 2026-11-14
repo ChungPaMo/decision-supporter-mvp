@@ -25,7 +25,7 @@ export default function MainLayout({ children }: { children: ReactNode }) {
       <header className="app-header">
         <div>
           <h1>생산계획 의사결정 시스템</h1>
-          <p>데이터 등록·승인·수요 예측은 실제 서버 저장 · 계획·진단은 별도 예시 · 출력물은 DEMO/UNVERIFIED</p>
+          <p>데이터 등록·승인·예측은 실제 서버 저장 · 계획은 읽기 전용 연결/합성 사례 · 정식 계획 승인 미구현</p>
         </div>
         <div
           className="app-progress"
@@ -64,7 +64,6 @@ export default function MainLayout({ children }: { children: ReactNode }) {
           </ol>
         </nav>
         <main className={`app-main app-main-${step}`}>
-          {['plans', 'diagnosis', 'approval'].includes(step) && <div className="notice notice-warn">계획·진단·계획 승인은 별도 예시이며 실제 예측 결과와 연결되지 않았습니다.</div>}
           {children}
         </main>
       </div>

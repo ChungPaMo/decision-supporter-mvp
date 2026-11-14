@@ -3,6 +3,7 @@ import { BatchDetail, BatchSummary, Entity, ValidationResult } from '../types/ap
 import { apiClient } from '../services/api';
 import { ENTITY_ORDER, useProductionStore } from '../store/productionStore';
 import { BatchBadge, ENTITY_LABEL, errorMessage, Notice, qty, ROLE_CODE, ScreenHeader } from '../components/ui';
+import ClassificationPanel from '../components/ClassificationPanel';
 
 const HIDDEN_COLUMNS = new Set(['location', 'review_required', 'batch_id', 'source_type', 'lines']);
 const SELECTION_KEY = 'chungpamo.batch-selection.v1';
@@ -194,6 +195,7 @@ export default function DataUploadScreen() {
 
   return <div className="screen">
     <ScreenHeader title="데이터 등록·승인" description="파일을 서버에 등록하고 검증 결과를 확인해 승인합니다. 제품·자재 승인 후 BOM·재고·월별 수요를 등록하세요." />
+    <ClassificationPanel onChoose={setActiveEntity} disabled={busy} />
     <div className="actions"><button className="button" disabled={busy} onClick={() => void refresh()}>서버 상태 다시 조회</button>
       <span role="status">{busy ? '서버 처리 중…' : synced ? '서버 상태 조회 완료' : '서버 상태 확인 필요'}</span></div>
     {message && <div role="alert"><Notice tone="bad">{message}</Notice></div>}

@@ -41,7 +41,7 @@ def main():
                     except OSError:
                         if time.monotonic() > deadline: raise RuntimeError('Server readiness timeout')
                         time.sleep(.1)
-            subprocess.run([node, str(FRONT / 'node_modules/@playwright/test/cli.js'), 'test', 'shell.spec.ts'],
+            subprocess.run([node, str(FRONT / 'node_modules/@playwright/test/cli.js'), 'test', 'shell.spec.ts', 'handoff.spec.ts'],
                            cwd=FRONT, env=env, check=True)
         finally:
             for process in reversed(processes):

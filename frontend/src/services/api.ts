@@ -1,5 +1,6 @@
 import { BatchDetail, BatchSummary, Entity, Page, ValidationResult } from '../types/api';
 import { ForecastExecution, ForecastExecutionSummary, ForecastRunParameters, ForecastRunReply } from '../types/engine';
+import { ClassificationResult, PlanningReply } from '../types/modules';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
@@ -39,13 +40,19 @@ class ApiClient {
   }
 
   // 건강 체크
-  async requestPlan(executionId: string): Promise<unknown> {
+  async classifyFile(file: File, includeSamples: boolean): Promise<ClassificationResult> {
+    const formData = new FormData();
+    formData.append('file', file); formData.append('sample_row_limit', includeSamples ? '5' : '0');
+    return this.request('POST', '/classifications/file', { formData });
+  }
+
+  async requestPlan(executionId: string, productIds?: string[], targetMonth?: string): Promise<PlanningReply> {
     const execution = await this.getForecast(executionId);
     const rows = execution.result?.forecasts ?? [];
     if (!rows.length) throw new Error('계획에 사용할 실제 예측 결과가 없습니다.');
     return this.request('POST', '/plans', { body: {
-      forecast_execution_id: executionId, product_ids: [...new Set(rows.map(row => row.product_id))],
-      target_month: rows[0].target_month, as_of_date: execution.parameters.trained_until,
+      forecast_execution_id: executionId, product_ids: productIds ?? [...new Set(rows.map(row => row.product_id))],
+      target_month: targetMonth ?? rows[0].target_month, as_of_date: execution.parameters.trained_until,
     } });
   }
 

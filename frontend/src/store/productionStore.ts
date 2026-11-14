@@ -2,12 +2,21 @@ import { create } from 'zustand';
 import { BatchDetail, Entity } from '../types/api';
 import { PlanApproval } from '../types/engine';
 import { ScenarioId } from '../services/fixtures';
+import { PlanningReply } from '../types/modules';
 
 export type Step = 'data' | 'forecast' | 'plans' | 'diagnosis' | 'mrp' | 'whatif' | 'approval';
 
 export const ENTITY_ORDER: Entity[] = ['product', 'material', 'bom', 'inventory', 'monthly_demand'];
 
 interface ProductionState {
+  planningView: 'DEMO' | 'LIVE';
+  setPlanningView: (view: 'DEMO' | 'LIVE') => void;
+  planningPreview: PlanningReply | null;
+  setPlanningPreview: (preview: PlanningReply | null) => void;
+  previewPlanId: string | null;
+  setPreviewPlanId: (id: string) => void;
+  demoPlanIndex: number;
+  setDemoPlanIndex: (index: number) => void;
   step: Step;
   activeEntity: Entity;
   batches: Partial<Record<Entity, BatchDetail>>;
@@ -27,6 +36,10 @@ interface ProductionState {
 }
 
 export const useProductionStore = create<ProductionState>((set) => ({
+  planningView: 'DEMO', setPlanningView: (planningView) => set({ planningView }),
+  planningPreview: null, setPlanningPreview: (planningPreview) => set({ planningPreview, previewPlanId: planningPreview?.result.plans[0]?.plan_id ?? null }),
+  previewPlanId: null, setPreviewPlanId: (previewPlanId) => set({ previewPlanId }),
+  demoPlanIndex: 0, setDemoPlanIndex: (demoPlanIndex) => set({ demoPlanIndex }),
   step: typeof window !== 'undefined' && window.location.hash === '#forecast' ? 'forecast' : 'data',
   activeEntity: 'product',
   batches: {},
