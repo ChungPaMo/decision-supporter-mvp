@@ -70,6 +70,7 @@ DB 테스트는 스키마 초기화를 포함하며 별도 사용자 승인과 �
 ## 협업과 계약
 
 - [구조](docs/ARCHITECTURE.md), [소유권](docs/OWNERSHIP.md), [인터페이스](docs/INTEGRATION_CONTRACT.md)
+- [팀원별 상세 작업 배분](docs/TEAM_WORK_ASSIGNMENTS.md), [팀원 인수인계](docs/TEAM_HANDOFF.md)
 - [개발 절차](docs/DEVELOPMENT_WORKFLOW.md), [이관·검증 기록](docs/MIGRATION_REPORT.md)
 - [다중 CAPA 미확정 초안](docs/multi_capacity_contract_draft.md), [팀 결정 질문](docs/multi_capacity_decision_questions.md)
 
