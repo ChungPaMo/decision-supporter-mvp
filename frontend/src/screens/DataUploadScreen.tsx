@@ -122,6 +122,7 @@ function BatchPanel({ batch, disabled, act }: { batch: BatchDetail; disabled: bo
         expected_version: batch.version, column_overrides: Object.fromEntries(Object.entries(overrides).filter(([, value]) => value.trim())),
         default_unit: unit.trim() || null, sheet: sheet.trim() || null,
       }))}>서버 재검증</button>
+      <h4 className="decision-title">승인·반려</h4>
       <label className="field"><span>승인자 역할 코드</span><input value={actor} onChange={(e) => setActor(e.target.value)} aria-invalid={!actorValid} /></label>
       <label className="field"><span>반려 사유</span><input value={reason} onChange={(e) => setReason(e.target.value)} maxLength={500} /></label>
       <div className="actions">
