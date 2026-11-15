@@ -224,8 +224,10 @@ python -X utf8 modules/planning_engine/synthetic/convert.py `
 | 파일 | 오류 |
 |---|---|
 | demand_missing_qty.csv | 수요량 빈칸 |
-| demand_duplicate_period.csv | 같은 제품·월 중복 |
-| demand_bad_period_format.csv | 월 형식 `2026/07` |
+| demand_conflicting_duplicate.csv | 같은 제품·월이 수량을 달리해 두 번 (`2026-12` 9930 / 9931) → `DUPLICATE_KEY_CONFLICT`로 막혀야 함 |
+| demand_invalid_month.csv | 없는 달 `2026-13` → `PERIOD_INVALID`로 막혀야 함 |
+| demand_duplicate_period.csv | **통과가 맞는 경우.** 같은 제품·월·수량 행이 그대로 두 번 → 백엔드는 첫 행만 쓰고 `DUPLICATE_ROW_IDENTICAL` 경고 |
+| demand_bad_period_format.csv | **통과가 맞는 경우.** 월 형식 `2026/07` → 백엔드가 `2026-07`로 자동 정리 |
 | products_unknown_unit.csv | 없는 단위 `BOXX` |
 | bom_unknown_material.csv | 등록 안 된 자재 `MR-XXX` |
 | inventory_negative_qty.csv | 음수 재고 |

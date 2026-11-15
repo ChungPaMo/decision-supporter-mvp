@@ -439,6 +439,12 @@ def main():
               [("CP-N3-3030", p, q, "EA") for p, q in main_series] + [("CP-N3-3030", *main_series[-1], "EA")])
     write_csv(er / "demand_bad_period_format.csv", ["product_id", "period", "demand_qty", "unit"],
               [("CP-N3-3030", p.replace("-", "/") if i == 0 else p, q, "EA") for i, (p, q) in enumerate(main_series)])
+    # 위 두 파일은 백엔드가 자동 정리·경고로 통과시키는 경우다. 아래 두 파일이 실제로 막혀야 하는 오류다.
+    last_period, last_qty = main_series[-1]
+    write_csv(er / "demand_conflicting_duplicate.csv", ["product_id", "period", "demand_qty", "unit"],
+              [("CP-N3-3030", p, q, "EA") for p, q in main_series] + [("CP-N3-3030", last_period, last_qty + 1, "EA")])
+    write_csv(er / "demand_invalid_month.csv", ["product_id", "period", "demand_qty", "unit"],
+              [("CP-N3-3030", "2026-13" if i == 0 else p, q, "EA") for i, (p, q) in enumerate(main_series)])
     write_csv(er / "products_unknown_unit.csv", ["제품코드", "제품명", "단위", "제품유형", "안전재고"],
               [("CP-N3-3030", "천연펄프 3겹 30m 30롤", "BOXX", "완제품", ss["CP-N3-3030"])])
     write_csv(er / "bom_unknown_material.csv", ["BOM코드", "제품코드", "버전", "상태", "활성", "유효시작일", "유효종료일",
