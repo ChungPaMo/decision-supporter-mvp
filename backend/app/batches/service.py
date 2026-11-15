@@ -126,7 +126,7 @@ class BatchService:
             preview = self._run(tx, filename, data, entity, default_unit, column_overrides, sheet)
             digest = result_digest(preview, self._settings(default_unit, column_overrides, sheet))
             rec = BatchRecord(
-                batch_id=uuid.uuid4(), entity=entity, status=preview.status, source_type=source_type, source_name=preview.file.name,
+                batch_id=uuid.uuid4(), dataset_id=getattr(self.repo,"dataset_id","TISSUE-LEGACY"), entity=entity, status=preview.status, source_type=source_type, source_name=preview.file.name,
                 source_note=(source_note or None), source_sha256=preview.file.sha256, created_by=created_by,
                 created_at=dt.datetime.now(dt.timezone.utc), default_unit=default_unit, column_overrides=column_overrides or {},
                 sheet_filter=sheet, blocking_error_count=preview.blocking_error_count, warning_count=preview.warning_count,

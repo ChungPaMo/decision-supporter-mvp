@@ -2,7 +2,7 @@ import datetime as dt
 import uuid
 from typing import Annotated, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, computed_field
 
 from app.forecast.schemas import ForecastResponse
 
@@ -30,6 +30,15 @@ class ForecastFailure(BaseModel):
 
 
 class ForecastExecutionSummary(BaseModel):
+    dataset_id: str = "TISSUE-LEGACY"
+
+    @computed_field
+    @property
+    def dataset_input_digest(self) -> str:
+        import hashlib,json
+        value=json.dumps({'dataset_id':self.dataset_id,'engine_input_digest':self.input_digest},sort_keys=True,separators=(',',':'))
+        return 'sha256:'+hashlib.sha256(value.encode()).hexdigest()
+
     execution_id: uuid.UUID
     status: Literal["OK", "PARTIAL", "DATA_INSUFFICIENT", "INPUT_INVALID", "FAILED"]
     input_digest: str

@@ -4,6 +4,7 @@ from typing import Literal
 from uuid import UUID
 from pydantic import Field
 from .base import StrictModel, Code
+from .dataset import DatasetId,LEGACY_DATASET
 from .planning import PlanCommand, PlanningInput, PlanningOutput, PlanCandidate
 
 
@@ -45,6 +46,7 @@ class PlanCandidateDetail(PlanCandidate):
 
 
 class PlanExecutionSummary(StrictModel):
+    dataset_id: DatasetId = LEGACY_DATASET
     execution_id: UUID
     forecast_execution_id: UUID
     base_plan_execution_id: UUID | None

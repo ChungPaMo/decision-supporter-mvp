@@ -1,3 +1,5 @@
+from app.api.datasets import dataset_context
+from app.datasets import get_dataset_engine
 from uuid import UUID
 from typing import Annotated
 from fastapi import APIRouter,Depends,Query,Response
@@ -15,11 +17,11 @@ from contracts.interfaces.plan_execution import (PlanExecutionCreate,PlanExecuti
 router=APIRouter(prefix='/plan-executions',tags=['plan-executions'],responses=ERROR_RESPONSES)
 
 
-def get_service():
+def get_service(dataset_id: str = Depends(dataset_context)):
     if get_settings().persistence!='postgres':
         raise ApiError(501,ErrorCode.PERSISTENCE_DISABLED,'Plan persistence is disabled.')
     from app.db import get_engine
-    return PlanService(get_engine())
+    return PlanService(get_dataset_engine(dataset_id))
 
 
 Service=Annotated[PlanService,Depends(get_service)]
@@ -35,6 +37,9 @@ def read(call):
              responses={200:{'model':PlanExecutionReply},422:{'model':PlanExecutionReply|ErrorResponse},500:{'model':PlanExecutionReply|ErrorResponse}},
              summary='Engine-gated immutable plan execution (currently 501)')
 def create(body:PlanExecutionCreate,svc:Service):
+    from app.api.integrations import scoped_command
+    context=getattr(svc.database,'dataset_id','TISSUE-LEGACY')
+    body=scoped_command(body,context)
     reply=svc.create(PlanCommand.model_validate(body.model_dump()))
     status=200 if reply.reused else 201
     if reply.execution.status=='FAILED':status=422 if reply.execution.result_snapshot.status in ('INPUT_INVALID','UNSUPPORTED') else 500

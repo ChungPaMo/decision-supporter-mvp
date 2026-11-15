@@ -10,6 +10,7 @@
   },
   "status": 200,
   "response": {
+    "dataset_id": "TISSUE-LEGACY",
     "batch_id": "00000000-0000-0000-0000-000000000003",
     "entity": "bom",
     "status": "APPROVED",

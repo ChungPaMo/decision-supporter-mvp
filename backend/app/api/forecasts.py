@@ -1,3 +1,5 @@
+from app.api.datasets import dataset_context
+from app.datasets import get_dataset_engine
 import uuid
 from typing import Annotated
 
@@ -18,11 +20,11 @@ history_router = APIRouter(prefix="/forecasts", tags=["approved-demand-forecast"
 })
 
 
-def get_forecast_runs():
+def get_forecast_runs(dataset_id: str = Depends(dataset_context)):
     if get_settings().persistence != "postgres":
         raise ApiError(501, ErrorCode.PERSISTENCE_DISABLED, "예측 실행 저장이 비활성화되어 있습니다.")
     from app.db import get_engine
-    return ForecastRuns(get_engine())
+    return ForecastRuns(get_dataset_engine(dataset_id))
 
 
 Runs = Annotated[ForecastRuns, Depends(get_forecast_runs)]

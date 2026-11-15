@@ -735,6 +735,103 @@
     "title": "ClassificationOutput",
     "type": "object"
   },
+  "DatasetCreate": {
+    "additionalProperties": false,
+    "properties": {
+      "dataset_id": {
+        "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+        "title": "Dataset Id",
+        "type": "string"
+      },
+      "dataset_name": {
+        "maxLength": 200,
+        "minLength": 1,
+        "title": "Dataset Name",
+        "type": "string"
+      },
+      "description": {
+        "maxLength": 2000,
+        "minLength": 1,
+        "title": "Description",
+        "type": "string"
+      },
+      "source_type": {
+        "const": "SYNTHETIC",
+        "default": "SYNTHETIC",
+        "title": "Source Type",
+        "type": "string"
+      }
+    },
+    "required": [
+      "dataset_id",
+      "dataset_name",
+      "description"
+    ],
+    "title": "DatasetCreate",
+    "type": "object"
+  },
+  "DatasetDetail": {
+    "additionalProperties": false,
+    "properties": {
+      "created_at": {
+        "format": "date-time",
+        "title": "Created At",
+        "type": "string"
+      },
+      "created_by": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "title": "Created By"
+      },
+      "dataset_id": {
+        "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+        "title": "Dataset Id",
+        "type": "string"
+      },
+      "dataset_name": {
+        "maxLength": 200,
+        "minLength": 1,
+        "title": "Dataset Name",
+        "type": "string"
+      },
+      "description": {
+        "maxLength": 2000,
+        "minLength": 1,
+        "title": "Description",
+        "type": "string"
+      },
+      "source_type": {
+        "const": "SYNTHETIC",
+        "default": "SYNTHETIC",
+        "title": "Source Type",
+        "type": "string"
+      },
+      "status": {
+        "enum": [
+          "ACTIVE",
+          "ARCHIVED"
+        ],
+        "title": "Status",
+        "type": "string"
+      }
+    },
+    "required": [
+      "dataset_id",
+      "dataset_name",
+      "description",
+      "status",
+      "created_at",
+      "created_by"
+    ],
+    "title": "DatasetDetail",
+    "type": "object"
+  },
   "PlanCandidateDetail": {
     "$defs": {
       "PlanningIssue": {
@@ -892,6 +989,12 @@
         "const": "planning-integration-0.1-draft",
         "default": "planning-integration-0.1-draft",
         "title": "Contract Version",
+        "type": "string"
+      },
+      "dataset_id": {
+        "default": "TISSUE-LEGACY",
+        "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+        "title": "Dataset Id",
         "type": "string"
       },
       "forecast_execution_id": {
@@ -1115,6 +1218,12 @@
         "const": "planning-integration-0.1-draft",
         "default": "planning-integration-0.1-draft",
         "title": "Contract Version",
+        "type": "string"
+      },
+      "dataset_id": {
+        "default": "TISSUE-LEGACY",
+        "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+        "title": "Dataset Id",
         "type": "string"
       },
       "forecast_execution_id": {
@@ -2067,6 +2176,12 @@
             "title": "Contract Version",
             "type": "string"
           },
+          "dataset_id": {
+            "default": "TISSUE-LEGACY",
+            "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+            "title": "Dataset Id",
+            "type": "string"
+          },
           "forecast_execution_id": {
             "format": "uuid",
             "title": "Forecast Execution Id",
@@ -2231,6 +2346,12 @@
             "const": "planning-handoff-0.2-draft",
             "default": "planning-handoff-0.2-draft",
             "title": "Contract Version",
+            "type": "string"
+          },
+          "dataset_id": {
+            "default": "TISSUE-LEGACY",
+            "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+            "title": "Dataset Id",
             "type": "string"
           },
           "forecast_input_digest": {
@@ -2920,6 +3041,12 @@
         "title": "Data Origin",
         "type": "string"
       },
+      "dataset_id": {
+        "default": "TISSUE-LEGACY",
+        "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+        "title": "Dataset Id",
+        "type": "string"
+      },
       "decision_status": {
         "enum": [
           "DRAFT",
@@ -3093,6 +3220,12 @@
               "TEST_DOUBLE"
             ],
             "title": "Data Origin",
+            "type": "string"
+          },
+          "dataset_id": {
+            "default": "TISSUE-LEGACY",
+            "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+            "title": "Dataset Id",
             "type": "string"
           },
           "decision_status": {
@@ -4152,6 +4285,12 @@
             "title": "Contract Version",
             "type": "string"
           },
+          "dataset_id": {
+            "default": "TISSUE-LEGACY",
+            "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+            "title": "Dataset Id",
+            "type": "string"
+          },
           "forecast_execution_id": {
             "format": "uuid",
             "title": "Forecast Execution Id",
@@ -4314,6 +4453,12 @@
               "TEST_DOUBLE"
             ],
             "title": "Data Origin",
+            "type": "string"
+          },
+          "dataset_id": {
+            "default": "TISSUE-LEGACY",
+            "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+            "title": "Dataset Id",
             "type": "string"
           },
           "decision_status": {
@@ -4489,6 +4634,12 @@
             "const": "planning-handoff-0.2-draft",
             "default": "planning-handoff-0.2-draft",
             "title": "Contract Version",
+            "type": "string"
+          },
+          "dataset_id": {
+            "default": "TISSUE-LEGACY",
+            "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+            "title": "Dataset Id",
             "type": "string"
           },
           "forecast_input_digest": {
@@ -5767,6 +5918,12 @@
             "title": "Contract Version",
             "type": "string"
           },
+          "dataset_id": {
+            "default": "TISSUE-LEGACY",
+            "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+            "title": "Dataset Id",
+            "type": "string"
+          },
           "forecast_execution_id": {
             "format": "uuid",
             "title": "Forecast Execution Id",
@@ -6287,6 +6444,12 @@
         "const": "planning-handoff-0.2-draft",
         "default": "planning-handoff-0.2-draft",
         "title": "Contract Version",
+        "type": "string"
+      },
+      "dataset_id": {
+        "default": "TISSUE-LEGACY",
+        "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+        "title": "Dataset Id",
         "type": "string"
       },
       "forecast_input_digest": {

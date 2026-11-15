@@ -21,6 +21,7 @@ def db_error(exc):
 def validate_pair(snapshot,result):
     # Reuse exactly the preview boundary checks, without running a calculation.
     command=snapshot.command
+    if snapshot.dataset_id!=command.dataset_id:raise ValueError('Input and command dataset mismatch')
     units={r.product_id:r.unit for r in snapshot.forecast_rows}
     if set(command.product_ids)!=set(units) or any(r.target_month!=command.target_month for r in snapshot.forecast_rows):
         raise ValueError('Missing forecast input scope')
@@ -49,6 +50,8 @@ def what_if_snapshot(base,command,*,allow_test=False):
     if base.data_origin!='REAL_ENGINE' and not allow_test:
         raise ApiError(404,ErrorCode.PLAN_NOT_FOUND,'Test doubles are not operational base plans.')
     original=base.input_snapshot.command
+    if command.dataset_id!=base.dataset_id or command.dataset_id!=base.input_snapshot.dataset_id:
+        raise ApiError(409,ErrorCode.DATASET_MISMATCH,'What-if parent and child must belong to the same dataset.')
     if (base.status not in ('COMPLETED','PARTIAL') or command.base_plan_execution_id!=base.execution_id or
         command.forecast_execution_id!=base.forecast_execution_id or command.target_month!=original.target_month or
         command.as_of_date!=original.as_of_date or set(command.product_ids)!=set(original.product_ids)):
@@ -85,6 +88,8 @@ class PlanService:
     def __init__(self,database): self.database=database;self.repo=PlanRepository(database)
 
     def create(self,command):
+        if command.dataset_id!=getattr(self.database,'dataset_id','TISSUE-LEGACY'):
+            raise ApiError(409,ErrorCode.DATASET_MISMATCH,'Plan request and selected dataset do not match.')
         from engine import planning
         if not planning.AVAILABLE:
             raise ApiError(501,ErrorCode.MODULE_NOT_IMPLEMENTED,'Planning algorithm is not implemented; no execution was fabricated.')

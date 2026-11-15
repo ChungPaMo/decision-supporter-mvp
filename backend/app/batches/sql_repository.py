@@ -20,7 +20,7 @@ from app.batches.repository import (
 )
 from app.ingest.validation import KnownBom, KnownMaterial, KnownProduct
 
-_COLS = """batch_id, entity, status, source_type, source_name, source_note, source_sha256, created_by, uploaded_at AS created_at,
+_COLS = """dataset_id, batch_id, entity, status, source_type, source_name, source_note, source_sha256, created_by, uploaded_at AS created_at,
   default_unit, column_overrides, sheet_filter, blocking_error_count, warning_count, result_digest, validation_result, version,
   approved_by, approved_at, approved_record_count, rejected_by, rejected_at, reject_reason"""
 
@@ -227,6 +227,7 @@ class SqlBatchTx:
 class SqlBatchRepository:
     def __init__(self, engine: Engine) -> None:
         self.engine = engine
+        self.dataset_id = getattr(engine,"dataset_id","TISSUE-LEGACY")
 
     @contextmanager
     def transaction(self):

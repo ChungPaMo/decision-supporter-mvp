@@ -28,7 +28,7 @@ def _create_cols(sql: str, table: str) -> set[str]:
 @pytest.mark.parametrize("table", ["import_batch", "batch_source_file", "monthly_demand"])
 def test_columns_match_models(sql, table):
     created = _create_cols(sql, table)
-    added = set(re.findall(rf"ALTER TABLE {table} ADD COLUMN ([a-z_]+)", sql))
+    added = set(re.findall(rf"ALTER TABLE (?:public\.)?{table} ADD COLUMN ([a-z_]+)", sql))
     assert created | added == set(Base.metadata.tables[table].columns.keys())
 
 
@@ -58,4 +58,4 @@ def test_migration_chain_is_linear():
     for f in versions.glob("*.py"):
         t = f.read_text(encoding="utf-8")
         revs[re.search(r'^revision = "(\w+)"', t, re.M).group(1)] = re.search(r'^down_revision = (.+)$', t, re.M).group(1).strip('"')
-    assert revs == {"0001": "None", "0002": "0001", "0003": "0002", "0004": "0003", "0005": "0004", "0006": "0005", "0007": "0006"}
+    assert revs == {"0001": "None", "0002": "0001", "0003": "0002", "0004": "0003", "0005": "0004", "0006": "0005", "0007": "0006", "0008": "0007"}

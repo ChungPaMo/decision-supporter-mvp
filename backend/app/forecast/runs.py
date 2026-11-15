@@ -19,7 +19,7 @@ from app.errors import ApiError, ErrorCode
 from app.forecast import service as adapter
 from app.forecast.runs_schemas import ForecastExecution, ForecastExecutionSummary, ForecastHistory, ForecastRunReply, ForecastRunRequest
 
-SUMMARY_COLUMNS = "execution_id,status,input_digest,dedup_key,parameters,runtime_identity,quantile_model_version,input_row_count,forecast_count,created_at,finished_at"
+SUMMARY_COLUMNS = "dataset_id,execution_id,status,input_digest,dedup_key,parameters,runtime_identity,quantile_model_version,input_row_count,forecast_count,created_at,finished_at"
 
 
 def _json(value):
@@ -106,6 +106,7 @@ ORDER BY v.product_id,v.period
                 provenance = {str(r["batch_id"]): {"batch_id": r["batch_id"], "batch_version": r["version"],
                               "source_sha256": r["source_sha256"], "result_digest": r["result_digest"], "approved_at": r["approved_at"]} for r in rows}
                 identity = runtime_identity()
+                if getattr(self.database,"dataset_id","TISSUE-LEGACY") != "TISSUE-LEGACY": identity = {**identity,"dataset_id":self.database.dataset_id}
                 dedup_key = _hash({"input_digest": digest, "runtime": identity, "batches": sorted(provenance.values(), key=lambda b: str(b["batch_id"]))})
                 key = int.from_bytes(bytes.fromhex(dedup_key[:16]), "big", signed=True)
                 locked = c.execute(text("SELECT pg_try_advisory_xact_lock(:key)"), {"key": key}).scalar_one()

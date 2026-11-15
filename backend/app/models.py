@@ -40,6 +40,7 @@ class Base(DeclarativeBase):
 class ImportBatch(Base):
     """업로드 1회 = 배치 1개. 출처 구분·중복 업로드 탐지·승인 상태의 기준."""
     __tablename__ = "import_batch"
+    dataset_id: Mapped[str] = mapped_column(String(40), server_default="TISSUE-LEGACY")
 
     batch_id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, server_default=func.gen_random_uuid())
     source_type: Mapped[str] = mapped_column(String(20))

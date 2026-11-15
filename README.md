@@ -11,6 +11,8 @@
 
 ## 현재 동작 범위
 
+데이터셋 격리: [API·마이그레이션·실제 통합 결과](docs/DATASET_ISOLATION.md). 기존 클라이언트는 TISSUE-LEGACY로 한정되며 CHUNGPAMO-2027 접근은 모든 영구 API에 `?dataset_id=CHUNGPAMO-2027`을 명시합니다. 서로 다른 데이터셋은 같은 PostgreSQL의 독립 스키마를 사용합니다. dataset_id는 인증 권한을 뜻하지 않습니다.
+
 2026-11-15 후속: [계획 실행 저장·What-if 계보·검토·출력 기반](docs/PLAN_EXECUTION_PERSISTENCE.md)을 추가했습니다. Alembic 0007, 별도 `/plan-executions` API이며 기존 Preview는 유지합니다. 실제 계획 계산·정식 승인은 501, 정식 Excel은 인증된 승인 저장본만 허용합니다. 테스트 대역으로 저장 시스템을 검증했으며 실제 계획 생성 완료가 아닙니다.
 
 2026-11-15: **CAPA·Routing 등록·승인·PostgreSQL 조회·PlanningInput 승인 스냅샷 연결**을 추가했습니다. [데이터 사전·실행법](docs/CAPACITY_ROUTING_DATA_DICTIONARY.md), [합성 양식](contracts/examples/tissue_capacity/README.md), [검증 결과](docs/CAPACITY_ROUTING_VERIFICATION.md)를 확인하세요. 신규 Alembic 0006이며 기존 0001~0005는 보존했습니다. 프론트 신규 CAPA 업로드 화면과 계획 알고리즘은 구현하지 않았습니다. 앞선 490/12·464/8 수치는 각 당시 기록입니다.

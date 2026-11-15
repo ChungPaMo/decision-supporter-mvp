@@ -34,6 +34,7 @@ class BatchSettings(BaseModel):
 
 
 class BatchSummary(BaseModel):
+    dataset_id: str = "TISSUE-LEGACY"
     batch_id: uuid.UUID
     entity: Literal["monthly_demand", "product", "material", "bom", "inventory", "capacity", "routing"]
     status: BatchStatus = Field(description="MAPPING_HOLD → 열 지정 필요 / HAS_ERRORS → 원본 수정 후 재업로드 / READY_FOR_APPROVAL → 승인 가능 / APPROVED, REJECTED → 최종")
@@ -185,7 +186,7 @@ class InventoryPage(BaseModel):
 def to_summary(b: BatchRecord) -> BatchSummary:
     f = (b.validation_result or {}).get("file", {})
     return BatchSummary(
-        batch_id=b.batch_id, entity=b.entity, status=b.status, source_type=b.source_type, source_note=b.source_note,
+        dataset_id=b.dataset_id, batch_id=b.batch_id, entity=b.entity, status=b.status, source_type=b.source_type, source_note=b.source_note,
         file=FileInfo(name=b.source_name, sha256=b.source_sha256, size_bytes=f.get("size_bytes"), format=f.get("format")),
         version=b.version, created_by=b.created_by, created_at=b.created_at,
         settings=BatchSettings(default_unit=b.default_unit, column_overrides=b.column_overrides or {}, sheet=b.sheet_filter),

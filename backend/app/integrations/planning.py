@@ -47,6 +47,8 @@ class SqlPlanningSourceProvider:
     def __init__(self, database): self.database = database
 
     def load(self, command: PlanCommand) -> PlanningInput:
+        if command.dataset_id!=getattr(self.database,'dataset_id','TISSUE-LEGACY'):
+            raise ApiError(409,ErrorCode.DATASET_MISMATCH,'Plan request and database dataset do not match.')
         if command.scenario == 'WHAT_IF':
             from app.plans.service import load_what_if
             return load_what_if(self.database, command)
@@ -54,6 +56,8 @@ class SqlPlanningSourceProvider:
             with self.database.connect().execution_options(isolation_level='REPEATABLE READ') as c:
                 c.execute(text('SET TRANSACTION READ ONLY'))
                 execution = ForecastRuns._detail(c, command.forecast_execution_id)
+                if getattr(execution,'dataset_id','TISSUE-LEGACY')!=command.dataset_id:
+                    raise ApiError(409,ErrorCode.DATASET_MISMATCH,'Forecast belongs to a different dataset.')
                 if execution.status not in ('OK', 'PARTIAL') or execution.result is None:
                     raise ApiError(409, ErrorCode.PLAN_INPUT_UNAVAILABLE, '성공한 저장 예측 결과를 선택하세요.')
                 tx = SqlBatchTx(c)
@@ -74,6 +78,8 @@ class SqlPlanningSourceProvider:
                     raise ApiError(409, ErrorCode.PLAN_INPUT_UNAVAILABLE, '선택 제품·월의 예측이 누락됐습니다. 제외 제품을 0 수요로 처리하지 않습니다.')
                 capacity, routing, capacity_ids, missing = planning_snapshot(c, command)
                 ids = {r.batch_id for r in [*products, *materials, *boms, *inventory]} | capacity_ids
+                if command.dataset_id!='TISSUE-LEGACY':
+                    ids |= {r.batch_id for r in execution.input_batches}
                 sources = c.execute(text("""SELECT batch_id,version AS batch_version,entity,source_sha256,result_digest,approved_at
 FROM import_batch WHERE batch_id=ANY(CAST(:ids AS uuid[])) AND status='APPROVED' AND blocking_error_count=0 ORDER BY batch_id"""), {'ids': sorted(ids)}).mappings().all()
                 if {r['batch_id'] for r in sources} != ids:
@@ -81,6 +87,7 @@ FROM import_batch WHERE batch_id=ANY(CAST(:ids AS uuid[])) AND status='APPROVED'
                 if any(not any(b.header.product_id == pid for b in boms) for pid in command.product_ids): missing.append('BOM_COVERAGE')
                 if any(not any(r.item_type == 'PRODUCT' and r.item_id == pid for r in inventory) for pid in command.product_ids): missing.append('INVENTORY_COVERAGE')
                 return PlanningInput.model_validate(json.loads(_json({
+                    'dataset_id': command.dataset_id,
                     'command': command.model_dump(mode='json'), 'forecast_input_digest': execution.input_digest,
                     'forecast_model_version': getattr(execution, 'quantile_model_version', None),
                     'forecast_runtime_identity': getattr(execution, 'runtime_identity', {}),
@@ -97,11 +104,11 @@ FROM import_batch WHERE batch_id=ANY(CAST(:ids AS uuid[])) AND status='APPROVED'
             raise ApiError(500, ErrorCode.PERSISTENCE_ERROR, '계획 입력 스냅샷 조회에 실패했습니다.') from None
 
 
-def get_source_provider() -> PlanningSourceProvider:
+def get_source_provider(dataset_id='TISSUE-LEGACY') -> PlanningSourceProvider:
     if get_settings().persistence != 'postgres':
         raise ApiError(501, ErrorCode.PERSISTENCE_DISABLED, '승인 계획 입력 조회가 비활성화되어 있습니다.')
-    from app.db import get_engine
-    return SqlPlanningSourceProvider(get_engine())
+    from app.datasets import get_dataset_engine
+    return SqlPlanningSourceProvider(get_dataset_engine(dataset_id))
 
 
 def execute(command: PlanCommand, provider_factory=get_source_provider) -> PlanningReply:

@@ -8,6 +8,9 @@ POST /ingest/preview 는 저장 없이 검증만 하는 별도 API 로 그대로
 
 from __future__ import annotations
 
+from app.api.datasets import dataset_context
+from app.datasets import get_dataset_engine
+
 import datetime as dt
 import json
 import uuid
@@ -28,14 +31,14 @@ from app.ingest.parsing import MAX_BYTES
 router = APIRouter(tags=["batches"], responses=ERROR_RESPONSES)
 
 
-def get_service() -> BatchService:
+def get_service(dataset_id: str = Depends(dataset_context)) -> BatchService:
     """테스트는 app.dependency_overrides[get_service] 로 인메모리 저장소를 주입한다."""
     if get_settings().persistence != "postgres":
         raise ApiError(501, ErrorCode.PERSISTENCE_DISABLED,
                        "이 서버는 배치 저장이 꺼져 있습니다 (PERSISTENCE=disabled). 검증만 필요하면 POST /ingest/preview 를 사용하세요.")
     from app.batches.sql_repository import SqlBatchRepository
     from app.db import get_engine
-    return BatchService(SqlBatchRepository(get_engine()))
+    return BatchService(SqlBatchRepository(get_dataset_engine(dataset_id)))
 
 
 Service = Annotated[BatchService, Depends(get_service)]
@@ -52,7 +55,10 @@ async def create_batch(
     source_type: str = Form("CLIENT_UPLOAD", description="CLIENT_UPLOAD | PUBLIC_DEMAND | SYNTHETIC (후자 둘은 source_note 필수)"),
     source_note: str | None = Form(None),
     created_by: str | None = Form(None, description="업로더 역할 코드(선택)"),
+    dataset_id: str | None = Form(None, description="선택적 소유권 확인값. query dataset_id와 같아야 하며 query를 대체하지 않음"),
 ) -> BatchDetail:
+    if dataset_id is not None and dataset_id!=getattr(svc.repo,'dataset_id','TISSUE-LEGACY'):
+        raise ApiError(409,ErrorCode.DATASET_MISMATCH,'Multipart dataset and selected query dataset disagree.')
     overrides = None
     if column_overrides:
         try:

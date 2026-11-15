@@ -8,6 +8,7 @@
   "response": {
     "items": [
       {
+        "dataset_id": "TISSUE-LEGACY",
         "batch_id": "00000000-0000-0000-0000-000000000006",
         "entity": "monthly_demand",
         "status": "REJECTED",
@@ -44,6 +45,7 @@
         "reject_reason": "기준월 오류, 원본 수정 후 재업로드"
       },
       {
+        "dataset_id": "TISSUE-LEGACY",
         "batch_id": "00000000-0000-0000-0000-000000000005",
         "entity": "monthly_demand",
         "status": "APPROVED",

@@ -192,6 +192,11 @@
             ],
             "title": "Created By"
           },
+          "dataset_id": {
+            "default": "TISSUE-LEGACY",
+            "title": "Dataset Id",
+            "type": "string"
+          },
           "entity": {
             "enum": [
               "monthly_demand",
@@ -464,6 +469,11 @@
             ],
             "title": "Created By"
           },
+          "dataset_id": {
+            "default": "TISSUE-LEGACY",
+            "title": "Dataset Id",
+            "type": "string"
+          },
           "entity": {
             "enum": [
               "monthly_demand",
@@ -639,6 +649,18 @@
             ],
             "description": "업로더 역할 코드(선택)",
             "title": "Created By"
+          },
+          "dataset_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "선택적 소유권 확인값. query dataset_id와 같아야 하며 query를 대체하지 않음",
+            "title": "Dataset Id"
           },
           "default_unit": {
             "anyOf": [
@@ -1707,6 +1729,103 @@
         "title": "ConstraintResult",
         "type": "object"
       },
+      "DatasetCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "dataset_id": {
+            "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "dataset_name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Dataset Name",
+            "type": "string"
+          },
+          "description": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Description",
+            "type": "string"
+          },
+          "source_type": {
+            "const": "SYNTHETIC",
+            "default": "SYNTHETIC",
+            "title": "Source Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dataset_id",
+          "dataset_name",
+          "description"
+        ],
+        "title": "DatasetCreate",
+        "type": "object"
+      },
+      "DatasetDetail": {
+        "additionalProperties": false,
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "dataset_id": {
+            "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "dataset_name": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Dataset Name",
+            "type": "string"
+          },
+          "description": {
+            "maxLength": 2000,
+            "minLength": 1,
+            "title": "Description",
+            "type": "string"
+          },
+          "source_type": {
+            "const": "SYNTHETIC",
+            "default": "SYNTHETIC",
+            "title": "Source Type",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "ACTIVE",
+              "ARCHIVED"
+            ],
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dataset_id",
+          "dataset_name",
+          "description",
+          "status",
+          "created_at",
+          "created_by"
+        ],
+        "title": "DatasetDetail",
+        "type": "object"
+      },
       "DemandItem": {
         "properties": {
           "batch_id": {
@@ -1902,6 +2021,11 @@
       },
       "ErrorCode": {
         "enum": [
+          "DATASET_INVALID",
+          "DATASET_NOT_FOUND",
+          "DATASET_INACTIVE",
+          "DATASET_EXISTS",
+          "DATASET_MISMATCH",
           "PLAN_NOT_FOUND",
           "PLAN_APPROVAL_DISABLED",
           "PLAN_DECISION_BLOCKED",
@@ -2234,6 +2358,16 @@
             "title": "Created At",
             "type": "string"
           },
+          "dataset_id": {
+            "default": "TISSUE-LEGACY",
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "dataset_input_digest": {
+            "readOnly": true,
+            "title": "Dataset Input Digest",
+            "type": "string"
+          },
           "dedup_key": {
             "title": "Dedup Key",
             "type": "string"
@@ -2332,7 +2466,8 @@
           "finished_at",
           "input_batches",
           "result",
-          "failure"
+          "failure",
+          "dataset_input_digest"
         ],
         "title": "ForecastExecution",
         "type": "object"
@@ -2342,6 +2477,16 @@
           "created_at": {
             "format": "date-time",
             "title": "Created At",
+            "type": "string"
+          },
+          "dataset_id": {
+            "default": "TISSUE-LEGACY",
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "dataset_input_digest": {
+            "readOnly": true,
+            "title": "Dataset Input Digest",
             "type": "string"
           },
           "dedup_key": {
@@ -2412,7 +2557,8 @@
           "input_row_count",
           "forecast_count",
           "created_at",
-          "finished_at"
+          "finished_at",
+          "dataset_input_digest"
         ],
         "title": "ForecastExecutionSummary",
         "type": "object"
@@ -3891,6 +4037,12 @@
             "title": "Contract Version",
             "type": "string"
           },
+          "dataset_id": {
+            "default": "TISSUE-LEGACY",
+            "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+            "title": "Dataset Id",
+            "type": "string"
+          },
           "forecast_execution_id": {
             "format": "uuid",
             "title": "Forecast Execution Id",
@@ -4111,6 +4263,12 @@
             "title": "Contract Version",
             "type": "string"
           },
+          "dataset_id": {
+            "default": "TISSUE-LEGACY",
+            "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+            "title": "Dataset Id",
+            "type": "string"
+          },
           "forecast_execution_id": {
             "format": "uuid",
             "title": "Forecast Execution Id",
@@ -4192,6 +4350,12 @@
               "TEST_DOUBLE"
             ],
             "title": "Data Origin",
+            "type": "string"
+          },
+          "dataset_id": {
+            "default": "TISSUE-LEGACY",
+            "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+            "title": "Dataset Id",
             "type": "string"
           },
           "decision_status": {
@@ -4415,6 +4579,12 @@
               "TEST_DOUBLE"
             ],
             "title": "Data Origin",
+            "type": "string"
+          },
+          "dataset_id": {
+            "default": "TISSUE-LEGACY",
+            "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+            "title": "Dataset Id",
             "type": "string"
           },
           "decision_status": {
@@ -4758,6 +4928,12 @@
             "const": "planning-handoff-0.2-draft",
             "default": "planning-handoff-0.2-draft",
             "title": "Contract Version",
+            "type": "string"
+          },
+          "dataset_id": {
+            "default": "TISSUE-LEGACY",
+            "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+            "title": "Dataset Id",
             "type": "string"
           },
           "forecast_input_digest": {
@@ -6254,6 +6430,18 @@
               "title": "Offset",
               "type": "integer"
             }
+          },
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -6355,6 +6543,20 @@
       },
       "post": {
         "operationId": "create_batch_batches_post",
+        "parameters": [
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "multipart/form-data": {
@@ -6476,6 +6678,18 @@
               "title": "Batch Id",
               "type": "string"
             }
+          },
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -6587,6 +6801,18 @@
             "schema": {
               "format": "uuid",
               "title": "Batch Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
               "type": "string"
             }
           }
@@ -6712,6 +6938,18 @@
               "title": "Batch Id",
               "type": "string"
             }
+          },
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
+              "type": "string"
+            }
           }
         ],
         "requestBody": {
@@ -6833,6 +7071,18 @@
             "schema": {
               "format": "uuid",
               "title": "Batch Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
               "type": "string"
             }
           }
@@ -7013,6 +7263,18 @@
               "title": "Offset",
               "type": "integer"
             }
+          },
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -7138,6 +7400,18 @@
               "minimum": 0,
               "title": "Offset",
               "type": "integer"
+            }
+          },
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
+              "type": "string"
             }
           }
         ],
@@ -7463,6 +7737,332 @@
         ]
       }
     },
+    "/datasets": {
+      "get": {
+        "operationId": "list_datasets_datasets_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/DatasetDetail"
+                  },
+                  "title": "Response List Datasets Datasets Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          }
+        },
+        "summary": "List Datasets",
+        "tags": [
+          "datasets"
+        ]
+      },
+      "post": {
+        "operationId": "create_dataset_datasets_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DatasetCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          }
+        },
+        "summary": "Create Dataset",
+        "tags": [
+          "datasets"
+        ]
+      }
+    },
+    "/datasets/{dataset_id}": {
+      "get": {
+        "operationId": "detail_dataset_datasets__dataset_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "dataset_id",
+            "required": true,
+            "schema": {
+              "title": "Dataset Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DatasetDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          }
+        },
+        "summary": "Detail Dataset",
+        "tags": [
+          "datasets"
+        ]
+      }
+    },
     "/demand/monthly": {
       "get": {
         "operationId": "list_monthly_demand_demand_monthly_get",
@@ -7538,6 +8138,18 @@
               "minimum": 0,
               "title": "Offset",
               "type": "integer"
+            }
+          },
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
+              "type": "string"
             }
           }
         ],
@@ -7803,6 +8415,18 @@
               "title": "Offset",
               "type": "integer"
             }
+          },
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -7884,6 +8508,20 @@
       },
       "post": {
         "operationId": "create_forecast_forecasts_post",
+        "parameters": [
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -8017,6 +8655,18 @@
             "schema": {
               "format": "uuid",
               "title": "Execution Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
               "type": "string"
             }
           }
@@ -8335,6 +8985,18 @@
               "title": "Offset",
               "type": "integer"
             }
+          },
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -8495,6 +9157,18 @@
               "title": "Offset",
               "type": "integer"
             }
+          },
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -8621,6 +9295,18 @@
               "title": "Offset",
               "type": "integer"
             }
+          },
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -8722,6 +9408,20 @@
       },
       "post": {
         "operationId": "create_plan_executions_post",
+        "parameters": [
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -8869,6 +9569,18 @@
               "title": "Execution Id",
               "type": "string"
             }
+          },
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -8980,6 +9692,18 @@
             "schema": {
               "format": "uuid",
               "title": "Execution Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
               "type": "string"
             }
           }
@@ -9099,6 +9823,18 @@
               "title": "Execution Id",
               "type": "string"
             }
+          },
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -9208,6 +9944,18 @@
             "schema": {
               "format": "uuid",
               "title": "Execution Id",
+              "type": "string"
+            }
+          },
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
               "type": "string"
             }
           }
@@ -9333,6 +10081,18 @@
               "title": "Execution Id",
               "type": "string"
             }
+          },
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -9437,6 +10197,20 @@
     "/plans": {
       "post": {
         "operationId": "create_plan_plans_post",
+        "parameters": [
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -9564,6 +10338,20 @@
     "/plans/what-if": {
       "post": {
         "operationId": "what_if_plans_what_if_post",
+        "parameters": [
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
+              "type": "string"
+            }
+          }
+        ],
         "requestBody": {
           "content": {
             "application/json": {
@@ -9748,6 +10536,18 @@
               "title": "Offset",
               "type": "integer"
             }
+          },
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -9873,6 +10673,18 @@
               "minimum": 0,
               "title": "Offset",
               "type": "integer"
+            }
+          },
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
+              "type": "string"
             }
           }
         ],

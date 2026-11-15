@@ -6,9 +6,11 @@ from uuid import UUID
 from pydantic import Field, model_validator
 from .base import Code, Month, DecimalValue, StrictModel
 from .capacity import CapacityRegistrationDraft
+from .dataset import DatasetId,LEGACY_DATASET
 
 
 class PlanCommand(StrictModel):
+    dataset_id: DatasetId = LEGACY_DATASET
     contract_version: Literal['planning-integration-0.1-draft'] = 'planning-integration-0.1-draft'
     forecast_execution_id: UUID
     product_ids: list[Code] = Field(min_length=1)
@@ -119,6 +121,7 @@ class ForecastFact(StrictModel):
 
 
 class PlanningInput(StrictModel):
+    dataset_id: DatasetId = LEGACY_DATASET
     contract_version: Literal['planning-handoff-0.2-draft'] = 'planning-handoff-0.2-draft'
     command: PlanCommand
     forecast_input_digest: str
@@ -131,6 +134,12 @@ class PlanningInput(StrictModel):
     policy_snapshot: dict[str, str] = Field(default_factory=dict)
     missing_inputs: list[str] = Field(default_factory=list)
     base_plan_snapshot: dict | None = None
+
+    @model_validator(mode='after')
+    def dataset_scope_matches(self):
+        if self.dataset_id!=self.command.dataset_id:
+            raise ValueError('PlanningInput and command must identify the same dataset')
+        return self
 
 
 class PlanningIssue(StrictModel):

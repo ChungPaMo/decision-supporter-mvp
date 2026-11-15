@@ -475,6 +475,11 @@
         "title": "Created At",
         "type": "string"
       },
+      "dataset_id": {
+        "default": "TISSUE-LEGACY",
+        "title": "Dataset Id",
+        "type": "string"
+      },
       "dedup_key": {
         "title": "Dedup Key",
         "type": "string"
@@ -585,6 +590,11 @@
           "created_at": {
             "format": "date-time",
             "title": "Created At",
+            "type": "string"
+          },
+          "dataset_id": {
+            "default": "TISSUE-LEGACY",
+            "title": "Dataset Id",
             "type": "string"
           },
           "dedup_key": {
@@ -781,6 +791,11 @@
           "created_at": {
             "format": "date-time",
             "title": "Created At",
+            "type": "string"
+          },
+          "dataset_id": {
+            "default": "TISSUE-LEGACY",
+            "title": "Dataset Id",
             "type": "string"
           },
           "dedup_key": {

@@ -12,7 +12,7 @@ def digest(value):
     return 'sha256:'+hashlib.sha256(_json(value).encode()).hexdigest()
 
 
-SUMMARY = '''e.execution_id,e.forecast_execution_id,e.base_plan_execution_id,e.scenario_type,e.target_month,
+SUMMARY = '''e.dataset_id,e.execution_id,e.forecast_execution_id,e.base_plan_execution_id,e.scenario_type,e.target_month,
  e.as_of_date::text,e.status,e.input_digest,e.result_digest,e.engine_version,e.policy_version,e.runtime_identity,
  e.created_at,e.completed_at,e.error_code,e.data_origin,r.status AS decision_status,r.selected_plan_id,r.version'''
 
@@ -29,7 +29,8 @@ class PlanRepository:
         result=PlanExecutionDetail.model_validate({**row,'decisions':[dict(e) for e in events]})
         from .service import validate_pair
         validate_pair(result.input_snapshot,result.result_snapshot)
-        if digest(result.input_snapshot.model_dump(mode='json'))!=result.input_digest or digest(result.result_snapshot.model_dump(mode='json'))!=result.result_digest:
+        if result.dataset_id!=result.input_snapshot.dataset_id: raise ValueError("Stored dataset ownership mismatch")
+        if digest(row['input_snapshot'])!=result.input_digest or digest(result.result_snapshot.model_dump(mode='json'))!=result.result_digest:
             raise ValueError('Stored plan digest mismatch')
         from contracts.interfaces.planning import ApprovedSource
         sources=c.execute(text('''SELECT i.batch_id,i.batch_version,b.entity,i.source_sha256,i.result_digest,i.approved_at

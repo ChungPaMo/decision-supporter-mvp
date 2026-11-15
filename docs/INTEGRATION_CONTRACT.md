@@ -1,5 +1,7 @@
 # Module integration · draft 0.2
 
+> **데이터셋 격리 확장:** [DATASET_ISOLATION](DATASET_ISOLATION.md)을 따른다. API의 dataset_id query는 요청 저장소·예측·계획·What-if·출력 전체를 같은 소속으로 제한한다. 기존 생략 호출은 TISSUE-LEGACY만 사용한다. PlanningInput/PlanCommand는 dataset_id를 포함하며 엔진 알고리즘은 변경하지 않았다. 기존 예측 input_digest는 엔진 계약을 보존하고 별도 dataset_input_digest와 실행 소유권으로 데이터셋을 식별한다. 신규 migration은 0008이다.
+
 > **2026-11-15 계획 영구 저장 확장:** [계획 실행 계약](PLAN_EXECUTION_PERSISTENCE.md)의 별도 `/plan-executions`를 추가했다. 기존 `/plans*`는 읽기 전용 Preview를 유지한다. What-if provider는 저장된 실제 입력/부모 결과를 읽지만 계산 모듈 미구현 501은 유지한다. 저장·계보·검토/반려·승인 조건부 XLSX 기반은 구현됐으며 정식 승인은 인증/정책 미연결로 비활성이다. 아래 PLAN_HISTORY_NOT_IMPLEMENTED와 ‘계획 저장소 없음’ 설명은 초기 기록으로 대체된다. 0001~0006을 보존하고 신규 0007만 추가했다.
 
 > **2026-11-15 등록 확장:** CAPA/Routing은 더 이상 미등록 전용 경로가 아니다. `POST /batches`의 capacity/routing 승인 자료를 0006 테이블에 저장하고 `/capacity`, `/routings`로 조회한다. SQL provider는 실제 승인 자료가 있으면 capacity_snapshot/routing_snapshot과 출처 목록을 채운다. 아래 ‘null 스냅샷’ 설명은 해당 자료가 없는 경우에 적용된다. RoutingStep의 기존 필드는 유지하고 `resource_requirements`에 같은 공정의 추가 동시 자원 소요를 보존한다. [데이터 사전](CAPACITY_ROUTING_DATA_DICTIONARY.md)을 따른다. 새 마이그레이션은 0006이며 0001~0005는 보존했다. 분류기의 추천 entity와 엔진 알고리즘은 변경하지 않았다. 계획·What-if의 501과 미확정 정책 표시는 유지한다.

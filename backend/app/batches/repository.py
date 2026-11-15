@@ -53,6 +53,7 @@ class BatchRecord:
     rejected_by: str | None = None
     rejected_at: dt.datetime | None = None
     reject_reason: str | None = None
+    dataset_id: str = "TISSUE-LEGACY"
 
 
 @dataclass
