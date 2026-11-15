@@ -19,6 +19,8 @@ python -X utf8 modules/planning_engine/synthetic/generate.py
 | convert.py | raw → upload·derived 변환. raw 파일만 읽는다 |
 | aggregate_sales.py | 판매 현황 → 월 수요 집계 규칙 (convert.py가 사용) |
 | ledger.py | raw 거래 기록만 읽어 재고가 맞물리는지 확인, 월별 설비 사용시간 집계 |
+| bottleneck_check.py | 예측 P50/P80/P90별 설비 부하·자재 여유·수량 한도 어림 점검 (`data/forecast/bottleneck_check.md`). 계획 엔진 정답 아님 |
+| forecast_request.py | upload/05_monthly_demand.csv → 예측 엔진 입력 JSON (`data/forecast/request.json`, 기준일 2026-12-31, 3개월) |
 
 ## 1. 가상 회사
 
@@ -66,6 +68,13 @@ python -X utf8 modules/planning_engine/synthetic/generate.py
 | 거래처 변화 | 오픈마켓G 2023-04 신규 입점, 강원 대리점 2025-06 거래 중지 | 거래처별 판매 이력이 기간 중 시작·종료 |
 
 `SUMMARY.md`의 "어림" 값은 설계 확인용(최근 12개월 평균 기준)이며 엔진 정답이 아니다. 정답은 별도 손계산으로 만든다.
+
+**예측 엔진으로 확인한 결과** (2026-11-15, `forecast_request.py` → `python -m engine.forecast` → `bottleneck_check.py`)
+
+- 예측: 9제품 모두 OK, 경고 0. 3개월 합계 P80은 P50보다 약 9% 높다. 백테스트(2026년)에서 P50 WAPE 약 8%, P80 적중률 약 71%(목표 80%보다 낮음, 성장 제품 때문에 예측이 약 3% 낮음).
+- 1월은 설계대로: SAW1 P50 90% / P80 100% / P90 105%. MR-N3는 1/20 입고분이 없으면 P80부터 부족.
+- 2월은 설 연휴로 시간이 줄어 P50에서도 SAW1·LB1이 정규+잔업 한도를 넘는다. 3개월 합계로 보면 SAW1이 P50 98%(1월 선행생산 + 잔업으로 겨우 가능), P80 106%·P90 112%(불가능). **희원 결정: 이 빠듯함을 그대로 둔다.** 계획 엔진은 못 맞추는 수량(부족분)을 반드시 보여줘야 한다.
+- 선물세트: 모델이 2026년 성수기(2월)를 보고 2027년도 2월에 높게 예측한다. 2027년 설(2/7) 기준 실제 성수기는 1월이므로 명절 이동은 담당자 보정 대상. 이번 예측으로는 월 2,500 한도를 넘지 않는다.
 
 ## 2. 폴더 구조
 
