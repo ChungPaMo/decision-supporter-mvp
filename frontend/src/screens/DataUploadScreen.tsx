@@ -60,6 +60,19 @@ function failureMessage(error: unknown) {
   return base;
 }
 
+// 등록 순서(제품→자재→BOM→재고→월별 수요)에서 아직 승인되지 않은 첫 항목을 다음 할 일로 안내한다.
+function nextAction(batches: Partial<Record<Entity, BatchDetail>>, approved: Partial<Record<Entity, boolean>>, synced: boolean): { text: string; entity?: Entity } {
+  if (!synced) return { text: '서버 상태를 먼저 확인하세요.' };
+  const entity = ENTITY_ORDER.find((item) => !approved[item]);
+  if (!entity) return { text: '모든 데이터가 승인됐습니다. 승인 수요 예측으로 진행하세요.' };
+  const label = ENTITY_LABEL[entity];
+  const status = batches[entity]?.status;
+  if (status === 'READY_FOR_APPROVAL') return { entity, text: `${label} 검증 결과를 확인하고 승인하세요.` };
+  if (status === 'HAS_ERRORS') return { entity, text: `${label} 파일의 오류를 고쳐 다시 등록하세요.` };
+  if (status === 'MAPPING_HOLD') return { entity, text: `${label}의 열 지정을 확인하고 재검증하세요.` };
+  return { entity, text: `${label} 파일을 등록하세요.` };
+}
+
 type Action = (operation: () => Promise<BatchDetail>) => Promise<void>;
 
 function BatchPanel({ batch, disabled, act }: { batch: BatchDetail; disabled: boolean; act: Action }) {
@@ -96,7 +109,7 @@ function BatchPanel({ batch, disabled, act }: { batch: BatchDetail; disabled: bo
       {readError ? <Notice tone="bad">{readError}</Notice> : <RowsTable rows={rows} caption="서버 승인 데이터 조회 (최대 100개 항목 중 선택 배치)" />}
     </>}
     {batch.status === 'REJECTED' && <Notice tone="muted">{batch.rejected_by} 반려 · 사유: {batch.reject_reason}</Notice>}
-    {!finished && <fieldset className="stack" disabled={disabled}>
+    {!finished && <fieldset className="stack review-fields" disabled={disabled}>
       <legend>재검증 설정</legend>
       {holds.map((hold, i) => <label className="field" key={`${hold.field}-${i}`}><span>{hold.message}</span>
         <input aria-label={`${hold.field} 매핑 열`} list={`columns-${i}`} value={overrides[hold.field] ?? ''}
@@ -197,29 +210,36 @@ export default function DataUploadScreen({ view = 'upload' }: { view?: 'upload' 
     finally { working.current = false; if (alive.current) setBusy(false); }
   }
 
-  return <div className="screen">
+  const next = nextAction(batches, approvedEntities, synced);
+  const approvedCount = ENTITY_ORDER.filter((entity) => approvedEntities[entity]).length;
+  return <div className="screen data-screen">
     {verify
       ? <ScreenHeader title="검증·승인·등록" description="등록된 배치의 검증 결과를 확인하고, 승인 가능한 데이터만 승인합니다. 자동으로 승인되지 않습니다." />
       : <ScreenHeader title="데이터 등록·승인" description="파일을 서버에 등록하고 검증 결과를 확인해 승인합니다. 제품·자재 승인 후 BOM·재고·월별 수요를 등록하세요." />}
-    {!verify && <ClassificationPanel onChoose={setActiveEntity} disabled={busy} />}
-    <div className="actions"><button className="button" disabled={busy} onClick={() => void refresh()}>서버 상태 다시 조회</button>
+    <div className="actions sync-row"><button className="button" disabled={busy} onClick={() => void refresh()}>서버 상태 다시 조회</button>
       <span role="status">{busy ? '서버 처리 중…' : synced ? '서버 상태 조회 완료' : '서버 상태 확인 필요'}</span></div>
     {message && <div role="alert"><Notice tone="bad">{message}</Notice></div>}
     {!synced && !busy && <Notice tone="warn">서버 연결을 확인한 후 다시 조회하세요. 확인 전에는 등록·승인을 할 수 없습니다.</Notice>}
+    <section className="next-step" aria-label="다음 할 일">
+      <p><b>다음 할 일</b>{next.text}<small>승인 {approvedCount} / {ENTITY_ORDER.length}</small></p>
+      {next.entity && next.entity !== activeEntity && <button type="button" className="button" disabled={busy} onClick={() => setActiveEntity(next.entity!)}>{ENTITY_LABEL[next.entity]} 열기</button>}
+      <button className={`button${next.entity ? '' : ' primary'}`} disabled={busy || !synced || !approvedEntities.monthly_demand}
+        onClick={() => setStep('forecast')}>승인 수요 예측</button>
+    </section>
     <div className="data-layout"><aside className="entity-list" aria-label="데이터 종류"><ul>
       {ENTITY_ORDER.map((entity) => <li key={entity}><button type="button" disabled={busy} className={entity === activeEntity ? 'active' : ''}
         aria-current={entity === activeEntity ? 'true' : undefined} onClick={() => setActiveEntity(entity)}>
         <span>{ENTITY_LABEL[entity]}</span>{batches[entity] ? <BatchBadge status={batches[entity]!.status} /> : <small>미등록</small>}
       </button></li>)}
-    </ul></aside><div className="stack">
+    </ul></aside><div className={`data-columns${verify ? '' : ' with-rail'}`}><div className="stack">
       {!verify && <section className="panel stack"><h3>{ENTITY_LABEL[activeEntity]} 파일 등록</h3>
         {locked && <Notice tone="warn">제품과 자재를 먼저 승인해야 등록할 수 있습니다.</Notice>}
-        <fieldset disabled={busy || !synced || locked} className="stack"><legend>CSV/XLSX 업로드</legend>
+        <fieldset disabled={busy || !synced || locked} className="stack upload-fields"><legend>CSV/XLSX 업로드</legend>
           <label className="field"><span>데이터 출처</span><select aria-label="데이터 출처" value={source} onChange={(e) => setSource(e.target.value)}>
             <option value="CLIENT_UPLOAD">기업 업로드</option><option value="SYNTHETIC">합성 데이터</option><option value="PUBLIC_DEMAND">공개 수요 데이터</option>
           </select></label>
           <label className="field"><span>출처 설명</span><input value={sourceNote} onChange={(e) => setSourceNote(e.target.value)} /></label>
-          <label className="field"><span>등록 파일 (CSV/XLSX)</span><input type="file" accept=".csv,.xlsx" onChange={handleFile}
+          <label className="field file-field"><span>등록 파일 (CSV/XLSX)</span><input type="file" accept=".csv,.xlsx" onChange={handleFile}
             disabled={source !== 'CLIENT_UPLOAD' && !sourceNote.trim()} /></label>
         </fieldset>
       </section>}
@@ -229,9 +249,7 @@ export default function DataUploadScreen({ view = 'upload' }: { view?: 'upload' 
       </select></label>
       {verify && !batch && !busy && <Notice tone="muted">이 데이터 종류에는 등록된 배치가 없습니다. 데이터 업로드에서 파일을 먼저 등록하세요.</Notice>}
       {batch && <BatchPanel key={`${batch.batch_id}-${batch.version}`} batch={batch} disabled={busy || !synced} act={act} />}
-    </div></div>
+    </div>{!verify && <ClassificationPanel onChoose={setActiveEntity} disabled={busy} />}</div></div>
     <Notice tone="info">승인된 월별 수요는 실제 예측에 사용됩니다. 계획·진단은 별도 예시입니다.</Notice>
-    <div className="actions"><button className="button primary" disabled={busy || !synced || !approvedEntities.monthly_demand}
-      onClick={() => setStep('forecast')}>승인 수요 예측</button></div>
   </div>;
 }

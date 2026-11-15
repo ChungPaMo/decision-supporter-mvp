@@ -58,6 +58,8 @@ class ApiClient {
     // 요청 시점의 데이터셋을 고정한다. 응답 전에 데이터셋이 바뀌면 결과를 화면에 넘기지 않는다.
     const datasetId = currentDataset();
     const url = `${API_BASE}${this.scoped(path, datasetId)}`;
+    // 데이터셋과 무관한 요청(/datasets, /health 등)은 데이터셋이 바뀌어도 결과를 버리지 않는다.
+    const stale = () => url.includes('dataset_id=') && currentDataset() !== datasetId;
     const config: RequestInit = { method };
 
     if (options?.formData) {
@@ -77,10 +79,10 @@ class ApiClient {
     }
     if (!res.ok) {
       const error = await res.json().catch(() => ({ detail: { code: 'NETWORK_ERROR', message: res.statusText } }));
-      throw currentDataset() === datasetId ? error : STALE;
+      throw stale() ? STALE : error;
     }
     const payload = await res.json();
-    if (currentDataset() !== datasetId) throw STALE;
+    if (stale()) throw STALE;
     return payload;
   }
 
