@@ -1,0 +1,383 @@
+{
+  "description": "계획 엔진 작은 손계산 케이스 (SYNTHETIC). 규칙: modules/planning_engine/PLANNING_RULES.md v0.3. 풀이: SMALL_CASES.md. 엔진 코드와 독립적으로 손으로 계산했다.",
+  "rules_version": "PLANNING_RULES v0.3",
+  "conventions": {
+    "demand": "선택된 분위수 값(10진 문자열). 계획 수요 = ceil(값 x 수요배수)",
+    "routing": "제품 -> 자원 -> {run_time, reference_qty}. 1개당 시간 = run_time / reference_qty",
+    "resources": "regular/overtime는 월별 시간 배열. ot_allowed=false면 잔업 한도는 쓰지 않는다",
+    "arrays": "월별 값은 months 순서",
+    "evaluations": "적힌 항목만 비교한다. 적지 않은 판정은 비교 대상이 아니다"
+  },
+  "cases": [
+    {
+      "case_id": "HC-01",
+      "title": "기본 순소요: 할당재고·안전재고·수요 올림",
+      "rule": "§2 목표 생산량",
+      "input": {
+        "months": ["2027-01", "2027-02", "2027-03"],
+        "ot_allowed": false,
+        "demand_multiplier": "1",
+        "products": [{"id": "A", "unit": "EA", "safety_stock": 20, "on_hand": 40, "allocated": 10}],
+        "demand": {"A": ["100.4", "120", "89.2"]},
+        "resources": [{"id": "S", "time_basis": "MACHINE_HOUR", "regular": [100, 100, 100], "overtime": [0, 0, 0]}],
+        "routing": {"A": {"S": {"run_time": "1", "reference_qty": "10"}}}
+      },
+      "expected": {
+        "planned_demand": {"A": [101, 120, 90]},
+        "target": {"A": [91, 120, 90]},
+        "production": {"A": [91, 120, 90]},
+        "end_inventory": {"A": [20, 20, 20]},
+        "stockout": {"A": [0, 0, 0]},
+        "used_hours": {"S": ["9.1", "12", "9"]},
+        "overtime_hours": {"S": ["0", "0", "0"]},
+        "evaluations": [
+          {"constraint_id": "CAP-S-2027-01", "status": "SATISFIED", "limit_value": "100", "used_value": "9.1"},
+          {"constraint_id": "CAP-S-2027-02", "status": "SATISFIED", "limit_value": "100", "used_value": "12"},
+          {"constraint_id": "CAP-S-2027-03", "status": "SATISFIED", "limit_value": "100", "used_value": "9"},
+          {"constraint_id": "DEM-A-2027-01", "status": "SATISFIED"},
+          {"constraint_id": "DEM-A-2027-02", "status": "SATISFIED"},
+          {"constraint_id": "DEM-A-2027-03", "status": "SATISFIED"},
+          {"constraint_id": "SS-A-2027-01", "status": "SATISFIED"},
+          {"constraint_id": "SS-A-2027-02", "status": "SATISFIED"},
+          {"constraint_id": "SS-A-2027-03", "status": "SATISFIED"}
+        ],
+        "feasibility": "FEASIBLE"
+      }
+    },
+    {
+      "case_id": "HC-02",
+      "title": "설비 한도: 앞 달로 미루고, 남으면 뒤 달에 보충, 결품 이월",
+      "rule": "§3.2 선행생산, §3.3 보충, §4 결품, SS SOFT",
+      "input": {
+        "months": ["2027-01", "2027-02", "2027-03"],
+        "ot_allowed": false,
+        "demand_multiplier": "1",
+        "products": [{"id": "A", "unit": "EA", "safety_stock": 10, "on_hand": 0, "allocated": 0}],
+        "demand": {"A": ["100", "100", "50"]},
+        "resources": [{"id": "S", "time_basis": "MACHINE_HOUR", "regular": [100, 80, 100], "overtime": [0, 0, 0]}],
+        "routing": {"A": {"S": {"run_time": "1", "reference_qty": "1"}}}
+      },
+      "expected": {
+        "planned_demand": {"A": [100, 100, 50]},
+        "target": {"A": [110, 100, 50]},
+        "unmade_after_prebuild": {"A": 30},
+        "production": {"A": [100, 80, 80]},
+        "end_inventory": {"A": [0, -20, 10]},
+        "stockout": {"A": [0, 20, 0]},
+        "used_hours": {"S": ["100", "80", "80"]},
+        "overtime_hours": {"S": ["0", "0", "0"]},
+        "evaluations": [
+          {"constraint_id": "CAP-S-2027-01", "status": "SATISFIED", "limit_value": "100", "used_value": "100", "reason_codes": ["CAPACITY_BINDING"]},
+          {"constraint_id": "CAP-S-2027-02", "status": "SATISFIED", "limit_value": "80", "used_value": "80", "reason_codes": ["CAPACITY_BINDING"]},
+          {"constraint_id": "CAP-S-2027-03", "status": "SATISFIED", "limit_value": "100", "used_value": "80", "reason_codes": []},
+          {"constraint_id": "DEM-A-2027-01", "status": "SATISFIED"},
+          {"constraint_id": "DEM-A-2027-02", "status": "VIOLATED", "reason_codes": ["STOCKOUT"]},
+          {"constraint_id": "DEM-A-2027-03", "status": "SATISFIED"},
+          {"constraint_id": "SS-A-2027-01", "status": "VIOLATED"},
+          {"constraint_id": "SS-A-2027-02", "status": "VIOLATED"},
+          {"constraint_id": "SS-A-2027-03", "status": "SATISFIED"}
+        ],
+        "feasibility": "INFEASIBLE"
+      }
+    },
+    {
+      "case_id": "HC-03",
+      "title": "공유 설비: 두 제품을 같은 비율로 축소, 자투리 시간은 다시 나누지 않음",
+      "rule": "§3.1 같은 비율 규칙",
+      "input": {
+        "months": ["2027-01"],
+        "ot_allowed": false,
+        "demand_multiplier": "1",
+        "products": [
+          {"id": "A", "unit": "EA", "safety_stock": 0, "on_hand": 0, "allocated": 0},
+          {"id": "B", "unit": "EA", "safety_stock": 0, "on_hand": 0, "allocated": 0}
+        ],
+        "demand": {"A": ["60"], "B": ["40"]},
+        "resources": [
+          {"id": "S", "time_basis": "MACHINE_HOUR", "regular": [120], "overtime": [0]},
+          {"id": "RA", "time_basis": "MACHINE_HOUR", "regular": [100], "overtime": [0]}
+        ],
+        "routing": {
+          "A": {"S": {"run_time": "1", "reference_qty": "1"}, "RA": {"run_time": "1", "reference_qty": "1"}},
+          "B": {"S": {"run_time": "4", "reference_qty": "2"}}
+        }
+      },
+      "expected": {
+        "scale_factor": {"S": "6/7", "RA": "1"},
+        "production": {"A": [51], "B": [34]},
+        "end_inventory": {"A": [-9], "B": [-6]},
+        "stockout": {"A": [9], "B": [6]},
+        "used_hours": {"S": ["119"], "RA": ["51"]},
+        "evaluations": [
+          {"constraint_id": "CAP-S-2027-01", "status": "SATISFIED", "limit_value": "120", "used_value": "119", "reason_codes": ["CAPACITY_BINDING"]},
+          {"constraint_id": "CAP-RA-2027-01", "status": "SATISFIED", "limit_value": "100", "used_value": "51", "reason_codes": []},
+          {"constraint_id": "DEM-A-2027-01", "status": "VIOLATED"},
+          {"constraint_id": "DEM-B-2027-01", "status": "VIOLATED"}
+        ],
+        "feasibility": "INFEASIBLE"
+      }
+    },
+    {
+      "case_id": "HC-04",
+      "title": "여러 자원: 제품마다 가장 빠듯한 자원의 비율을 따름",
+      "rule": "§3.1-3 제품별 비율 = 쓰는 자원 비율 중 최솟값",
+      "input": {
+        "months": ["2027-01"],
+        "ot_allowed": false,
+        "demand_multiplier": "1",
+        "products": [
+          {"id": "A", "unit": "EA", "safety_stock": 0, "on_hand": 0, "allocated": 0},
+          {"id": "B", "unit": "EA", "safety_stock": 0, "on_hand": 0, "allocated": 0}
+        ],
+        "demand": {"A": ["60"], "B": ["40"]},
+        "resources": [
+          {"id": "S", "time_basis": "MACHINE_HOUR", "regular": [120], "overtime": [0]},
+          {"id": "RA", "time_basis": "MACHINE_HOUR", "regular": [45], "overtime": [0]}
+        ],
+        "routing": {
+          "A": {"S": {"run_time": "1", "reference_qty": "1"}, "RA": {"run_time": "1", "reference_qty": "1"}},
+          "B": {"S": {"run_time": "4", "reference_qty": "2"}}
+        }
+      },
+      "expected": {
+        "scale_factor": {"S": "6/7", "RA": "3/4"},
+        "production": {"A": [45], "B": [34]},
+        "end_inventory": {"A": [-15], "B": [-6]},
+        "stockout": {"A": [15], "B": [6]},
+        "used_hours": {"S": ["113"], "RA": ["45"]},
+        "evaluations": [
+          {"constraint_id": "CAP-S-2027-01", "status": "SATISFIED", "limit_value": "120", "used_value": "113", "reason_codes": ["CAPACITY_BINDING"]},
+          {"constraint_id": "CAP-RA-2027-01", "status": "SATISFIED", "limit_value": "45", "used_value": "45", "reason_codes": ["CAPACITY_BINDING"]},
+          {"constraint_id": "DEM-A-2027-01", "status": "VIOLATED"},
+          {"constraint_id": "DEM-B-2027-01", "status": "VIOLATED"}
+        ],
+        "feasibility": "INFEASIBLE"
+      }
+    },
+    {
+      "case_id": "HC-05",
+      "title": "잔업: 정규시간을 넘는 만큼 잔업 한도 안에서 사용",
+      "rule": "§3 CAP = 정규 + 잔업, §4 잔업시간",
+      "input": {
+        "months": ["2027-01"],
+        "ot_allowed": true,
+        "demand_multiplier": "1",
+        "products": [{"id": "A", "unit": "EA", "safety_stock": 0, "on_hand": 0, "allocated": 0}],
+        "demand": {"A": ["110"]},
+        "resources": [{"id": "S", "time_basis": "MACHINE_HOUR", "regular": [100], "overtime": [20]}],
+        "routing": {"A": {"S": {"run_time": "1", "reference_qty": "1"}}}
+      },
+      "expected": {
+        "production": {"A": [110]},
+        "end_inventory": {"A": [0]},
+        "stockout": {"A": [0]},
+        "used_hours": {"S": ["110"]},
+        "overtime_hours": {"S": ["10"]},
+        "evaluations": [
+          {"constraint_id": "CAP-S-2027-01", "status": "SATISFIED", "limit_value": "120", "used_value": "110", "reason_codes": []},
+          {"constraint_id": "DEM-A-2027-01", "status": "SATISFIED"}
+        ],
+        "feasibility": "FEASIBLE"
+      }
+    },
+    {
+      "case_id": "HC-06",
+      "title": "잔업 허용 안: 그달 잔업을 먼저 쓰고 남는 것만 앞 달로",
+      "rule": "§3.2 잔업 먼저, 선행생산은 그다음",
+      "input": {
+        "months": ["2027-01", "2027-02"],
+        "ot_allowed": true,
+        "demand_multiplier": "1",
+        "products": [{"id": "A", "unit": "EA", "safety_stock": 0, "on_hand": 0, "allocated": 0}],
+        "demand": {"A": ["80", "140"]},
+        "resources": [{"id": "S", "time_basis": "MACHINE_HOUR", "regular": [100, 100], "overtime": [20, 20]}],
+        "routing": {"A": {"S": {"run_time": "1", "reference_qty": "1"}}}
+      },
+      "expected": {
+        "production": {"A": [100, 120]},
+        "end_inventory": {"A": [20, 0]},
+        "stockout": {"A": [0, 0]},
+        "used_hours": {"S": ["100", "120"]},
+        "overtime_hours": {"S": ["0", "20"]},
+        "evaluations": [
+          {"constraint_id": "CAP-S-2027-01", "status": "SATISFIED", "limit_value": "120", "used_value": "100", "reason_codes": []},
+          {"constraint_id": "CAP-S-2027-02", "status": "SATISFIED", "limit_value": "120", "used_value": "120", "reason_codes": ["CAPACITY_BINDING"]},
+          {"constraint_id": "DEM-A-2027-01", "status": "SATISFIED"},
+          {"constraint_id": "DEM-A-2027-02", "status": "SATISFIED"}
+        ],
+        "feasibility": "FEASIBLE"
+      }
+    },
+    {
+      "case_id": "HC-07",
+      "title": "잔업 없는 안(비용절감형): HC-06과 같은 입력에서 결품",
+      "rule": "§3 CAP = 정규만",
+      "input": {
+        "months": ["2027-01", "2027-02"],
+        "ot_allowed": false,
+        "demand_multiplier": "1",
+        "products": [{"id": "A", "unit": "EA", "safety_stock": 0, "on_hand": 0, "allocated": 0}],
+        "demand": {"A": ["80", "140"]},
+        "resources": [{"id": "S", "time_basis": "MACHINE_HOUR", "regular": [100, 100], "overtime": [20, 20]}],
+        "routing": {"A": {"S": {"run_time": "1", "reference_qty": "1"}}}
+      },
+      "expected": {
+        "unmade_after_prebuild": {"A": 20},
+        "production": {"A": [100, 100]},
+        "end_inventory": {"A": [20, -20]},
+        "stockout": {"A": [0, 20]},
+        "used_hours": {"S": ["100", "100"]},
+        "overtime_hours": {"S": ["0", "0"]},
+        "evaluations": [
+          {"constraint_id": "CAP-S-2027-01", "status": "SATISFIED", "limit_value": "100", "used_value": "100", "reason_codes": ["CAPACITY_BINDING"]},
+          {"constraint_id": "CAP-S-2027-02", "status": "SATISFIED", "limit_value": "100", "used_value": "100", "reason_codes": ["CAPACITY_BINDING"]},
+          {"constraint_id": "DEM-A-2027-01", "status": "SATISFIED"},
+          {"constraint_id": "DEM-A-2027-02", "status": "VIOLATED", "reason_codes": ["STOCKOUT"]}
+        ],
+        "feasibility": "INFEASIBLE"
+      }
+    },
+    {
+      "case_id": "HC-08",
+      "title": "월 생산수량 한도: 넘친 양을 앞 달로",
+      "rule": "§3.1-3 LIM, QTY 판정",
+      "input": {
+        "months": ["2027-01", "2027-02"],
+        "ot_allowed": false,
+        "demand_multiplier": "1",
+        "products": [{"id": "G", "unit": "EA", "safety_stock": 0, "on_hand": 0, "allocated": 0}],
+        "demand": {"G": ["30", "70"]},
+        "resources": [{"id": "S", "time_basis": "MACHINE_HOUR", "regular": [1000, 1000], "overtime": [0, 0]}],
+        "routing": {"G": {"S": {"run_time": "1", "reference_qty": "1"}}},
+        "quantity_limits": {"G": [50, 50]}
+      },
+      "expected": {
+        "production": {"G": [50, 50]},
+        "end_inventory": {"G": [20, 0]},
+        "stockout": {"G": [0, 0]},
+        "evaluations": [
+          {"constraint_id": "QTY-G-2027-01", "status": "SATISFIED", "limit_value": "50", "used_value": "50", "reason_codes": []},
+          {"constraint_id": "QTY-G-2027-02", "status": "SATISFIED", "limit_value": "50", "used_value": "50", "reason_codes": ["QUANTITY_LIMIT_BINDING"]},
+          {"constraint_id": "DEM-G-2027-01", "status": "SATISFIED"},
+          {"constraint_id": "DEM-G-2027-02", "status": "SATISFIED"}
+        ],
+        "feasibility": "FEASIBLE"
+      }
+    },
+    {
+      "case_id": "HC-09",
+      "title": "BOM 전개와 자재 부족: 손실률·기준수량·안전재고·입고 예정",
+      "rule": "§5 MRP, MAT은 UNVERIFIED",
+      "input": {
+        "months": ["2027-01", "2027-02"],
+        "ot_allowed": false,
+        "demand_multiplier": "1",
+        "products": [{"id": "A", "unit": "EA", "safety_stock": 0, "on_hand": 0, "allocated": 0}],
+        "demand": {"A": ["100", "100"]},
+        "resources": [{"id": "S", "time_basis": "MACHINE_HOUR", "regular": [1000, 1000], "overtime": [0, 0]}],
+        "routing": {"A": {"S": {"run_time": "1", "reference_qty": "1"}}},
+        "materials": [
+          {"id": "K1", "unit": "kg", "safety_stock": "20", "on_hand": "150", "allocated": "0"},
+          {"id": "K2", "unit": "EA", "safety_stock": "0", "on_hand": "400", "allocated": "0"}
+        ],
+        "bom": {"A": [
+          {"material": "K1", "qty": "2", "base_qty": "1", "scrap_rate": "0.05"},
+          {"material": "K2", "qty": "3", "base_qty": "2", "scrap_rate": "0"}
+        ]},
+        "receipts": [{"material": "K1", "qty": "100", "month": "2027-02"}]
+      },
+      "expected": {
+        "production": {"A": [100, 100]},
+        "per_unit": {"K1": "2.1", "K2": "1.5"},
+        "material_requirements": {
+          "K1": {"required": ["210", "210"], "available": ["130", "100"], "shortage": ["80", "110"]},
+          "K2": {"required": ["150", "150"], "available": ["400", "0"], "shortage": ["0", "0"]}
+        },
+        "evaluations": [
+          {"constraint_id": "MAT-K1-2027-01", "status": "UNVERIFIED", "limit_value": "130", "used_value": "210", "reason_codes": ["PROCUREMENT_REQUIRED"]},
+          {"constraint_id": "MAT-K1-2027-02", "status": "UNVERIFIED", "limit_value": "230", "used_value": "420", "reason_codes": ["PROCUREMENT_REQUIRED"]},
+          {"constraint_id": "MAT-K2-2027-01", "status": "SATISFIED", "limit_value": "400", "used_value": "150"},
+          {"constraint_id": "MAT-K2-2027-02", "status": "SATISFIED", "limit_value": "400", "used_value": "300"},
+          {"constraint_id": "DEM-A-2027-01", "status": "SATISFIED"},
+          {"constraint_id": "DEM-A-2027-02", "status": "SATISFIED"}
+        ],
+        "feasibility": "UNVERIFIED"
+      }
+    },
+    {
+      "case_id": "HC-10",
+      "title": "What-if 수요배수 1.2: 곱한 뒤 올림, 같은 설비로 재계산",
+      "rule": "§2-1 수요배수, §8",
+      "input": {
+        "months": ["2027-01"],
+        "ot_allowed": false,
+        "demand_multiplier": "1.2",
+        "base_demand_multiplier": "1",
+        "products": [{"id": "A", "unit": "EA", "safety_stock": 0, "on_hand": 0, "allocated": 0}],
+        "demand": {"A": ["100.3"]},
+        "resources": [{"id": "S", "time_basis": "MACHINE_HOUR", "regular": [110], "overtime": [0]}],
+        "routing": {"A": {"S": {"run_time": "1", "reference_qty": "1"}}}
+      },
+      "expected": {
+        "base": {"planned_demand": {"A": [101]}, "production": {"A": [101]}, "stockout": {"A": [0]}, "feasibility": "FEASIBLE"},
+        "planned_demand": {"A": [121]},
+        "production": {"A": [110]},
+        "end_inventory": {"A": [-11]},
+        "stockout": {"A": [11]},
+        "evaluations": [
+          {"constraint_id": "CAP-S-2027-01", "status": "SATISFIED", "limit_value": "110", "used_value": "110", "reason_codes": ["CAPACITY_BINDING"]},
+          {"constraint_id": "DEM-A-2027-01", "status": "VIOLATED"}
+        ],
+        "feasibility": "INFEASIBLE"
+      }
+    },
+    {
+      "case_id": "HC-11",
+      "title": "데이터 빠짐: 라우팅 없는 제품 → 설비 판정 확인 불가",
+      "rule": "§7 ROUTING_MISSING",
+      "input": {
+        "months": ["2027-01"],
+        "ot_allowed": false,
+        "demand_multiplier": "1",
+        "products": [
+          {"id": "A", "unit": "EA", "safety_stock": 0, "on_hand": 0, "allocated": 0},
+          {"id": "B", "unit": "EA", "safety_stock": 0, "on_hand": 0, "allocated": 0}
+        ],
+        "demand": {"A": ["50"], "B": ["30"]},
+        "resources": [{"id": "S", "time_basis": "MACHINE_HOUR", "regular": [100], "overtime": [0]}],
+        "routing": {"A": {"S": {"run_time": "1", "reference_qty": "1"}}}
+      },
+      "expected": {
+        "status": "OK",
+        "production": {"A": [50], "B": [30]},
+        "stockout": {"A": [0], "B": [0]},
+        "evaluations": [
+          {"constraint_id": "CAP-S-2027-01", "status": "UNVERIFIED", "application_state": "MISSING_INPUT", "limit_value": "100", "used_value": null},
+          {"constraint_id": "DEM-A-2027-01", "status": "SATISFIED"},
+          {"constraint_id": "DEM-B-2027-01", "status": "SATISFIED"}
+        ],
+        "unverified_codes": ["ROUTING_MISSING"],
+        "feasibility": "UNVERIFIED"
+      }
+    },
+    {
+      "case_id": "HC-12",
+      "title": "단위 오류: 제품 수요는 EA인데 재고가 kg → 계산하지 않음",
+      "rule": "§7 UNIT_MISMATCH",
+      "input": {
+        "months": ["2027-01"],
+        "ot_allowed": false,
+        "demand_multiplier": "1",
+        "products": [{"id": "A", "unit": "EA", "inventory_unit": "kg", "safety_stock": 0, "on_hand": 10, "allocated": 0}],
+        "demand": {"A": ["50"]},
+        "resources": [{"id": "S", "time_basis": "MACHINE_HOUR", "regular": [100], "overtime": [0]}],
+        "routing": {"A": {"S": {"run_time": "1", "reference_qty": "1"}}}
+      },
+      "expected": {
+        "status": "INPUT_INVALID",
+        "plans": [],
+        "error_codes": ["UNIT_MISMATCH"]
+      }
+    }
+  ]
+}
