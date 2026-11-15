@@ -28,7 +28,9 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import convert  # noqa: E402
+import ledger  # noqa: E402
 import masters  # noqa: E402
+import operations  # noqa: E402
 import sales_orders  # noqa: E402
 
 SEED = 20261115
@@ -395,8 +397,31 @@ def main():
     expect(derived / "scheduled_receipts.csv", ["po_id", "material_id", "qty", "unit", "expected_date", "supplier_id"],
            SCHEDULED_RECEIPTS)
 
+    # ---- 2026년 생산·구매·재고 거래 기록: 12/31 재고현황에서 거꾸로 만든다 ----
+    ops = operations.build(
+        products=list(demand), names=names, order_rows=order_rows, fg_end=fg_inv, mat_end=mat_inv, bom=BOM,
+        routes=ROUTES, labor_per_1000=LABOR_PER_1000_PACKS, hours=HOURS, monthly_limit={"CP-GIFT-12": 2500},
+        materials=masters.MATERIALS, suppliers=masters.SUPPLIERS, price_rows=masters.purchase_price_rows(),
+        scheduled=SCHEDULED_RECEIPTS, cal=sales_orders.Calendar(range(years[0], years[-1] + 2)), seed=SEED + 3)
+    tx = raw / "transactions"
+    write_csv(tx / "생산실적_2026.csv", operations.PRODUCTION_HEADER, ops["production"])
+    write_csv(tx / "자재투입내역_2026.csv", operations.ISSUE_HEADER, ops["issues"])
+    write_csv(tx / "구매발주내역_2026.csv", operations.PO_HEADER, ops["po"])
+    write_csv(tx / "입고내역_2026.csv", operations.RECEIPT_HEADER, ops["receipts"])
+    write_csv(tx / "재고수불부_2026.csv", operations.LEDGER_HEADER, ops["ledger"])
+    plant, rank = ops["plant"], {r[0]: i for i, r in enumerate(RESOURCES)}
+    over = [(r, p, h, plant.budget(r, p)) for (r, p), h in ops["used_hours"].items() if h > plant.budget(r, p)]
+    if over:
+        raise SystemExit(f"2026년 생산 시간이 월 가용시간을 넘었습니다: {over[:5]}")
+    expect(derived / "capacity_usage_monthly.csv", ["resource_id", "period", "used_hours", "time_basis"],
+           [(r, p, f"{h:.1f}", basis[r]) for (r, p), h in
+            sorted(ops["used_hours"].items(), key=lambda x: (rank[x[0][0]], x[0][1]))])
+
     # ---- raw → upload/derived 변환 후, 기대값과 한 글자라도 다르면 멈춘다 ----
     monthly, _ = convert.convert_all(raw, up, derived)
+    problems = ledger.check(raw)
+    if problems:
+        raise SystemExit("거래 기록 검증 실패:\n" + "\n".join(problems[:20]))
     target = {(c, p): q for c, s in demand.items() for p, q in s if q > 0}
     if monthly != target:
         bad = sorted(set(monthly.items()) ^ set(target.items()))[:5]
@@ -424,7 +449,7 @@ def main():
               [("MATERIAL", "MR-N3", AS_OF_DATE, -100, 0, -100, "kg")])
 
     # ---- 사람이 읽는 요약 ----
-    write_summary(demand, ma12, ss, fg_inv, need, mat_req, mat_inv, mat_ss, product_cost)
+    write_summary(demand, ma12, ss, fg_inv, need, mat_req, mat_inv, mat_ss, product_cost, ops)
 
 
 def verify_report_against_masters(order_rows, product_master, customer_master, price_book, bom_rows):
@@ -484,7 +509,7 @@ def write_dirty_sample(order_rows, path: Path):
     write_csv(path, sales_orders.HEADER, rows)
 
 
-def write_summary(demand, ma12, ss, fg_inv, need, mat_req, mat_inv, mat_ss, product_cost):
+def write_summary(demand, ma12, ss, fg_inv, need, mat_req, mat_inv, mat_ss, product_cost, ops):
     load = {r[0]: Decimal(0) for r in RESOURCES}
     for code, steps in ROUTES.items():
         for _, res, ref, hrs in steps:
@@ -515,6 +540,16 @@ def write_summary(demand, ma12, ss, fg_inv, need, mat_req, mat_inv, mat_ss, prod
         lines.append(f"| {m} ({u}) | {float(mat_req[m]):,.1f} | {mat_ss[m]:,} | {mat_inv[m]:,} | {float(slack):,.1f} |")
     lines += ["", "## 제품 원가 (자재비만, 원/팩)", ""]
     lines += [f"- {c}: {float(v):,.0f}" for c, v in product_cost.items()]
+    plant, used = ops["plant"], ops["used_hours"]
+    periods = [f"2026-{k:02d}" for k in range(1, 13)]
+    lines += ["", "## 2026년 설비·인력 사용률 (생산실적 ÷ 월 가용시간)", "",
+              "| 자원 | " + " | ".join(p[5:] for p in periods) + " |", "|---|" + "---|" * 12]
+    for r, *_ in RESOURCES:
+        lines.append(f"| {r} | " + " | ".join(f"{float(used.get((r, p), 0) / plant.budget(r, p)):.0%}" for p in periods) + " |")
+    lines += ["", "## 2026년 재고 (기초 → 기말)", "", "| 품목 | 2026-01-01 기초 | 2026-12-31 기말 |", "|---|---|---|"]
+    lines += [f"| {c} | {ops['fg_open'][c]:,} | {fg_inv[c]:,} |" for c in demand]
+    lines += [f"| {c} | {ops['mat_open'][c]:,} | {mat_inv[c]:,} |" for c, *_ in MATERIALS]
+    lines += ["", f"생산 {len(ops['production'])}건, 발주 {len(ops['po'])}건, 입고 {len(ops['receipts'])}건."]
     (OUT / "SUMMARY.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 

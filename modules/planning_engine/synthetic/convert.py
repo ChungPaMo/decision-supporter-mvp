@@ -16,6 +16,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 import aggregate_sales  # noqa: E402
+import ledger  # noqa: E402
 
 UNIT_TO_BASE = {"팩": "EA", "개": "EA", "kg": "kg"}
 KIND = {"설비": ("EQUIPMENT", "MACHINE_HOUR"), "작업자": ("LABOR_POOL", "PERSON_HOUR")}
@@ -133,6 +134,12 @@ def convert_all(raw: Path, up: Path, derived: Path):
     write(derived / "scheduled_receipts.csv", ["po_id", "material_id", "qty", "unit", "expected_date", "supplier_id"],
           [(p["발주번호"], p["자재코드"], p["미입고수량"], base_unit(p["단위"]), p["납기예정일"], p["공급사코드"])
            for p in read(snaps / "미입고발주현황_20261231.csv")])
+
+    # ---- derived: 생산실적 → 월별 설비·작업 사용시간 ----
+    if (raw / "transactions" / "생산실적_2026.csv").exists():
+        used = ledger.capacity_usage(raw)
+        write(derived / "capacity_usage_monthly.csv", ["resource_id", "period", "used_hours", "time_basis"],
+              [(r, p, f"{h:.1f}", basis[r]) for (r, p), h in sorted(used.items(), key=lambda x: (rank[x[0][0]], x[0][1]))])
     return monthly, returns
 
 
