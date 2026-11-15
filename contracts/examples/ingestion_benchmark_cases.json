@@ -1,0 +1,22 @@
+{
+  "version": "manual-ingestion-gold-1.0",
+  "note": "Hand-authored synthetic gold; never derived from recommendations. Column indices are 1-based. Null means no safe source for that field.",
+  "cases": [
+    {"id":"standard", "entity":"monthly_demand", "csv":"product_id,period,demand_qty,unit\nCP-N3-3030,2026-01,10,EA\n", "mapping":{"product_id":1,"period":2,"demand_qty":3}, "expected_status":"READY_FOR_APPROVAL"},
+    {"id":"reordered", "entity":"monthly_demand", "csv":"unit,demand_qty,product_id,period\nEA,10,CP-N3-3030,2026-01\n", "mapping":{"product_id":3,"period":4,"demand_qty":2}, "expected_status":"READY_FOR_APPROVAL"},
+    {"id":"strong_korean", "entity":"monthly_demand", "csv":"제품코드,기준월,수요량,단위\nCP-N3-3030,2026-01,10,EA\n", "mapping":{"product_id":1,"period":2,"demand_qty":3}, "expected_status":"READY_FOR_APPROVAL"},
+    {"id":"typo", "entity":"monthly_demand", "csv":"product_id,period,demand_qt,unit\nCP-N3-3030,2026-01,10,EA\n", "mapping":{"product_id":1,"period":2,"demand_qty":3}, "expected_status":"MAPPING_HOLD"},
+    {"id":"multiple_quantity_candidates", "entity":"monthly_demand", "csv":"제품코드,기준월,수량,주문수량,단위\nCP-N3-3030,2026-01,10,11,EA\n", "mapping":{"product_id":1,"period":2,"demand_qty":null}, "expected_status":"MAPPING_HOLD"},
+    {"id":"money_is_not_demand", "entity":"monthly_demand", "csv":"제품코드,기준월,판매금액,단위\nCP-N3-3030,2026-01,10000,EA\n", "mapping":{"product_id":1,"period":2,"demand_qty":null}, "expected_status":"MAPPING_HOLD"},
+    {"id":"shipping_is_not_order_month", "entity":"monthly_demand", "csv":"제품코드,출고일자,수요량,단위\nCP-N3-3030,2026-01-05,10,EA\n", "mapping":{"product_id":1,"period":null,"demand_qty":3}, "expected_status":"MAPPING_HOLD"},
+    {"id":"mixed_allowed_month_formats", "entity":"monthly_demand", "csv":"product_id,period,demand_qty,unit\nCP-N3-3030,2026/01,10,EA\nCP-N3-3030,2026-02,11,EA\n", "mapping":{"product_id":1,"period":2,"demand_qty":3}, "expected_status":"READY_FOR_APPROVAL"},
+    {"id":"quantity_with_unit_suffix", "entity":"monthly_demand", "csv":"product_id,period,demand_qty,unit\nCP-N3-3030,2026-01,10팩,EA\n", "mapping":{"product_id":1,"period":2,"demand_qty":3}, "expected_status":"HAS_ERRORS"},
+    {"id":"unknown_unit", "entity":"monthly_demand", "csv":"product_id,period,demand_qty,unit\nCP-N3-3030,2026-01,10,BOX\n", "mapping":{"product_id":1,"period":2,"demand_qty":3}, "expected_status":"HAS_ERRORS"},
+    {"id":"identical_month_duplicate_allowed", "entity":"monthly_demand", "csv":"product_id,period,demand_qty,unit\nCP-N3-3030,2026-01,10,EA\nCP-N3-3030,2026-01,10,EA\n", "mapping":{"product_id":1,"period":2,"demand_qty":3}, "expected_status":"READY_FOR_APPROVAL"},
+    {"id":"conflicting_month_duplicate", "entity":"monthly_demand", "csv":"product_id,period,demand_qty,unit\nCP-N3-3030,2026-01,10,EA\nCP-N3-3030,2026-01,11,EA\n", "mapping":{"product_id":1,"period":2,"demand_qty":3}, "expected_status":"HAS_ERRORS"},
+    {"id":"manual_override", "entity":"monthly_demand", "csv":"product_id,period,Q1,unit\nCP-N3-3030,2026-01,10,EA\n", "overrides":{"demand_qty":"C"}, "mapping":{"product_id":1,"period":2,"demand_qty":3}, "expected_status":"READY_FOR_APPROVAL"},
+    {"id":"return_quantity_is_not_sales", "entity":"monthly_demand", "csv":"제품코드,기준월,반품수량,단위\nCP-N3-3030,2026-01,10,EA\n", "mapping":{"product_id":1,"period":2,"demand_qty":null}, "expected_status":"MAPPING_HOLD"},
+    {"id":"material_not_product", "entity":"product", "csv":"자재코드,제품명,base_unit\nMR-N3,합성제품,EA\n", "mapping":{"product_id":null,"product_name":2,"base_unit":3}, "expected_status":"MAPPING_HOLD"},
+    {"id":"profile_supported_code_name", "entity":"monthly_demand", "csv":"상품번호,기준월,수요량,단위\nCP-N3-3030,2026-01,10,EA\n", "mapping":{"product_id":1,"period":2,"demand_qty":3}, "expected_status":"MAPPING_HOLD"}
+  ]
+}

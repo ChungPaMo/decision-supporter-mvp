@@ -54,10 +54,20 @@ def build_modules() -> str:
                       ensure_ascii=False, indent=2, sort_keys=True) + "\n"
 
 
+def build_ingestion() -> str:
+    from contracts.interfaces.ingestion import (ProfileReply, MappingReply, SavedMappingRuleDraft,
+        SalesTransformPolicy, TransformReply, INGESTION_VERSION)
+    return json.dumps({'contract_version': INGESTION_VERSION,
+        'models': {model.__name__: model.model_json_schema() for model in
+                   (ProfileReply, MappingReply, SavedMappingRuleDraft, SalesTransformPolicy, TransformReply)}},
+        ensure_ascii=False, indent=2, sort_keys=True) + '\n'
+
+
 if __name__ == "__main__":
     OUT.write_text(build(), encoding="utf-8", newline="\n")
     PLAN_OUT.write_text(build_plan(), encoding="utf-8", newline="\n")
     FORECAST_OUT.write_text(build_forecast(), encoding="utf-8", newline="\n")
     FORECAST_RUN_OUT.write_text(build_forecast_run(), encoding="utf-8", newline="\n")
     (OUT.parent / 'schemas' / 'module_interfaces_draft.json').write_text(build_modules(), encoding='utf-8', newline='\n')
+    (OUT.parent / 'schemas' / 'ingestion_assistance_v1.json').write_text(build_ingestion(), encoding='utf-8', newline='\n')
     print("wrote", OUT, PLAN_OUT)

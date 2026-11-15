@@ -1,5 +1,7 @@
 # Module integration · draft 0.2
 
+> **입력 보조 확장 (2026-11-15):** [ingestion-assistance-0.1](AI_MAPPING_INTEGRATION_DESIGN.md)은 backend 소유의 profile/컬럼 후보/합성 판매 변환 preview 계약이다. [DTO](../contracts/interfaces/ingestion.py)를 사용하며 분류·계획 모듈 계약을 교체하지 않는다. DB migration·AI 호출·자동 승인·frontend 변경은 없다. 분류 entity는 이훤 담당 연결점을 유지하고, 정상 업로드·검증·승인은 기존 batch 경로를 거친다.
+
 > **데이터셋 격리 확장:** [DATASET_ISOLATION](DATASET_ISOLATION.md)을 따른다. API의 dataset_id query는 요청 저장소·예측·계획·What-if·출력 전체를 같은 소속으로 제한한다. 기존 생략 호출은 TISSUE-LEGACY만 사용한다. PlanningInput/PlanCommand는 dataset_id를 포함하며 엔진 알고리즘은 변경하지 않았다. 기존 예측 input_digest는 엔진 계약을 보존하고 별도 dataset_input_digest와 실행 소유권으로 데이터셋을 식별한다. 신규 migration은 0008이다.
 
 > **2026-11-15 계획 영구 저장 확장:** [계획 실행 계약](PLAN_EXECUTION_PERSISTENCE.md)의 별도 `/plan-executions`를 추가했다. 기존 `/plans*`는 읽기 전용 Preview를 유지한다. What-if provider는 저장된 실제 입력/부모 결과를 읽지만 계산 모듈 미구현 501은 유지한다. 저장·계보·검토/반려·승인 조건부 XLSX 기반은 구현됐으며 정식 승인은 인증/정책 미연결로 비활성이다. 아래 PLAN_HISTORY_NOT_IMPLEMENTED와 ‘계획 저장소 없음’ 설명은 초기 기록으로 대체된다. 0001~0006을 보존하고 신규 0007만 추가했다.

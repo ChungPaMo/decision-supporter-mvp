@@ -263,3 +263,6 @@ BOM·재고·자재 이슈 코드:
 - **화면 담당**: 위 계약만으로 업로드·열 지정·검증 결과·승인 화면을 만들 수 있게 했다. 화면 로직(테이블 편집 UI 등)은 이 저장소 백엔드가 구현하지 않는다. 필드 수정은 "원본 파일 수정 후 재업로드" 또는 "열 지정(revalidate)" 두 가지뿐이며 셀 단위 편집 API 는 없다(필요하면 요구사항 합의 후 추가).
 - **계획 담당**: `GET /boms`, `GET /inventory` 는 승인 데이터 조회용 **제안 계약**이다. 제약조건 계획의 입력 형태(기준일 선택, 단위 환산 책임)는 예측·최적화 담당과 확정해야 한다. 같은 종류의 다른 단위는 환산하지 않고 저장되므로 소비하는 쪽이 `unit` 을 확인해야 한다.
 - **검색기 담당**: 이 API 와 무관. 후보 제안이 필요해지면 `holds[].candidates` 확장 지점에 붙인다.
+# 입력 보조 경로의 추가 오류 (2026-11-15)
+
+기존 batch 상태·승인 오류·트랜잭션은 변경하지 않았다. 별도 미리보기 `/ingest/profile`, `/ingest/mapping-suggestions`, `/ingest/transform-preview`의 추가 오류는 ANALYSIS_LIMIT(413), CSV_MALFORMED(422), TRANSFORM_POLICY_INVALID(422), TRANSFORM_POLICY_UNSUPPORTED(422), TRANSFORM_MAPPING_HOLD(422), TRANSFORM_DUPLICATE_SOURCE(422)다. [정책·미리보기 계약](AI_MAPPING_INTEGRATION_DESIGN.md)을 참고한다. 변환의 policy_digest/result_digest는 승인 배치의 result_digest를 대체하지 않는다.

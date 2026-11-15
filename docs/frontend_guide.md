@@ -1,5 +1,13 @@
 # 프론트엔드 연동 안내
 
+## 입력 보조 API (2026-11-15)
+
+`/ingest/profile`, `/ingest/mapping-suggestions`, `/ingest/transform-preview`는 프로파일/검토 후보/합성 판매 변환 **미리보기**다. 외부 AI 호출·DB 배치 생성·자동 승인은 없다. dataset_id query를 전달하며, 승인 마스터 대조는 use_approved_master=true일 때만 해당 dataset의 승인 자료를 읽는다. 생략 시 참조 미검증을 표시한다.
+
+매핑은 HOLD/반증을 보여주고 fuzzy 후보를 자동 적용하지 않는다. 변환 정책의 user_confirmed=false이면 POLICY_REVIEW_REQUIRED, 오류면 HAS_ERRORS, 확인 후 오류가 없으면 TRANSFORMED_PREVIEW다. 모든 응답의 persisted=false/auto_approve=false/approval_required=true를 유지한다. 표준 CSV의 실제 등록·승인은 기존 /batches 흐름을 별도로 거친다. 새 backend 결과를 기존 Fixture로 바꾸지 않는다.
+
+추가 top-level 오류: ANALYSIS_LIMIT(413), CSV_MALFORMED(422), TRANSFORM_POLICY_INVALID(422), TRANSFORM_POLICY_UNSUPPORTED(422), TRANSFORM_MAPPING_HOLD(422), TRANSFORM_DUPLICATE_SOURCE(422). 오류는 화면 성공으로 처리하지 않는다. 정책/데이터셋 불일치는 DATASET_MISMATCH(409). 전체 요청·응답 및 privacy/trace 한도는 [입력 보조 설계](AI_MAPPING_INTEGRATION_DESIGN.md)를 따른다. 이번 작업에서 frontend 코드는 수정하지 않았다.
+
 데이터셋 격리 API: `/datasets`, `/datasets/{dataset_id}`. 모든 영구 DB API는 query `dataset_id`로 선택한다. 생략 시 TISSUE-LEGACY만 조회하며 전체 조회가 아니다. 신규 데이터는 CHUNGPAMO-2027을 명시한다. 새 오류 DATASET_INVALID(422), DATASET_NOT_FOUND(404), DATASET_INACTIVE(409), DATASET_EXISTS(409), DATASET_MISMATCH(409). [데이터셋 계약](DATASET_ISOLATION.md)을 따른다. dataset_id는 인증/권한 증명이 아니다.
 
 계획 영구 실행 API(Preview와 별도): `/plan-executions`, `/plan-executions/{execution_id}`, `/plan-executions/{execution_id}/candidates`, `/plan-executions/{execution_id}/decisions`, `/plan-executions/{execution_id}/export.xlsx`. 생성은 엔진 미구현 501, APPROVE는 인증/정책 미연결 501이다. [계약·요청 예시](PLAN_EXECUTION_PERSISTENCE.md)를 따른다. 새 오류: PLAN_NOT_FOUND(404), PLAN_APPROVAL_DISABLED(501), PLAN_DECISION_BLOCKED(409), PLAN_EXPORT_BLOCKED(409), PLAN_OVERRIDE_UNSUPPORTED(422). actor_id는 신원 증명이 아니며 auth_verified=false 검토와 공식 승인을 구별한다.

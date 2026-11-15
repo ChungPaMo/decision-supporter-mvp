@@ -720,6 +720,42 @@
         "title": "Body_create_batch_batches_post",
         "type": "object"
       },
+      "Body_mapping_suggestions_ingest_mapping_suggestions_post": {
+        "properties": {
+          "column_overrides": {
+            "default": "{}",
+            "title": "Column Overrides",
+            "type": "string"
+          },
+          "entity": {
+            "default": "monthly_demand",
+            "enum": [
+              "product",
+              "material",
+              "monthly_demand",
+              "bom",
+              "inventory"
+            ],
+            "title": "Entity",
+            "type": "string"
+          },
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          },
+          "use_approved_master": {
+            "default": false,
+            "title": "Use Approved Master",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_mapping_suggestions_ingest_mapping_suggestions_post",
+        "type": "object"
+      },
       "Body_preview_ingest_preview_post": {
         "properties": {
           "column_overrides": {
@@ -773,6 +809,57 @@
           "file"
         ],
         "title": "Body_preview_ingest_preview_post",
+        "type": "object"
+      },
+      "Body_profile_file_ingest_profile_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          },
+          "include_samples": {
+            "default": false,
+            "title": "Include Samples",
+            "type": "boolean"
+          },
+          "use_approved_master": {
+            "default": false,
+            "title": "Use Approved Master",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_profile_file_ingest_profile_post",
+        "type": "object"
+      },
+      "Body_transform_preview_ingest_transform_preview_post": {
+        "properties": {
+          "files": {
+            "items": {
+              "contentMediaType": "application/octet-stream",
+              "type": "string"
+            },
+            "title": "Files",
+            "type": "array"
+          },
+          "policy": {
+            "title": "Policy",
+            "type": "string"
+          },
+          "use_approved_master": {
+            "default": false,
+            "title": "Use Approved Master",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "policy",
+          "files"
+        ],
+        "title": "Body_transform_preview_ingest_transform_preview_post",
         "type": "object"
       },
       "BomFact": {
@@ -1409,6 +1496,176 @@
         "title": "ClassificationOutput",
         "type": "object"
       },
+      "ColumnProfile": {
+        "additionalProperties": false,
+        "properties": {
+          "anomalies": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Anomalies",
+            "type": "array"
+          },
+          "col": {
+            "title": "Col",
+            "type": "integer"
+          },
+          "column": {
+            "title": "Column",
+            "type": "string"
+          },
+          "date_formats": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Date Formats",
+            "type": "object"
+          },
+          "distinct_count": {
+            "title": "Distinct Count",
+            "type": "integer"
+          },
+          "distinct_count_is_exact": {
+            "title": "Distinct Count Is Exact",
+            "type": "boolean"
+          },
+          "empty_count": {
+            "title": "Empty Count",
+            "type": "integer"
+          },
+          "empty_ratio": {
+            "title": "Empty Ratio",
+            "type": "number"
+          },
+          "example_values": {
+            "items": {
+              "$ref": "#/components/schemas/ValueExample"
+            },
+            "title": "Example Values",
+            "type": "array"
+          },
+          "format_match_rates": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Format Match Rates",
+            "type": "object"
+          },
+          "known_material_match_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Known Material Match Ratio"
+          },
+          "known_product_match_ratio": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Known Product Match Ratio"
+          },
+          "non_null_ratio": {
+            "title": "Non Null Ratio",
+            "type": "number"
+          },
+          "normalized_column": {
+            "title": "Normalized Column",
+            "type": "string"
+          },
+          "total_rows": {
+            "title": "Total Rows",
+            "type": "integer"
+          },
+          "type_candidates": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Type Candidates",
+            "type": "array"
+          },
+          "uncertainty_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Uncertainty Reasons",
+            "type": "array"
+          },
+          "unit_candidates": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unit Candidates",
+            "type": "array"
+          }
+        },
+        "required": [
+          "col",
+          "column",
+          "normalized_column",
+          "total_rows",
+          "empty_count",
+          "empty_ratio",
+          "non_null_ratio",
+          "distinct_count",
+          "distinct_count_is_exact",
+          "example_values",
+          "type_candidates",
+          "format_match_rates",
+          "known_product_match_ratio",
+          "known_material_match_ratio",
+          "date_formats",
+          "unit_candidates",
+          "anomalies",
+          "uncertainty_reasons"
+        ],
+        "title": "ColumnProfile",
+        "type": "object"
+      },
+      "ColumnSuggestion": {
+        "additionalProperties": false,
+        "properties": {
+          "col": {
+            "title": "Col",
+            "type": "integer"
+          },
+          "source_column": {
+            "title": "Source Column",
+            "type": "string"
+          },
+          "suggestions": {
+            "items": {
+              "$ref": "#/components/schemas/MappingCandidate"
+            },
+            "maxItems": 3,
+            "title": "Suggestions",
+            "type": "array"
+          },
+          "unresolved_reasons": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unresolved Reasons",
+            "type": "array"
+          }
+        },
+        "required": [
+          "col",
+          "source_column",
+          "suggestions",
+          "unresolved_reasons"
+        ],
+        "title": "ColumnSuggestion",
+        "type": "object"
+      },
       "ConstraintEvaluation": {
         "additionalProperties": false,
         "properties": {
@@ -2021,6 +2278,12 @@
       },
       "ErrorCode": {
         "enum": [
+          "ANALYSIS_LIMIT",
+          "CSV_MALFORMED",
+          "TRANSFORM_POLICY_INVALID",
+          "TRANSFORM_POLICY_UNSUPPORTED",
+          "TRANSFORM_MAPPING_HOLD",
+          "TRANSFORM_DUPLICATE_SOURCE",
           "DATASET_INVALID",
           "DATASET_NOT_FOUND",
           "DATASET_INACTIVE",
@@ -3506,6 +3769,39 @@
         "title": "LocationOut",
         "type": "object"
       },
+      "MappingCandidate": {
+        "additionalProperties": false,
+        "properties": {
+          "evidence": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Evidence",
+            "type": "array"
+          },
+          "method": {
+            "title": "Method",
+            "type": "string"
+          },
+          "requires_review": {
+            "const": true,
+            "default": true,
+            "title": "Requires Review",
+            "type": "boolean"
+          },
+          "target_field": {
+            "title": "Target Field",
+            "type": "string"
+          }
+        },
+        "required": [
+          "target_field",
+          "method",
+          "evidence"
+        ],
+        "title": "MappingCandidate",
+        "type": "object"
+      },
       "MappingHoldOut": {
         "properties": {
           "candidates": {
@@ -3541,6 +3837,148 @@
           "message"
         ],
         "title": "MappingHoldOut",
+        "type": "object"
+      },
+      "MappingReply": {
+        "additionalProperties": false,
+        "properties": {
+          "approval_required": {
+            "const": true,
+            "default": true,
+            "title": "Approval Required",
+            "type": "boolean"
+          },
+          "auto_approve": {
+            "const": false,
+            "default": false,
+            "title": "Auto Approve",
+            "type": "boolean"
+          },
+          "contract_version": {
+            "default": "ingestion-assistance-0.1",
+            "title": "Contract Version",
+            "type": "string"
+          },
+          "dataset_id": {
+            "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "entity": {
+            "enum": [
+              "product",
+              "material",
+              "monthly_demand",
+              "bom",
+              "inventory"
+            ],
+            "title": "Entity",
+            "type": "string"
+          },
+          "master_digest": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Master Digest"
+          },
+          "master_scope": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Master Scope"
+          },
+          "persisted": {
+            "const": false,
+            "default": false,
+            "title": "Persisted",
+            "type": "boolean"
+          },
+          "saved_rule_storage": {
+            "const": "NOT_IMPLEMENTED",
+            "default": "NOT_IMPLEMENTED",
+            "title": "Saved Rule Storage",
+            "type": "string"
+          },
+          "sheets": {
+            "items": {
+              "$ref": "#/components/schemas/MappingSheetReply"
+            },
+            "title": "Sheets",
+            "type": "array"
+          },
+          "source_sha256": {
+            "title": "Source Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dataset_id",
+          "entity",
+          "source_sha256",
+          "master_scope",
+          "master_digest",
+          "sheets"
+        ],
+        "title": "MappingReply",
+        "type": "object"
+      },
+      "MappingSheetReply": {
+        "additionalProperties": false,
+        "properties": {
+          "existing_mapping": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Existing Mapping",
+            "type": "object"
+          },
+          "holds": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Holds",
+            "type": "array"
+          },
+          "sheet": {
+            "title": "Sheet",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "MAPPED",
+              "HOLD",
+              "IGNORED"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "suggestions": {
+            "items": {
+              "$ref": "#/components/schemas/ColumnSuggestion"
+            },
+            "title": "Suggestions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "sheet",
+          "status",
+          "existing_mapping",
+          "suggestions",
+          "holds"
+        ],
+        "title": "MappingSheetReply",
         "type": "object"
       },
       "MaterialFact": {
@@ -5548,6 +5986,114 @@
         "title": "ProductionRow",
         "type": "object"
       },
+      "ProfileReply": {
+        "additionalProperties": false,
+        "properties": {
+          "approval_required": {
+            "const": true,
+            "default": true,
+            "title": "Approval Required",
+            "type": "boolean"
+          },
+          "auto_approve": {
+            "const": false,
+            "default": false,
+            "title": "Auto Approve",
+            "type": "boolean"
+          },
+          "contract_version": {
+            "default": "ingestion-assistance-0.1",
+            "title": "Contract Version",
+            "type": "string"
+          },
+          "dataset_id": {
+            "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "master_digest": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Master Digest"
+          },
+          "master_scope": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Master Scope"
+          },
+          "persisted": {
+            "const": false,
+            "default": false,
+            "title": "Persisted",
+            "type": "boolean"
+          },
+          "samples_included": {
+            "title": "Samples Included",
+            "type": "boolean"
+          },
+          "sheets": {
+            "items": {
+              "$ref": "#/components/schemas/ProfileSheet"
+            },
+            "title": "Sheets",
+            "type": "array"
+          },
+          "source_sha256": {
+            "title": "Source Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dataset_id",
+          "source_sha256",
+          "master_scope",
+          "master_digest",
+          "samples_included",
+          "sheets"
+        ],
+        "title": "ProfileReply",
+        "type": "object"
+      },
+      "ProfileSheet": {
+        "additionalProperties": false,
+        "properties": {
+          "columns": {
+            "items": {
+              "$ref": "#/components/schemas/ColumnProfile"
+            },
+            "title": "Columns",
+            "type": "array"
+          },
+          "row_count": {
+            "title": "Row Count",
+            "type": "integer"
+          },
+          "sheet": {
+            "title": "Sheet",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sheet",
+          "row_count",
+          "columns"
+        ],
+        "title": "ProfileSheet",
+        "type": "object"
+      },
       "Quantiles": {
         "additionalProperties": true,
         "properties": {
@@ -6060,6 +6606,202 @@
         "title": "RoutingStep",
         "type": "object"
       },
+      "SalesColumns": {
+        "additionalProperties": false,
+        "properties": {
+          "line_id": {
+            "default": "행번호",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Line Id",
+            "type": "string"
+          },
+          "order_date": {
+            "default": "주문일자",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Order Date",
+            "type": "string"
+          },
+          "order_id": {
+            "default": "주문번호",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Order Id",
+            "type": "string"
+          },
+          "product_id": {
+            "default": "제품코드",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Product Id",
+            "type": "string"
+          },
+          "quantity": {
+            "default": "수량",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Quantity",
+            "type": "string"
+          },
+          "status": {
+            "default": "구분",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Status",
+            "type": "string"
+          },
+          "unit": {
+            "default": "단위",
+            "maxLength": 100,
+            "minLength": 1,
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "title": "SalesColumns",
+        "type": "object"
+      },
+      "SalesTransformPolicy": {
+        "additionalProperties": false,
+        "properties": {
+          "columns": {
+            "$ref": "#/components/schemas/SalesColumns"
+          },
+          "dataset_id": {
+            "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "date_basis": {
+            "const": "ORDER_DATE",
+            "default": "ORDER_DATE",
+            "title": "Date Basis",
+            "type": "string"
+          },
+          "date_formats": {
+            "items": {
+              "enum": [
+                "YYYY-MM-DD",
+                "YYYY/MM/DD",
+                "YYYYMMDD"
+              ],
+              "type": "string"
+            },
+            "maxItems": 3,
+            "minItems": 1,
+            "title": "Date Formats",
+            "type": "array"
+          },
+          "duplicate_policy": {
+            "const": "ERROR_TRANSACTION_KEY",
+            "default": "ERROR_TRANSACTION_KEY",
+            "title": "Duplicate Policy",
+            "type": "string"
+          },
+          "excluded_status": {
+            "const": "취소",
+            "default": "취소",
+            "title": "Excluded Status",
+            "type": "string"
+          },
+          "group_by": {
+            "const": "PRODUCT_MONTH",
+            "default": "PRODUCT_MONTH",
+            "title": "Group By",
+            "type": "string"
+          },
+          "included_status": {
+            "const": "정상",
+            "default": "정상",
+            "title": "Included Status",
+            "type": "string"
+          },
+          "policy_id": {
+            "const": "CHUNGPAMO_SYNTHETIC_SALES",
+            "default": "CHUNGPAMO_SYNTHETIC_SALES",
+            "title": "Policy Id",
+            "type": "string"
+          },
+          "return_handling": {
+            "const": "SEPARATE_ABSOLUTE_NOT_NETTED",
+            "default": "SEPARATE_ABSOLUTE_NOT_NETTED",
+            "title": "Return Handling",
+            "type": "string"
+          },
+          "separate_status": {
+            "const": "반품",
+            "default": "반품",
+            "title": "Separate Status",
+            "type": "string"
+          },
+          "source_scope": {
+            "const": "SYNTHETIC_ONLY",
+            "default": "SYNTHETIC_ONLY",
+            "title": "Source Scope",
+            "type": "string"
+          },
+          "unit_factor": {
+            "const": "1",
+            "default": "1",
+            "title": "Unit Factor",
+            "type": "string"
+          },
+          "unit_mapping": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "title": "Unit Mapping",
+            "type": "object"
+          },
+          "user_confirmed": {
+            "default": false,
+            "title": "User Confirmed",
+            "type": "boolean"
+          },
+          "version": {
+            "const": "1.0",
+            "default": "1.0",
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "dataset_id"
+        ],
+        "title": "SalesTransformPolicy",
+        "type": "object"
+      },
+      "SeparateReturns": {
+        "additionalProperties": false,
+        "properties": {
+          "period": {
+            "title": "Period",
+            "type": "string"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "string"
+          },
+          "return_qty": {
+            "title": "Return Qty",
+            "type": "string"
+          },
+          "unit": {
+            "const": "EA",
+            "default": "EA",
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_id",
+          "period",
+          "return_qty"
+        ],
+        "title": "SeparateReturns",
+        "type": "object"
+      },
       "SheetOut": {
         "properties": {
           "data_rows": {
@@ -6281,6 +7023,41 @@
         "title": "SkippedProduct",
         "type": "object"
       },
+      "SourceLocation": {
+        "additionalProperties": false,
+        "properties": {
+          "col": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Col"
+          },
+          "row": {
+            "title": "Row",
+            "type": "integer"
+          },
+          "sheet": {
+            "title": "Sheet",
+            "type": "string"
+          },
+          "source_index": {
+            "title": "Source Index",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "source_index",
+          "sheet",
+          "row"
+        ],
+        "title": "SourceLocation",
+        "type": "object"
+      },
       "SourceType": {
         "enum": [
           "PUBLIC_DEMAND",
@@ -6340,6 +7117,327 @@
         "title": "SyntheticDemandRow",
         "type": "object"
       },
+      "TransformIssue": {
+        "additionalProperties": false,
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "field": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Field"
+          },
+          "location": {
+            "$ref": "#/components/schemas/SourceLocation"
+          }
+        },
+        "required": [
+          "code",
+          "location"
+        ],
+        "title": "TransformIssue",
+        "type": "object"
+      },
+      "TransformOperation": {
+        "additionalProperties": false,
+        "properties": {
+          "operation": {
+            "enum": [
+              "SELECT_COLUMNS",
+              "RENAME_COLUMNS",
+              "NORMALIZE_DATE",
+              "NORMALIZE_UNIT",
+              "FILTER_ROWS",
+              "GROUP_BY",
+              "SUM_DECIMAL",
+              "VALIDATE_REFERENCE"
+            ],
+            "title": "Operation",
+            "type": "string"
+          },
+          "parameters": {
+            "additionalProperties": true,
+            "title": "Parameters",
+            "type": "object"
+          }
+        },
+        "required": [
+          "operation",
+          "parameters"
+        ],
+        "title": "TransformOperation",
+        "type": "object"
+      },
+      "TransformReply": {
+        "additionalProperties": false,
+        "properties": {
+          "approval_required": {
+            "const": true,
+            "default": true,
+            "title": "Approval Required",
+            "type": "boolean"
+          },
+          "auto_approve": {
+            "const": false,
+            "default": false,
+            "title": "Auto Approve",
+            "type": "boolean"
+          },
+          "contract_version": {
+            "default": "ingestion-assistance-0.1",
+            "title": "Contract Version",
+            "type": "string"
+          },
+          "counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Counts",
+            "type": "object"
+          },
+          "dataset_id": {
+            "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "input_digest": {
+            "title": "Input Digest",
+            "type": "string"
+          },
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/TransformIssue"
+            },
+            "maxItems": 100,
+            "title": "Issues",
+            "type": "array"
+          },
+          "issues_total": {
+            "title": "Issues Total",
+            "type": "integer"
+          },
+          "limit": {
+            "title": "Limit",
+            "type": "integer"
+          },
+          "master_digest": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Master Digest"
+          },
+          "master_scope": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Master Scope"
+          },
+          "offset": {
+            "title": "Offset",
+            "type": "integer"
+          },
+          "operations": {
+            "items": {
+              "$ref": "#/components/schemas/TransformOperation"
+            },
+            "title": "Operations",
+            "type": "array"
+          },
+          "persisted": {
+            "const": false,
+            "default": false,
+            "title": "Persisted",
+            "type": "boolean"
+          },
+          "policy": {
+            "$ref": "#/components/schemas/SalesTransformPolicy"
+          },
+          "policy_digest": {
+            "title": "Policy Digest",
+            "type": "string"
+          },
+          "quantity_reconciliation": {
+            "additionalProperties": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "boolean"
+                }
+              ]
+            },
+            "title": "Quantity Reconciliation",
+            "type": "object"
+          },
+          "records": {
+            "items": {
+              "$ref": "#/components/schemas/TransformedDemand"
+            },
+            "title": "Records",
+            "type": "array"
+          },
+          "result_digest": {
+            "title": "Result Digest",
+            "type": "string"
+          },
+          "returns": {
+            "items": {
+              "$ref": "#/components/schemas/SeparateReturns"
+            },
+            "title": "Returns",
+            "type": "array"
+          },
+          "returns_total": {
+            "title": "Returns Total",
+            "type": "integer"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/TransformSource"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "status": {
+            "enum": [
+              "POLICY_REVIEW_REQUIRED",
+              "HAS_ERRORS",
+              "TRANSFORMED_PREVIEW"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "dataset_id",
+          "status",
+          "policy",
+          "policy_digest",
+          "input_digest",
+          "result_digest",
+          "sources",
+          "operations",
+          "master_scope",
+          "master_digest",
+          "counts",
+          "quantity_reconciliation",
+          "records",
+          "returns",
+          "issues",
+          "issues_total",
+          "warnings",
+          "total",
+          "offset",
+          "limit",
+          "returns_total"
+        ],
+        "title": "TransformReply",
+        "type": "object"
+      },
+      "TransformSource": {
+        "additionalProperties": false,
+        "properties": {
+          "filename": {
+            "title": "Filename",
+            "type": "string"
+          },
+          "row_count": {
+            "title": "Row Count",
+            "type": "integer"
+          },
+          "sha256": {
+            "title": "Sha256",
+            "type": "string"
+          },
+          "source_index": {
+            "title": "Source Index",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "source_index",
+          "filename",
+          "sha256",
+          "row_count"
+        ],
+        "title": "TransformSource",
+        "type": "object"
+      },
+      "TransformedDemand": {
+        "additionalProperties": false,
+        "properties": {
+          "demand_qty": {
+            "title": "Demand Qty",
+            "type": "string"
+          },
+          "period": {
+            "title": "Period",
+            "type": "string"
+          },
+          "product_id": {
+            "title": "Product Id",
+            "type": "string"
+          },
+          "source_locations": {
+            "items": {
+              "$ref": "#/components/schemas/SourceLocation"
+            },
+            "maxItems": 5,
+            "title": "Source Locations",
+            "type": "array"
+          },
+          "source_row_count": {
+            "title": "Source Row Count",
+            "type": "integer"
+          },
+          "unit": {
+            "const": "EA",
+            "default": "EA",
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "product_id",
+          "period",
+          "demand_qty",
+          "source_row_count",
+          "source_locations"
+        ],
+        "title": "TransformedDemand",
+        "type": "object"
+      },
       "ValidationError": {
         "properties": {
           "ctx": {
@@ -6378,6 +7476,26 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "ValueExample": {
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "value": {
+            "maxLength": 48,
+            "title": "Value",
+            "type": "string"
+          }
+        },
+        "required": [
+          "value",
+          "count"
+        ],
+        "title": "ValueExample",
         "type": "object"
       }
     }
@@ -8766,6 +9884,131 @@
         "summary": "서버·DB 상태 확인"
       }
     },
+    "/ingest/mapping-suggestions": {
+      "post": {
+        "operationId": "mapping_suggestions_ingest_mapping_suggestions_post",
+        "parameters": [
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_mapping_suggestions_ingest_mapping_suggestions_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MappingReply"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          }
+        },
+        "summary": "Reviewable top-3 mapping candidates; never auto-applied",
+        "tags": [
+          "ingest-assistance"
+        ]
+      }
+    },
     "/ingest/preview": {
       "post": {
         "operationId": "preview_ingest_preview_post",
@@ -8804,6 +10047,279 @@
         "summary": "CSV/XLSX 파싱·매핑·검증 미리보기 (저장 없음)",
         "tags": [
           "ingest"
+        ]
+      }
+    },
+    "/ingest/profile": {
+      "post": {
+        "operationId": "profile_file_ingest_profile_post",
+        "parameters": [
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_profile_file_ingest_profile_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfileReply"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          }
+        },
+        "summary": "Bounded column profile; no persistence or approval",
+        "tags": [
+          "ingest-assistance"
+        ]
+      }
+    },
+    "/ingest/transform-preview": {
+      "post": {
+        "operationId": "transform_preview_ingest_transform_preview_post",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 500,
+              "maximum": 500,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_transform_preview_ingest_transform_preview_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransformReply"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          }
+        },
+        "summary": "Synthetic sales policy preview; no batch creation or approval",
+        "tags": [
+          "ingest-assistance"
         ]
       }
     },

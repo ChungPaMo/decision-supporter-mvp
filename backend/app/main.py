@@ -9,10 +9,12 @@ from app.api.forecasts import router as forecasts_router
 from app.api.forecasts import history_router as forecast_history_router
 from app.api.health import router as health_router
 from app.api.ingest import router as ingest_router
+from app.api.ingest_assistance import router as ingest_assistance_router
 from app.api.integrations import router as integrations_router
 from app.config import Settings, get_settings
 from app.errors import ApiError, ErrorCode
 from app.exports.limits import ExportBodyLimit
+from app.ingest.limits import AssistanceBodyLimit
 
 from app.api.plan_executions import router as plan_executions_router
 
@@ -21,6 +23,7 @@ from app.api.datasets import router as datasets_router
 app = FastAPI(title="충파모 과제 7 MVP", version=get_settings().app_version)
 app.include_router(health_router)
 app.include_router(ingest_router)
+app.include_router(ingest_assistance_router)
 app.include_router(integrations_router)
 app.include_router(batches_router)
 app.include_router(datasets_router)
@@ -40,6 +43,7 @@ def configure_cors(target: FastAPI, settings: Settings) -> None:
 
 # 나중에 추가한 미들웨어가 바깥쪽이다: CORS 를 바깥에 두어 413 응답에도 CORS 헤더가 붙게 한다
 app.add_middleware(ExportBodyLimit)
+app.add_middleware(AssistanceBodyLimit)
 configure_cors(app, get_settings())
 
 
