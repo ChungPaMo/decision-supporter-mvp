@@ -1,7 +1,7 @@
 """SqlBatchRepository + BatchService 통합 시험 (DB 필요).
 
 2026-11-10 PostgreSQL 16.6에서 실제 통과했다. DB가 없는 PC에서는 skip이며 성공으로 간주하지 않는다.
-이 시험은 실제 커밋을 하므로 테스트 DB(chungpamo_test)에서만 실행되고, 끝나면 테이블을 TRUNCATE 한다.
+이 시험은 실제 커밋을 하므로 전용 회귀 DB(chungpamo_regression)에서만 실행되고, 끝나면 테이블을 TRUNCATE 한다.
 """
 from decimal import Decimal
 from concurrent.futures import ThreadPoolExecutor
@@ -32,6 +32,8 @@ def svc(test_engine):
 
 
 def _clean(engine):
+    from scripts.verify_test_db import assert_destructive_engine
+    assert_destructive_engine(engine)
     with engine.begin() as c:
         c.execute(text("TRUNCATE forecast_run, inventory, bom_line, bom_header, material, monthly_demand, product, batch_source_file, import_batch CASCADE"))
 

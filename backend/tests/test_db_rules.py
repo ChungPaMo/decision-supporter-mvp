@@ -13,8 +13,8 @@ from sqlalchemy.exc import DBAPIError, IntegrityError
 def _batch(conn, status="READY_FOR_APPROVAL", sha=None, errors=0, source_type="SYNTHETIC", entity="monthly_demand"):
     bid = uuid.uuid4()
     conn.execute(text(
-        "INSERT INTO import_batch (batch_id, source_type, source_name, source_sha256, status, blocking_error_count, entity) "
-        "VALUES (:b, :t, 'f.csv', :s, :st, :e, :en)"),
+        "INSERT INTO import_batch (batch_id, source_type, source_name, source_sha256, status, blocking_error_count, entity, source_note) "
+        "VALUES (:b, :t, 'f.csv', :s, :st, :e, :en, 'Synthetic regression fixture')"),
         dict(b=bid, t=source_type, s=sha or uuid.uuid4().hex * 2, st=status, e=errors, en=entity))
     return bid
 
@@ -289,6 +289,8 @@ def test_forecast_input_view_has_only_approved_clean_demand(conn):
 
 # ---------------------------------------------------------------- 실제 커밋을 가로지르는 시험 (별도 트랜잭션)
 def test_rows_cannot_be_added_or_changed_after_the_approving_transaction_commits(test_engine):
+    from scripts.verify_test_db import assert_destructive_engine
+    assert_destructive_engine(test_engine)
     """승인 트랜잭션이 커밋된 뒤 같은 배치에 행을 추가·수정하는 시도를 DB 가 거부해야 한다 (G3)."""
     try:
         with test_engine.begin() as c:                                            # tx1: 배치 생성

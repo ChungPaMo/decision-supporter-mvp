@@ -3,6 +3,9 @@
     "target": "ES2020",
     "moduleResolution": "bundler",
     "module": "ESNext",
+    "lib": ["ES2023", "DOM", "ESNext.Disposable"],
+    "types": ["node"],
+    "typeRoots": ["./node_modules/@types"],
     "baseUrl": "../../frontend",
     "paths": { "@playwright/test": ["node_modules/@playwright/test"] }
   }

@@ -78,6 +78,7 @@ DB 테스트는 스키마 초기화를 포함하며 별도 사용자 승인과 �
 - [구조](docs/ARCHITECTURE.md), [소유권](docs/OWNERSHIP.md), [인터페이스](docs/INTEGRATION_CONTRACT.md)
 - [팀원별 상세 작업 배분](docs/TEAM_WORK_ASSIGNMENTS.md), [팀원 인수인계](docs/TEAM_HANDOFF.md)
 - [개발 절차](docs/DEVELOPMENT_WORKFLOW.md), [이관·검증 기록](docs/MIGRATION_REPORT.md)
+- [PostgreSQL 회귀·데이터셋 E2E 검증](docs/DB_REGRESSION_E2E_VERIFICATION.md), [기존 DB 테스트 55개 개별 감사](docs/DB_REGRESSION_TEST_AUDIT.md)
 - [다중 CAPA 미확정 초안](docs/multi_capacity_contract_draft.md), [팀 결정 질문](docs/multi_capacity_decision_questions.md)
 
 개발은 이 모노레포의 `main`에서 Pull → 개발 → 테스트 → Commit → Push 순서로 진행하며 새 브랜치·PR을 생성하지 않습니다. 모듈 개발은 각 담당 폴더에서 진행하고 공통 계약·DB·설정은 김대영과 검토합니다. 상세 안전 규칙은 [개발·협업 절차](docs/DEVELOPMENT_WORKFLOW.md)를 따릅니다. 실제 GitHub 계정 매핑이 미확인이라 CODEOWNERS 활성 규칙은 없습니다. 초기 원격 README 이력은 보존했습니다.

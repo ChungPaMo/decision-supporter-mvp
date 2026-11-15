@@ -43,13 +43,8 @@ def prevent_db_connections(request):
 
 
 def _test_url() -> str:
-    """검증된 충파모 loopback 주소/포트/역할에서 chungpamo_test만 초기화한다."""
-    url = make_url(get_settings().database_url)
-    if (url.drivername != "postgresql+psycopg" or url.host != "127.0.0.1" or url.port != 55433
-            or url.username != "chungpamo_app" or url.database not in ("chungpamo", "chungpamo_test")):
-        raise RuntimeError("DB 테스트는 신규 모노레포의 127.0.0.1:55433 전용 DB만 허용한다")
-    url = url.set(database="chungpamo_test")
-    return url.render_as_string(hide_password=False)
+    from scripts.verify_test_db import validate_test_url
+    return validate_test_url().render_as_string(hide_password=False)
 
 
 @pytest.fixture(scope="session")
@@ -57,7 +52,7 @@ def test_engine(request):
     """마이그레이션을 처음부터 적용한 테스트 DB. 도달할 수 없으면 해당 테스트는 건너뛴다(통과로 보고하지 않는다)."""
     if request.config.getoption("--no-db"):
         pytest.skip("--no-db: 실제 PostgreSQL 검증 제외 (접속 시도 없음)")
-    if os.environ.get("CHUNGPAMO_ALLOW_TEST_DB_RESET") != "chungpamo_test@127.0.0.1:55433":
+    if os.environ.get("CHUNGPAMO_ALLOW_TEST_DB_RESET") != "chungpamo_regression@127.0.0.1:55433":
         pytest.fail("테스트 DB 초기화는 별도 승인·대상 식별 후 CHUNGPAMO_ALLOW_TEST_DB_RESET 설정이 필요합니다")
     url = _test_url()
     from scripts.verify_test_db import authorize_reset
@@ -69,12 +64,20 @@ def test_engine(request):
     except Exception as exc:
         pytest.skip(f"전용 PostgreSQL 컨테이너에 연결할 수 없음 (docker compose up -d db 필요): {type(exc).__name__}")
     with engine.begin() as c:   # 테스트 DB 만 비운다
-        assert c.execute(text("SELECT current_database()")).scalar_one() == "chungpamo_test"
+        assert c.execute(text("SELECT current_database()")).scalar_one() == "chungpamo_regression"
+        from app.dataset_schema_v1 import schema_for
+        for historical in ('regression_history_0001','regression_history_0005'):
+            c.execute(text('DROP SCHEMA IF EXISTS '+historical+' CASCADE'))
+        c.execute(text('DROP SCHEMA IF EXISTS '+schema_for('CHUNGPAMO-2027')+' CASCADE'))
         c.execute(text("DROP SCHEMA public CASCADE; CREATE SCHEMA public"))
     r = subprocess.run([sys.executable, "-m", "alembic", "upgrade", "head"],
                        cwd=BACKEND, capture_output=True, text=True,
                        env={**os.environ, "DATABASE_URL": url})
     assert r.returncode == 0, r.stderr
+    with engine.begin() as c:
+        c.execute(text("CREATE TABLE regression_test_sentinel(purpose text NOT NULL)"))
+        from scripts.verify_test_db import SENTINEL
+        c.execute(text("INSERT INTO regression_test_sentinel VALUES(:p)"),{'p':SENTINEL})
     yield engine
     engine.dispose()
 
@@ -86,3 +89,24 @@ def conn(test_engine):
         tx = c.begin()
         yield c
         tx.rollback()
+
+
+@pytest.fixture
+def historical_schema(test_engine):
+    """Preserved 0001~0005 roundtrips live outside the current 0008 test schema."""
+    from scripts.verify_test_db import assert_destructive_engine,DATABASE,ROLE
+    assert_destructive_engine(test_engine)
+    engines=[]
+    def create(schema,revision='0005'):
+        if schema not in ('regression_history_0001','regression_history_0005'):raise RuntimeError('Unknown historical schema')
+        with test_engine.begin() as c:
+            assert tuple(c.execute(text('SELECT current_database(),current_user')).one())==(DATABASE,ROLE)
+            c.execute(text('CREATE SCHEMA '+schema))
+        env={**os.environ,'DATABASE_URL':test_engine.url.render_as_string(hide_password=False),'REGRESSION_MIGRATION_SCHEMA':schema}
+        r=subprocess.run([sys.executable,'-m','alembic','upgrade',revision],cwd=BACKEND,env=env,capture_output=True,text=True)
+        assert r.returncode==0,r.stderr
+        e=create_engine(test_engine.url,connect_args={'options':'-c search_path='+schema+',public'})
+        e._regression_schema=schema;engines.append(e)
+        return e
+    yield create
+    for e in engines:e.dispose()

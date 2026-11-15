@@ -1,4 +1,4 @@
-"""실제 브라우저 E2E. monorepo 백엔드의 chungpamo_test만 초기화한다.
+"""실제 브라우저 E2E. 별도 승인된 chungpamo_regression만 초기화한다.
 
 실행: .venv\Scripts\python.exe tests\e2e\run_postgres_e2e.py (모노레포 루트)
 개발 DB·기존 Docker 자원에는 쓰지 않는다. 비밀번호를 명령행/로그에 출력하지 않는다.
@@ -23,34 +23,40 @@ from sqlalchemy.engine import make_url
 BACK = Path(__file__).resolve().parents[2]
 FRONT = BACK / "frontend"
 ARTIFACTS = FRONT / ".e2e"
-sys.path.insert(0, str(BACK))
+sys.path[:0] = [str(BACK / 'backend'), str(BACK)]
 
 
 def main():
     from scripts.verify_test_db import authorize_reset
-    authorize_reset()
-    url = make_url(dotenv_values(BACK / ".env")["DATABASE_URL"])
-    assert (url.drivername, url.host, url.port, url.username, url.database) == (
-        "postgresql+psycopg", "127.0.0.1", 55433, "chungpamo_app", "chungpamo")
-    info = json.loads(subprocess.check_output(["docker", "inspect", "chungpamo-monorepo-db"], text=True, encoding="utf-8"))[0]
-    assert info["Config"]["Labels"]["com.docker.compose.project"] == "chungpamo-monorepo"
-    assert info["State"]["Health"]["Status"] == "healthy"
-    assert any(m.get("Name") == "chungpamo-monorepo-pgdata" for m in info["Mounts"])
+    if not os.environ.get('TEST_DATABASE_URL'):
+        config = dotenv_values(BACK / '.env.regression.local')
+        if config.get('TEST_DATABASE_URL'):
+            os.environ['TEST_DATABASE_URL'] = config['TEST_DATABASE_URL']
+    # Explicit independent credentials only; no development URL rewriting.
+    url = authorize_reset()
     for port in (8001, 5174):
         with socket.socket() as sock:
             assert sock.connect_ex(("127.0.0.1", port)) != 0, f"E2E port {port} occupied; refusing reuse"
     ARTIFACTS.mkdir(exist_ok=True)
-    engine = create_engine(url.set(database="chungpamo_test"))
-    env = {**os.environ, "DATABASE_URL": url.set(database="chungpamo_test").render_as_string(hide_password=False),
+    engine = create_engine(url)
+    env = {**os.environ, "DATABASE_URL": url.render_as_string(hide_password=False),
            "PERSISTENCE": "postgres", "CORS_ALLOW_ORIGINS": "http://127.0.0.1:5174"}
 
     def recreate_test_database():
         # Recheck identity and synthetic-only contents before each authorized reset.
         authorize_reset(env['DATABASE_URL'])
         with engine.begin() as connection:
-            assert connection.execute(text("SELECT current_database()")).scalar_one() == "chungpamo_test"
+            assert connection.execute(text("SELECT current_database()")).scalar_one() == "chungpamo_regression"
+            from app.dataset_schema_v1 import schema_for
+            for historical in ('regression_history_0001', 'regression_history_0005'):
+                connection.execute(text('DROP SCHEMA IF EXISTS '+historical+' CASCADE'))
+            connection.execute(text('DROP SCHEMA IF EXISTS '+schema_for('CHUNGPAMO-2027')+' CASCADE'))
             connection.execute(text("DROP SCHEMA public CASCADE; CREATE SCHEMA public"))
         subprocess.run([sys.executable, "-m", "alembic", "upgrade", "head"], cwd=BACK / "backend", env=env, check=True)
+        from scripts.verify_test_db import SENTINEL
+        with engine.begin() as connection:
+            connection.execute(text('CREATE TABLE regression_test_sentinel(purpose text NOT NULL)'))
+            connection.execute(text('INSERT INTO regression_test_sentinel VALUES(:p)'),{'p':SENTINEL})
 
     recreate_test_database()
     wb = Workbook()

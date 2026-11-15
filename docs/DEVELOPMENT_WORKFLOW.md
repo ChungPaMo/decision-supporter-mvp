@@ -29,19 +29,17 @@
 
 ## 파괴적 테스트는 별도 승인
 
-DB 테스트는 public DROP/재생성, TRUNCATE, 0001~0005 왕복을 포함한다. **전용 대상 식별 + 기존 데이터 보존 불필요 확인 + 사용자의 해당 실행 승인**이 먼저다. 과거 별도 작업의 일회성 승인은 재사용하지 않는다.
+DB 테스트는 public/테스트 데이터셋 스키마 DROP/재생성, TRUNCATE, 별도 스키마의 0001~0005 왕복을 포함한다. **전용 대상 식별 + 기존 데이터 보존 불필요 확인 + 사용자의 해당 실행 승인**이 먼저다. 과거 별도 작업의 일회성 승인은 재사용하지 않는다.
 
-신규 모노레포 컨테이너/볼륨/프로젝트/포트, 테스트 DB명, 테이블·스키마, SYNTHETIC 출처를 확인한다. 예상 밖 데이터가 있으면 중단한다. 승인 후에만 아래 토큰을 해당 프로세스 환경에 설정한다. 토큰은 승인을 대신하지 않는다.
+현재 파괴적 테스트는 `127.0.0.1:55433/chungpamo_regression`, 사용자 `chungpamo_regression_runner`로만 실행한다. 개발 DB `chungpamo`와 기존 `chungpamo_test`는 사용하지 않는다. 모노레포 컨테이너/볼륨/프로젝트/포트, 실제 DB·사용자, sentinel, 테이블·스키마, SYNTHETIC 출처를 확인한다. 예상 밖 데이터가 있으면 중단한다. 별도 비밀번호는 Git에서 제외된 `.env.regression.local`의 `TEST_DATABASE_URL`로 보관한다. [환경 생성·실행 및 실제 검증 기록](DB_REGRESSION_E2E_VERIFICATION.md)을 먼저 읽는다. 승인 후에만 아래 토큰을 해당 프로세스 환경에 설정한다. 토큰은 승인을 대신하지 않는다.
 
 ```powershell
-$env:CHUNGPAMO_ALLOW_TEST_DB_RESET='chungpamo_test@127.0.0.1:55433'
-./.venv/Scripts/python.exe -m scripts.verify_test_db
-./.venv/Scripts/python.exe -m pytest -q --tb=short
-./.venv/Scripts/python.exe tests/e2e/run_postgres_e2e.py
+$env:CHUNGPAMO_ALLOW_TEST_DB_RESET='chungpamo_regression@127.0.0.1:55433'
+./.venv/Scripts/python.exe scripts/run_regression.py
 Remove-Item Env:CHUNGPAMO_ALLOW_TEST_DB_RESET
 ```
 
-guard는 데이터 삭제를 하지 않는다. guard 통과 이후 pytest/E2E만 테스트 DB를 재생성한다. 테스트 전 개발 DB 내용·DDL·기존 Docker 자원 식별자를 보존하고 종료 후 비교한다. pytest와 E2E를 같은 테스트 DB에서 동시에 실행하지 않는다.
+guard는 데이터 삭제를 하지 않는다. guard 통과 이후 pytest/E2E만 회귀 DB의 허용 스키마를 재생성한다. 회귀 DB 자체는 삭제하지 않는다. 테스트 전후 개발 DB 내용을 읽기 전용으로 비교한다. pytest와 E2E를 같은 테스트 DB에서 동시에 실행하지 않는다. 브라우저 DB 실행기 `tests/e2e/run_postgres_e2e.py`도 같은 별도 승인과 대상 검사가 필요하다. 데이터셋 선택 시나리오는 UI 미구현으로 아직 실행하지 않는다.
 
 ## 비DB 브라우저 검증
 

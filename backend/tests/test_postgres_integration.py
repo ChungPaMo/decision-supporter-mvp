@@ -1,4 +1,4 @@
-"""실제 PostgreSQL 경로만 검증한다. 쓰기/DDL은 chungpamo_test로 한정한다."""
+"""실제 PostgreSQL 경로만 검증한다. 쓰기/DDL은 chungpamo_regression으로 한정한다."""
 import os
 from pathlib import Path
 import subprocess
@@ -16,11 +16,13 @@ from tests.test_sql_repository import _clean
 ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_empty_test_db_migrates_down_to_0001_and_up_sequentially(test_engine):
+def test_empty_test_db_migrates_down_to_0001_and_up_sequentially(test_engine,historical_schema):
+    test_engine=historical_schema('regression_history_0001')
     with test_engine.connect() as c:
-        assert c.execute(text("SELECT current_database()")).scalar_one() == "chungpamo_test"
+        assert c.execute(text("SELECT current_database()")).scalar_one() == "chungpamo_regression"
     _clean(test_engine)
-    env = {**os.environ, "DATABASE_URL": test_engine.url.render_as_string(hide_password=False)}
+    env = {**os.environ, "DATABASE_URL": test_engine.url.render_as_string(hide_password=False),
+           'REGRESSION_MIGRATION_SCHEMA':test_engine._regression_schema}
     for direction, revision in (("downgrade", "0001"), ("upgrade", "0002"), ("upgrade", "0003"), ("upgrade", "0004"), ("upgrade", "0005")):
         result = subprocess.run([sys.executable, "-m", "alembic", direction, revision],
                                 cwd=ROOT / "backend", env=env, capture_output=True, text=True)

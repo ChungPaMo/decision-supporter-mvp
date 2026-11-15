@@ -16,7 +16,7 @@ def main():
                                       'ls-files', '--cached', '--others', '--exclude-standard', '-z'], cwd=ROOT)
     paths = set(filter(None, result.decode('utf-8').split('\0')))
     secrets = []
-    for env in [ROOT / '.env', ROOT / 'frontend/.env.local']:
+    for env in [ROOT / '.env', ROOT / '.env.regression.local', ROOT / 'frontend/.env.local']:
         if not env.exists(): continue
         for line in env.read_text(encoding='utf-8-sig').splitlines():
             if '=' not in line or line.lstrip().startswith('#'): continue
@@ -24,7 +24,7 @@ def main():
             value = value.strip().strip('"').strip("'")
             if re.search('PASSWORD|TOKEN|SECRET|API_KEY', key) and len(value) >= 12:
                 secrets.append(value)
-            if key == 'DATABASE_URL':
+            if key.endswith('DATABASE_URL'):
                 password = urlsplit(value).password
                 if password and len(password) >= 12 and not password.startswith('change_me'):
                     secrets.append(password)

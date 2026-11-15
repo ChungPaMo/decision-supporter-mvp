@@ -1,0 +1,8 @@
+{
+  "name": "chungpamo-e2e-type-support",
+  "private": true,
+  "description": "Independent test typing dependencies; frontend remains untouched.",
+  "devDependencies": {
+    "@types/node": "20.19.43"
+  }
+}

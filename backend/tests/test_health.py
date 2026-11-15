@@ -21,7 +21,7 @@ def test_health_reports_db_unavailable_without_leaking_details(monkeypatch):
 
 def test_health_ok_with_real_db(test_engine, monkeypatch):
     """전용 PostgreSQL 컨테이너가 떠 있을 때만 실행."""
-    assert test_engine.url.database == "chungpamo_test"
+    assert test_engine.url.database == "chungpamo_regression"
     monkeypatch.setattr("app.api.health.get_engine", lambda: test_engine)
     r = client.get("/health")
     assert r.status_code == 200

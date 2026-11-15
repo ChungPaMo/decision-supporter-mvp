@@ -257,23 +257,37 @@ def test_invalid_model_quantiles_are_not_saved_as_predictions(environment, monke
     assert counts(engine) == (1, 1, 0)
 
 
-def test_0005_preserves_legacy_results_and_allows_new_run(environment):
+def test_0005_preserves_legacy_results_and_allows_new_run(environment,historical_schema):
     client, service, engine = environment
     seed(service)
+    history=historical_schema('regression_history_0005')
     from engine.forecast.service import QUANTILE_MODEL_VERSION
-    with engine.begin() as c:
+    from tests.test_db_rules import _approved_batch,_product
+    with history.begin() as c:
+        bid=_approved_batch(c,entity='product')
+        _product(c,bid,'0001001')
         c.execute(text("INSERT INTO demand_forecast(product_id,target_month,horizon,p50,p80,p90,p50_method,quantile_model_version,trained_until) "
                        "VALUES ('0001001','2017-01',1,1,2,3,'MA12',:model,'2016-12-31')"), {"model": QUANTILE_MODEL_VERSION})
-    env = {**os.environ, "DATABASE_URL": engine.url.render_as_string(hide_password=False)}
+    env = {**os.environ, "DATABASE_URL": history.url.render_as_string(hide_password=False),
+           'REGRESSION_MIGRATION_SCHEMA':history._regression_schema}
     for direction, revision in (("downgrade", "0004"), ("upgrade", "0005")):
         result = subprocess.run([sys.executable, "-m", "alembic", direction, revision],
                                 cwd=Path(__file__).resolve().parents[1], env=env, capture_output=True, text=True)
         assert result.returncode == 0, result.stderr
-    with engine.connect() as c:
+    with history.connect() as c:
         row = c.execute(text("SELECT forecast_run_id,p50,p80,p90 FROM demand_forecast")).one()
         assert row[0] is None and tuple(row[1:]) == (1, 2, 3)
     created = client.post("/forecasts", json=PARAMETERS)
-    assert created.status_code == 201 and counts(engine) == (1, 1, 10)
+    assert created.status_code == 201 and counts(engine) == (1, 1, 9)
+    with history.connect() as c:
+        # The original tenth row is retained in the historical namespace, not mixed into the current API schema.
+        assert c.execute(text('SELECT count(*) FROM demand_forecast')).scalar_one()+counts(engine)[2]==10
+    # Same real-engine result generated from test-only synthetic inputs is also accepted by the historical 0005 table.
+    # No development DB records are copied. Current API still runs against public 0008.
+    with history.begin() as c:
+        columns='execution_id,dedup_key,input_digest,parameters,input_snapshot,runtime_identity,input_row_count,forecast_count,status,quantile_model_version,result,failure,created_at,finished_at'
+        c.execute(text('INSERT INTO forecast_run('+columns+') SELECT '+columns+' FROM public.forecast_run WHERE execution_id=:id'),
+                  {'id':created.json()['execution']['execution_id']})
     # A populated execution history must not be silently destroyed.
     result = subprocess.run([sys.executable, "-m", "alembic", "downgrade", "0004"],
                             cwd=Path(__file__).resolve().parents[1], env=env, capture_output=True, text=True)
