@@ -4,6 +4,7 @@ import { apiClient } from '../services/api';
 import { planResponses } from '../services/fixtures';
 import { Step, useProductionStore } from '../store/productionStore';
 import LivePlanningPanel from '../components/LivePlanningPanel';
+import PlanExecutionPanel from '../components/PlanExecutionPanel';
 import UsageMeter from '../components/UsageMeter';
 import { DEMO_PLANS, DEMO_RESOURCES, DEMO_MATERIALS } from '../services/planningDemo';
 
@@ -27,7 +28,7 @@ export default function PlanningWorkspace({ stage }: { stage: Stage }) {
     {planningView === 'DEMO' && <Notice tone="warn">DEMO / UNVERIFIED — 고정 합성 설명값입니다. 실제 예측·계산·승인 기록과 연결되지 않았습니다. 화면의 비율은 이 설명값을 시각화합니다.</Notice>}
     <nav className="workflow-tabs" aria-label="계획 상세 단계">{STAGES.map(([id, label]) => <button key={id} className={stage === id ? 'active' : ''} aria-current={stage === id ? 'page' : undefined} onClick={() => setStep(id as Step)}>{label}</button>)}</nav>
     {error && <div role="alert"><Notice tone="bad">{error}</Notice></div>}
-    {planningView === 'LIVE' ? <LivePlanningPanel stage={stage} /> : <>
+    {planningView === 'LIVE' ? <><LivePlanningPanel stage={stage} /><PlanExecutionPanel /></> : <>
     {stage === 'plans' && <>
       <div className="dashboard-grid"><aside className="panel"><h3>기준 조건 · 설명값</h3><dl className="fact-list"><dt>기초 완제품</dt><dd>2,000팩</dd><dt>목표 안전재고</dt><dd>1,000팩</dd><dt>월 수량 한도</dt><dd>10,500팩</dd><dt>포장 설비</dt><dd>160h + 잔업 20h</dd><dt>작업 인력</dt><dd>170 + 잔업 20인시</dd></dl><p className="muted">목적함수·KPI·동시 적용 방식은 계약 미확정입니다.</p></aside>
       <section className="panel"><h3>MPS 초안 시나리오 비교</h3><div className="table-scroll"><table><caption>PPT 합성 사례 — 계산 결과 아님</caption><thead><tr><th>구분</th>{PLANS.map(p => <th key={p.name}>{p.name}</th>)}</tr></thead><tbody>

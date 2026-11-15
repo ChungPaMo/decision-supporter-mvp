@@ -1,10 +1,51 @@
 import { BatchDetail, BatchSummary, Entity, Page, ValidationResult } from '../types/api';
 import { ForecastExecution, ForecastExecutionSummary, ForecastRunParameters, ForecastRunReply } from '../types/engine';
-import { ClassificationResult, PlanningReply } from '../types/modules';
+import { ClassificationResult, DatasetDetail, PlanCandidate, PlanDecisionEvent, PlanDecisionRequest, PlanExecutionCommand, PlanExecutionDetail, PlanExecutionReply, PlanExecutionSummary, PlanningReply } from '../types/modules';
+import { useProductionStore } from '../store/productionStore';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
+// 데이터셋 DB를 조회하지 않는 경로. 그 외 모든 요청에는 dataset_id 를 붙인다.
+const UNSCOPED = ['/health', '/datasets', '/classifications/', '/ingest/', '/exports/plans/xlsx', '/dev/'];
+const STALE = { detail: { code: 'DATASET_CHANGED', message: '데이터셋이 변경되어 이전 요청 결과를 버렸습니다.' } };
+const currentDataset = () => useProductionStore.getState().datasetId;
+
 class ApiClient {
+  private scoped(path: string, datasetId: string) {
+    if (UNSCOPED.some((prefix) => path.startsWith(prefix))) return path;
+    return `${path}${path.includes('?') ? '&' : '?'}dataset_id=${encodeURIComponent(datasetId)}`;
+  }
+
+  async listDatasets(): Promise<DatasetDetail[]> {
+    return this.request('GET', '/datasets');
+  }
+
+  // 저장되는 계획 실행. 엔진 미연결 동안 생성은 501 MODULE_NOT_IMPLEMENTED 가 정상 응답이다.
+  async createPlanExecution(command: PlanExecutionCommand): Promise<PlanExecutionReply> {
+    return this.request('POST', '/plan-executions', { body: command });
+  }
+
+  async planExecutions(limit = 20, offset = 0): Promise<Page<PlanExecutionSummary>> {
+    return this.request('GET', `/plan-executions?limit=${limit}&offset=${offset}`);
+  }
+
+  async getPlanExecution(executionId: string): Promise<PlanExecutionDetail> {
+    return this.request('GET', `/plan-executions/${encodeURIComponent(executionId)}`);
+  }
+
+  async planCandidates(executionId: string): Promise<PlanCandidate[]> {
+    return this.request('GET', `/plan-executions/${encodeURIComponent(executionId)}/candidates`);
+  }
+
+  async planDecisions(executionId: string): Promise<{ items: PlanDecisionEvent[] }> {
+    return this.request('GET', `/plan-executions/${encodeURIComponent(executionId)}/decisions`);
+  }
+
+  // REVIEW/REJECT 만 기록된다. APPROVE 는 인증·정책 미구현으로 501 PLAN_APPROVAL_DISABLED.
+  async decidePlan(executionId: string, body: PlanDecisionRequest): Promise<PlanExecutionDetail> {
+    return this.request('POST', `/plan-executions/${encodeURIComponent(executionId)}/decisions`, { body });
+  }
+
   private async request<T>(
     method: string,
     path: string,
@@ -14,7 +55,9 @@ class ApiClient {
       formData?: FormData;
     }
   ): Promise<T> {
-    const url = `${API_BASE}${path}`;
+    // 요청 시점의 데이터셋을 고정한다. 응답 전에 데이터셋이 바뀌면 결과를 화면에 넘기지 않는다.
+    const datasetId = currentDataset();
+    const url = `${API_BASE}${this.scoped(path, datasetId)}`;
     const config: RequestInit = { method };
 
     if (options?.formData) {
@@ -34,9 +77,11 @@ class ApiClient {
     }
     if (!res.ok) {
       const error = await res.json().catch(() => ({ detail: { code: 'NETWORK_ERROR', message: res.statusText } }));
-      throw error;
+      throw currentDataset() === datasetId ? error : STALE;
     }
-    return res.json();
+    const payload = await res.json();
+    if (currentDataset() !== datasetId) throw STALE;
+    return payload;
   }
 
   // 건강 체크

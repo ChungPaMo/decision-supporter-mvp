@@ -1,17 +1,19 @@
 import { FormEvent, useEffect, useRef, useState } from 'react';
 import { apiClient } from '../services/api';
 import { ForecastExecution, ForecastExecutionSummary, ForecastRunParameters, ForecastRunReply } from '../types/engine';
-import { useProductionStore } from '../store/productionStore';
+import { scopedKey, useProductionStore } from '../store/productionStore';
 import { errorMessage, Notice, qty, ScreenHeader } from '../components/ui';
 import ForecastChart from '../components/ForecastChart';
 
 const KEY = 'chungpamo.forecast-selection.v1';
 const LABEL = { OK: '예측 완료', PARTIAL: '일부 제품 제외', DATA_INSUFFICIENT: '예측 데이터 부족', INPUT_INVALID: '예측 입력 오류', FAILED: '예측 실행 실패' };
 
-function remember(id: string) { try { localStorage.setItem(KEY, id); } catch { /* ID 저장은 선택 사항 */ } }
+// 저장된 예측 UUID는 데이터셋별로 기억한다.
+const key = () => scopedKey(KEY, useProductionStore.getState().datasetId);
+function remember(id: string) { try { localStorage.setItem(key(), id); } catch { /* ID 저장은 선택 사항 */ } }
 function lastId() {
   try {
-    const value = localStorage.getItem(KEY) || '';
+    const value = localStorage.getItem(key()) || '';
     return /^[0-9a-f-]{36}$/i.test(value) ? value : undefined;
   } catch { return undefined; }
 }

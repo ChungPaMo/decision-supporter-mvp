@@ -1,23 +1,26 @@
 import { ChangeEvent, useEffect, useRef, useState } from 'react';
 import { BatchDetail, BatchSummary, Entity, ValidationResult } from '../types/api';
 import { apiClient } from '../services/api';
-import { ENTITY_ORDER, useProductionStore } from '../store/productionStore';
+import { ENTITY_ORDER, scopedKey, useProductionStore } from '../store/productionStore';
 import { BatchBadge, ENTITY_LABEL, errorMessage, Notice, qty, ROLE_CODE, ScreenHeader } from '../components/ui';
 import ClassificationPanel from '../components/ClassificationPanel';
 
 const HIDDEN_COLUMNS = new Set(['location', 'review_required', 'batch_id', 'source_type', 'lines']);
 const SELECTION_KEY = 'chungpamo.batch-selection.v1';
 
+// 선택 배치 ID는 데이터셋별로 따로 기억한다. 다른 데이터셋의 UUID를 재사용하지 않는다.
+const selectionKey = () => scopedKey(SELECTION_KEY, useProductionStore.getState().datasetId);
+
 function selections(): Partial<Record<Entity, string>> {
   try {
-    const value = JSON.parse(localStorage.getItem(SELECTION_KEY) || '{}');
+    const value = JSON.parse(localStorage.getItem(selectionKey()) || '{}');
     return value && typeof value === 'object' && !Array.isArray(value) ? value : {};
   } catch { return {}; }
 }
 
 function remember(entity: Entity, id: string) {
   // 승인 상태는 저장하지 않는다. ID는 재조회 대상 선택에만 사용한다.
-  try { localStorage.setItem(SELECTION_KEY, JSON.stringify({ ...selections(), [entity]: id })); } catch { /* 저장소가 막혀도 서버 재조회 가능 */ }
+  try { localStorage.setItem(selectionKey(), JSON.stringify({ ...selections(), [entity]: id })); } catch { /* 저장소가 막혀도 서버 재조회 가능 */ }
 }
 
 function RowsTable({ rows, caption }: { rows: Array<Record<string, unknown>>; caption: string }) {
@@ -119,7 +122,7 @@ function BatchPanel({ batch, disabled, act }: { batch: BatchDetail; disabled: bo
   </section>;
 }
 
-export default function DataUploadScreen() {
+export default function DataUploadScreen({ view = 'upload' }: { view?: 'upload' | 'verify' }) {
   const { activeEntity, setActiveEntity, batches, setBatch, setWorkspace, approvedEntities, synced, setSynced, setStep } = useProductionStore();
   const [history, setHistory] = useState<BatchSummary[]>([]);
   const [busy, setBusy] = useState(false);
@@ -129,6 +132,7 @@ export default function DataUploadScreen() {
   const alive = useRef(true);
   const working = useRef(false);
   const batch = batches[activeEntity];
+  const verify = view === 'verify';
   const locked = activeEntity !== 'product' && activeEntity !== 'material' && !(approvedEntities.product && approvedEntities.material);
 
   async function load() {
@@ -188,14 +192,16 @@ export default function DataUploadScreen() {
     working.current = true; setBusy(true); setMessage('');
     try {
       const detail = await apiClient.getBatch(id);
-      remember(detail.entity, id); setBatch(detail.entity, detail);
-    } catch (error) { setMessage(failureMessage(error)); setSynced(false); }
-    finally { working.current = false; setBusy(false); }
+      if (alive.current) { remember(detail.entity, id); setBatch(detail.entity, detail); }
+    } catch (error) { if (alive.current) { setMessage(failureMessage(error)); setSynced(false); } }
+    finally { working.current = false; if (alive.current) setBusy(false); }
   }
 
   return <div className="screen">
-    <ScreenHeader title="데이터 등록·승인" description="파일을 서버에 등록하고 검증 결과를 확인해 승인합니다. 제품·자재 승인 후 BOM·재고·월별 수요를 등록하세요." />
-    <ClassificationPanel onChoose={setActiveEntity} disabled={busy} />
+    {verify
+      ? <ScreenHeader title="검증·승인·등록" description="등록된 배치의 검증 결과를 확인하고, 승인 가능한 데이터만 승인합니다. 자동으로 승인되지 않습니다." />
+      : <ScreenHeader title="데이터 등록·승인" description="파일을 서버에 등록하고 검증 결과를 확인해 승인합니다. 제품·자재 승인 후 BOM·재고·월별 수요를 등록하세요." />}
+    {!verify && <ClassificationPanel onChoose={setActiveEntity} disabled={busy} />}
     <div className="actions"><button className="button" disabled={busy} onClick={() => void refresh()}>서버 상태 다시 조회</button>
       <span role="status">{busy ? '서버 처리 중…' : synced ? '서버 상태 조회 완료' : '서버 상태 확인 필요'}</span></div>
     {message && <div role="alert"><Notice tone="bad">{message}</Notice></div>}
@@ -206,7 +212,7 @@ export default function DataUploadScreen() {
         <span>{ENTITY_LABEL[entity]}</span>{batches[entity] ? <BatchBadge status={batches[entity]!.status} /> : <small>미등록</small>}
       </button></li>)}
     </ul></aside><div className="stack">
-      <section className="panel stack"><h3>{ENTITY_LABEL[activeEntity]} 파일 등록</h3>
+      {!verify && <section className="panel stack"><h3>{ENTITY_LABEL[activeEntity]} 파일 등록</h3>
         {locked && <Notice tone="warn">제품과 자재를 먼저 승인해야 등록할 수 있습니다.</Notice>}
         <fieldset disabled={busy || !synced || locked} className="stack"><legend>CSV/XLSX 업로드</legend>
           <label className="field"><span>데이터 출처</span><select aria-label="데이터 출처" value={source} onChange={(e) => setSource(e.target.value)}>
@@ -216,11 +222,12 @@ export default function DataUploadScreen() {
           <label className="field"><span>등록 파일 (CSV/XLSX)</span><input type="file" accept=".csv,.xlsx" onChange={handleFile}
             disabled={source !== 'CLIENT_UPLOAD' && !sourceNote.trim()} /></label>
         </fieldset>
-      </section>
+      </section>}
       <label className="field"><span>배치 이력</span><select aria-label="배치 이력" disabled={busy || !synced} value={batch?.batch_id ?? ''} onChange={(e) => void selectBatch(e.target.value)}>
         <option value="">등록된 배치 선택</option>{history.filter((item) => item.entity === activeEntity).map((item) =>
           <option key={item.batch_id} value={item.batch_id}>{item.file.name} · {item.status} · v{item.version} · {item.batch_id.slice(0, 8)}</option>)}
       </select></label>
+      {verify && !batch && !busy && <Notice tone="muted">이 데이터 종류에는 등록된 배치가 없습니다. 데이터 업로드에서 파일을 먼저 등록하세요.</Notice>}
       {batch && <BatchPanel key={`${batch.batch_id}-${batch.version}`} batch={batch} disabled={busy || !synced} act={act} />}
     </div></div>
     <Notice tone="info">승인된 월별 수요는 실제 예측에 사용됩니다. 계획·진단은 별도 예시입니다.</Notice>

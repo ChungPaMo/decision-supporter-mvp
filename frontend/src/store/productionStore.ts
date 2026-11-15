@@ -2,13 +2,28 @@ import { create } from 'zustand';
 import { BatchDetail, Entity } from '../types/api';
 import { PlanApproval } from '../types/engine';
 import { ScenarioId } from '../services/fixtures';
-import { PlanningReply } from '../types/modules';
+import { DatasetDetail, PlanningReply } from '../types/modules';
 
-export type Step = 'data' | 'forecast' | 'plans' | 'diagnosis' | 'mrp' | 'whatif' | 'approval';
+export type Step = 'dashboard' | 'data' | 'verify' | 'forecast' | 'plans' | 'diagnosis' | 'mrp' | 'whatif' | 'approval';
 
 export const ENTITY_ORDER: Entity[] = ['product', 'material', 'bom', 'inventory', 'monthly_demand'];
 
+export const LEGACY_DATASET = 'TISSUE-LEGACY';
+const DATASET_KEY = 'chungpamo.dataset.v1';
+function storedDataset() {
+  try {
+    const value = localStorage.getItem(DATASET_KEY) || '';
+    return /^[A-Z][A-Z0-9_-]{0,39}$/.test(value) ? value : LEGACY_DATASET;
+  } catch { return LEGACY_DATASET; }
+}
+// 데이터셋별 localStorage 키. 기존 TISSUE-LEGACY 키는 그대로 유지한다.
+export const scopedKey = (key: string, datasetId: string) => (datasetId === LEGACY_DATASET ? key : `${key}.${datasetId}`);
+
 interface ProductionState {
+  datasetId: string;
+  datasets: DatasetDetail[] | null;
+  setDatasets: (datasets: DatasetDetail[] | null) => void;
+  setDataset: (datasetId: string) => void;
   planningView: 'DEMO' | 'LIVE';
   setPlanningView: (view: 'DEMO' | 'LIVE') => void;
   planningPreview: PlanningReply | null;
@@ -36,6 +51,14 @@ interface ProductionState {
 }
 
 export const useProductionStore = create<ProductionState>((set) => ({
+  datasetId: storedDataset(),
+  datasets: null,
+  setDatasets: (datasets) => set({ datasets }),
+  // 데이터셋을 바꾸면 이전 데이터셋의 배치·승인 상태·계획 미리보기·선택을 모두 버린다.
+  setDataset: (datasetId) => {
+    try { localStorage.setItem(DATASET_KEY, datasetId); } catch { /* 선택 저장은 선택 사항 */ }
+    set({ datasetId, batches: {}, approvedEntities: {}, synced: false, planningPreview: null, previewPlanId: null, selectedPlanId: null, approvals: [], demoPlanIndex: 0, activeEntity: 'product' });
+  },
   planningView: 'DEMO', setPlanningView: (planningView) => set({ planningView }),
   planningPreview: null, setPlanningPreview: (planningPreview) => set({ planningPreview, previewPlanId: planningPreview?.result.plans[0]?.plan_id ?? null }),
   previewPlanId: null, setPreviewPlanId: (previewPlanId) => set({ previewPlanId }),
