@@ -81,3 +81,28 @@ def test_capacity_plan_that_only_mentions_mps_is_not_an_mps():
     grid = [['기준', 'MPS 2027년 1분기'], ['설비', '구분', '1월', '2월', '3월'], ['롤 절단기', '소요공수', 150, 160, 170], ['롤 절단기', '보유공수', 168, 168, 168],
             ['롤 절단기', '부하율(%)', 89, 95, 101]]
     assert classify_workbook([('S', grid)]).category == 'RCCP'
+
+
+# 의미 매칭과 규칙을 합치는 방식 (모델 없이 확인한다)
+def _verdict(category, needs_review=False, score=5.0):
+    from file_classifier.doctype import Verdict
+    return Verdict(category, needs_review, '보통', score, reason='규칙 근거')
+
+
+def test_semantic_result_fills_in_when_rules_cannot_decide():
+    from file_classifier.doctype_embed import SemanticResult, combine
+    shown, reason = combine(_verdict(UNKNOWN, score=0.0), SemanticResult('MES', {'MES': 2.4}, ['정품수량 ≈ 양품 수량']))
+    assert shown == 'MES' and '정품수량' in reason
+
+
+def test_disagreement_between_rules_and_semantic_matching_needs_review():
+    from file_classifier.doctype_embed import REVIEW, SemanticResult, combine
+    assert combine(_verdict('CRP'), SemanticResult('MES', {'MES': 3.0}, []))[0] == REVIEW
+    assert combine(_verdict('CRP'), SemanticResult('CRP', {'CRP': 3.0}, []))[0] == 'CRP'
+    assert combine(_verdict('CRP'), SemanticResult(UNKNOWN, {}, []))[0] == 'CRP'
+
+
+def test_both_undecided_stays_undecided():
+    from file_classifier.doctype_embed import REVIEW, SemanticResult, combine
+    assert combine(_verdict(UNKNOWN, score=0.0), SemanticResult(UNKNOWN, {}, []))[0] == UNKNOWN
+    assert combine(_verdict('MPS', needs_review=True), SemanticResult(None, {}, []))[0] == REVIEW

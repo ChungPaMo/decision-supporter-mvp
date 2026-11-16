@@ -1,6 +1,9 @@
 """폴더에 든 엑셀·CSV 를 문서 종류별로 분류해 결과 엑셀을 만든다. openpyxl 이 필요하다.
 
-    python -X utf8 modules/file_classifier/tools/sort_folder.py <폴더> [--out 결과.xlsx] [--labels labels.json]
+    python -X utf8 modules/file_classifier/tools/sort_folder.py <폴더> [--out 결과.xlsx] [--labels labels.json] [--embed]
+
+--embed 를 주면 의미 매칭(BGE-M3, torch·transformers 필요)을 함께 쓴다. 규칙이 정하지 못한 파일을 뜻이 가까운 낱말로
+판단하고, 규칙과 의미 매칭의 결론이 다르면 '확인 필요'로 돌린다. 모델은 로컬에서만 돈다.
 
 --labels 를 주면 정답과 비교해 채점 시트를 추가하고 요약을 출력한다.
 원본 파일은 읽기만 하며 옮기거나 고치지 않는다. 외부로 보내는 것도 없다.
@@ -58,12 +61,21 @@ def shown_category(verdict: Verdict | None) -> str:
     return verdict.category
 
 
-def run(folder: pathlib.Path) -> list[dict]:
+def run(folder: pathlib.Path, matcher=None) -> list[dict]:
     files = sorted(p for p in folder.iterdir() if p.suffix.lower() in (".xlsx", ".xlsm", ".csv") and not p.name.startswith("~$"))
     results = []
     for path in files:
         verdict, error, ms = classify_file(path)
-        results.append({"file": path.name, "verdict": verdict, "error": error, "ms": ms, "shown": shown_category(verdict)})
+        result = {"file": path.name, "verdict": verdict, "error": error, "ms": ms, "shown": shown_category(verdict), "note": ""}
+        if matcher is not None and verdict is not None:
+            from file_classifier.doctype_embed import combine
+
+            start = time.perf_counter()
+            shown, reason = combine(verdict, matcher.classify(read_sheets(path)))
+            result["ms"] += (time.perf_counter() - start) * 1000
+            if shown != result["shown"] or reason != verdict.reason:
+                result["shown"], result["note"] = shown, reason
+        results.append(result)
     return results
 
 
@@ -89,7 +101,7 @@ def write_result(results: list[dict], out: pathlib.Path, labels: dict[str, dict]
     for r in results:
         v = r["verdict"]
         row = [r["file"], r["shown"], v.detail if v else "", v.confidence if v else "", v.score if v else "", (v.runner_up or "") if v else "",
-               v.runner_up_score if v else "", (v.reason if v else r["error"]), ", ".join(v.evidence[:8]) if v else ""]
+               v.runner_up_score if v else "", (r.get("note") or (v.reason if v else r["error"])), ", ".join(v.evidence[:8]) if v else ""]
         if labels:
             truth = labels.get(r["file"], {}).get("category", "")
             row += [truth, "" if not truth else "정답" if r["shown"] == truth else REVIEW if r["shown"] == REVIEW else "오분류"]
@@ -133,11 +145,18 @@ def main() -> None:
     parser.add_argument("--labels", type=pathlib.Path, default=None)
     parser.add_argument("--split", choices=["dev", "test"], default=None, help="채점 출력에서 이 분할만 본다")
     parser.add_argument("--show-misses", action="store_true")
+    parser.add_argument("--embed", action="store_true", help="의미 매칭(BGE-M3)을 함께 쓴다")
     args = parser.parse_args()
     labels = None
     if args.labels:
         labels = {item["file"]: item for item in json.loads(args.labels.read_text(encoding="utf-8"))["files"]}
-    results = run(args.folder)
+    matcher = None
+    if args.embed:
+        from file_classifier.doctype_embed import SemanticMatcher
+
+        matcher = SemanticMatcher()
+        print(f"의미 매칭 사용 (장치 {matcher.embedder.device})")
+    results = run(args.folder, matcher)
     out = args.out or args.folder.parent / "분류결과.xlsx"
     write_result(results, out, labels)
     counts = collections.Counter(r["shown"] for r in results)
