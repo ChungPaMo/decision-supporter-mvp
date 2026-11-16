@@ -1,0 +1,1806 @@
+{
+ "seed": 20261117,
+ "note": "SYNTHETIC. 실제 기업 자료가 아니다.",
+ "files": [
+  {
+   "file": "대장_v2.xlsx",
+   "category": "미분류",
+   "template": "etc_survey",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "test"
+  },
+  {
+   "file": "수정본.xlsx",
+   "category": "BOM",
+   "template": "bom_kr_form",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "EXPORT.xlsx",
+   "category": "BOM",
+   "template": "bom_kr_form",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "download.xlsx",
+   "category": "RCCP",
+   "template": "rccp_oracle_load_ratio",
+   "source": "oracle-capacity",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "BOM_2027-01.xlsx",
+   "category": "BOM",
+   "template": "bom_sap_multilevel",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "test"
+  },
+  {
+   "file": "download (3).xlsx",
+   "category": "BOM",
+   "template": "bom_kr_form",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "자재소요_v2.xlsx",
+   "category": "MRP",
+   "template": "mrp_sap_md04",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "test"
+  },
+  {
+   "file": "data.xlsx",
+   "category": "ERP",
+   "template": "erp_kr_sales",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "첨부.xlsx",
+   "category": "ERP",
+   "template": "erp_kr_po",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "수정본 (14).xlsx",
+   "category": "CRP",
+   "template": "crp_kr_form",
+   "source": "kr-form",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "검토.xlsx",
+   "category": "ERP",
+   "template": "erp_customer_kurbel",
+   "source": "kurbel",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "Sheet.xlsx",
+   "category": "RCCP",
+   "template": "rccp_oracle_bill_of_resources",
+   "source": "oracle-capacity",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "설비부하검토(1월).xlsx",
+   "category": "RCCP",
+   "template": "rccp_kr_form",
+   "source": "kr-form",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "dev"
+  },
+  {
+   "file": "MPS_2027-01.xlsx",
+   "category": "MPS",
+   "template": "mps_kr_weekly",
+   "source": "kr-form",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "test"
+  },
+  {
+   "file": "자료.xlsx",
+   "category": "CRP",
+   "template": "crp_sap_details",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "최종.xlsx",
+   "category": "MES",
+   "template": "mes_kr_daily_log",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "보고.xlsx",
+   "category": "MRP",
+   "template": "mrp_textbook_records",
+   "source": "textbook",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "download (50).xlsx",
+   "category": "RCCP",
+   "template": "rccp_oracle_bill_of_resources",
+   "source": "oracle-capacity",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "RCCP 최종.xlsx",
+   "category": "RCCP",
+   "template": "rccp_oracle_bucketed",
+   "source": "oracle-capacity",
+   "verified": true,
+   "name_kind": "hint",
+   "split": "dev"
+  },
+  {
+   "file": "report.xlsx",
+   "category": "BOM",
+   "template": "bom_sap_multilevel",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "Book1.xlsx",
+   "category": "MPS",
+   "template": "mps_oracle_entries",
+   "source": "oracle-mps",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "자료 (95).xlsx",
+   "category": "MES",
+   "template": "mes_kr_weekly_status",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "검토 (69).xlsx",
+   "category": "ERP",
+   "template": "erp_stock_kurbel",
+   "source": "kurbel",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "검토 (32).xlsx",
+   "category": "MRP",
+   "template": "mrp_kr_form",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "첨부 (37).xlsx",
+   "category": "BOM",
+   "template": "bom_kr_form",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "가동현황 최종.xlsx",
+   "category": "MES",
+   "template": "mes_oee",
+   "source": "oee",
+   "verified": true,
+   "name_kind": "hint",
+   "split": "test"
+  },
+  {
+   "file": "최종 (55).xlsx",
+   "category": "MRP",
+   "template": "mrp_kr_form",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "CRP 최종.xlsx",
+   "category": "CRP",
+   "template": "crp_sap_cm01",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "dev"
+  },
+  {
+   "file": "report (91).xlsx",
+   "category": "BOM",
+   "template": "bom_sap_multilevel",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "대장(1월).xlsx",
+   "category": "미분류",
+   "template": "etc_minutes",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "dev"
+  },
+  {
+   "file": "설비부하검토 최종.xlsx",
+   "category": "RCCP",
+   "template": "rccp_kr_form",
+   "source": "kr-form",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "test"
+  },
+  {
+   "file": "data (60).xlsx",
+   "category": "BOM",
+   "template": "bom_kr_form",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "export (15).xlsx",
+   "category": "CRP",
+   "template": "crp_sap_cm01",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "최종 (66).xlsx",
+   "category": "MES",
+   "template": "mes_kr_defects",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "새 Microsoft Excel 워크시트.xlsx",
+   "category": "RCCP",
+   "template": "rccp_oracle_bucketed",
+   "source": "oracle-capacity",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "data (19).xlsx",
+   "category": "MPS",
+   "template": "mps_oracle_entries",
+   "source": "oracle-mps",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "새 Microsoft Excel 워크시트 (93).xlsx",
+   "category": "MPS",
+   "template": "mps_cpim",
+   "source": "cpim-mps",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "새 Microsoft Excel 워크시트 (85).xlsx",
+   "category": "MPS",
+   "template": "mps_kr_weekly",
+   "source": "kr-form",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "export (87).xlsx",
+   "category": "MRP",
+   "template": "mrp_sap_md04",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "생산계획_2027-01.xlsx",
+   "category": "MPS",
+   "template": "mps_oracle_entries",
+   "source": "oracle-mps",
+   "verified": true,
+   "name_kind": "hint",
+   "split": "test"
+  },
+  {
+   "file": "검토 (44).xlsx",
+   "category": "RCCP",
+   "template": "rccp_oracle_bucketed",
+   "source": "oracle-capacity",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "작업장부하.xlsx",
+   "category": "CRP",
+   "template": "crp_sap_details",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "dev"
+  },
+  {
+   "file": "export (82).xlsx",
+   "category": "미분류",
+   "template": "etc_safety",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "첨부 (33).xlsx",
+   "category": "MPS",
+   "template": "mps_cpim",
+   "source": "cpim-mps",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "export (33).xlsx",
+   "category": "MES",
+   "template": "mes_kr_daily_log",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "최종 (99).xlsx",
+   "category": "BOM",
+   "template": "bom_structure_table",
+   "source": "kurbel",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "EXPORT (51).xlsx",
+   "category": "CRP",
+   "template": "crp_sap_cm01",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "data (34).xlsx",
+   "category": "ERP",
+   "template": "erp_stock_kurbel",
+   "source": "kurbel",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "자료 (32).xlsx",
+   "category": "미분류",
+   "template": "etc_attendance",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "test"
+  },
+  {
+   "file": "검토 (31).xlsx",
+   "category": "BOM",
+   "template": "bom_sap_multilevel",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "Sheet (32).xlsx",
+   "category": "CRP",
+   "template": "crp_kr_form",
+   "source": "kr-form",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "Book1 (50).xlsx",
+   "category": "ERP",
+   "template": "erp_kr_price",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "Sheet (43).xlsx",
+   "category": "BOM",
+   "template": "bom_sap_multilevel",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "첨부 (96).xlsx",
+   "category": "MPS",
+   "template": "mps_cpim",
+   "source": "cpim-mps",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "MRP.xlsx",
+   "category": "MRP",
+   "template": "mrp_kr_form",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "hint",
+   "split": "dev"
+  },
+  {
+   "file": "export (26).xlsx",
+   "category": "BOM",
+   "template": "bom_structure_table",
+   "source": "kurbel",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "검토 (62).xlsx",
+   "category": "MRP",
+   "template": "mrp_kr_form",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "MRP(1월).xlsx",
+   "category": "MRP",
+   "template": "mrp_kr_form",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "hint",
+   "split": "test"
+  },
+  {
+   "file": "download (13).xlsx",
+   "category": "RCCP",
+   "template": "rccp_oracle_load_ratio",
+   "source": "oracle-capacity",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "보고 (25).xlsx",
+   "category": "ERP",
+   "template": "erp_customer_kurbel",
+   "source": "kurbel",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "검토 (6).xlsx",
+   "category": "MPS",
+   "template": "mps_wikiversity",
+   "source": "wikiversity-mps",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "새 Microsoft Excel 워크시트 (95).xlsx",
+   "category": "CRP",
+   "template": "crp_sap_cm01",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "RCCP(1월).xlsx",
+   "category": "RCCP",
+   "template": "rccp_oracle_required_hours",
+   "source": "oracle-capacity",
+   "verified": true,
+   "name_kind": "hint",
+   "split": "test"
+  },
+  {
+   "file": "Sheet (42).xlsx",
+   "category": "ERP",
+   "template": "erp_supplier_kurbel",
+   "source": "kurbel",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "data (22).xlsx",
+   "category": "BOM",
+   "template": "bom_sap_multilevel",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "생산계획_v2.xlsx",
+   "category": "MPS",
+   "template": "mps_oracle_entries",
+   "source": "oracle-mps",
+   "verified": true,
+   "name_kind": "hint",
+   "split": "test"
+  },
+  {
+   "file": "작업장부하_v2.xlsx",
+   "category": "CRP",
+   "template": "crp_sap_details",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "test"
+  },
+  {
+   "file": "MRP(1월) (47).xlsx",
+   "category": "MRP",
+   "template": "mrp_textbook_records",
+   "source": "textbook",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "test"
+  },
+  {
+   "file": "최종 (39).xlsx",
+   "category": "MRP",
+   "template": "mrp_textbook_records",
+   "source": "textbook",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "export (84).xlsx",
+   "category": "MPS",
+   "template": "mps_wikiversity",
+   "source": "wikiversity-mps",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "report (29).xlsx",
+   "category": "미분류",
+   "template": "etc_safety",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "최종 (21).xlsx",
+   "category": "BOM",
+   "template": "bom_structure_table",
+   "source": "kurbel",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "작업장부하 최종.xlsx",
+   "category": "CRP",
+   "template": "crp_sap_details",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "test"
+  },
+  {
+   "file": "수정본 (28).xlsx",
+   "category": "MES",
+   "template": "mes_oee",
+   "source": "oee",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "EXPORT (25).xlsx",
+   "category": "CRP",
+   "template": "crp_sap_cm01",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "자료 (5).xlsx",
+   "category": "MRP",
+   "template": "mrp_textbook_records",
+   "source": "textbook",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "보고 (26).xlsx",
+   "category": "미분류",
+   "template": "etc_hr",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "data (59).xlsx",
+   "category": "CRP",
+   "template": "crp_sap_details",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "대장_2027-01.xlsx",
+   "category": "미분류",
+   "template": "etc_minutes",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "dev"
+  },
+  {
+   "file": "MES.xlsx",
+   "category": "MES",
+   "template": "mes_kr_weekly_status",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "hint",
+   "split": "dev"
+  },
+  {
+   "file": "보고 (82).xlsx",
+   "category": "MRP",
+   "template": "mrp_sap_md04",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "수정본 (20).xlsx",
+   "category": "MPS",
+   "template": "mps_oracle_entries",
+   "source": "oracle-mps",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "data (53).xlsx",
+   "category": "MES",
+   "template": "mes_kr_defects",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "최종 (54).xlsx",
+   "category": "BOM",
+   "template": "bom_kr_form",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "자료(1월).xlsx",
+   "category": "미분류",
+   "template": "etc_energy",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "dev"
+  },
+  {
+   "file": "최종 (33).xlsx",
+   "category": "MRP",
+   "template": "mrp_textbook_records",
+   "source": "textbook",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "보고 (12).xlsx",
+   "category": "RCCP",
+   "template": "rccp_oracle_required_hours",
+   "source": "oracle-capacity",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "생산일보(1월).xlsx",
+   "category": "MES",
+   "template": "mes_oee",
+   "source": "oee",
+   "verified": true,
+   "name_kind": "hint",
+   "split": "dev"
+  },
+  {
+   "file": "data (28).xlsx",
+   "category": "CRP",
+   "template": "crp_kr_form",
+   "source": "kr-form",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "data (24).xlsx",
+   "category": "미분류",
+   "template": "etc_training",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "data (27).xlsx",
+   "category": "MRP",
+   "template": "mrp_textbook_records",
+   "source": "textbook",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "Sheet (95).xlsx",
+   "category": "MPS",
+   "template": "mps_kr_weekly",
+   "source": "kr-form",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "대장.xlsx",
+   "category": "미분류",
+   "template": "etc_supplies",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "test"
+  },
+  {
+   "file": "검토 (68).xlsx",
+   "category": "미분류",
+   "template": "etc_survey",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "data (13).xlsx",
+   "category": "RCCP",
+   "template": "rccp_oracle_bill_of_resources",
+   "source": "oracle-capacity",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "Book1 (9).xlsx",
+   "category": "MES",
+   "template": "mes_sap_confirmations",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "보고 (95).xlsx",
+   "category": "BOM",
+   "template": "bom_kr_form",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "download (22).xlsx",
+   "category": "미분류",
+   "template": "etc_training",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "작업장부하_v2 (92).xlsx",
+   "category": "CRP",
+   "template": "crp_kr_form",
+   "source": "kr-form",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "dev"
+  },
+  {
+   "file": "export (34).xlsx",
+   "category": "CRP",
+   "template": "crp_sap_details",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "MRP 최종.xlsx",
+   "category": "MRP",
+   "template": "mrp_textbook_records",
+   "source": "textbook",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "test"
+  },
+  {
+   "file": "자료_v2.xlsx",
+   "category": "미분류",
+   "template": "etc_training",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "test"
+  },
+  {
+   "file": "자료 (22).xlsx",
+   "category": "MRP",
+   "template": "mrp_textbook_records",
+   "source": "textbook",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "CRP_v2.xlsx",
+   "category": "CRP",
+   "template": "crp_sap_details",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "test"
+  },
+  {
+   "file": "첨부 (87).xlsx",
+   "category": "ERP",
+   "template": "erp_kr_item",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "data (48).xlsx",
+   "category": "MES",
+   "template": "mes_kr_daily_log",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "자료 (78).xlsx",
+   "category": "미분류",
+   "template": "etc_hr",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "수정본 (89).xlsx",
+   "category": "ERP",
+   "template": "erp_kr_sales",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "최종 (93).xlsx",
+   "category": "CRP",
+   "template": "crp_sap_cm01",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "최종 (12).xlsx",
+   "category": "MES",
+   "template": "mes_oee",
+   "source": "oee",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "최종 (56).xlsx",
+   "category": "ERP",
+   "template": "erp_kr_po",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "가동현황(1월).xlsx",
+   "category": "MES",
+   "template": "mes_sap_confirmations",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "dev"
+  },
+  {
+   "file": "Sheet (60).xlsx",
+   "category": "CRP",
+   "template": "crp_sap_cm01",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "MES_v2.xlsx",
+   "category": "MES",
+   "template": "mes_kr_daily_log",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "hint",
+   "split": "test"
+  },
+  {
+   "file": "보고 (45).xlsx",
+   "category": "BOM",
+   "template": "bom_structure_table",
+   "source": "kurbel",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "Sheet (99).xlsx",
+   "category": "RCCP",
+   "template": "rccp_kr_form",
+   "source": "kr-form",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "export (68).xlsx",
+   "category": "MRP",
+   "template": "mrp_sap_md04",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "최종 (23).xlsx",
+   "category": "MRP",
+   "template": "mrp_sap_md04",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "자료(1월) (38).xlsx",
+   "category": "미분류",
+   "template": "etc_vehicle",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "test"
+  },
+  {
+   "file": "자료 (66).xlsx",
+   "category": "RCCP",
+   "template": "rccp_oracle_load_ratio",
+   "source": "oracle-capacity",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "수정본 (98).xlsx",
+   "category": "MPS",
+   "template": "mps_wikiversity",
+   "source": "wikiversity-mps",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "Book1 (20).xlsx",
+   "category": "미분류",
+   "template": "etc_contacts",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "data (47).xlsx",
+   "category": "RCCP",
+   "template": "rccp_oracle_bucketed",
+   "source": "oracle-capacity",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "조회_v2.xlsx",
+   "category": "ERP",
+   "template": "erp_kr_sales",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "test"
+  },
+  {
+   "file": "보고 (18).xlsx",
+   "category": "MPS",
+   "template": "mps_oracle_entries",
+   "source": "oracle-mps",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "ERP_2027-01.xlsx",
+   "category": "ERP",
+   "template": "erp_kr_item",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "dev"
+  },
+  {
+   "file": "첨부 (56).xlsx",
+   "category": "CRP",
+   "template": "crp_kr_form",
+   "source": "kr-form",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "자료 (31).xlsx",
+   "category": "BOM",
+   "template": "bom_structure_table",
+   "source": "kurbel",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "export (71).xlsx",
+   "category": "미분류",
+   "template": "etc_supplies",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "검토 (96).xlsx",
+   "category": "MRP",
+   "template": "mrp_kr_form",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "자료 (18).xlsx",
+   "category": "ERP",
+   "template": "erp_kr_price",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "export (69).xlsx",
+   "category": "RCCP",
+   "template": "rccp_oracle_required_hours",
+   "source": "oracle-capacity",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "MES_2027-01.xlsx",
+   "category": "MES",
+   "template": "mes_kr_weekly_status",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "hint",
+   "split": "dev"
+  },
+  {
+   "file": "첨부 (18).xlsx",
+   "category": "CRP",
+   "template": "crp_sap_cm01",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "수정본 (49).xlsx",
+   "category": "ERP",
+   "template": "erp_supplier_kurbel",
+   "source": "kurbel",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "Sheet (9).xlsx",
+   "category": "MPS",
+   "template": "mps_wikiversity",
+   "source": "wikiversity-mps",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "report (95).xlsx",
+   "category": "RCCP",
+   "template": "rccp_oracle_required_hours",
+   "source": "oracle-capacity",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "CRP_2027-01.xlsx",
+   "category": "CRP",
+   "template": "crp_sap_cm01",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "dev"
+  },
+  {
+   "file": "최종 (70).xlsx",
+   "category": "MRP",
+   "template": "mrp_kr_form",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "EXPORT (80).xlsx",
+   "category": "MPS",
+   "template": "mps_kr_weekly",
+   "source": "kr-form",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "최종 (15).xlsx",
+   "category": "미분류",
+   "template": "etc_energy",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "설비부하검토(1월) (20).xlsx",
+   "category": "RCCP",
+   "template": "rccp_kr_form",
+   "source": "kr-form",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "test"
+  },
+  {
+   "file": "data (75).xlsx",
+   "category": "MES",
+   "template": "mes_kr_defects",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "ERP_2027-01 (51).xlsx",
+   "category": "ERP",
+   "template": "erp_supplier_kurbel",
+   "source": "kurbel",
+   "verified": true,
+   "name_kind": "hint",
+   "split": "dev"
+  },
+  {
+   "file": "download (25).xlsx",
+   "category": "ERP",
+   "template": "erp_kr_stock",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "자료 (58).xlsx",
+   "category": "RCCP",
+   "template": "rccp_kr_form",
+   "source": "kr-form",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "첨부 (61).xlsx",
+   "category": "미분류",
+   "template": "etc_attendance",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "자료 (34).xlsx",
+   "category": "ERP",
+   "template": "erp_stock_kurbel",
+   "source": "kurbel",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "검토 (83).xlsx",
+   "category": "MES",
+   "template": "mes_kr_weekly_status",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "data (77).xlsx",
+   "category": "미분류",
+   "template": "etc_attendance",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "검토 (84).xlsx",
+   "category": "MES",
+   "template": "mes_sap_confirmations",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "Book1 (16).xlsx",
+   "category": "ERP",
+   "template": "erp_kr_item",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "자료 (94).xlsx",
+   "category": "미분류",
+   "template": "etc_survey",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "download (41).xlsx",
+   "category": "MES",
+   "template": "mes_sap_confirmations",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "생산계획(1월).xlsx",
+   "category": "MPS",
+   "template": "mps_wikiversity",
+   "source": "wikiversity-mps",
+   "verified": true,
+   "name_kind": "hint",
+   "split": "test"
+  },
+  {
+   "file": "대장_2027-01 (57).xlsx",
+   "category": "미분류",
+   "template": "etc_contacts",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "dev"
+  },
+  {
+   "file": "export (83).xlsx",
+   "category": "BOM",
+   "template": "bom_sap_multilevel",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "BOM_v2.xlsx",
+   "category": "BOM",
+   "template": "bom_sap_multilevel",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "dev"
+  },
+  {
+   "file": "조회 최종.xlsx",
+   "category": "ERP",
+   "template": "erp_kr_price",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "dev"
+  },
+  {
+   "file": "report (85).xlsx",
+   "category": "BOM",
+   "template": "bom_structure_table",
+   "source": "kurbel",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "자료 최종.xlsx",
+   "category": "미분류",
+   "template": "etc_minutes",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "dev"
+  },
+  {
+   "file": "data (87).xlsx",
+   "category": "BOM",
+   "template": "bom_structure_table",
+   "source": "kurbel",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "MES 최종.xlsx",
+   "category": "MES",
+   "template": "mes_kr_weekly_status",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "hint",
+   "split": "test"
+  },
+  {
+   "file": "보고 (20).xlsx",
+   "category": "MPS",
+   "template": "mps_wikiversity",
+   "source": "wikiversity-mps",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "export (88).xlsx",
+   "category": "ERP",
+   "template": "erp_stock_kurbel",
+   "source": "kurbel",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "ERP_2027-01 (95).xlsx",
+   "category": "ERP",
+   "template": "erp_kr_stock",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "dev"
+  },
+  {
+   "file": "수정본 (76).xlsx",
+   "category": "MPS",
+   "template": "mps_cpim",
+   "source": "cpim-mps",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "EXPORT (23).xlsx",
+   "category": "MES",
+   "template": "mes_kr_defects",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "첨부 (77).xlsx",
+   "category": "MRP",
+   "template": "mrp_sap_md04",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "보고 (23).xlsx",
+   "category": "ERP",
+   "template": "erp_kr_stock",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "생산계획.xlsx",
+   "category": "MPS",
+   "template": "mps_cpim",
+   "source": "cpim-mps",
+   "verified": true,
+   "name_kind": "hint",
+   "split": "dev"
+  },
+  {
+   "file": "data (9).xlsx",
+   "category": "MES",
+   "template": "mes_oee",
+   "source": "oee",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "자료 (53).xlsx",
+   "category": "MES",
+   "template": "mes_sap_confirmations",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "report (53).xlsx",
+   "category": "MES",
+   "template": "mes_kr_defects",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "첨부 (13).xlsx",
+   "category": "ERP",
+   "template": "erp_kr_po",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "ERP(1월).xlsx",
+   "category": "ERP",
+   "template": "erp_customer_kurbel",
+   "source": "kurbel",
+   "verified": true,
+   "name_kind": "hint",
+   "split": "dev"
+  },
+  {
+   "file": "최종 (92).xlsx",
+   "category": "RCCP",
+   "template": "rccp_oracle_bill_of_resources",
+   "source": "oracle-capacity",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "Book1 (29).xlsx",
+   "category": "MPS",
+   "template": "mps_kr_weekly",
+   "source": "kr-form",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "첨부 (80).xlsx",
+   "category": "MPS",
+   "template": "mps_kr_weekly",
+   "source": "kr-form",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "download (82).xlsx",
+   "category": "CRP",
+   "template": "crp_kr_form",
+   "source": "kr-form",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "download (9).xlsx",
+   "category": "CRP",
+   "template": "crp_kr_form",
+   "source": "kr-form",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "자료 (25).xlsx",
+   "category": "MES",
+   "template": "mes_kr_daily_log",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "자료 (90).xlsx",
+   "category": "MPS",
+   "template": "mps_cpim",
+   "source": "cpim-mps",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "수정본 (4).xlsx",
+   "category": "미분류",
+   "template": "etc_vehicle",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "report (10).xlsx",
+   "category": "CRP",
+   "template": "crp_kr_form",
+   "source": "kr-form",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "최종 (60).xlsx",
+   "category": "MRP",
+   "template": "mrp_sap_md04",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "RCCP.xlsx",
+   "category": "RCCP",
+   "template": "rccp_oracle_load_ratio",
+   "source": "oracle-capacity",
+   "verified": true,
+   "name_kind": "hint",
+   "split": "test"
+  },
+  {
+   "file": "Sheet (33).xlsx",
+   "category": "RCCP",
+   "template": "rccp_oracle_load_ratio",
+   "source": "oracle-capacity",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "자재명세서(1월).xlsx",
+   "category": "BOM",
+   "template": "bom_kr_form",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "hint",
+   "split": "dev"
+  },
+  {
+   "file": "첨부 (69).xlsx",
+   "category": "BOM",
+   "template": "bom_structure_table",
+   "source": "kurbel",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "CRP.xlsx",
+   "category": "CRP",
+   "template": "crp_sap_details",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "test"
+  },
+  {
+   "file": "Sheet (26).xlsx",
+   "category": "RCCP",
+   "template": "rccp_oracle_required_hours",
+   "source": "oracle-capacity",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "대장_2027-01 (6).xlsx",
+   "category": "미분류",
+   "template": "etc_hr",
+   "source": "generic",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "dev"
+  },
+  {
+   "file": "RCCP(1월) (73).xlsx",
+   "category": "RCCP",
+   "template": "rccp_oracle_bucketed",
+   "source": "oracle-capacity",
+   "verified": true,
+   "name_kind": "hint",
+   "split": "test"
+  },
+  {
+   "file": "설비부하검토_2027-01.xlsx",
+   "category": "RCCP",
+   "template": "rccp_oracle_bill_of_resources",
+   "source": "oracle-capacity",
+   "verified": true,
+   "name_kind": "hint",
+   "split": "test"
+  },
+  {
+   "file": "최종 (77).xlsx",
+   "category": "MRP",
+   "template": "mrp_kr_form",
+   "source": "kr-form",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "자재소요_v2 (89).xlsx",
+   "category": "MRP",
+   "template": "mrp_sap_md04",
+   "source": "sap",
+   "verified": false,
+   "name_kind": "hint",
+   "split": "dev"
+  },
+  {
+   "file": "data (35).xlsx",
+   "category": "MRP",
+   "template": "mrp_textbook_records",
+   "source": "textbook",
+   "verified": false,
+   "name_kind": "neutral",
+   "split": "dev"
+  },
+  {
+   "file": "Book1 (30).xlsx",
+   "category": "BOM",
+   "template": "bom_structure_table",
+   "source": "kurbel",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "test"
+  },
+  {
+   "file": "검토 (51).xlsx",
+   "category": "MPS",
+   "template": "mps_wikiversity",
+   "source": "wikiversity-mps",
+   "verified": true,
+   "name_kind": "neutral",
+   "split": "dev"
+  }
+ ]
+}
