@@ -9,3 +9,4 @@ pytest==9.2.0               # 테스트
 httpx==0.28.1               # FastAPI TestClient 의존
 openpyxl==3.1.5            # XLSX 읽기 (PoC E02 와 같은 라이브러리)
 python-multipart==0.0.32    # FastAPI 파일 업로드(UploadFile) 필수
+RapidFuzz==3.14.6          # 로컬 컬럼 후보 순위, 확인·승인 게이트와 분리

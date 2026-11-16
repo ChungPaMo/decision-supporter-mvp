@@ -1,3 +1,5 @@
 *.sh text eol=lf
 # 원본 바이트가 바뀌면 sha256 과 응답 예시가 달라진다
 contracts/examples/*.csv -text
+# Keep the frozen evaluation input SHA stable on Windows and Linux checkouts.
+contracts/examples/mapping_recommendation_cases_v1.json text eol=lf

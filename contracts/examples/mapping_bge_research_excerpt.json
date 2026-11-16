@@ -1,0 +1,37 @@
+{
+  "scope": "HISTORICAL_REUSE_ONLY; not measured on mapping-recommendation-small-1.0 or this PC",
+  "source_commit": "c7f3fce8c81c3365c00cc36295427709c9baa6af",
+  "source_url": "https://github.com/ChungPaMo/retriever-eval/blob/c7f3fce8c81c3365c00cc36295427709c9baa6af/results/trichef_results.json",
+  "source_task": "A: column name to standard field",
+  "model": "BAAI/bge-m3",
+  "test_cases": 386,
+  "ranking_test": {
+    "n": 317,
+    "top1": 0.943217665615142,
+    "recall3": 0.9936908517350158
+  },
+  "decision_test": {
+    "n": 386,
+    "accuracy": 0.8341968911917098,
+    "wrong_rate": 0.13730569948186527,
+    "hold_miss_rate": 0.02849740932642487,
+    "acc_ci95": [
+      0.7938,
+      0.868
+    ],
+    "wrong_ci95": [
+      0.1065,
+      0.1752
+    ]
+  },
+  "timing": {
+    "encode_all_s": 5.2,
+    "per_text_ms": 1.33,
+    "single_query_ms_median": 31.7,
+    "vram_peak_mb": 2245
+  },
+  "timing_device": "NVIDIA GeForce RTX 4060 Laptop GPU",
+  "hold_rate": null,
+  "hold_rate_note": "The summary reports hold_miss_rate, not overall HOLD rate. Do not substitute it.",
+  "limitations": "Synthetic aliases-informed dataset, different candidate set and hardware; not a same-set comparison. No model download or inference performed in the current task."
+}

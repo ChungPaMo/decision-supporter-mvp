@@ -1,5 +1,7 @@
 # 데이터 입력 벤치마크 및 1차 검증 결과
 
+2026-11-16 소규모 컬럼 추천 후속은 [별도 48건 비교](MAPPING_RECOMMENDATION_MVP_20261116.md)와 [실행 JSON](MAPPING_RECOMMENDATION_RESULTS_20261116.json)에 기록했다. 아래 16건/43필드·과거 DB/대량 벤치마크와 분모가 다르다. 신규 비교는 규칙/SequenceMatcher/RapidFuzz이며 BGE-M3는 기존 연구만 재사용했다. 현재 PC의 Docker·PostgreSQL 구성/실DB 작업은 모두 보류한다.
+
 2026-11-15. 기준 SHA `ff448ace16aa58d4fb963bac6ab52841966b72fa`. 새 구현의 최종 SHA는 Git 이력/완료 보고를 따른다. 모든 데이터는 합성이고 외부 AI 호출은 0회다. [연구 결과](AI_ASSISTED_DATA_INGESTION_RESEARCH.md)와 이 문서의 자체 측정을 섞지 않는다.
 
 ## 정답·재현 방법

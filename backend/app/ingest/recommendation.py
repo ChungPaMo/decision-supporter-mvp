@@ -1,5 +1,5 @@
 """Rank reviewable candidates, preserving the existing mapper as the baseline."""
-from difflib import SequenceMatcher
+from rapidfuzz.fuzz import ratio
 from contracts.interfaces.ingestion import ColumnSuggestion, MappingCandidate, MappingReply, MappingSheetReply
 from app.ingest.mapping import ENTITY_FIELDS, map_sheet, norm_header
 from app.ingest.parsing import FileError, ParsedFile
@@ -8,9 +8,24 @@ from app.ingest.profiling import ScopedMaster, profile
 LEXICAL_CUTOFF = 0.60  # Candidate retrieval only. Never a probability or acceptance threshold.
 QUANTITIES = {'demand_qty', 'on_hand_qty', 'available_qty', 'allocated_qty', 'qty_per', 'base_qty', 'safety_stock_qty', 'scrap_rate'}
 
+# Server-owned vocabulary only. Never cache uploaded headers/values across requests.
+VOCABULARY = {entity: {field: {
+    'standard': norm_header(field),
+    'strong': frozenset(map(norm_header, spec['strong'])),
+    'weak': frozenset(map(norm_header, spec['weak'])),
+    'all': tuple(dict.fromkeys(map(norm_header, [field] + spec['strong'] + spec['weak']))),
+} for field, spec in fields.items()} for entity, fields in ENTITY_FIELDS.items()}
+
+
+def lexical_similarity(labels, aliases):
+    """Full-string normalized Indel similarity; 0..1 ranking aid, never a probability."""
+    return max((ratio(label, alias, processor=None) / 100 for label in labels for alias in aliases), default=0.0)
+
 
 def compatible(field, header, column):
-    label = norm_header(header)
+    # Matching may ignore annotations such as '(EA)', but semantic guards must
+    # still see qualifiers such as '(반품)' or '(출고일자 기준)'. Keep the mapper unchanged.
+    label = norm_header(header.translate(str.maketrans({char: ' ' for char in '()（）[]'})))
     if field == 'product_id' and any(word in label for word in ('자재', 'material')):
         return False, 'MATERIAL_IS_NOT_PRODUCT'
     if field == 'material_id' and any(word in label for word in ('제품', '상품', 'product')):
@@ -18,7 +33,7 @@ def compatible(field, header, column):
     if field in QUANTITIES:
         if any(word in label for word in ('금액', '단가', 'amount', 'price', 'cost')):
             return False, 'MONEY_IS_NOT_QUANTITY'
-        if field == 'demand_qty' and any(word in label for word in ('반품', '취소', 'return', '생산', '한도', 'capacity', '시간', '인시')):
+        if field == 'demand_qty' and any(word in label for word in ('반품', '취소', 'return', 'cancel', '생산', '한도', 'capacity', '시간', '인시')):
             return False, 'OTHER_BUSINESS_MEASURE_IS_NOT_DEMAND'
         if column.total_rows > column.empty_count and column.format_match_rates['DECIMAL'] != 1:
             return False, 'NON_DECIMAL_VALUES'
@@ -48,14 +63,15 @@ def recommend(parsed: ParsedFile, entity: str, dataset_id: str, master: ScopedMa
         suggestions = []
         for header, column in zip(sheet.header, stats.columns):
             ranked, rejected = [], []
+            contradicted_selection = False
+            labels = {norm_header(label) for label in header.labels}
             for field, spec in ENTITY_FIELDS[entity].items():
                 mapped = baseline.fields.get(field)
-                labels = [norm_header(label) for label in header.labels]
-                exact = norm_header(field) in labels
-                strong = any(norm_header(alias) in labels for alias in spec['strong'])
-                weak = any(norm_header(alias) in labels for alias in spec['weak'])
-                lexical = max((SequenceMatcher(None, label, norm_header(alias), autojunk=False).ratio()
-                               for label in labels for alias in [field] + spec['strong'] + spec['weak']), default=0)
+                vocabulary = VOCABULARY[entity][field]
+                exact = vocabulary['standard'] in labels
+                strong = bool(vocabulary['strong'] & labels)
+                weak = bool(vocabulary['weak'] & labels)
+                lexical = lexical_similarity(labels, vocabulary['all'])
                 master_rate = column.known_product_match_ratio if field == 'product_id' else column.known_material_match_ratio if field == 'material_id' else None
                 by_profile = master_rate is not None and master_rate >= 0.8
                 selected = mapped is not None and mapped.col == header.col
@@ -66,6 +82,7 @@ def recommend(parsed: ParsedFile, entity: str, dataset_id: str, master: ScopedMa
                     rejected.append(field + ':' + reason)
                     if selected:
                         holds.append('PROFILE_CONTRADICTION:' + field)
+                        contradicted_selection = True
                     continue
                 if selected and mapped.method == 'USER_OVERRIDE':
                     method, rank = 'USER_OVERRIDE', 0
@@ -80,11 +97,17 @@ def recommend(parsed: ParsedFile, entity: str, dataset_id: str, master: ScopedMa
                 else:
                     method, rank = 'LEXICAL_SIMILARITY', 5
                 evidence = [method, 'FORMAT_COUNTS_MEASURED; SEMANTICS_NOT_PROVEN']
+                if method == 'LEXICAL_SIMILARITY':
+                    evidence.append(f'RAPIDFUZZ_RATIO={lexical:.6f}; RANKING_ONLY_NOT_CONFIDENCE')
                 if by_profile:
                     evidence.append(f'APPROVED_MASTER_MATCH_RATIO={master_rate:.6f}')
                 if field in QUANTITIES:
                     evidence.append(f'DECIMAL_MATCH_RATIO={column.format_match_rates["DECIMAL"]:.6f}')
                 ranked.append((rank, -lexical, field, MappingCandidate(target_field=field, method=method, evidence=evidence)))
+            if contradicted_selection:
+                # A rejected known role must not turn into another role through fuzzy fallback.
+                ranked = []
+                rejected.append('SOURCE_ROLE_CONTRADICTION_REQUIRES_REVIEW')
             candidates = [item[3] for item in sorted(ranked, key=lambda item: item[:3])[:3]]
             suggestions.append(ColumnSuggestion(col=header.col, source_column=header.display[:200], suggestions=candidates,
                                                  unresolved_reasons=sorted(set(rejected))[:12]))

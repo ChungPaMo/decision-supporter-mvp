@@ -1,5 +1,7 @@
 # 데이터 입력 보조 계약과 향후 AI 연결 설계
 
+2026-11-16 컬럼 추천 후속: [48건 비교·MVP 결정](MAPPING_RECOMMENDATION_MVP_20261116.md)에 따라 scorer를 RapidFuzz로 교체했다. 정확/별칭/수동 매핑·cutoff·Top-3·DTO·승인 게이트는 유지하고 괄호 속 의미 반증을 보강했다. 아래 SequenceMatcher 설명은 최초 구현 기록이다. 현재 PC의 Docker/PostgreSQL 구성·실DB 검사·0009 실제 적용은 금지·보류하며 기존 개발 PC로 이관한다. BGE-M3는 기존 연구를 재사용했고 Upstage/LLM은 호출하지 않는다.
+
 2026-11-16 후속: [분류·변환 이력 연결](INGESTION_INTEGRATION_HISTORY.md)에서 classified-mapping과 명시적 영구 저장 API, 신규 0009를 추가했다. 아래 무저장·원본 SHA 연결 한계는 기존 preview API의 당시 계약으로 보존한다. 새 저장 경로와 혼동하지 않는다. AI 호출·저장 매핑 규칙 자동 적용은 여전히 없다.
 
 2026-11-15, `ingestion-assistance-0.1`. [연구 근거](AI_ASSISTED_DATA_INGESTION_RESEARCH.md)를 먼저 작성한 뒤 구현했다. **현재 AI/embedding/API key/외부 추론 호출은 없다.** 모델·서비스·비용 계약은 미선정이다. 이 문서는 현 구현과 후속 제안을 구분한다.

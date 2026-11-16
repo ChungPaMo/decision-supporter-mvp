@@ -1,0 +1,143 @@
+{
+  "dataset_version": "mapping-recommendation-small-1.0",
+  "dataset_sha256": "7df6ea18a15c2f08cbd81a7e2ada9ad98e0248def9da8bdaaa08cf1be45ffd67",
+  "scope": "SYNTHETIC_ONLY; column candidates, not automatic mappings or approval accuracy",
+  "timing_scope": "warm imports; parsed inputs; recommendation includes profile; no file I/O/DB/model; median of three small runs by default",
+  "shared_guards": "SequenceMatcher and RapidFuzz use the same production semantic/profile guards.",
+  "python": "3.11.9",
+  "rapidfuzz": "3.14.6",
+  "cutoff": 0.6,
+  "timing_repeats": 3,
+  "methods": {
+    "exact_alias": {
+      "cases": 48,
+      "mappable_cases": 32,
+      "correct_mapping_count": 4,
+      "correct_mapping_rate": 0.125,
+      "wrong_recommendation_count": 6,
+      "wrong_recommendation_rate": 0.125,
+      "candidate_hold_count": 38,
+      "candidate_hold_rate": 0.7916666666666666,
+      "top3_hits": 4,
+      "top3_recall": 0.125,
+      "median_ms_per_column": 0.017241666985986132
+    },
+    "sequence": {
+      "cases": 48,
+      "mappable_cases": 32,
+      "correct_mapping_count": 25,
+      "correct_mapping_rate": 0.78125,
+      "wrong_recommendation_count": 6,
+      "wrong_recommendation_rate": 0.125,
+      "candidate_hold_count": 17,
+      "candidate_hold_rate": 0.3541666666666667,
+      "top3_hits": 26,
+      "top3_recall": 0.8125,
+      "median_ms_per_column": 0.9374312491369589
+    },
+    "rapidfuzz": {
+      "cases": 48,
+      "mappable_cases": 32,
+      "correct_mapping_count": 25,
+      "correct_mapping_rate": 0.78125,
+      "wrong_recommendation_count": 6,
+      "wrong_recommendation_rate": 0.125,
+      "candidate_hold_count": 17,
+      "candidate_hold_rate": 0.3541666666666667,
+      "top3_hits": 26,
+      "top3_recall": 0.8125,
+      "median_ms_per_column": 0.15945208360790275
+    }
+  },
+  "wrong_examples": [
+    {
+      "id": "product-category-typo",
+      "header": "product_categroy",
+      "expected": "product_type",
+      "top1": "product_id",
+      "top3": [
+        "product_id",
+        "product_name",
+        "product_type"
+      ]
+    },
+    {
+      "id": "demand-money",
+      "header": "월수요金額",
+      "expected": null,
+      "top1": "demand_qty",
+      "top3": [
+        "demand_qty"
+      ]
+    },
+    {
+      "id": "stock-money",
+      "header": "on_hand_value",
+      "expected": null,
+      "top1": "on_hand_qty",
+      "top3": [
+        "on_hand_qty"
+      ]
+    },
+    {
+      "id": "unknown-quantity-role",
+      "header": "수량",
+      "expected": null,
+      "top1": "demand_qty",
+      "top3": [
+        "demand_qty",
+        "unit"
+      ]
+    },
+    {
+      "id": "unknown-base-or-available",
+      "header": "base_or_available_qty",
+      "expected": null,
+      "top1": "available_qty",
+      "top3": [
+        "available_qty"
+      ]
+    },
+    {
+      "id": "unconfirmed-reference-period",
+      "header": "참고기간",
+      "expected": null,
+      "top1": "period",
+      "top3": [
+        "period"
+      ]
+    }
+  ],
+  "missed_examples": [
+    {
+      "id": "calendar-bucket",
+      "header": "calendar_month",
+      "expected": "period"
+    },
+    {
+      "id": "finished-item-identifier",
+      "header": "완제품식별번호",
+      "expected": "product_id"
+    },
+    {
+      "id": "raw-material-identifier",
+      "header": "원자재식별번호",
+      "expected": "material_id"
+    },
+    {
+      "id": "item-classification-deletion",
+      "header": "item_classificaton",
+      "expected": "item_type"
+    },
+    {
+      "id": "stock-snapshot-day",
+      "header": "stock_snapshot_date",
+      "expected": "as_of_date"
+    },
+    {
+      "id": "assembly-quantity-expression",
+      "header": "quantity_per_assembly",
+      "expected": "qty_per"
+    }
+  ]
+}

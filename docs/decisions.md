@@ -1,5 +1,9 @@
 # 기술 결정 기록
 
+## 컬럼 후보 검색: RapidFuzz — 2026-11-16
+
+RapidFuzz==3.14.6을 backend 직접 의존성/lock 및 공통 constraints에 고정한다. [소규모 비교](MAPPING_RECOMMENDATION_MVP_20261116.md)에서 SequenceMatcher와 Top-3 품질이 같고 추천 경로는 약 5.9배 빨랐다. 기존 별칭과 cutoff=0.60을 재사용하고 후보는 반드시 검토한다. BGE-M3는 기존 연구를 재사용했으며 Upstage/LLM 호출·새 migration은 없다. 현재 PC의 Docker·PostgreSQL 작업은 금지·보류한다.
+
 ## D-001 DB: PostgreSQL 16 (Docker Compose) 채택 — 2026-10-30
 
 | 후보 | 장점 | 단점 |
