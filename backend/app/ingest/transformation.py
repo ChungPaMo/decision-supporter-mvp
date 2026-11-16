@@ -124,11 +124,19 @@ class Aggregate:
 
 def transform(files: list[tuple[str, bytes]], policy: SalesTransformPolicy, master: ScopedMaster | None = None,
               *, offset=0, limit=500) -> TransformReply:
+    if not (0 <= offset and 1 <= limit <= 500):
+        raise FileError('REQUEST_INVALID', 'Page bounds are offset>=0, limit=1..500.')
+    result = transform_complete(files, policy, master)
+    return result.model_copy(update={'offset': offset, 'limit': limit,
+        'records': result.records[offset:offset + limit], 'returns': result.returns[offset:offset + limit]})
+
+
+def transform_complete(files: list[tuple[str, bytes]], policy: SalesTransformPolicy,
+                       master: ScopedMaster | None = None) -> TransformReply:
+    """Complete bounded computation for persistence; API previews page the same result."""
     check_scope(policy.dataset_id, master)
     if not 1 <= len(files) <= MAX_FILES or sum(len(data) for _, data in files) > MAX_TOTAL_BYTES:
         raise FileError('ANALYSIS_LIMIT', 'At most 8 files / 50 MiB combined per transformation.', 413)
-    if not (0 <= offset and 1 <= limit <= 500):
-        raise FileError('REQUEST_INVALID', 'Page bounds are offset>=0, limit=1..500.')
     hashes = [hashlib.sha256(data).hexdigest() for _, data in files]
     if len(set(hashes)) != len(hashes):
         raise FileError('TRANSFORM_DUPLICATE_SOURCE', 'Identical source files cannot be aggregated twice.')
@@ -265,5 +273,5 @@ def transform(files: list[tuple[str, bytes]], policy: SalesTransformPolicy, mast
         status='HAS_ERRORS' if issues_total else 'TRANSFORMED_PREVIEW' if policy.user_confirmed else 'POLICY_REVIEW_REQUIRED',
         policy=policy, policy_digest=policy_hash, input_digest=input_hash, result_digest=result_hash, sources=sources,
         operations=compile_recipe(policy), master_scope=master.dataset_id if master else None, master_digest=reference_hash, counts=counts,
-        quantity_reconciliation=reconciliation, records=output[offset:offset + limit], returns=separate[offset:offset + limit],
-        issues=issues, issues_total=issues_total, warnings=sorted(warnings), total=len(output), offset=offset, limit=limit, returns_total=len(separate))
+        quantity_reconciliation=reconciliation, records=output, returns=separate,
+        issues=issues, issues_total=issues_total, warnings=sorted(warnings), total=len(output), offset=0, limit=MAX_GROUPS, returns_total=len(separate))

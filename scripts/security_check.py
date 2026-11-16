@@ -54,6 +54,12 @@ def main():
                 if kind == 'local-user-path' and path == 'scripts/security_check.py' and "'local-user-path':" in line: continue
                 # Existing synthetic path-stripping regression case, not a workstation path.
                 if kind == 'local-user-path' and path == 'backend/tests/test_ingest.py' and 'someone' in line: continue
+                # Reviewed fictional emergency-contact generator: only its all-zero placeholder.
+                # Other numbers on the same line or elsewhere still produce findings.
+                if (kind == 'phone' and path == 'modules/file_classifier/samples/make_samples.py'
+                        and '"etc_contacts"' in line
+                        and all(re.fullmatch(r'010-0{4}-0{4}', value) for value in re.findall(pattern, line))):
+                    continue
                 findings.append((path, number, kind))
             if any(secret in line for secret in secrets): findings.append((path, number, 'matches-local-secret'))
     print(json.dumps({'text_files': count, 'binary_files': binary, 'findings': findings}, ensure_ascii=False))

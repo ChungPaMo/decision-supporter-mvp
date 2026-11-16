@@ -1,5 +1,7 @@
 # Module integration · draft 0.2
 
+> 2026-11-16: 업로드 분류기 AVAILABLE=True/rules-0.2.0으로 두 분류 API는 실제 추천 또는 HOLD를 반환한다. 비활성/미구현만 501이며 기존 아래 미구현 설명은 초기 기록이다. [분류·매핑·이력 연계](INGESTION_INTEGRATION_HISTORY.md)는 기존 DTO·승인 gate를 재사용한다. 신규 0009는 이번 PC에서 PostgreSQL 미적용이다. 별도 문서 분류/임베딩 도구는 API에 연결하지 않았다.
+
 > **입력 보조 확장 (2026-11-15):** [ingestion-assistance-0.1](AI_MAPPING_INTEGRATION_DESIGN.md)은 backend 소유의 profile/컬럼 후보/합성 판매 변환 preview 계약이다. [DTO](../contracts/interfaces/ingestion.py)를 사용하며 분류·계획 모듈 계약을 교체하지 않는다. DB migration·AI 호출·자동 승인·frontend 변경은 없다. 분류 entity는 이훤 담당 연결점을 유지하고, 정상 업로드·검증·승인은 기존 batch 경로를 거친다.
 
 > **데이터셋 격리 확장:** [DATASET_ISOLATION](DATASET_ISOLATION.md)을 따른다. API의 dataset_id query는 요청 저장소·예측·계획·What-if·출력 전체를 같은 소속으로 제한한다. 기존 생략 호출은 TISSUE-LEGACY만 사용한다. PlanningInput/PlanCommand는 dataset_id를 포함하며 엔진 알고리즘은 변경하지 않았다. 기존 예측 input_digest는 엔진 계약을 보존하고 별도 dataset_input_digest와 실행 소유권으로 데이터셋을 식별한다. 신규 migration은 0008이다.

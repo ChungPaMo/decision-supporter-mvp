@@ -6,7 +6,8 @@ from sqlalchemy.exc import DBAPIError,IntegrityError,OperationalError,InterfaceE
 from app.errors import ApiError,ErrorCode
 from contracts.interfaces.dataset import LEGACY_DATASET,DatasetDetail
 
-from .dataset_schema_v1 import CORE_TABLES,ROOT_TABLES,provision_schema,schema_for as _schema_for
+from .dataset_schema_v1 import ROOT_TABLES, schema_for as _schema_for
+from .dataset_schema_v2 import CORE_TABLES, provision_schema
 
 
 def check_id(value):

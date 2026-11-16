@@ -13,7 +13,7 @@ sys.path[:0]=[str(ROOT/'backend'),str(ROOT/'modules/planning_engine'),str(ROOT)]
 
 def fingerprint(engine):
     from sqlalchemy import text
-    from app.dataset_schema_v1 import CORE_TABLES,schema_for
+    from app.dataset_schema_v2 import CORE_TABLES,schema_for
     result={}
     with engine.connect() as c:
         assert c.execute(text('SHOW transaction_read_only')).scalar()=='on'

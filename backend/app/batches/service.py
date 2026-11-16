@@ -196,6 +196,10 @@ class BatchService:
                 raise ApiError(409, ErrorCode.BATCH_FINALIZED, "이미 승인 또는 반려된 배치는 수정할 수 없습니다.", {"status": b.status})
             if b.version != expected_version:
                 raise ApiError(409, ErrorCode.VERSION_CONFLICT, "다른 변경이 먼저 반영되었습니다. 다시 조회한 뒤 시도하세요.", {"current_version": b.version})
+            evidence = tx.transformation_for_batch(batch_id)
+            if evidence and (default_unit is not None or column_overrides or sheet is not None):
+                raise ApiError(409, ErrorCode.TRANSFORM_BLOCKED, 'Transformed output columns are fixed; review a new transformation to change policy.')
+            self._verify_transformation(tx, b, evidence)
             preview = self._run(tx, b.source_name, tx.get_file(batch_id), b.entity, default_unit, column_overrides, sheet)
             digest = result_digest(preview, self._settings(default_unit, column_overrides, sheet))
             return tx.update_validation(batch_id, ValidationUpdate(
@@ -219,6 +223,7 @@ class BatchService:
                 raise ApiError(409, ErrorCode.RESULT_CHANGED, "화면에서 본 검증 결과와 현재 결과가 다릅니다. 다시 조회한 뒤 확인하고 승인하세요.",
                                {"current_result_digest": b.result_digest})
             # 저장된 원본을 다시 검증한다. 요약(validation_result)은 신뢰하지 않는다.
+            self._verify_transformation(tx, b, tx.transformation_for_batch(batch_id))
             settings = self._settings(b.default_unit, b.column_overrides, b.sheet_filter)
             preview = self._run(tx, b.source_name, tx.get_file(batch_id), b.entity, b.default_unit, b.column_overrides, b.sheet_filter)
             if preview.status != BatchStatus.READY_FOR_APPROVAL.value or result_digest(preview, settings) != b.result_digest:
@@ -235,6 +240,19 @@ class BatchService:
             if written != len(records):                   # 방어: 어긋나면 예외 → 전체 롤백
                 raise RepositoryError(f"expected {len(records)} rows, wrote {written}")
             return tx.get_batch(batch_id)
+
+    @staticmethod
+    def _verify_transformation(tx, batch, evidence):
+        if evidence is None:
+            return
+        from app.ingest.history import canonical_csv, verify_evidence
+        from contracts.interfaces.ingestion import TransformReply
+        record, files = evidence
+        verify_evidence(record, files)
+        if (str(record['batch_id']) != str(batch.batch_id) or record['dataset_id'] != batch.dataset_id
+            or record['output_sha256'] != batch.source_sha256
+            or canonical_csv(TransformReply.model_validate(record['manifest']['result'])) != tx.get_file(batch.batch_id)):
+            raise ApiError(409, ErrorCode.RESULT_CHANGED, 'Transformation evidence and batch bytes disagree.')
 
     @staticmethod
     def _commit_products(tx: BatchTx, batch_id: uuid.UUID, actor: str, records: list[ProductRecordOut]) -> int:

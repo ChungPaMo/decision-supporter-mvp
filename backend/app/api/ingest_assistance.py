@@ -12,7 +12,7 @@ from app.ingest.recommendation import recommend
 from app.ingest.transformation import MAX_FILES, MAX_TOTAL_BYTES, transform
 from app.ingest.validation import MasterData
 from app.errors import ERROR_RESPONSES
-from contracts.interfaces.ingestion import Entity, MappingReply, ProfileReply, SalesTransformPolicy, TransformReply
+from contracts.interfaces.ingestion import ClassifiedMappingReply, Entity, MappingReply, ProfileReply, SalesTransformPolicy, TransformReply
 
 router = APIRouter(prefix='/ingest', tags=['ingest-assistance'], responses=ERROR_RESPONSES)
 
@@ -97,5 +97,31 @@ async def transform_preview(dataset_id: Dataset, master: Master, policy: str = F
         data.append((file.filename or '', content))
     try:
         return transform(data, recipe, master, offset=offset, limit=limit)
+    except FileError as exc:
+        raise file_error(exc) from None
+
+
+@router.post('/classified-mapping', response_model=ClassifiedMappingReply,
+             summary='Classify then suggest columns; HOLD requires explicit entity selection or sales transformation')
+async def classified_mapping(dataset_id: Dataset, master: Master, file: UploadFile = File(...),
+                             entity: Entity | None = Form(None), column_overrides: str = Form('{}'),
+                             sample_row_limit: int = Form(0, ge=0, le=20)):
+    from app.integrations import modules
+    overrides = parse_json_object(column_overrides, 'BAD_COLUMN_OVERRIDES')
+    if not all(isinstance(value, str) and len(value) <= 200 for value in overrides.values()):
+        raise HTTPException(422, {'code': 'BAD_COLUMN_OVERRIDES', 'message': 'Bounded column references required.'})
+    try:
+        parsed = parse_analysis_file(file.filename or '', await file.read(MAX_BYTES + 1))
+        try:
+            classification = modules.classify(modules.descriptor(parsed, sample_row_limit))
+        except ValidationError:
+            raise HTTPException(422, {'code': 'REQUEST_INVALID', 'message': 'Classification descriptor exceeds bounded limits.'}) from None
+        selected = entity or (classification.recommended_entity if not classification.hold else None)
+        if selected is None and overrides:
+            raise HTTPException(422, {'code': 'BAD_COLUMN_OVERRIDES', 'message': 'Choose an entity before specifying columns.'})
+        mapping = recommend(parsed, selected, dataset_id, master, overrides) if selected else None
+        return ClassifiedMappingReply(dataset_id=dataset_id, source_sha256=parsed.sha256, classification=classification,
+            selected_entity=selected, selection_method='USER_SELECTION' if entity else 'CLASSIFIER_RECOMMENDATION' if selected else 'REQUIRED',
+            mapping=mapping, next_action='REVIEW_MAPPING' if selected else 'SELECT_ENTITY_OR_TRANSFORM')
     except FileError as exc:
         raise file_error(exc) from None

@@ -169,7 +169,7 @@ def main(approve=False):
     from app.datasets import schema_for,get_dataset_engine,CORE_TABLES
     from app.integrations.planning import SqlPlanningSourceProvider
     from contracts.interfaces.planning import PlanCommand
-    with base.connect() as c:assert c.execute(text('SELECT version_num FROM public.alembic_version')).scalar()=='0008'
+    with base.connect() as c:assert c.execute(text('SELECT version_num FROM public.alembic_version')).scalar()=='0009'
     offline=verify();assert offline['normal_contract_passes']==9
     checks=registry_probes(base)+isolation_probes(base)
     print('Pre-approval isolation probes:',len(checks),'passed')

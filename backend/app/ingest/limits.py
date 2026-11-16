@@ -4,7 +4,7 @@ from app.errors import ApiError, ErrorCode
 from app.exports.limits import _respond
 
 MAX_REQUEST_BYTES = 51 * 1024 * 1024  # 50 MiB files + bounded multipart/settings overhead.
-PATHS = {'/ingest/profile', '/ingest/mapping-suggestions', '/ingest/transform-preview'}
+PATHS = {'/ingest/profile', '/ingest/mapping-suggestions', '/ingest/transform-preview', '/ingest/classified-mapping', '/ingest/transformations'}
 
 
 class AssistanceBodyLimit:

@@ -66,6 +66,15 @@ class SqlBatchTx:
             raise RepositoryError("source file missing")
         return bytes(row[0])
 
+    def transformation_for_batch(self, batch_id):
+        from app.ingest.history_repository import SqlTransformationTx
+        row = self.c.execute(text('SELECT transformation_id FROM ingestion_transformation WHERE batch_id=:id'),
+                             {'id': batch_id}).scalar()
+        if row is None:
+            return None
+        tx = SqlTransformationTx(self.c)
+        return tx.get_transformation(row), tx.transformation_sources(row)
+
     def update_validation(self, batch_id: uuid.UUID, u: ValidationUpdate) -> BatchRecord:
         self.c.execute(text(
             "UPDATE import_batch SET status = :st, default_unit = :du, column_overrides = CAST(:co AS jsonb), sheet_filter = :sheet,"

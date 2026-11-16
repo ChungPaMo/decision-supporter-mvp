@@ -1,6 +1,8 @@
 # decision-supporter-mvp
 
 충파모 공식 단일 모노레포 · 가상 휴지 제조기업 생산계획 지원 MVP.
+
+2026-11-16: [파일 분류·매핑·변환 이력 연결](docs/INGESTION_INTEGRATION_HISTORY.md)을 추가했다. 업로드 분류기는 규칙 기반으로 실제 추천/HOLD를 반환한다. 새 classified-mapping과 명시적 transformations API는 기존 매핑·판매 변환·승인 전 배치를 연결한다. Alembic 0009와 스키마 v2를 추가했으며 현재 PC의 PostgreSQL 적용/검증은 미실행이다. [이번 실행 결과](docs/INGESTION_INTEGRATION_VERIFICATION_20261116.md)를 과거 DB 검증 수치와 구분한다.
 기존 backend/frontend의 실제 등록·승인·예측을 통합했으며 분류·계획 계산은 담당자가 구현할 연결점입니다.
 
 최종 뼈대의 팀원별 시작 파일·함수·입출력·fixture·독립 시험은 [TEAM_HANDOFF](docs/TEAM_HANDOFF.md)를 먼저 확인하세요. 분류 파일 API, 읽기 전용 계획 어댑터, CAPA·라우팅 DTO를 추가했으며 알고리즘과 계획 저장·정식 승인은 구현하지 않았습니다. 이번 후속 작업은 DB 초기화 없이 비DB·화면·계약 검증만 수행하며 아래 490/12 결과는 이전 PostgreSQL 검증 기록입니다. [이번 뼈대 검증 기록](docs/E2E_SCAFFOLD_VERIFICATION_20261114.md)을 별도로 확인하세요.
@@ -20,7 +22,7 @@
 | 단계 | 상태 |
 |---|---|
 | CSV/XLSX 수동 유형 선택·매핑·검증·승인/반려·PostgreSQL 저장 | 실제 구현 이관 |
-| 파일 자동 분류 | 미구현, API 501. 수동 선택 유지 |
+| 파일 자동 분류 | 규칙 기반 추천/HOLD 구현. 수동 선택·기존 승인 게이트 유지 |
 | 승인 수요 → P50/P80/P90 → DB 실행/출처/결과 → React 이력·차트 | 실제 구현 이관 |
 | MPS 3안 / RCCP / MRP / What-if | 인터페이스·명시적 501·독립 DEMO 화면. 계산 엔진 미구현 |
 | 최종 MPS 저장·승인·정식 Excel | 미구현. 기존 독립 Fixture DEMO Excel formatter만 유지 |
@@ -30,7 +32,7 @@
 ```text
 frontend/                       정마나미 · React/디자인/표시/API 클라이언트
 backend/                        김대영 · FastAPI/검증/승인/SQL/마이그레이션
-modules/file_classifier/        이훤 · 분류 확장점, 알고리즘 미구현
+modules/file_classifier/        이훤 · 업로드용 규칙 분류 및 별도 문서 분류 연구
 modules/planning_engine/        이희원 · engine/forecast 단일 구현 + 계획 확장점
 contracts/{interfaces,schemas}/ 김대영 · 신규 공통 계약
 infrastructure/                 김대영 · 새 전용 PostgreSQL Compose

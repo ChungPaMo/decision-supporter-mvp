@@ -15,7 +15,7 @@ const forecast = { execution_id: ID, status: 'OK', input_digest: 'sha256:' + 'c'
 
 async function savedForecastDouble(page: Page) {
   await page.route(/\/forecasts(?:\?.*)?$/, route => route.fulfill({ json: { items: [forecast], total: 1, limit: 20, offset: 0 } }));
-  await page.route(`**/forecasts/${ID}`, route => route.fulfill({ json: forecast }));
+  await page.route(new RegExp(`/forecasts/${ID}(?:\\?.*)?$`), route => route.fulfill({ json: forecast }));
   await page.goto('/');
   await page.getByRole('button', { name: /생산계획 비교/ }).click();
   await page.getByRole('button', { name: '실제 모듈 연결', exact: true }).click();
@@ -23,18 +23,23 @@ async function savedForecastDouble(page: Page) {
   await expect(page.getByRole('button', { name: '읽기 전용 계획 계산 요청' })).toBeEnabled();
 }
 
-test('unimplemented classifier uses actual 501 without fake recommendations or approval', async ({ page }) => {
+test('actual classifier holds ambiguous input without creating a batch', async ({ page }) => {
+  let writes = 0;
+  page.on('request', r => { if (r.method() === 'POST' && /\/batches(?:\?|$)/.test(r.url())) writes++; });
   await page.goto('/');
+  await page.getByRole('button', { name: /데이터 업로드/ }).click();
   const panel = page.getByRole('region', { name: '파일 유형 자동 분류' });
   await panel.getByLabel('분류할 파일 (CSV/XLSX)', { exact: true }).setInputFiles({ name: 'synthetic.csv', mimeType: 'text/csv', buffer: Buffer.from('product_id,qty\nTP-10R,10\n') });
   await panel.getByRole('button', { name: '파일 유형 추천 요청' }).click();
-  await expect(panel.getByRole('alert')).toContainText('MODULE_NOT_IMPLEMENTED');
-  await expect(panel.getByRole('table')).toHaveCount(0);
+  await expect(panel.getByText(/HOLD —/)).toBeVisible();
+  await expect(panel.getByRole('button', { name: '검토한 추천 유형 선택' })).toBeDisabled();
+  await expect(panel.getByRole('table')).toContainText('rules-');
+  expect(writes).toBe(0);
 });
 
 test('classification HOLD and reviewed entity selection never create a batch', async ({ page }) => {
   let writes = 0;
-  page.on('request', r => { if (r.method() === 'POST' && r.url().endsWith('/batches')) writes++; });
+  page.on('request', r => { if (r.method() === 'POST' && /\/batches(?:\?|$)/.test(r.url())) writes++; });
   await page.route('**/classifications/file', route => route.fulfill({ json: holdFixture.payload }));
   await page.goto('/');
   const panel = page.getByRole('region', { name: '파일 유형 자동 분류' });
@@ -60,7 +65,7 @@ test('actual planning 501 never switches back to synthetic results', async ({ pa
 
 test('typed test-double module output renders across steps but never enables approval', async ({ page }) => {
   await savedForecastDouble(page);
-  await page.route('**/plans', route => route.fulfill({ json: {
+  await page.route(/\/plans(?:\?.*)?$/, route => route.fulfill({ json: {
     contract_version: 'planning-preview-0.2-draft', forecast_execution_id: ID, input_digest: 'sha256:' + 'e'.repeat(64),
     result: { ...outputFixture.payload, contract_version: 'planning-handoff-0.2-draft' }, persisted: false, approval_available: false,
   } }));

@@ -1,5 +1,7 @@
 # 배치 API 계약 v0.3 — 업로드 · 검증 · 승인 (monthly_demand, product, material, bom, inventory)
 
+2026-11-16: [변환 이력 연결](INGESTION_INTEGRATION_HISTORY.md)의 명시적 저장 API는 기존 BatchService로 승인 전 월수요 배치를 만든다. 신규 0009가 필요하며 이번 PC에서는 실DB 미적용이다. 변환 digest를 승인에 사용하지 않고 기존 배치 digest와 승인·재검증 게이트를 유지한다. 연결 배치의 canonical 열 설정을 바꾸면 TRANSFORM_BLOCKED 409다. 선택 데이터셋 내 변환 이력 없음은 TRANSFORM_NOT_FOUND 404다.
+
 > 화면(업로드·검증·승인) 담당과 예측 담당이 읽는 문서다. 기계 판독본은 서버의 `/openapi.json`(`/docs`)이며 이 문서와 어긋나면 OpenAPI 가 기준이다.
 > **상태: 서비스 로직은 DB 없이 테스트로 검증했다. PostgreSQL 저장 경로는 작성만 했고 미검증**이다. 기본 설정(`PERSISTENCE=disabled`)에서 아래 `/batches*`, `/products`, `/materials`, `/boms`, `/inventory`, `/demand/monthly` 는 모두 `501 PERSISTENCE_DISABLED` 를 돌려준다(저장되는 척하지 않음). `POST /ingest/preview` 는 저장 없이 검증만 하며 항상 동작한다.
 

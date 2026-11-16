@@ -25,7 +25,7 @@ def capabilities():
 
 
 @router.post('/classifications', response_model=ClassificationOutput,
-             summary='허용한 파일 메타·최대 20개 샘플 행 분류 (현재 501)')
+             summary='규칙 기반 유형 추천·HOLD (허용한 메타·최대 20개 샘플 행)')
 def classify(body: ClassificationInput):
     return modules.classify(body)
 
@@ -35,10 +35,7 @@ def classify(body: ClassificationInput):
 async def classify_file(file: UploadFile = File(...), sample_row_limit: int = Form(0, ge=0, le=20)):
     try:
         parsed = parse_file(file.filename or '', await file.read(MAX_BYTES + 1))
-        descriptor = ClassificationInput(filename=parsed.filename, sha256=parsed.sha256, format=parsed.format, sheets=[
-            {'name': sheet.name or None, 'columns': [col.display for col in sheet.header],
-             'sample_rows': [[cell.value for cell in row.cells] for row in sheet.rows[:sample_row_limit]]}
-            for sheet in parsed.sheets])
+        descriptor = modules.descriptor(parsed, sample_row_limit)
     except FileError as exc:
         raise ApiError(exc.http_status, ErrorCode(exc.code), exc.message) from None
     except ValidationError:

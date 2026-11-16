@@ -7,7 +7,7 @@ test('real API errors never turn into fixture approvals or forecasts', async ({ 
   await page.goto('/');
   await expect(page.getByRole('alert')).toContainText('PERSISTENCE_DISABLED');
   await expect(page.getByLabel('등록 파일 (CSV/XLSX)', { exact: true })).toBeDisabled();
-  await page.getByRole('button', { name: /수요 예측 확인/ }).click();
+  await page.getByRole('navigation', { name: '업무 메뉴' }).getByRole('button', { name: '수요예측', exact: true }).click();
   await expect(page.getByRole('alert')).toContainText('PERSISTENCE_DISABLED');
   await expect(page.getByRole('region', { name: '저장된 예측 결과' })).toHaveCount(0);
   await expect(page.getByRole('img')).toHaveCount(0);
@@ -44,8 +44,8 @@ test('PPT workflow is interactive but does not fake planning or approval', async
 test('mobile navigation preserves visible manual upload and module boundaries', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto('/');
-  await expect(page.getByRole('navigation', { name: '업무 단계' })).toBeVisible();
-  await expect(page.getByRole('button', { name: /데이터 등록·승인/ })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: '업무 메뉴' })).toBeVisible();
+  await expect(page.getByRole('navigation', { name: '업무 메뉴' }).getByRole('button', { name: '데이터 업로드', exact: true })).toBeVisible();
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > window.innerWidth);
   expect(overflow).toBe(false);
 });

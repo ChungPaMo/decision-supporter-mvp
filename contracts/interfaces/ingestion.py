@@ -3,6 +3,7 @@ from typing import Literal
 from pydantic import Field, model_validator
 from .base import StrictModel
 from .dataset import DatasetId
+from .modules import ClassificationOutput
 
 INGESTION_VERSION = 'ingestion-assistance-0.1'
 Entity = Literal['product', 'material', 'monthly_demand', 'bom', 'inventory']
@@ -84,6 +85,21 @@ class MappingReply(StrictModel):
     master_digest: str | None
     sheets: list[MappingSheetReply]
     saved_rule_storage: Literal['NOT_IMPLEMENTED'] = 'NOT_IMPLEMENTED'
+    approval_required: Literal[True] = True
+    auto_approve: Literal[False] = False
+    persisted: Literal[False] = False
+
+
+class ClassifiedMappingReply(StrictModel):
+    contract_version: str = 'classified-mapping-0.1'
+    dataset_id: DatasetId
+    source_sha256: str
+    classification: ClassificationOutput
+    selected_entity: Entity | None
+    selection_method: Literal['CLASSIFIER_RECOMMENDATION', 'USER_SELECTION', 'REQUIRED']
+    mapping: MappingReply | None
+    next_action: Literal['REVIEW_MAPPING', 'SELECT_ENTITY_OR_TRANSFORM']
+    transform_preview_url: Literal['/ingest/transform-preview'] = '/ingest/transform-preview'
     approval_required: Literal[True] = True
     auto_approve: Literal[False] = False
     persisted: Literal[False] = False

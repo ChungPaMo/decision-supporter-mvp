@@ -37,6 +37,9 @@ class _State:
 
 
 class FakeTx:
+    def transformation_for_batch(self, batch_id):
+        return None
+
     def __init__(self, repo: "InMemoryBatchRepository") -> None:
         self.r = repo
         self.s = repo.state

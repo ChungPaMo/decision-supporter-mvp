@@ -1,5 +1,11 @@
 # 프론트엔드 연동 안내
 
+## 분류·변환 이력 연계 (2026-11-16)
+
+`/ingest/classified-mapping`, `/ingest/transformations`, `/ingest/transformations/{transformation_id}`를 추가했다. [연계 계약](INGESTION_INTEGRATION_HISTORY.md)을 따른다. 유형 추천→기존 매핑 후보, HOLD→사용자 선택/명시적 판매 정책, 전체 이력→승인 전 배치를 연결한다. 기존 frontend 구현은 수정하지 않았다. 새 요청에는 선택 dataset_id query를 명시하고, persisted=true와 승인 성공을 구분하며 preview/batch digest를 구분한다. 현재 클라이언트의 `/ingest/` unscoped 분류를 영구 API에 그대로 사용하면 안 된다.
+
+TRANSFORM_BLOCKED 409는 미확인 정책·오류·빈 정상 수요 또는 연결 배치의 열 재해석 거부다. TRANSFORM_NOT_FOUND 404는 선택 데이터셋 내 이력 없음이다. 저장 후 기존 배치 조회·명시적 승인을 사용한다. 0009 실DB 적용은 이번 PC에서 미실행이다.
+
 ## 입력 보조 API (2026-11-15)
 
 `/ingest/profile`, `/ingest/mapping-suggestions`, `/ingest/transform-preview`는 프로파일/검토 후보/합성 판매 변환 **미리보기**다. 외부 AI 호출·DB 배치 생성·자동 승인은 없다. dataset_id query를 전달하며, 승인 마스터 대조는 use_approved_master=true일 때만 해당 dataset의 승인 자료를 읽는다. 생략 시 참조 미검증을 표시한다.

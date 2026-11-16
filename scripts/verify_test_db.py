@@ -58,7 +58,7 @@ def authorize_reset(url=None):
                 raise RuntimeError('Disposable database sentinel missing; preserve existing data')
             if c.execute(text('SELECT purpose FROM public.regression_test_sentinel')).scalars().all()!=[SENTINEL]:
                 raise RuntimeError('Invalid disposable database sentinel')
-            from app.dataset_schema_v1 import CORE_TABLES,schema_for
+            from app.dataset_schema_v2 import CORE_TABLES,schema_for
             allowed_schemas={'public',schema_for('CHUNGPAMO-2027'),'regression_history_0001','regression_history_0005'}
             schemas=set(c.execute(text("SELECT nspname FROM pg_namespace WHERE nspname NOT LIKE 'pg_%' AND nspname<>'information_schema'")).scalars())
             if schemas-allowed_schemas:raise RuntimeError('Unexpected test schema; preserve and investigate')

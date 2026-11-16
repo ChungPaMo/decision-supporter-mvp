@@ -31,7 +31,7 @@ def verify_target():
     with e.connect() as c:
         actual = c.execute(text('SELECT current_database(),current_user')).one()
         assert tuple(actual)==('chungpamo','chungpamo_app')
-        assert c.execute(text('SELECT version_num FROM alembic_version')).scalar() in ('0006','0007','0008')
+        assert c.execute(text('SELECT version_num FROM alembic_version')).scalar() in ('0006','0007','0008','0009')
     return e
 
 

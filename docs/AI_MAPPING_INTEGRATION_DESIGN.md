@@ -1,5 +1,7 @@
 # 데이터 입력 보조 계약과 향후 AI 연결 설계
 
+2026-11-16 후속: [분류·변환 이력 연결](INGESTION_INTEGRATION_HISTORY.md)에서 classified-mapping과 명시적 영구 저장 API, 신규 0009를 추가했다. 아래 무저장·원본 SHA 연결 한계는 기존 preview API의 당시 계약으로 보존한다. 새 저장 경로와 혼동하지 않는다. AI 호출·저장 매핑 규칙 자동 적용은 여전히 없다.
+
 2026-11-15, `ingestion-assistance-0.1`. [연구 근거](AI_ASSISTED_DATA_INGESTION_RESEARCH.md)를 먼저 작성한 뒤 구현했다. **현재 AI/embedding/API key/외부 추론 호출은 없다.** 모델·서비스·비용 계약은 미선정이다. 이 문서는 현 구현과 후속 제안을 구분한다.
 
 ## 현재 흐름과 개발 경계

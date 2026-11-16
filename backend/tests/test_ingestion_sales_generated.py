@@ -36,3 +36,24 @@ def test_over_80000_transactions_exactly_match_generated_monthly_gold(tmp_path):
         expected = list(csv.DictReader(stream))
     assert sorted((r['product_id'], r['period'], Decimal(r['demand_qty']), r['unit']) for r in body['records']) == sorted(
         (r['product_id'], r['period'], Decimal(r['demand_qty']), r['unit']) for r in expected)
+    # Continue through the real transformation/batch services, with test-only memory storage.
+    # This proves the large-input integration logic, not PostgreSQL persistence or triggers.
+    from tests.test_ingestion_history import HistoryMemoryRepository
+    from app.batches.repository import ProductInsert
+    from app.batches.service import BatchService
+    from app.ingest.history import TransformationService
+    repository = HistoryMemoryRepository()
+    repository.state.products = {row['product_id']: (ProductInsert(row['product_id'], 'Synthetic product', 'EA', None, Decimal(0)), None)
+                                 for row in expected}
+    service = TransformationService(repository)
+    detail, reused = service.create(files, SalesTransformPolicy(dataset_id='CHUNGPAMO-2027', user_confirmed=True),
+        body['result_digest'], 'Fresh generated synthetic sales fixture', 'TEST-REVIEWER')
+    assert not reused and detail.batch_status == 'READY_FOR_APPROVAL' and detail.preview.total == 498
+    assert repository.state.transformation_sources[detail.transformation_id] == files
+    assert repository.state.demand == {}
+    batch_service = BatchService(repository)
+    batch = batch_service.get_batch(detail.batch_id)
+    batch_service.approve(batch.batch_id, approved_by='TEST-REVIEWER', expected_result_digest=batch.result_digest)
+    assert sorted((pid, period, row.demand_qty, row.unit) for (pid, period), (row, _) in repository.state.demand.items()) == sorted(
+        (row['product_id'], row['period'], Decimal(row['demand_qty']), row['unit']) for row in expected)
+    assert service.get(detail.transformation_id).batch_status == 'APPROVED'
