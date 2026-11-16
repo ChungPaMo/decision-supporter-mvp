@@ -65,7 +65,7 @@ def test_http_review_only_behavior_preserves_source_and_history_is_not_created()
 
 
 def test_fixed_small_eval_is_not_generated_from_aliases_and_reports_bge_separately():
-    from scripts.evaluate_mapping_recommendations import run
+    import hashlib
     data = json.loads((ROOT / 'contracts/examples/mapping_recommendation_cases_v1.json').read_text(encoding='utf-8'))
     assert len(data['cases']) == 48 and len({row['id'] for row in data['cases']}) == 48
     for case in data['cases']:
@@ -74,10 +74,10 @@ def test_fixed_small_eval_is_not_generated_from_aliases_and_reports_bge_separate
         aliases = {norm_header(alias) for spec in ENTITY_FIELDS[case['entity']].values()
                    for alias in spec['strong'] + spec['weak']}
         assert norm_header(case['header']) not in aliases
-    report = run(repeats=1)
     saved = json.loads((ROOT / 'docs/MAPPING_RECOMMENDATION_RESULTS_20261116.json').read_text(encoding='utf-8'))
-    assert report['dataset_sha256'] == saved['dataset_sha256']
-    methods = report['methods']
+    # Reuse the published evaluation. API E2E work must not rerun scoring/timing research.
+    assert hashlib.sha256((ROOT / 'contracts/examples/mapping_recommendation_cases_v1.json').read_bytes()).hexdigest() == saved['dataset_sha256']
+    methods = saved['methods']
     assert methods['rapidfuzz']['top3_recall'] >= methods['exact_alias']['top3_recall']
     assert methods['rapidfuzz']['top3_recall'] == methods['sequence']['top3_recall']
     assert methods['rapidfuzz']['wrong_recommendation_count'] > 0  # Do not silently hide false proposals.

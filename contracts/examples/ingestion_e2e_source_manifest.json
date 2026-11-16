@@ -1,0 +1,27 @@
+{
+  "dataset_id": "CHUNGPAMO-2027",
+  "source_type": "SYNTHETIC",
+  "generator": "modules/planning_engine/synthetic/generate.py",
+  "seed": 20261115,
+  "scope": "Existing Lee generator outputs and independent gold only; no replacement business data",
+  "files": {
+    "upload/01_products.csv": "41214dbc5b0a4656a702cf9cc19fc5c1f56c04163437b26465022f57b8fb736f",
+    "upload/02_materials.csv": "bc1da829b0d69526294dd4683b2784e95a6215f4f090dc42abaadaa0a1bafff1",
+    "upload/03_bom.csv": "5ac622fc6b61130acbb54e9a2e16da410a398b8ab358b906910eb5c154a5f05a",
+    "upload/04_inventory.csv": "025eceecbb7a2c901e9f4e11429ed39db873b9bbd9dfa3a61223fa932e995845",
+    "upload/05_monthly_demand.csv": "8e43184b4ee8cea60b50b8358dd21c414fa99afdbf52c6bfaecd9c2c1b251b29",
+    "upload/06_capacity_resources.csv": "d6903ba6a1d82386392953dffd39b01e301bcf8f01d49c2eb99cd65052532b5a",
+    "upload/07_capacity_quantity_limits.csv": "0b006a728cb16c98cfe25cdf2b869ceba031918fbfc0684900db674927dd3c7f",
+    "upload/08_capacity_hours_budgets.csv": "e7b78f9546bdb64e92c6295599ed3ec5d39b042314e101254a64e62873c12648",
+    "upload/09_routing_steps.csv": "da84aec2d914250807cf89a6a58e5b6360feba77644726bd2bef362f868eac03",
+    "raw/transactions/판매현황_2022.csv": "6dd6a9319ed0b67e109cba169705d66e74172f6592393d983b28ea27db5a7b0f",
+    "raw/transactions/판매현황_2023.csv": "920d2b4c06877f3fe081ee93c2d647f9a1b36aafa6feaf8e40fa2d0febd504a0",
+    "raw/transactions/판매현황_2024.csv": "90eeb17b4631b5fc66fc314de0b00a618ce498b9ea82618d919773f3ded41380",
+    "raw/transactions/판매현황_2025.csv": "26fd2f857a87ea363f8356ff657a5d616b9bfaa97a712b93ef3fd8a53f1abc57",
+    "raw/transactions/판매현황_2026.csv": "a74828cd796ff37c623b373f702f5eb1068fd6c4aeed4f6c9e425b00589a1aea"
+  },
+  "counts": {"source_rows": 86214, "normal_included": 83984, "cancelled_excluded": 887, "returns_separate": 1343, "error_rows": 0, "aggregation_errors": 0, "monthly_demand_rows": 498},
+  "normal_quantity": "1812610",
+  "cancelled_quantity": "11240",
+  "separate_returns_quantity": "8670"
+}

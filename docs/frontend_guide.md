@@ -1,5 +1,7 @@
 # 프론트엔드 연동 안내
 
+데이터 입력의 실제 사용자 동작별 Method/URL·DTO·확인/오류·예시는 [입력 UI API 인계](INGESTION_UI_API_HANDOFF.md), 현재 화면에서 부족한 부분만 정리한 요청은 [UI 변경 요청](INGESTION_UI_CHANGE_REQUEST.md)을 따른다. 대표 검증은 공식 CHUNGPAMO-2027 생성 자료 86,214→498이며 현재 PC의 실DB 작업은 금지·보류다.
+
 ## 분류·변환 이력 연계 (2026-11-16)
 
 `/ingest/classified-mapping`, `/ingest/transformations`, `/ingest/transformations/{transformation_id}`를 추가했다. [연계 계약](INGESTION_INTEGRATION_HISTORY.md)을 따른다. 유형 추천→기존 매핑 후보, HOLD→사용자 선택/명시적 판매 정책, 전체 이력→승인 전 배치를 연결한다. 기존 frontend 구현은 수정하지 않았다. 새 요청에는 선택 dataset_id query를 명시하고, persisted=true와 승인 성공을 구분하며 preview/batch digest를 구분한다. 현재 클라이언트의 `/ingest/` unscoped 분류를 영구 API에 그대로 사용하면 안 된다.
