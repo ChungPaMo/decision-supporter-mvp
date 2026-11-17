@@ -348,3 +348,40 @@
 
 **관련 자료**
 - [AGENTS](../AGENTS.md), [현재 현황](PROJECT_PROGRESS.md), [개발 절차](DEVELOPMENT_WORKFLOW.md), [기준 코드 Commit 86a1fdb](https://github.com/ChungPaMo/decision-supporter-mvp/commit/86a1fdb), [공식 E2E 근거](INGESTION_API_E2E_VERIFICATION_20261116.md).
+
+### 2026-11-17 — 기존 개발 PC PostgreSQL 입력 이력·공식 E2E 검증
+
+**Git**
+- 시작 Commit: `acd40a511a57b9c0d92d2391a2d028ed09914af7`, main clean, fetch/switch/pull --ff-only 후 원격 일치.
+- 완료 Commit: 고유 제목 `test: verify PostgreSQL ingestion history and preserve development data`로 이 항목을 포함하는 Commit. `git log main -1 --format=%H --fixed-strings --grep='test: verify PostgreSQL ingestion history and preserve development data'`로 조회하며 실제 SHA/Push는 완료 응답에서 확인한다.
+- 브랜치: `main`, 새 브랜치/PR/강제 Push 없음.
+
+**작업 목적**
+- 기존 승인 자료를 보존하면서 다른 PC에서 준비한 0009·SQL 변환 이력·공식 자료 입력→명시적 승인→예측을 실제 PostgreSQL로 검증한다.
+
+**구현 내용**
+- `backend/tests/test_db_ingestion_history.py`: IMMEDIATE로 staging을 확인한 뒤 DEFERRED 기본값을 복원하고 승인 후에도 제약을 검증했다. 운영 승인/트리거·migration은 변경하지 않았다.
+- `backend/tests/test_db_ingestion_official.py`: 공식 14파일 SQL E2E, 201/200 동시 재전송, 실제 unique 위반에 의한 원자 rollback, commit 후 불변성/추가원본 거부, 승인된498행→예측OK27행을 추가했다.
+- `scripts/verify_ingestion_migration_postgres.py`: 승인된 회귀 DB에서 새0008→실제0009 upgrade 본문을 실행해 보관dataset 포함81테이블 보존을 확인하고 probe를 rollback했다. downgrade는 없다.
+- `scripts/postgresql_preservation.py`, `scripts/apply_ingestion_0009.py`, 안전성 테스트: 개발 DB 강제 읽기 전용 지문/백업 및 별도 승인 적용 guard를 마련했다. 상세 보고서와 PROJECT_PROGRESS를 갱신했다.
+
+**검증 결과**
+- Docker Desktop4.70.0/Engine29.4.0, 기존 chungpamo-monorepo-db·전용 볼륨/네트워크·55433을 확인했다. 개발 chungpamo/chungpamo_app은0008, 승인7+9배치·예측각1이었다. 다른 DB에는 접속하지 않았다.
+- 초기 환경의 RapidFuzz 누락을 고정3.14.6 설치로 보완했다. 초기 실DB1003 passed/1 failed/2 deselected는 위 fixture 타이밍 문제였고 수정 후 집중5개가 통과했다.
+- 최종 전체 **1015 passed / 0 failed / 0 skipped / 2 deselected**. 기존 DB63개 중61개+신규SQL3개가 통과했다. 사용자 지시에 따라 과거 downgrade2개는 미실행이다. 별도 보존/승인 가드8개도 통과했으며 최종 전체에 포함된다.
+- 공식원장86,214→498/원본14SHA/정답/저장 bytea/승인 지문/미승인 제외/예측이력은 **실제 PostgreSQL** 증거다. 타입/빌드·OpenAPI/Schema·pip check·컴파일·보안도 통과했다. 기존 Starlette/httpx warning1건은 남는다. 전체 브라우저는 미실행이다.
+- 개발56테이블/기존 DB객체/승인배치·예측·Docker identity는 회귀 전후 동일. 비공개 pg_dump custom 백업292,343 bytes와 전체SHA/pg_restore목차를 검증했으며 실제복구리허설은 하지 않았다.
+- 이후 별도 사용자 승인으로 개발DB의 현재0008·동일사전지문·백업을 재검사하고 **0008→0009만 적용**했다. 기존55개 데이터 테이블과 승인7+9배치·예측2건·기존객체가 동일했고 버전만 변경됐다. 새이력4테이블은0행/총60테이블이며, 적용후 GET24건을 PostgreSQL 강제 READ ONLY로 확인했다.
+- 최종 별도 비DB는 **951 passed / 0 failed / 66 skipped**. 새보존가드8개는 최종전체/비DB 모두 포함한다. 실제저장 E2E는 회귀DB에만 한정하고 개발DB에 공식자료를 중복등록하지 않았다.
+
+**기술적 결정**
+- 사용자가 기존 개발 PC의 Docker/DB 사용·회귀초기화와 개발0009를 각각 새로 승인했다. 개발DB에는 additive upgrade만 적용하고 초기화·downgrade·자동복구를 하지 않았다. 과거 보조 PC 금지·DB 초기화 승인을 포괄 재사용하지 않는다.
+- 현재0009와 v2의 실제 SQL 동작을 검증했으며 새 migration을 만들거나 기존0001~0008/담당폴더/원본/정답을 수정하지 않았다. 파괴적 fixture는 회귀 DB에만 한정하고 회귀 DB 자체는 보존한다.
+
+**남은 문제**
+- 김대영: 적용된 개발/회귀0009의 환경 정합성을 유지하고 백업 실제복구리허설/보존기간 정책을 후속 검토한다. 이번에 복구는 필요하지 않았고 미승인 변경·자동복구·downgrade는 하지 않았다.
+- 정마나미: 신규 입력 UI/클라이언트 dataset scope와 전체 브라우저 E2E. 이희원: 실제 계획 계산/정식승인 정책은 별도. 이훤: 분류기는 기존 구현을 호출했으며 별도 알고리즘 변경은 없다.
+- Notion 동기화·기업 데이터 적합성·기존 npm 취약점 인계는 이번에 완료/해결했다고 주장하지 않는다.
+
+**관련 자료**
+- [기준 Commit acd40a5](https://github.com/ChungPaMo/decision-supporter-mvp/commit/acd40a511a57b9c0d92d2391a2d028ed09914af7), [이번 상세 검증](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md), [현재 현황](PROJECT_PROGRESS.md), [기존 이력 계약](INGESTION_INTEGRATION_HISTORY.md), [공식14파일 manifest](../contracts/examples/ingestion_e2e_source_manifest.json).

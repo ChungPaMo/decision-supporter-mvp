@@ -40,10 +40,15 @@ def test_postgres_history_sources_replay_approval_and_cross_dataset_isolation(co
     detail, reused = svc.create(sales(), policy(), preview.result_digest, 'Synthetic history probe', 'TEST-REVIEWER')
     assert not reused and detail.batch_status == 'READY_FOR_APPROVAL'
     conn.exec_driver_sql('SET CONSTRAINTS ALL IMMEDIATE')
+    # Check the staged evidence now, then restore the production default. Approval first
+    # changes status and inserts rows in the same transaction; its count trigger is deferred.
+    conn.exec_driver_sql('SET CONSTRAINTS ALL DEFERRED')
     assert svc.get(detail.transformation_id).output_sha256 == detail.output_sha256
     batch = batches.get_batch(detail.batch_id)
     assert batches.list_approved_demand(None, None, None, 100, 0)[1] == 0
     batches.approve(batch.batch_id, approved_by='TEST-REVIEWER', expected_result_digest=batch.result_digest)
+    conn.exec_driver_sql('SET CONSTRAINTS ALL IMMEDIATE')
+    conn.exec_driver_sql('SET CONSTRAINTS ALL DEFERRED')
     assert svc.get(detail.transformation_id).batch_status == 'APPROVED'
     assert batches.list_approved_demand(None, None, None, 100, 0)[1] == 2
     other = TransformationService(SqlTransformationRepository(RollbackEngine(conn, 'TISSUE-LEGACY')))
