@@ -2,6 +2,8 @@
 
 충파모 공식 단일 모노레포 · 가상 휴지 제조기업 생산계획 지원 MVP.
 
+**최신 현황:** [PROJECT_PROGRESS](docs/PROJECT_PROGRESS.md) · **누적 개발 이력:** [DEVELOPMENT_CHANGELOG](docs/DEVELOPMENT_CHANGELOG.md) · **Codex 상시 작업 규칙:** [AGENTS](AGENTS.md). 새 작업은 이 문서들을 먼저 읽고 종료 시 갱신합니다. 아래 날짜별 설명과 테스트 수치는 각 작업 당시의 기록이며 최신 상태는 PROJECT_PROGRESS를 따릅니다. 현재 보조 PC에서는 Docker·PostgreSQL 관련 작업을 일절 수행하지 않습니다.
+
 2026-11-16 컬럼 추천: [소규모 규칙·RapidFuzz 비교와 MVP 결정](docs/MAPPING_RECOMMENDATION_MVP_20261116.md). 기존 확인·검증·승인 게이트를 유지하며 BGE-M3 연구를 재사용했다. 현재 작업 PC의 Docker 설치·실행/PostgreSQL 구성/0009 실제 적용/DB 쓰기·E2E는 금지하고 기존 개발 PC로 이관한다.
 
 2026-11-16: [파일 분류·매핑·변환 이력 연결](docs/INGESTION_INTEGRATION_HISTORY.md)을 추가했다. 업로드 분류기는 규칙 기반으로 실제 추천/HOLD를 반환한다. 새 classified-mapping과 명시적 transformations API는 기존 매핑·판매 변환·승인 전 배치를 연결한다. Alembic 0009와 스키마 v2를 추가했으며 현재 PC의 PostgreSQL 적용/검증은 미실행이다. [이번 실행 결과](docs/INGESTION_INTEGRATION_VERIFICATION_20261116.md)를 과거 DB 검증 수치와 구분한다.
