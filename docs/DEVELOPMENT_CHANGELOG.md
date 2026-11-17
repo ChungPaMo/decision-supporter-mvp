@@ -385,3 +385,40 @@
 
 **관련 자료**
 - [기준 Commit acd40a5](https://github.com/ChungPaMo/decision-supporter-mvp/commit/acd40a511a57b9c0d92d2391a2d028ed09914af7), [이번 상세 검증](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md), [현재 현황](PROJECT_PROGRESS.md), [기존 이력 계약](INGESTION_INTEGRATION_HISTORY.md), [공식14파일 manifest](../contracts/examples/ingestion_e2e_source_manifest.json).
+
+### 2026-11-17 — 생산계획 엔진 현황 및 백엔드 통합 준비 분석
+
+**Git**
+- 시작 Commit: `77067f128ea0531f24855584f9ccfa41f2b84d3b`. 작업 트리 clean, fetch→main switch→pull --ff-only 후 로컬/원격 일치.
+- 완료 Commit: 이 항목을 포함하는 고유 제목 **`docs: assess planning engine integration readiness`**. `git log main -1 --format=%H --fixed-strings --grep='docs: assess planning engine integration readiness'`로 실제 SHA 조회, Push/원격 일치는 완료 후 최종 응답에 보고한다.
+- 브랜치: `main`. 새 브랜치/PR/강제 Push 없음.
+
+**작업 목적**
+- 희원 담당 실제 계산 구현과 김대영의 기존 API/SQL 기반을 구분하고, 엔진 완성을 기다리지 않고 수행할 독립 통합 작업과 계약 의존 작업을 특정한다.
+
+**구현 내용**
+- [PLANNING_ENGINE_INTEGRATION_READINESS](PLANNING_ENGINE_INTEGRATION_READINESS.md) 추가: 구성요소별5단계 상태, 실제 코드/테스트 근거, 공식 자료 대조, 기존 API/저장7테이블/What-if·승인 gate, 계약 차이 C01~C11, 담당·파일·선행 조건·완료 기준 B01~B09, 희원/나미 인계와 단계별 순서 정리.
+- [PROJECT_PROGRESS](PROJECT_PROGRESS.md)를 최신 분석 범위로 갱신했다. 기존 완료 기능·직전 전체1015/2제외 기록은 보존하고 이번 집중71개와 분리했다.
+- 서비스/계획·분류 엔진/frontend/공식 생성기·정답/migration/테스트 코드는 수정하지 않았다. 기존 INTEGRATION_CONTRACT 등의 과거 설명과 현재 코드 차이는 새 보고서에 정정 관계로 기록했다.
+
+**검증 결과**
+- 2026-11-17 집중 비DB pytest **71 passed / 0 failed / 0 skipped**: 모듈 경계10개와 계획 어댑터/source/저장·capability/Schema 검사. Starlette/httpx deprecation warning1건. 기존 테스트 대역은 계산 완료 근거가 아니다.
+- 실제 개발 DB `127.0.0.1:55433/chungpamo`, 역할 `chungpamo_app`, 전용 Docker identity와 revision0009/강제 READ ONLY 확인. 공식3개 월의 단일 월 PlanningInput을 기존 SQL provider로 조립했다. 월마다9제품·9자재·BOM27줄·재고18·자원6·시간6·수량한도1·라우팅27/추가인력9·승인출처9 확인. 정책 미확인 상태는 유지했다.
+- 공식 수요498행의 제품/기간/Decimal 수량/단위 정답 일치, 원본manifest14파일 SHA 전후 일치. 타dataset forecast404·provider 소속409·모르는 제품409 확인. 실제 planning.run은 NotImplementedError, 계획3API501·GET목록200/0건·APPROVE501 확인.
+- DB60테이블 전체 행 지문·스키마객체735개 정의·registry·승인7+9배치·예측각1건·revision·Docker identity 전후 불변. 테스트/회귀DB에 접속하거나 개발DB를 변경/초기화하지 않았고 migration도 실행하지 않았다. 접속 설정 외에 실제 SQL provider/엔진을 성공 대역으로 바꾸지 않았다.
+- 일회성 검증 스크립트의 datetime/JSON 비교와 잘못된 조회 컬럼명 오류를 바로잡아 최종 조회/보존 대조를 통과했다. 서비스 결함으로 오인하거나 최초 검사 실패를 통과로 기록하지 않는다. 상세 증거는 ignored `.artifacts/planning-readiness-20261117/`에만 둔다.
+- 전체 pytest·파괴적 PostgreSQL 회귀·migration 왕복·브라우저·TypeScript/build는 분석 범위에 필요하지 않아 미실행. 변경 문서 로컬 Markdown 링크107개·diff --check·보안 검사(텍스트435파일/findings0)를 통과했다. 휴리스틱 보안 검사이며 백업·비밀값·공식 원본은 Git에 포함하지 않는다.
+
+**기술적 결정**
+- MPS/RCCP/MRP/What-if는 여전히 미구현이다. v0.3·12개 HC 손계산을 구현 완료로 바꾸지 않는다. 실제 SQL로 검증한 것은 승인 입력 조립이며 계산/REAL_ENGINE 저장 성공이 아니다.
+- 새 provider/계획 저장 테이블을 중복 생성하지 않는다. 기존 연결점을 재사용하는 입력 진단·참조 검증·계약/fixture 인계는 독립 작업으로 분리했다.
+- 단일 월↔3개월, 예정 입고/What-if 범위, 음수 부족량 증감, 정책 판정/승인 차이는 변경 요청으로 유지한다. PlanningOutput의 HARD VIOLATED+FEASIBLE 검증 공백도 기록했으며 이번에 코드나 업무 규칙을 임의 수정하지 않았다. APPROVE501 유지.
+
+**남은 문제**
+- 김대영: B01/B02/B03/B09부터 독립 진행 가능. 입력 진단 API 경로는 제안이며 아직 구현하지 않았다. C01~C06 합의 후 기간/입고/정책/What-if 확장·실엔진 SQL 검증 준비.
+- 이희원: v0.3 변경 확인, 자재 수량 의미·부족 입력/공유 자원 정책·What-if 범위 확정 요청에 답하고 owner 폴더에서 실제 run 및 HC 정답 자동 비교 구현.
+- 정마나미: 기존 API client의 영구 계획 메서드 재사용, Preview/저장/승인·DEMO 분리, 기간/기준일/계보·오류·복원 화면 연계. 이번에 frontend는 변경하지 않았다.
+- 정식 승인·비용/KPI·서버 인증·최종 브라우저 제조E2E는 의존 작업이다. 미구현501을 임의로 해제하지 않는다.
+
+**관련 자료**
+- [기준 Commit 77067f1](https://github.com/ChungPaMo/decision-supporter-mvp/commit/77067f128ea0531f24855584f9ccfa41f2b84d3b), [이번 통합 준비 보고서](PLANNING_ENGINE_INTEGRATION_READINESS.md), [최신 상태](PROJECT_PROGRESS.md), [희원 규칙 초안](../modules/planning_engine/PLANNING_RULES.md), [기존 계획 저장 계약](PLAN_EXECUTION_PERSISTENCE.md), [직전 실제 SQL 검증](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md).
