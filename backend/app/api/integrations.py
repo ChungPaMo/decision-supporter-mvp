@@ -8,6 +8,7 @@ from app.integrations import modules
 from app.integrations import planning as plan_adapter
 from app.errors import ApiError, ErrorCode, ErrorResponse
 from contracts.interfaces.modules import ClassificationInput, ClassificationOutput, PlanCommand, PlanningReply
+from contracts.interfaces.planning import PlanningInputDiagnostics
 from app.ingest.parsing import MAX_BYTES, FileError, parse_file
 
 router = APIRouter(tags=['module-integration'], responses=ERROR_RESPONSES)
@@ -48,6 +49,15 @@ def plan_reply(body):
     reply = plan_adapter.execute(body, provider_factory=factory)
     status = {'INPUT_INVALID': 422, 'UNSUPPORTED': 422, 'FAILED': 500}.get(reply.result.status, 200)
     return JSONResponse(status_code=status, content=reply.model_dump(mode='json'))
+
+
+@router.post('/planning-inputs/preview', response_model=PlanningInputDiagnostics,
+             summary='Read-only single-month approved input diagnostics, independent of plan calculation')
+def preview_planning_inputs(body: PlanCommand, dataset_id: str = Depends(dataset_context)):
+    command = scoped_command(body, dataset_id)
+    if command.scenario != 'BASE':
+        raise ApiError(422, ErrorCode.REQUEST_INVALID, '계획 입력 진단은 BASE 요청만 받습니다.')
+    return plan_adapter.preview_inputs(command)
 
 
 @router.post('/plans', response_model=PlanningReply,

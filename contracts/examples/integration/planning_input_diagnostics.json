@@ -1,0 +1,74 @@
+{
+  "_note": "SYNTHETIC CONTRACT EXAMPLE. Placeholder IDs and typed input provider, no SQL or calculation.",
+  "payload": {
+    "dataset_id": "TISSUE-LEGACY",
+    "forecast_execution_id": "00000000-0000-4000-8000-000000000001",
+    "target_month": "2027-01",
+    "as_of_date": "2026-12-31",
+    "scope": "SINGLE_MONTH",
+    "status": "NEEDS_REVIEW",
+    "inputs": {
+      "forecast": {
+        "ready": true,
+        "row_count": 1
+      },
+      "products": {
+        "ready": true,
+        "row_count": 1
+      },
+      "materials": {
+        "ready": false,
+        "row_count": 0
+      },
+      "bom": {
+        "ready": false,
+        "row_count": 0
+      },
+      "inventory": {
+        "ready": false,
+        "row_count": 0
+      },
+      "resources": {
+        "ready": false,
+        "row_count": 0
+      },
+      "quantity_limits": {
+        "ready": true,
+        "row_count": 0
+      },
+      "hours_budgets": {
+        "ready": false,
+        "row_count": 0
+      },
+      "routing": {
+        "ready": false,
+        "row_count": 0
+      }
+    },
+    "missing_inputs": [
+      "BOM_COVERAGE",
+      "CAPACITY_NOT_REGISTERED",
+      "HOURS_COVERAGE",
+      "INVENTORY_COVERAGE",
+      "ROUTING_COVERAGE",
+      "ROUTING_NOT_REGISTERED"
+    ],
+    "warning_codes": [
+      "POLICY_NOT_CONFIRMED"
+    ],
+    "approved_sources": [
+      {
+        "batch_id": "00000000-0000-4000-8000-000000000002",
+        "batch_version": 1,
+        "entity": "product",
+        "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+        "result_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "approved_at": "2026-12-31T00:00:00Z"
+      }
+    ],
+    "forecast_input_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+    "input_digest": "sha256:8cd58efdb95144f8b24817b84928b3cdd0fe955d04e9767dd195ef9cdacd0d2e",
+    "engine_available": false,
+    "persisted": false
+  }
+}

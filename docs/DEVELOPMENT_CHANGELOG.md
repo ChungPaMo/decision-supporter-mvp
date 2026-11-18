@@ -422,3 +422,32 @@
 
 **관련 자료**
 - [기준 Commit 77067f1](https://github.com/ChungPaMo/decision-supporter-mvp/commit/77067f128ea0531f24855584f9ccfa41f2b84d3b), [이번 통합 준비 보고서](PLANNING_ENGINE_INTEGRATION_READINESS.md), [최신 상태](PROJECT_PROGRESS.md), [희원 규칙 초안](../modules/planning_engine/PLANNING_RULES.md), [기존 계획 저장 계약](PLAN_EXECUTION_PERSISTENCE.md), [직전 실제 SQL 검증](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md).
+
+### 2026-11-18 — 계획 입력 진단 API·공통 검증·계약 협의 명세
+
+**Git**
+- 시작 Commit `231bcb262c98e764349fc54e5c3c6706e083f46f`, fetch 및 fast-forward 후 확인.
+- 완료 Commit은 고유 제목 `feat: diagnose approved planning inputs without running the engine`으로 조회한다. `git log main -1 --format=%H --fixed-strings --grep='feat: diagnose approved planning inputs without running the engine'`
+- 브랜치 `main`.
+
+**작업 목적**
+- 계획 계산 구현 전에도 저장 예측과 승인 자료의 단일 월 입력을 확인하고 B01~B03을 보조 PC에서 검증한다.
+
+**구현 내용**
+- `backend/app/api/integrations.py`에 `POST /planning-inputs/preview`를 추가했다. `backend/app/integrations/planning.py`와 `planning_validation.py`에서 기존 provider·참조·출처·단위·기간 검증, 요약·지문을 연결했다.
+- `contracts/interfaces/planning.py`와 OpenAPI/Schema/합성 예시를 갱신했다. 신규 TestClient·provider 대역 회귀, C01~C11 차이·8개 인수 사례·화면 인계를 추가했다.
+
+**검증 결과**
+- 최종 루트 비DB pytest **978 passed / 0 failed / 66 skipped / 6 deselected**. 실DB 테스트 66개는 접속 차단, 오프라인 Alembic 호출 검사 6개는 선택 제외했다. 초기 회귀의 OpenAPI enum 순서와 가이드 누락 2건을 수정해 재검증했다.
+- `persisted=false`, 실행 생성 금지, 기존 계산 API의 501, OpenAPI/JSON Schema/예시 동기화 통과. Docker·실DB·Alembic·브라우저는 미실행이다.
+
+**기술적 결정**
+- 기존 BASE 명령과 단일 월 범위로 진단한다. 200 응답에서 누락과 모호성을 표시하고 필수 예측 범위·변조·참조 충돌은 기존 오류 계약으로 처리한다. LEGACY에서도 수요 출처를 검증하며 기존 계획 스냅샷 형식을 보존한다.
+- 입력 존재와 엔진 가용성을 별도 필드로 제공한다. 업무 정책 합의 항목은 테스트 명세에서 보류하고 `POLICY_NOT_CONFIRMED`를 유지한다.
+
+**남은 문제**
+- 기존 개발 PC에서 공식 저장 예측으로 새 경로의 실제 PostgreSQL 읽기·격리·출처·지문 및 이력 보존을 확인한다.
+- 이희원과 기간·입고·What-if·정책·부호·판정을 확정한다. 정마나미에게 단일 월 진단 응답·오류·상태별 화면 계약을 인계한다.
+
+**관련 자료**
+- [시작 Commit 231bcb2](https://github.com/ChungPaMo/decision-supporter-mvp/commit/231bcb262c98e764349fc54e5c3c6706e083f46f), [진단 검증·인수 명세](PLANNING_INPUT_DIAGNOSTICS_VERIFICATION.md), [현황](PROJECT_PROGRESS.md), [통합 계약](INTEGRATION_CONTRACT.md).

@@ -1,10 +1,12 @@
 # 충파모 프로젝트 진행상황
 
-최종 확인: **2026-11-17 (KST), 기존 개발 PC**. 이번 계획 엔진 통합 준비 분석 기준: [`77067f1`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/77067f128ea0531f24855584f9ccfa41f2b84d3b), fetch/pull 후 로컬/원격 main 일치. 이번 문서 Commit은 고유 제목 `docs: assess planning engine integration readiness`와 [누적 이력의 마지막 항목](DEVELOPMENT_CHANGELOG.md)으로 식별한다. 실제 SHA는 완료 후 `git log main -1 --format=%H --fixed-strings --grep='docs: assess planning engine integration readiness'`로 조회한다.
+최종 확인 **2026-11-18 (KST), 보조 개발 PC**. 작업 시작 `main`은 [`231bcb2`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/231bcb262c98e764349fc54e5c3c6706e083f46f)다. 이번 변경은 `feat: diagnose approved planning inputs without running the engine` Commit과 [누적 이력의 마지막 항목](DEVELOPMENT_CHANGELOG.md)으로 식별한다.
 
-이번 분석: **집중 비DB pytest 71 passed / 0 failed / 0 skipped**, 공식 3개 월의 단일 월 PlanningInput 실제 SQL 읽기 조립·미구현501 확인. 계획 계산은 여전히 미구현이며 3개월 기간·입고·What-if·부족량/판정 계약 차이와 김대영 독립 작업을 [계획 통합 준비 보고서](PLANNING_ENGINE_INTEGRATION_READINESS.md)에 정리했다. 개발 DB0009·60테이블/스키마 객체735개·승인7+9배치·예측각1건을 강제 읽기 전용으로 확인하고 전후 불변을 검증했다. 서비스/알고리즘/frontend/migration은 수정하지 않았다.
+이번 B01~B03에서 단일 월 `POST /planning-inputs/preview`, 공통 참조·출처·단위·기간 검증과 계약 협의 명세를 추가했다. **비DB pytest 978 passed / 0 failed / 66 skipped / 6 deselected**. 저장 경계는 대역이며 새 진단 경로의 실제 SQL 검증은 기존 개발 PC의 후속이다. [진단 검증·화면 인계](PLANNING_INPUT_DIAGNOSTICS_VERIFICATION.md)
 
-직전 완료 검증(`77067f1`): **전체 pytest 1015 passed / 0 failed / 0 skipped / downgrade 2개 선택 제외**. 공식 원본→변환 이력·승인→예측을 실제 SQL로 확인했다. 별도 승인 후 개발 DB **0008→0009 적용 완료**: 기존55개 데이터 테이블·승인7+9배치·예측각1·기존객체/볼륨 보존, revision만 변경하고 새 이력4테이블은 빈 상태다. 이후 강제 읽기 전용 GET24건/60테이블 보존 확인. [당시 상세](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md). 전체 회귀·브라우저·TypeScript/build는 이번 분석에서 다시 실행하지 않았다.
+11/17 기존 개발 PC에서 **집중 비DB pytest 71 passed**, 공식 3개 월 각각의 PlanningInput 실제 SQL 읽기 조립·미구현501을 확인했다. 개발 DB0009·60테이블/스키마 객체735개·승인7+9배치·예측각1건의 전후 보존도 확인했다. 이 기록은 신규 진단 API 구현 전의 결과다. [계획 통합 준비 보고서](PLANNING_ENGINE_INTEGRATION_READINESS.md)
+
+11/17 실제 PostgreSQL 검증(`77067f1`)은 **전체 pytest 1015 passed / 0 failed / 0 skipped / 2 deselected**였다. 공식 원본→변환 이력·승인→예측의 실제 SQL 흐름을 확인했다. 별도 승인 후 개발 DB **0008→0009 적용 완료**. 기존55개 데이터 테이블·승인7+9배치·예측각1·기존객체/볼륨을 보존했고 새 이력4테이블은 빈 상태다. 이후 강제 읽기 전용 GET24건/60테이블 보존을 확인했다. [당시 상세](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md)
 
 이 문서는 **최신 상태**, [DEVELOPMENT_CHANGELOG](DEVELOPMENT_CHANGELOG.md)는 **시간순 변경 이유·결과**, 개별 검증 보고서는 **상세 근거**, [AGENTS](../AGENTS.md)는 **매 작업의 읽기·갱신 규칙**이다. 이전 보고서의 “이번 작업”은 그 보고서 작성 당시를 뜻한다.
 
@@ -36,6 +38,7 @@
 | 정제·변환 | 원본5파일86,214→498, SQL 이력·원본bytes/SHA·승인 전 batch 연결·재조회·동시201/200·실제DB 실패 rollback 검증 완료 | 김대영 | 회귀/개발DB0009 적용 확인. 개발DB는 기존공식자료 중복등록 없이 새이력0건 유지. SYNTHETIC_ONLY를 일반 기업에 자동 적용하지 않음. [이력 계약](INGESTION_INTEGRATION_HISTORY.md), [실DB 근거](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md) |
 | PostgreSQL·데이터셋 격리 | 신규v2의 로컬FK·UUID격리·불변/지연트리거 실제 검증. 보관dataset 포함3스키마·기존81테이블 보존 probe 후 rollback. 개발0009도 별도승인·백업확인 후 적용 | 김대영 | 개발/회귀 현재0009. 기존자료와 연결된 볼륨은 보존, downgrade2개 미실행. dataset_id는 인증권한 아님. [최신 근거](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md) |
 | 수요예측 | 단일 엔진/계약 유지. 실제 승인된 변환 수요498행→예측OK/27행 저장·재조회·P50≤P80≤P90, 미승인 probe 제외 확인 | 이희원(엔진), 김대영(API), 정마나미(화면) | 합성 회귀 결과를 실제 기업 적합성으로 일반화하지 않음. [이번 실DB 검증](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md) |
+| 계획 입력 진단 | 기존 승인 입력 provider를 재사용한 단일 월 진단 API, 출처 대조·참조/단위/기간 검증, 정책 미확인·엔진 가용성 표시. TestClient·SQL 대역 검증 완료 | 김대영(API), 정마나미(화면 연계) | 기존 개발 PC에서 신규 읽기 경로 검증. 화면 연계에 응답 상태·오류 계약 제공. [진단 검증](PLANNING_INPUT_DIAGNOSTICS_VERIFICATION.md) |
 | 생산계획·제약 계산 | 공식 승인자료→단일 월 DTO 실제 조립 확인. **`engine.planning.AVAILABLE=False`/NotImplementedError, MPS/RCCP/MRP/What-if 계산 미구현**, API501·실제 계획0건. HC-01~12는 손계산이며 모듈10개 시험은 구조/경계 검사 | 이희원(계산), 김대영(계약·저장) | 단일 월↔3개월·예정 입고·What-if·음수 자재 의미·HARD/SOFT 판정 차이 해소 필요. 이력7테이블·어댑터·검토/출력 기반은 재구현 불필요. 정식 APPROVE501 유지. [상세·담당 작업](PLANNING_ENGINE_INTEGRATION_READINESS.md), [저장 기반](PLAN_EXECUTION_PERSISTENCE.md) |
 | 프론트엔드 | 데이터셋 선택·배치 등록/검토/재검증/승인·분류 패널·예측 조회 및 별도 DEMO 화면 구현. 기존 비DB 브라우저 검사 기록과 11/16 type-check/build 통과 기록 | 정마나미 | 새 profile/Top-3/변환 정책·이력 API 화면 연결, CAPA/Routing 입력 확장 필요. `/ingest/` dataset scope·오래된 응답 보호 포함. [API 인계](INGESTION_UI_API_HANDOFF.md), [화면 변경 요청](INGESTION_UI_CHANGE_REQUEST.md) |
 | 전체 E2E | 공식14파일 SHA와 입력·저장·승인·예측 **TestClient+실제PostgreSQL** 경로 검증 완료. 메모리/SQL 대역으로 저장 성공을 대체하지 않음 | 김대영(통합), 각 담당 | 신규입력 전체브라우저·실제계획계산을 포함한 제조전체E2E는 미완료. [이번 범위](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md) |
@@ -46,25 +49,25 @@
 - 제품·자재·BOM·재고·자원·CAPA·Routing의 실제 DTO 연결과 공유 설비/동시 인시 요구를 확인했다. 판매 거래 **86,214행 → 월별 수요 498행**이 독립 정답의 제품/월/Decimal 수량/단위와 일치했다. 정상 수요만 집계하고 취소 제외·반품 별도를 유지했다.
 - 파일 분류기→컬럼 매핑 API, RapidFuzz Top-3 추천→사용자 확인, 변환 이력→승인 전 배치→명시적 승인 게이트를 연결했다. 추천·미리보기·이력 저장·업무 승인 상태는 서로 구분한다.
 - 11/16 공식 자료 FastAPI TestClient E2E와 프론트엔드 연계 문서를 완료했다. 당시 **저장소와 CAPA SQL 경계는 메모리/테스트 대역**이었으며, 이후 11/17의 별도 실제 PostgreSQL 검증으로 입력·승인·예측 저장 경로를 확인했다. 실제 계획 계산 저장은 여전히 미검증이다.
-- 가장 최근 실제 전체 Python은 **2026-11-17: 1015 passed / 0 failed / 0 skipped / 2 deselected**. 기존 DB63개 중61개와 추가실DB3개를 통과했고 downgrade2개는 사용자 지시로 미실행이다. 별도 비DB는951 passed/66 skipped. TypeScript/build·계약 동기화·보안도 통과했다. [이번 상세](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md). 이전943/63skipped는 [11/16 기록](INGESTION_API_E2E_VERIFICATION_20261116.md)이다.
+- 가장 최근 실제 PostgreSQL 포함 전체 Python은 **2026-11-17: 1015 passed / 0 failed / 0 skipped / 2 deselected**. 기존 DB63개 중61개와 추가실DB3개를 통과했고 downgrade2개는 사용자 지시로 미실행이다. 당시 별도 비DB는951 passed/66 skipped. TypeScript/build·계약 동기화·보안도 통과했다. [11/17 상세](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md). 이전943/63skipped는 [11/16 기록](INGESTION_API_E2E_VERIFICATION_20261116.md)이다.
 - 과거 실제 PostgreSQL 회귀 결과는 2026-11-15 `ff448ac`의 608 passed/0 skipped 등 해당 시점 보고서의 기록이다. 신규 0009나 현재 DB의 검증으로 승격하지 않는다. [DB 근거](DB_REGRESSION_E2E_VERIFICATION.md)
 
 ## 남은 작업
 
 1. **김대영:** 개발0009 적용/기존자료 보존과 회귀DB의 원자성·불변성·동시성·격리·공식자료→승인→예측을 검증했다. 기존공식자료를 개발DB에 중복등록하지 않는다. 백업 실제복구리허설과 보존기간 정책은 후속이며 다음 파괴적 fixture도 새 범위승인이 필요하다.
 2. **정마나미:** [화면 요청 P0/P1](INGESTION_UI_CHANGE_REQUEST.md)에 따라 기존 화면을 재사용해 신규 API를 연결한다. 기존 승인 UI를 중복 구현하지 않는다. 기존 npm 취약점 2건(Vite/esbuild)도 담당 영역에서 검토한다.
-3. **김대영 독립 작업:** 기존 provider를 재사용하는 계산 없는 입력 진단 API 준비·참조/출처 검증과 Preview/저장 경계 정리·계약 변경 요청/fixture 명세·나미 API 인계부터 진행 가능하다. 새 provider/계획 이력 테이블을 중복 구현하지 않는다. [B01~B03/B09](PLANNING_ENGINE_INTEGRATION_READINESS.md).
+3. **김대영, 기존 개발 PC:** B01~B03 비DB 구현·검증을 완료했다. 공식 자료의 기존 저장 예측으로 진단 API를 읽기 전용 검증하고 LEGACY 출처·교차 데이터셋 차단·입력 지문·실행 수 보존을 대조한다. 나미 화면 연계와 B09 전체 인수 검증은 후속이다. [실DB 확인 항목·화면 인계](PLANNING_INPUT_DIAGNOSTICS_VERIFICATION.md)
 4. **이희원·김대영 의존 작업:** 계획 엔진 자체는 미구현이다. 희원 v0.3의3개월·공유자원 배분·입고·What-if·부족량/판정 의미를 합의한 뒤 김대영이 DTO/기간별 입력/정책 버전/실엔진 SQL 검증을 확장한다. 실제 계산과 HC 정답 대비 자동 테스트는 희원 담당이다. 정식 승인은 별도 인증/정책 확정 후 연결한다.
 5. **통합/화면 담당:** DB 및 화면 연결 후 공식 자료의 전체 브라우저 E2E를 수행한다. 기존 FE client의 영구 계획 메서드를 재사용하고 LIVE Preview와 이력·저장·승인 상태를 구분한다. 제조 전체 E2E는 실제 계획 엔진도 필요하다.
 6. **팀 검토:** 실제 기업 데이터의 이용 범위·단위/거래 상태·매핑 모호성·변환 정책을 검토한다. 합성 데이터 성과를 기업 데이터 성능으로 일반화하지 않는다. 현재 LLM/Upstage 호출은 하지 않으며 후속 입력/출력 계약만 [추천 보고서](MAPPING_RECOMMENDATION_MVP_20261116.md)에 정리돼 있다.
 
 ## 개발 환경 제한
 
-**이번 계획 분석 요청은 기존 개발 DB의 읽기 전용 조회를 허용했다.** 전용 컨테이너 inspect와 강제 READ ONLY 접속만 수행했다. 직전 별도 승인된 회귀초기화/개발0009 적용은 이미 끝난 과거 작업이며 이번에 재실행하지 않았다. 다른 보조 PC의 Docker/PostgreSQL 금지 및 과거승인 재사용금지는 유지한다.
+**현재 보조 PC에서는 Docker·PostgreSQL 관련 작업을 수행하지 않는다.** 컨테이너 조회를 포함한 Docker 작업, DB 접속·환경 변경, Alembic upgrade/downgrade, 실DB 테스트는 기존 개발 PC에서만 진행한다. 11/17의 읽기 전용 조회 및 별도 승인된 0009 적용은 과거 작업이다.
 
 - 기존 DB 데이터를 보존한다. 개발 DB/기존 `chungpamo_test` 초기화 금지, 독립 회귀 DB의 파괴적 작업도 [개발 절차](DEVELOPMENT_WORKFLOW.md)의 식별·보존 확인·별도 실행 승인이 필요하다.
 - `frontend/`, `modules/file_classifier/`, `modules/planning_engine/` 담당 폴더 제한과 신규 migration 추가 금지를 유지한다. 추천 점수 기반 자동 등록·승인, 원본 기업 데이터 외부 API 전송을 하지 않는다.
-- 이번 작업은 분석·진행 문서3개만 변경했다. 계획/분류 알고리즘·frontend·서비스·테스트·migration 파일은 수정하지 않았다. 계획 진입점의 실제 NotImplementedError를 확인했고 모델 재학습·외부AI 호출은 하지 않았다. 컨테이너/볼륨을 생성·재시작·삭제하지 않았다.
+- 이번 작업은 백엔드 진단/검증과 계약·테스트·문서를 변경했다. 신규 진단 API는 TestClient와 SQL 대역으로 검증했다. 66개 DB 테스트와 Alembic 명령 호출 검사 6개는 미실행이다.
 
 ## 작업 재개와 팀 공유
 

@@ -1,5 +1,7 @@
 # 프론트엔드 연동 안내
 
+계획 입력 진단은 `POST /planning-inputs/preview`에 선택 dataset query와 `PlanCommand`를 전달한다. 입력의 누락·경고·건수, 엔진 가용성, `persisted=false`를 표시하고 계획 계산·저장·승인 상태는 별도로 다룬다. 요청 예시와 오류 처리 기준은 [진단 API 인계](PLANNING_INPUT_DIAGNOSTICS_VERIFICATION.md)를 따른다.
+
 데이터 입력의 실제 사용자 동작별 Method/URL·DTO·확인/오류·예시는 [입력 UI API 인계](INGESTION_UI_API_HANDOFF.md), 현재 화면에서 부족한 부분만 정리한 요청은 [UI 변경 요청](INGESTION_UI_CHANGE_REQUEST.md)을 따른다. 대표 검증은 공식 CHUNGPAMO-2027 생성 자료 86,214→498이며 현재 PC의 실DB 작업은 금지·보류다.
 
 ## 분류·변환 이력 연계 (2026-11-16)

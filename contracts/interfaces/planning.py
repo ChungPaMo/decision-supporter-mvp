@@ -142,6 +142,29 @@ class PlanningInput(StrictModel):
         return self
 
 
+class PlanningInputCoverage(StrictModel):
+    ready: bool
+    row_count: int = Field(ge=0)
+
+
+class PlanningInputDiagnostics(StrictModel):
+    dataset_id: DatasetId
+    forecast_execution_id: UUID
+    target_month: Month
+    as_of_date: date
+    scope: Literal['SINGLE_MONTH'] = 'SINGLE_MONTH'
+    status: Literal['INPUTS_PRESENT', 'NEEDS_REVIEW']
+    inputs: dict[Literal['forecast', 'products', 'materials', 'bom', 'inventory',
+                         'resources', 'quantity_limits', 'hours_budgets', 'routing'], PlanningInputCoverage]
+    missing_inputs: list[Code]
+    warning_codes: list[Code]
+    approved_sources: list[ApprovedSource]
+    forecast_input_digest: str
+    input_digest: str
+    engine_available: bool
+    persisted: Literal[False] = False
+
+
 class PlanningIssue(StrictModel):
     code: Code
     message: str
