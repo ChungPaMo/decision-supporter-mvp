@@ -101,6 +101,10 @@ python -X utf8 modules/file_classifier/tools/make_principle_figures.py
 
 결과 엑셀에는 파일명, 분류, 확신 정도, 근거가 적힌다. 원본 파일은 읽기만 하고 옮기거나 고치지 않는다. 폴더 분류와 더미 생성에는 openpyxl이 필요하다.
 
+## 다른 모듈과의 연동
+
+업로드용 테이블 분류(`rules-0.3.0`)는 백엔드 분류 API, 컬럼 매핑 추천, 화면의 "파일 유형 추천" 패널에 연결돼 있다. 팀 공식 합성 자료(CHUNGPAMO-2027) 48개 파일로 확인한 결과와 다른 담당자에게 요청한 사항은 [CONTRACT_REQUESTS.md](CONTRACT_REQUESTS.md)에 있다. 문서 종류 분류는 아직 API와 화면에 연결되지 않았다.
+
 ## 구성
 
 | 경로 | 내용 |

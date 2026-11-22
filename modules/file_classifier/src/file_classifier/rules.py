@@ -7,7 +7,7 @@
     4. 파일 단위로 합친다. 표가 있는 시트가 모두 같은 entity 일 때만 추천한다.
 
 점수는 규칙으로 계산한 참고값이며 확률이 아니다. 파일명은 판단에 쓰지 않는다(틀린 이름이 흔하다).
-capacity / routing 은 분류 범주가 아니므로 보류한다. 판매·출고 내역과 가로로 펼친 월별 표는 보류하고
+capacity / routing 은 분류 범주가 아니므로 보류하고 등록 경로만 안내한다. 판매·출고 내역과 가로로 펼친 월별 표는 보류하고
 monthly_demand 로 변환할 수 있음을 안내한다.
 """
 from __future__ import annotations
@@ -15,7 +15,7 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-MODULE_VERSION = "rules-0.2.0"
+MODULE_VERSION = "rules-0.3.0"
 MIN_COVERAGE = 0.6      # 추천에 필요한 "아는 열" 비율
 MASTER_MIN_COVERAGE = 0.7   # 제품·자재 마스터는 모르는 열이 섞이면 다른 자료일 가능성이 커서 더 엄격하게 본다
 MIN_MARGIN = 0.15       # 1순위와 2순위 점수 차이
@@ -161,6 +161,33 @@ def _core(entity: str, has) -> bool:
     return False
 
 
+# 분류 범주(다섯 가지)에는 없지만 백엔드에 따로 등록 경로가 있는 자료. 추천하지 않고 어디로 가야 하는지만 알려 준다.
+_ROUTING_KEYS = ("routingid", "stepid", "공정순서", "공정코드")
+_ROUTING_WITH = ("runtime", "시간당처리량", "resourceid", "설비코드")
+_HOURS_KEYS = ("regularhours", "overtimehours", "가용시간", "잔업한도")
+_LIMIT_KEYS = ("limitqty", "최대생산수량", "생산한도")
+_RESOURCE_KEYS = ("resourceid", "설비코드")
+_RESOURCE_WITH = ("resourcename", "parallelunits", "설비명", "대수")
+
+
+def _other_route(names: list[str]) -> str | None:
+    """설비 능력·라우팅 자료로 보이면 안내 문구를, 아니면 None 을 돌려준다."""
+    def any_in(keys):
+        return any(k in n for n in names for k in keys)
+
+    if any_in(_ROUTING_KEYS) and any_in(_ROUTING_WITH):
+        kind, where = "공정 순서(라우팅)", "라우팅"
+    elif any_in(_HOURS_KEYS):
+        kind, where = "설비·인력 가용시간", "설비 능력(CAPA)"
+    elif any_in(_LIMIT_KEYS):
+        kind, where = "생산 수량 한도", "설비 능력(CAPA)"
+    elif any_in(_RESOURCE_KEYS) and any_in(_RESOURCE_WITH):
+        kind, where = "설비·자원 목록", "설비 능력(CAPA)"
+    else:
+        return None
+    return f"{kind} 자료로 보입니다. 자동 추천 대상(제품, 자재, BOM, 재고, 월 수요)이 아니므로 {where} 등록에서 유형을 직접 선택해 주세요."
+
+
 def classify_sheet(name: str | None, columns: list[str], sample_rows: list[list[str | None]]) -> SheetResult:
     header, recovered = _find_header(columns, sample_rows)
     names, found = _groups_of(header)
@@ -209,6 +236,8 @@ def classify_sheet(name: str | None, columns: list[str], sample_rows: list[list[
         demand_like = sum(1 for n in judged if n in month_headers or any(n in GROUPS[g] for g in VOCAB["monthly_demand"]))
         result.guidance_score = round(demand_like / len(judged), 3)
         result.reasons.append(result.guidance)
+    elif (route := _other_route(names)) is not None:
+        result.reasons.append(route)
     elif not ranked:
         if has("g_code") and generic >= MIN_COVERAGE * len(judged):
             result.reasons.append("품목 코드·이름만 있어 제품인지 자재인지 열 이름으로는 구분할 수 없습니다.")
