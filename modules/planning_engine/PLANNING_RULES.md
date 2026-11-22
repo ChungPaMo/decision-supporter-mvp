@@ -1,14 +1,15 @@
-# 계획 엔진 계산 규칙서 v0.3 (초안, 2026-11-15)
+# 계획 엔진 계산 규칙서 v0.4 (초안, 2026-11-22)
 
 계획 엔진(`engine.planning.run`)과 손계산 정답이 **똑같이** 따르는 계산 규칙이다. 손계산 정답은 이 문서만 보고 엔진 코드와 따로 만든다.
 기준: [엔진 계약 v0.2 §6](../../docs/engine_forecast_plan_contract.md)과 출력 계약 `contracts/interfaces/planning.py`(PlanningOutput). 바꾼 점은 §9에 모았다.
+이 문서는 **희원의 계산 제안**이다. 공통 계약(기간·입고 예정·What-if 키·정책 버전)은 김대영 검토 후 확정된다([계약 요청](CONTRACT_REQUESTS.md)).
 
 ## 0. 한눈에 보기
 
 ```
 예측(P50/P80) ─→ ① 목표 생산량 ─→ ② 설비·수량 한도 맞추기 ─→ ③ 재고 따라가기 ─→ ④ 자재 소요 ─→ ⑤ 판정
-                  (수요+안전재고   (넘치면 앞 달로 미리 생산,   (결품 확인)       (BOM 전개,      (계획안별
-                   −재고)           못 미루면 뒤 달에 보충)                        재고+입고 예정)   가능/불가능)
+                  (수요+안전재고   (넘치면 앞 달로 미리 생산,   (결품 확인)       (월별 MRP 표,   (계획안별
+                   −재고)           못 미루면 뒤 달에 보충)                        발주 필요량)     가능/불가능)
 ```
 
 세 계획안은 같은 계산을 쓰고 **두 가지만** 다르다.
@@ -19,28 +20,30 @@
 | 안정형 | `STABLE` | STABLE | P80 | 정규 + 잔업 한도 |
 | 비용절감형 | `COST_SAVING` | COST_SAVING | P50 | 정규만 |
 
-비용절감형은 "잔업비 0, 대신 결품을 감수"하는 안이다(희원 결정 2026-11-16). 충파모 데이터처럼 절단기가 빠듯하면 이 안은 결품 때문에 `INFEASIBLE`이 되는 것이 정상이며, 화면·설명에는 결품 수량과 원인 자원을 함께 보여준다. "안전재고를 쌓지 않는 안"(잔업 허용, 재고 최소)도 검토했지만 기준형과 차이가 작아(잔업 약 14% 감소) 채택하지 않았다.
+- 비용절감형은 "잔업비 0, 대신 결품을 감수"하는 안이다(희원 결정 2026-11-16). 충파모 데이터처럼 절단기가 빠듯하면 이 안은 결품 때문에 `INFEASIBLE`이 되는 것이 정상이며, 화면·설명에는 결품 수량과 원인 자원을 함께 보여준다. "안전재고를 쌓지 않는 안"(잔업 허용, 재고 최소)도 검토했지만 기준형과 차이가 작아(잔업 약 14% 감소) 채택하지 않았다.
+- 안정형은 P80만 쓴다. P90은 입력에 보존되지만 이번 범위에서 쓰지 않는다.
+- plan_id는 위 세 문자열로 고정하고, 출력 순서도 BASELINE → STABLE → COST_SAVING으로 고정한다. policy_ref는 `PLANNING_RULES-v0.4`.
 
 ## 1. 기호와 입력
 
 | 기호 | 뜻 | 입력 위치 |
 |---|---|---|
-| p, m, r, k | 제품, 월(1·2·3 = 2027-01·02·03), 자원(설비·작업자), 자재 | |
+| p, m, r, k | 제품, 월(1·2·3 = 시작 월부터 3개월), 자원(설비·작업자), 자재 | |
 | q(p,m) | 그 안이 쓰는 예측 분위수 (P50 또는 P80) | ForecastFact |
 | SS(p) | 제품 안전재고 | ProductFact |
-| I₀(p) | 기준일 가용재고 = 현재고 − 할당재고 | InventoryFact |
-| h(p,r) | 제품 1개를 만들 때 자원 r을 쓰는 시간 = Σ run_time ÷ reference_qty (공정표의 해당 자원 행 모두 합산, 작업자 인시 포함) | RoutingStep, resource_requirements |
+| I₀(p) | 기준일 가용재고 = 현재고 − 할당재고 | InventoryFact (품목별로 기준일 이전 가장 최신 시점 1개) |
+| h(p,r) | 제품 1개를 만들 때 자원 r을 쓰는 시간 = Σ run_time ÷ reference_qty (공정표의 해당 자원 행 모두 합산, 작업자 인시 포함, `min`은 ÷60으로 h 환산) | RoutingStep, resource_requirements |
 | REG(r,m), OT(r,m) | 정규 가용시간, 잔업 한도 | HoursBudget |
 | LIM(p,m) | 월 생산수량 한도 (없으면 무한) | QuantityLimit |
 | b(p,k) | 제품 1개당 자재 소요 = 소요량 ÷ 기준수량 × (1 + 스크랩률) | BOM (그 달 1일에 유효한 APPROVED·활성 BOM 1개) |
-| M₀(k), SS(k) | 자재 가용재고, 자재 안전재고 | InventoryFact, MaterialFact |
-| R(k,m) | 입고예정일이 m월 말 이전인 미입고 발주 수량 합 (누적) | 입고 예정 (§9 계약 추가 요청) |
+| M₀(k), SS(k) | 자재 가용재고(현재고 − 할당재고), 자재 안전재고 | InventoryFact, MaterialFact |
+| SR(k,m) | m월에 들어오기로 한 입고 예정 수량 (§5.1) | 입고 예정 (계약 추가 요청 C02) |
 
-계산은 모두 **정확한 분수**로 하고, 아래에 적힌 곳에서만 정수로 자른다. 소수 출력은 10진 문자열이다.
+계산은 모두 **정확한 분수**로 하고, 아래에 적힌 곳에서만 정수로 자른다. 소수 출력은 10진 문자열(소수 4자리 이하, 끝의 0 제거)이다.
 
 ## 2. ① 수요와 목표 생산량
 
-1. **계획 수요** d(p,m) = ⌈ q(p,m) × 수요배수 ⌉ (정수 올림). 수요배수는 기본 1, What-if에서만 바뀐다.
+1. **계획 수요** d(p,m) = ⌈ q(p,m) × 수요배수(p) ⌉ (곱한 뒤 정수 올림). 수요배수는 기본 1, What-if에서만 바뀐다.
 2. **목표 생산량** T(p,m): 계획대로 만들어진다고 가정한 재고 J로 차례대로 구한다.
    - J₀ = I₀
    - T(p,m) = max(0, d(p,m) + SS(p) − J(m−1))
@@ -89,15 +92,26 @@ U(p) > 0이면 m = 2, 3 순서로 그 달 남은 시간에 늦게라도 만든�
 - **I(p,m) < 0이면 결품.** 결품 수량 = −I(p,m), 다음 달로 그대로 이월된다(음수 재고가 남음).
 - 사용시간 USED(r,m) = Σₚ P(p,m) × h(p,r), 잔업시간 = max(0, USED − REG)
 
-## 5. ④ 자재 소요 (MRP)
+## 5. ④ 자재 소요 (월별 MRP 표)
 
-- 월 소요 N(k,m) = Σₚ P(p,m) × b(p,k)
-- 누적 소요 CN(k,m) = N(k,1) + … + N(k,m)
-- 누적 가용 AV(k,m) = M₀(k) + R(k,m) − SS(k)
-- 누적 부족 SH(k,m) = max(0, CN(k,m) − AV(k,m))
-- **그 달 부족(조달 필요량)** = SH(k,m) − SH(k,m−1)
+교과서식 MRP다. "부족하면 그달 발주해서 채운다"고 보고 다음 달로 넘어간다(희원 결정 2026-11-22). 모든 값이 0 이상이다.
 
-자재 부족은 생산량을 줄이지 않는다(발주하면 된다). 입고예정일은 월 단위로만 본다. 1/20 입고분은 1월 전체에 쓸 수 있다고 본다.
+| 줄 | 식 |
+|---|---|
+| 총소요 N(k,m) | Σₚ P(p,m) × b(p,k) |
+| 가용 AVL(k,m) | POH(k,m−1) + SR(k,m). POH(k,0) = M₀(k) |
+| **발주 필요량** NET(k,m) | max(0, N(k,m) + SS(k) − AVL(k,m)) |
+| 월말 재고 POH(k,m) | AVL(k,m) + NET(k,m) − N(k,m) (발주분이 그달 들어온다고 가정) |
+
+자재 부족은 생산량을 줄이지 않는다(발주하면 된다). 리드타임은 입력에 없으므로 "그달 발주해서 그달 받을 수 있는지"는 확인하지 않는다(`UNVERIFIED`).
+
+### 5.1 입고 예정 SR (희원 결정 2026-11-22)
+
+- **미입고 수량만** 센다. 일부 입고된 발주의 이미 들어온 양은 재고(M₀)에 들어 있다.
+- 입고예정일이 속한 **달 전체**에 쓸 수 있다고 본다. 1/20 입고분은 1월 초 며칠은 실제로 모자랄 수 있지만 월 단위 계획에서는 1월에 넣는다.
+- 입고예정일이 기준일 이전(납기 지남)이면 **1월 입고로 보고** warning `RECEIPT_OVERDUE`(input_refs에 발주번호).
+- 계획 기간 뒤에 들어오는 입고는 계산에 넣지 않는다.
+- 취소된 발주는 백엔드가 넘기지 않는다고 본다(승인 자료 기준).
 
 ## 6. ⑤ 판정 (ConstraintEvaluation)
 
@@ -105,45 +119,61 @@ U(p) > 0이면 m = 2, 3 순서로 그 달 남은 시간에 늦게라도 만든�
 |---|---|---|---|---|
 | `CAP-{r}-{YYYY-MM}` | 설비 `EQUIPMENT_HOURS`, 작업자 `WORK_HOURS` | HARD | CAP / USED (h, MACHINE_HOUR·PERSON_HOUR) | 항상 USED ≤ CAP → SATISFIED. 3.1에서 넘쳤던 달은 reason `CAPACITY_BINDING` |
 | `QTY-{p}-{YYYY-MM}` | `QUANTITY` | HARD | LIM / P (EA) | SATISFIED. 한도에 걸린 달은 `QUANTITY_LIMIT_BINDING` |
-| `DEM-{p}-{YYYY-MM}` | `OTHER` | HARD | d + 전월 결품 / 그달까지 공급 (EA) | I(p,m) < 0 → **VIOLATED** (`STOCKOUT`) |
+| `DEM-{p}-{YYYY-MM}` | `OTHER` | HARD | – | I(p,m) < 0 → **VIOLATED** (`STOCKOUT`), 아니면 SATISFIED |
 | `SS-{p}-{YYYY-MM}` | `SAFETY_STOCK` | SOFT | SS / I(p,m) | I < SS → VIOLATED (`BELOW_SAFETY_STOCK`) |
-| `MAT-{k}-{YYYY-MM}` | `MATERIAL` | HARD | AV / CN | 부족 > 0 → **UNVERIFIED** (`PROCUREMENT_REQUIRED`), 아니면 SATISFIED |
+| `MAT-{k}-{YYYY-MM}` | `MATERIAL` | HARD | AVL / N + SS(k) | NET > 0 → **UNVERIFIED** (`PROCUREMENT_REQUIRED`), 아니면 SATISFIED |
 
-**계획안 판정(feasibility)**: HARD 중 VIOLATED가 하나라도 있으면 `INFEASIBLE` → 아니고 UNVERIFIED가 있으면 `UNVERIFIED` → 나머지 `FEASIBLE`. SOFT 위반은 판정에 영향이 없다.
+**계획안 판정(feasibility)**
+1. HARD 중 VIOLATED가 하나라도 있으면 `INFEASIBLE`
+2. 아니고 HARD 중 UNVERIFIED가 있거나, 그 안의 unverified 목록이 비어 있지 않으면 `UNVERIFIED`
+3. 나머지 `FEASIBLE`
 
-`material_requirements`에는 자재·월마다 required = N(k,m), available = AV(k,m) − AV(k,m−1) (AV(k,0) = 0, 즉 1월은 재고 − 안전재고 + 1월 입고, 2월부터는 그달 입고), shortage = 그 달 부족을 낸다.
+SOFT 위반(안전재고 미달)은 판정을 바꾸지 않고 표시만 한다. **엔진의 feasibility는 계산 결과일 뿐이고, 승인해도 되는지는 백엔드 승인 정책이 따로 정한다**(희원 결정 2026-11-22). 결품이 있는데 FEASIBLE인 모순 출력은 계약 검사에서 막아 달라고 요청한다(C06).
 
-## 7. 입력이 빠지거나 틀렸을 때
+`material_requirements`에는 자재·월마다 required = N(k,m), available = AVL(k,m), shortage = NET(k,m)을 낸다.
+
+## 7. 입력이 빠지거나 틀렸을 때 (희원 결정 2026-11-22)
 
 | 상황 | 처리 |
 |---|---|
-| 제품의 공정표(라우팅)가 없음 | 그 제품은 3장을 건너뛰고 P = T. 그 제품이 어느 자원을 쓰는지 모르므로 **모든 CAP**을 `UNVERIFIED` + application_state `MISSING_INPUT`(used = null), unverified에 `ROUTING_MISSING` → 계획안 `UNVERIFIED` |
+| 계획할 제품의 예측이 없음 | 계산하지 않음. status `INPUT_INVALID`, error `FORECAST_MISSING` (백엔드 provider의 409와 같은 기준) |
+| 품목의 재고 행이 없음 | 0으로 계산. warning `INVENTORY_MISSING` + 모든 안의 unverified에 같은 코드 → `UNVERIFIED` |
+| 제품의 공정표(라우팅)가 없음 | 그 제품은 3장을 건너뛰고 P = T. 어느 자원을 쓰는지 모르므로 **모든 CAP**을 `UNVERIFIED` + application_state `MISSING_INPUT`(used = null), unverified에 `ROUTING_MISSING` |
 | 어떤 자원·월의 가용시간이 없음 | 그 자원은 한도 없음으로 보고 CAP-{r}-{m}을 `UNVERIFIED`/`MISSING_INPUT` |
-| BOM이 없거나 그 달 유효 BOM이 2개 이상 | 자재 소요 계산 제외, `BOM_MISSING` / `BOM_VERSION_AMBIGUOUS` 경고, MAT `UNVERIFIED` |
-| 제품의 예측이 없음 | 계획에서 제외하고 `FORECAST_MISSING` 경고 → status `PARTIAL` |
-| 단위가 서로 안 맞음(예: 수요 EA, 재고 kg) | 계산하지 않음, status `INPUT_INVALID`, error `UNIT_MISMATCH` |
+| BOM이 없거나 그 달 유효 BOM이 2개 이상 | 그 제품의 자재 소요 계산 제외, `BOM_MISSING` / `BOM_VERSION_AMBIGUOUS` 경고, 관련 MAT `UNVERIFIED` |
+| 단위가 서로 안 맞음(예: 수요 EA, 재고 kg) | 계산하지 않음. status `INPUT_INVALID`, error `UNIT_MISMATCH` |
+| **다단계 BOM**(구성품이 제품), **ELAPSED 시간 기준**, **GROSS 가용시간** | 계산이 틀려지므로 계산하지 않음. status `UNSUPPORTED`, error `BOM_MULTILEVEL_UNSUPPORTED` / `TIME_BASIS_UNSUPPORTED` / `AVAILABILITY_BASIS_UNSUPPORTED` |
+| **셋업 시간**, **대체 설비 그룹** 값이 있음 | 반영하지 않고 계산. 모든 안의 unverified에 `SETUP_TIME_IGNORED` / `ALTERNATIVE_RESOURCE_IGNORED` → `UNVERIFIED` |
 
-## 8. What-if
+없는 값을 0이나 무한으로 채운 경우에는 항상 경고·unverified 코드와 input_refs로 근거를 남긴다.
 
-같은 예측 결과로 계획만 다시 계산한다. 원본 입력은 바꾸지 않는다.
+## 8. What-if (희원 결정 2026-11-22)
 
-| 변경 | 적용 위치 |
-|---|---|
-| 수요배수 (예: 1.2) | §2-1의 수요배수 |
-| 잔업 한도 변경 | OT(r,m) |
-| 재고 수량 변경 | I₀ 또는 M₀ |
-| 입고 예정 취소·변경 | R(k,m) |
+같은 예측 결과로 **세 안을 모두** 다시 계산한다. 원본 승인 입력과 기준 결과는 바꾸지 않는다.
 
-## 9. 계약 v0.2에서 바꾼 점 (희원 결정 2026-11-15)
-
-| 항목 | v0.2 | v0.3 (이 문서) | 확인 |
+| 변경 | 범위 | 적용 위치 | 시연 장면 |
 |---|---|---|---|
-| 계획 기간 | target_month 한 달 | **3개월** (target_month = 시작 월) | 대영 님 확인 필요 |
-| 선행생산 | 비용절감형만 | **세 안 모두** (잔업 허용 안은 잔업 먼저) | |
-| 공유 자원 배분 | product_id 순 | **같은 비율로 축소** (§3.1) | |
-| 입고 예정 | 데이터 없음 → 무시 | **자재 판정에 반영** | PlanningInput에 칸 추가 요청 |
-| DEM dimension | `DUE_DATE` | `OTHER` (출력 계약에 DUE_DATE가 없음) | |
-| KPI | 안별 kpis[] | 출력 계약에 칸이 없어 이번 범위에서 제외 | 필요하면 추후 요청 |
+| 수요 배수 | 전체 또는 제품별 | §2-1 수요배수(p) | "수요가 20% 늘면?" |
+| 잔업 한도 | 자원·월별 (절대값) | OT(r,m) | "2월에 특근하면?" |
+| 입고 예정 취소·수량 변경 | 발주번호별 | SR(k,m) | "1/20 원단이 안 들어오면?" |
+
+재고 수량 변경, 생산량 직접 지정은 이번 범위에서 뺐다(생산량 직접 지정은 결과가 "사람이 만든 안 1개"가 되어 출력 규칙이 더 필요함).
+
+## 9. 바뀐 점
+
+| 항목 | 계약 v0.2 | v0.3 (2026-11-15) | v0.4 (2026-11-22) | 확인 |
+|---|---|---|---|---|
+| 계획 기간 | target_month 한 달 | **3개월** (target_month = 시작 월) | 같음 | C01 대영 확인 필요 |
+| 선행생산 | 비용절감형만 | **세 안 모두** (잔업 허용 안은 잔업 먼저) | 같음 | C04 |
+| 공유 자원 배분 | product_id 순 | **같은 비율로 축소** | 같음 | C04 |
+| 입고 예정 | 무시 | 자재 판정에 반영 | **미입고 수량·달 전체·납기 지남은 1월+경고** | C02 칸 추가 요청 |
+| 자재 결과 | 누적 부족 증가분 | 누적 부족 증가분(음수 가능) | **월별 MRP 표: 발주 필요량, 음수 없음** | C05 |
+| 판정 | SOFT 무시 | SOFT 무시 | **unverified 목록도 UNVERIFIED로, 승인은 백엔드** | C06 |
+| 예측 누락 | – | 빼고 PARTIAL | **INPUT_INVALID** | C07 |
+| 재고 누락·미지원 기능 | – | – | **0+경고 / UNSUPPORTED·경고 구분** | C08 |
+| What-if | 배수·재고·입고 | 배수·잔업·재고·입고 | **배수·잔업(월별)·입고, 세 안 모두 재계산** | C03 |
+| DEM dimension | `DUE_DATE` | `OTHER` | 같음 | |
+| KPI | 안별 kpis[] | 범위 제외 | 같음 | C09 |
 
 ## 10. 작은 예시
 
@@ -159,3 +189,12 @@ U(p) > 0이면 m = 2, 3 순서로 그 달 남은 시간에 늦게라도 만든�
 | ③ 보충 | – | 2월 남은 시간 0 → 보충 없음 |
 | 재고 I | 30 | 30 + 110 − 150 = **−10 (결품 10)** |
 | 판정 | DEM-A-01 SATISFIED | DEM-A-02 **VIOLATED** → 계획안 INFEASIBLE |
+
+자재 MRP 표 예시(원단 재고 150, 안전재고 20, 매달 210 사용, 3월 입고 400):
+
+| | 1월 | 2월 | 3월 |
+|---|---|---|---|
+| 총소요 N | 210 | 210 | 210 |
+| 가용 AVL | 150 | 20 | 20 + 400 = 420 |
+| 발주 필요량 NET | 80 | 210 | 0 |
+| 월말 재고 POH | 20 | 20 | 210 |

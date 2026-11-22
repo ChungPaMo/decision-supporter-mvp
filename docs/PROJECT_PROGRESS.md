@@ -1,5 +1,11 @@
 # 충파모 프로젝트 진행상황
 
+최종 확인 **2026-11-22 (KST), 이희원 작업 PC**. 작업 시작 `main`은 [`91f9cc9`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/91f9cc9953f5bb6a2ceb9472cfa275ccd484fe18)다. 이번 변경은 `docs: planning rules v0.4 and contract answers for planning engine` Commit과 [누적 이력의 마지막 항목](DEVELOPMENT_CHANGELOG.md)으로 식별한다.
+
+이번에는 이희원이 계획 엔진 계산 규칙을 [PLANNING_RULES v0.4](../modules/planning_engine/PLANNING_RULES.md)로 갱신하고 통합 준비 보고서 §4·§6에 [답변·계약 요청](../modules/planning_engine/CONTRACT_REQUESTS.md)을 작성했다. 문서·손계산 정답 변경이며 **계획 엔진 계산은 여전히 미구현**(`AVAILABLE=False`)이다. 아래 11/18 이전 기록은 해당 시점 결과다.
+
+2026-11-18 기준 김대영 작업: 시작 `main` [`231bcb2`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/231bcb262c98e764349fc54e5c3c6706e083f46f), `feat: diagnose approved planning inputs without running the engine`.
+
 최종 확인 **2026-11-18 (KST), 보조 개발 PC**. 작업 시작 `main`은 [`231bcb2`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/231bcb262c98e764349fc54e5c3c6706e083f46f)다. 이번 변경은 `feat: diagnose approved planning inputs without running the engine` Commit과 [누적 이력의 마지막 항목](DEVELOPMENT_CHANGELOG.md)으로 식별한다.
 
 이번 B01~B03에서 단일 월 `POST /planning-inputs/preview`, 공통 참조·출처·단위·기간 검증과 계약 협의 명세를 추가했다. **비DB pytest 978 passed / 0 failed / 66 skipped / 6 deselected**. 저장 경계는 대역이며 새 진단 경로의 실제 SQL 검증은 기존 개발 PC의 후속이다. [진단 검증·화면 인계](PLANNING_INPUT_DIAGNOSTICS_VERIFICATION.md)
@@ -39,7 +45,7 @@
 | PostgreSQL·데이터셋 격리 | 신규v2의 로컬FK·UUID격리·불변/지연트리거 실제 검증. 보관dataset 포함3스키마·기존81테이블 보존 probe 후 rollback. 개발0009도 별도승인·백업확인 후 적용 | 김대영 | 개발/회귀 현재0009. 기존자료와 연결된 볼륨은 보존, downgrade2개 미실행. dataset_id는 인증권한 아님. [최신 근거](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md) |
 | 수요예측 | 단일 엔진/계약 유지. 실제 승인된 변환 수요498행→예측OK/27행 저장·재조회·P50≤P80≤P90, 미승인 probe 제외 확인 | 이희원(엔진), 김대영(API), 정마나미(화면) | 합성 회귀 결과를 실제 기업 적합성으로 일반화하지 않음. [이번 실DB 검증](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md) |
 | 계획 입력 진단 | 기존 승인 입력 provider를 재사용한 단일 월 진단 API, 출처 대조·참조/단위/기간 검증, 정책 미확인·엔진 가용성 표시. TestClient·SQL 대역 검증 완료 | 김대영(API), 정마나미(화면 연계) | 기존 개발 PC에서 신규 읽기 경로 검증. 화면 연계에 응답 상태·오류 계약 제공. [진단 검증](PLANNING_INPUT_DIAGNOSTICS_VERIFICATION.md) |
-| 생산계획·제약 계산 | 공식 승인자료→단일 월 DTO 실제 조립 확인. **`engine.planning.AVAILABLE=False`/NotImplementedError, MPS/RCCP/MRP/What-if 계산 미구현**, API501·실제 계획0건. HC-01~12는 손계산이며 모듈10개 시험은 구조/경계 검사 | 이희원(계산), 김대영(계약·저장) | 단일 월↔3개월·예정 입고·What-if·음수 자재 의미·HARD/SOFT 판정 차이 해소 필요. 이력7테이블·어댑터·검토/출력 기반은 재구현 불필요. 정식 APPROVE501 유지. [상세·담당 작업](PLANNING_ENGINE_INTEGRATION_READINESS.md), [저장 기반](PLAN_EXECUTION_PERSISTENCE.md) |
+| 생산계획·제약 계산 | 공식 승인자료→단일 월 DTO 실제 조립 확인. **`engine.planning.AVAILABLE=False`/NotImplementedError, MPS/RCCP/MRP/What-if 계산 미구현**, API501·실제 계획0건. 계산 규칙 v0.4(11/22: 월별 MRP로 자재 음수 제거, 예측 누락 INPUT_INVALID, 재고 누락·미지원 기능 처리, What-if 3종·세 안 재계산, 판정/승인 분리)와 HC-01~12 손계산(HC-09 v0.4 갱신)만 존재. 모듈 시험은 구조/경계 검사 | 이희원(계산), 김대영(계약·저장) | 희원 측 결정은 [계약 답변](../modules/planning_engine/CONTRACT_REQUESTS.md)에 기록. C01 기간·C02 입고 예정·C03 What-if 키·C06 모순 출력 검사는 김대영 검토 필요. 이력7테이블·어댑터·검토/출력 기반은 재구현 불필요. 정식 APPROVE501 유지. [상세·담당 작업](PLANNING_ENGINE_INTEGRATION_READINESS.md), [저장 기반](PLAN_EXECUTION_PERSISTENCE.md) |
 | 프론트엔드 | 데이터셋 선택·배치 등록/검토/재검증/승인·분류 패널·예측 조회 및 별도 DEMO 화면 구현. 기존 비DB 브라우저 검사 기록과 11/16 type-check/build 통과 기록 | 정마나미 | 새 profile/Top-3/변환 정책·이력 API 화면 연결, CAPA/Routing 입력 확장 필요. `/ingest/` dataset scope·오래된 응답 보호 포함. [API 인계](INGESTION_UI_API_HANDOFF.md), [화면 변경 요청](INGESTION_UI_CHANGE_REQUEST.md) |
 | 전체 E2E | 공식14파일 SHA와 입력·저장·승인·예측 **TestClient+실제PostgreSQL** 경로 검증 완료. 메모리/SQL 대역으로 저장 성공을 대체하지 않음 | 김대영(통합), 각 담당 | 신규입력 전체브라우저·실제계획계산을 포함한 제조전체E2E는 미완료. [이번 범위](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md) |
 
@@ -57,7 +63,7 @@
 1. **김대영:** 개발0009 적용/기존자료 보존과 회귀DB의 원자성·불변성·동시성·격리·공식자료→승인→예측을 검증했다. 기존공식자료를 개발DB에 중복등록하지 않는다. 백업 실제복구리허설과 보존기간 정책은 후속이며 다음 파괴적 fixture도 새 범위승인이 필요하다.
 2. **정마나미:** [화면 요청 P0/P1](INGESTION_UI_CHANGE_REQUEST.md)에 따라 기존 화면을 재사용해 신규 API를 연결한다. 기존 승인 UI를 중복 구현하지 않는다. 기존 npm 취약점 2건(Vite/esbuild)도 담당 영역에서 검토한다.
 3. **김대영, 기존 개발 PC:** B01~B03 비DB 구현·검증을 완료했다. 공식 자료의 기존 저장 예측으로 진단 API를 읽기 전용 검증하고 LEGACY 출처·교차 데이터셋 차단·입력 지문·실행 수 보존을 대조한다. 나미 화면 연계와 B09 전체 인수 검증은 후속이다. [실DB 확인 항목·화면 인계](PLANNING_INPUT_DIAGNOSTICS_VERIFICATION.md)
-4. **이희원·김대영 의존 작업:** 계획 엔진 자체는 미구현이다. 희원 v0.3의3개월·공유자원 배분·입고·What-if·부족량/판정 의미를 합의한 뒤 김대영이 DTO/기간별 입력/정책 버전/실엔진 SQL 검증을 확장한다. 실제 계산과 HC 정답 대비 자동 테스트는 희원 담당이다. 정식 승인은 별도 인증/정책 확정 후 연결한다.
+4. **이희원·김대영 의존 작업:** 계획 엔진 자체는 미구현이다. 희원이 v0.4와 [계약 답변](../modules/planning_engine/CONTRACT_REQUESTS.md)으로 3개월·공유자원 배분·입고·What-if·부족량/판정 의미를 제안했다(11/22). 김대영 검토·합의 후 김대영이 DTO/기간별 입력/정책 버전/실엔진 SQL 검증을 확장한다. 실제 계산과 HC 정답 대비 자동 테스트는 희원 담당이다. 정식 승인은 별도 인증/정책 확정 후 연결한다.
 5. **통합/화면 담당:** DB 및 화면 연결 후 공식 자료의 전체 브라우저 E2E를 수행한다. 기존 FE client의 영구 계획 메서드를 재사용하고 LIVE Preview와 이력·저장·승인 상태를 구분한다. 제조 전체 E2E는 실제 계획 엔진도 필요하다.
 6. **팀 검토:** 실제 기업 데이터의 이용 범위·단위/거래 상태·매핑 모호성·변환 정책을 검토한다. 합성 데이터 성과를 기업 데이터 성능으로 일반화하지 않는다. 현재 LLM/Upstage 호출은 하지 않으며 후속 입력/출력 계약만 [추천 보고서](MAPPING_RECOMMENDATION_MVP_20261116.md)에 정리돼 있다.
 

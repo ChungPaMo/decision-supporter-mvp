@@ -1,6 +1,6 @@
 # 작은 손계산 케이스 풀이 (SYNTHETIC)
 
-규칙: [PLANNING_RULES.md](../../PLANNING_RULES.md) v0.3. 입력과 정답은 [small_cases.json](small_cases.json)에 있다.
+규칙: [PLANNING_RULES.md](../../PLANNING_RULES.md) v0.4. 입력과 정답은 [small_cases.json](small_cases.json)에 있다.
 모두 손으로 풀 수 있는 크기다. 케이스마다 규칙 하나를 확인한다. 엔진이 틀리면 어느 규칙이 틀렸는지 바로 알 수 있게 하려는 것이다.
 
 | 케이스 | 확인하는 규칙 | 판정 |
@@ -13,7 +13,7 @@
 | HC-06 | 잔업 허용 안은 그달 잔업 먼저 | FEASIBLE |
 | HC-07 | 같은 입력, 잔업 없는 안 → 결품 | INFEASIBLE |
 | HC-08 | 월 생산수량 한도 | FEASIBLE |
-| HC-09 | BOM 전개·자재 부족·입고 예정 | UNVERIFIED |
+| HC-09 | BOM 전개·월별 MRP 표·입고 예정 | UNVERIFIED |
 | HC-10 | What-if 수요배수 | 기준 FEASIBLE → INFEASIBLE |
 | HC-11 | 라우팅 빠짐 | UNVERIFIED |
 | HC-12 | 단위 오류 | INPUT_INVALID |
@@ -130,16 +130,16 @@ A 생산 100 / 100 (설비 넉넉).
 
 | K1 | 1월 | 2월 |
 |---|---|---|
-| 월 소요 N = 100 × 2.1 | 210 | 210 |
-| 누적 소요 CN | 210 | 420 |
-| 누적 가용 AV = 150 + 입고 − 20 | 130 | 230 |
-| 누적 부족 SH | 80 | 190 |
-| **그달 부족** | **80** | **110** |
-| available (그달 새로 생긴 가용) | 130 | 100 |
-| 판정 | UNVERIFIED | UNVERIFIED |
+| 총소요 N = 100 × 2.1 | 210 | 210 |
+| 가용 AVL = 월초 재고 + 그달 입고 | 150 | 20 + 100 = 120 |
+| **발주 필요량 NET = max(0, N + 20 − AVL)** | 210 + 20 − 150 = **80** | 210 + 20 − 120 = **110** |
+| 월말 재고 POH = AVL + NET − N | 20 | 20 |
+| 판정 (limit = AVL, used = N + 안전재고) | 150 / 230 UNVERIFIED | 120 / 230 UNVERIFIED |
 
-K2: 누적 소요 150 / 300 ≤ 400 → 부족 0, SATISFIED.
+K2: 가용 400 → 소요 150 → 월말 250, 2월 가용 250 → 소요 150 → 월말 100. 발주 필요 0, SATISFIED.
 결품은 없고 HARD 중 UNVERIFIED만 있음 → **UNVERIFIED** (조달 필요).
+
+v0.3에서는 가용량에서 안전재고를 미리 빼고 누적으로 셌다(130/100). v0.4는 교과서식 월별 MRP라 가용량 = 월초 재고 + 그달 입고다. 발주 필요량 숫자(80, 110)는 같다.
 
 ## HC-10 What-if 수요배수 1.2
 

@@ -451,3 +451,32 @@
 
 **관련 자료**
 - [시작 Commit 231bcb2](https://github.com/ChungPaMo/decision-supporter-mvp/commit/231bcb262c98e764349fc54e5c3c6706e083f46f), [진단 검증·인수 명세](PLANNING_INPUT_DIAGNOSTICS_VERIFICATION.md), [현황](PROJECT_PROGRESS.md), [통합 계약](INTEGRATION_CONTRACT.md).
+
+### 2026-11-22 — 계획 엔진 계산 규칙 v0.4·통합 준비 보고서 답변 (이희원)
+
+**Git**
+- 시작 Commit `91f9cc9953f5bb6a2ceb9472cfa275ccd484fe18` (fetch 후 fast-forward).
+- 완료 Commit은 고유 제목 `docs: planning rules v0.4 and contract answers for planning engine`으로 조회한다. `git log main -1 --format=%H --fixed-strings --grep='docs: planning rules v0.4 and contract answers for planning engine'`
+- 브랜치 `main`.
+
+**작업 목적**
+- [통합 준비 보고서](PLANNING_ENGINE_INTEGRATION_READINESS.md) §4 C01~C11과 §6 희원 확인 9가지에 답하고, 계산 규칙의 구멍(C05 자재 음수 등)을 계산 구현 전에 막는다.
+
+**구현 내용**
+- `modules/planning_engine/PLANNING_RULES.md` v0.4: 자재 결과를 교과서식 월별 MRP(required = 그달 총소요, available = 월초 재고 + 그달 입고, shortage = 그달 발주 필요량, 음수 없음)로 변경. 입고 예정은 미입고 수량·입고 달 전체 사용·납기 지남은 1월 + `RECEIPT_OVERDUE`. 예측 누락 `INPUT_INVALID`, 재고 누락 0 + `INVENTORY_MISSING`·UNVERIFIED, 다단계 BOM·ELAPSED·GROSS `UNSUPPORTED`, 셋업·대체 설비는 무시 + UNVERIFIED. What-if는 수요 배수·잔업 한도(자원·월)·입고 변경 3종이며 세 안 모두 재계산. feasibility는 계산 판정이고 승인 여부는 백엔드 정책.
+- `modules/planning_engine/CONTRACT_REQUESTS.md`: §6 답변과 C01~C11 입장·요청(기간 필드, 입고 예정 필드, 월별 What-if 키, FEASIBLE+HARD VIOLATED 거부 검사).
+- `tests/hand_calc/small_cases.json`·`SMALL_CASES.md`: HC-09를 v0.4 MRP 의미로 갱신(가용량 150/120, 발주 필요량 80/110 유지).
+
+**검증 결과**
+- 2026-11-22 이희원 PC, 루트 `.venv`: `pytest modules/planning_engine` **34 passed / 0 failed**. 규칙서만 보고 별도 작성한 임시 계산 스크립트로 HC-01~12 재계산 **12/12 일치**. JSON 파싱·`git diff --check` 통과.
+- 계획 엔진 계산 코드는 없으므로 엔진 결과와 정답 비교는 미실행. Docker·DB·브라우저 미실행.
+
+**기술적 결정**
+- 각 결정은 희원이 추천안 중 선택(자재 MRP, 입고 단순+경고, 예측 누락 거절, 재고 누락 0+경고, 미지원은 틀리면 거절·조금이면 경고, What-if 3종·세 안 재계산, 엔진 판정/승인 분리). 누적 부족 방식, 엄격한 입고 처리, 예측 누락 PARTIAL, 생산량 직접 지정은 채택하지 않음.
+
+**남은 문제**
+- 김대영: C01 기간·C02 입고 예정·C03 What-if 키·C04 정책 버전·C06 모순 출력 검사 검토.
+- 이희원: HC 보강(입고·재고 누락·미지원 케이스), 계산 코어 구현과 HC 자동 비교 테스트, 충파모 9제품×3개월×3안 정답 비교, What-if. 계약 확정 전 `AVAILABLE=False` 유지.
+
+**관련 자료**
+- [계산 규칙 v0.4](../modules/planning_engine/PLANNING_RULES.md), [계약 답변](../modules/planning_engine/CONTRACT_REQUESTS.md), [작은 손계산](../modules/planning_engine/tests/hand_calc/SMALL_CASES.md), [통합 준비 보고서](PLANNING_ENGINE_INTEGRATION_READINESS.md).

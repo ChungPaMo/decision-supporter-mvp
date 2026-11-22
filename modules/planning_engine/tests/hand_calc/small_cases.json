@@ -1,6 +1,6 @@
 {
-  "description": "계획 엔진 작은 손계산 케이스 (SYNTHETIC). 규칙: modules/planning_engine/PLANNING_RULES.md v0.3. 풀이: SMALL_CASES.md. 엔진 코드와 독립적으로 손으로 계산했다.",
-  "rules_version": "PLANNING_RULES v0.3",
+  "description": "계획 엔진 작은 손계산 케이스 (SYNTHETIC). 규칙: modules/planning_engine/PLANNING_RULES.md v0.4. 풀이: SMALL_CASES.md. 엔진 코드와 독립적으로 손으로 계산했다.",
+  "rules_version": "PLANNING_RULES v0.4",
   "conventions": {
     "demand": "선택된 분위수 값(10진 문자열). 계획 수요 = ceil(값 x 수요배수)",
     "routing": "제품 -> 자원 -> {run_time, reference_qty}. 1개당 시간 = run_time / reference_qty",
@@ -267,7 +267,7 @@
     {
       "case_id": "HC-09",
       "title": "BOM 전개와 자재 부족: 손실률·기준수량·안전재고·입고 예정",
-      "rule": "§5 MRP, MAT은 UNVERIFIED",
+      "rule": "§5 월별 MRP 표, MAT은 UNVERIFIED",
       "input": {
         "months": ["2027-01", "2027-02"],
         "ot_allowed": false,
@@ -290,14 +290,14 @@
         "production": {"A": [100, 100]},
         "per_unit": {"K1": "2.1", "K2": "1.5"},
         "material_requirements": {
-          "K1": {"required": ["210", "210"], "available": ["130", "100"], "shortage": ["80", "110"]},
-          "K2": {"required": ["150", "150"], "available": ["400", "0"], "shortage": ["0", "0"]}
+          "K1": {"required": ["210", "210"], "available": ["150", "120"], "shortage": ["80", "110"], "end_on_hand": ["20", "20"]},
+          "K2": {"required": ["150", "150"], "available": ["400", "250"], "shortage": ["0", "0"], "end_on_hand": ["250", "100"]}
         },
         "evaluations": [
-          {"constraint_id": "MAT-K1-2027-01", "status": "UNVERIFIED", "limit_value": "130", "used_value": "210", "reason_codes": ["PROCUREMENT_REQUIRED"]},
-          {"constraint_id": "MAT-K1-2027-02", "status": "UNVERIFIED", "limit_value": "230", "used_value": "420", "reason_codes": ["PROCUREMENT_REQUIRED"]},
+          {"constraint_id": "MAT-K1-2027-01", "status": "UNVERIFIED", "limit_value": "150", "used_value": "230", "reason_codes": ["PROCUREMENT_REQUIRED"]},
+          {"constraint_id": "MAT-K1-2027-02", "status": "UNVERIFIED", "limit_value": "120", "used_value": "230", "reason_codes": ["PROCUREMENT_REQUIRED"]},
           {"constraint_id": "MAT-K2-2027-01", "status": "SATISFIED", "limit_value": "400", "used_value": "150"},
-          {"constraint_id": "MAT-K2-2027-02", "status": "SATISFIED", "limit_value": "400", "used_value": "300"},
+          {"constraint_id": "MAT-K2-2027-02", "status": "SATISFIED", "limit_value": "250", "used_value": "150"},
           {"constraint_id": "DEM-A-2027-01", "status": "SATISFIED"},
           {"constraint_id": "DEM-A-2027-02", "status": "SATISFIED"}
         ],
