@@ -672,3 +672,33 @@
 
 **관련 자료**
 - [사전검증과 화면 API 인계](PLANNING_CONTRACT_V04_HANDOFF.md#2026-11-22-백엔드-통합-사전검증과-화면-연동), [격리 SQL 검사](../scripts/verify_plan_storage.py), [현재 현황](PROJECT_PROGRESS.md).
+
+### 2026-11-22 — 로컬 BGE-M3 후보 비교와 컬럼 추천 보강 (김대영)
+
+**Git**
+- 시작 Commit `6e7056aeb09166b2bc82d994faaae47f5af15db9`. `main`과 원격이 일치했고 작업 트리가 깨끗했다.
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='eval: compare local BGE-M3 and harden mapping suggestions'`으로 확인한다.
+- 브랜치 `main`.
+
+**작업 목적**
+- 동일 합성 평가셋에서 의미 후보의 정확도·오추천·응답 비용을 측정하고 운영 추천에 적용할지 결정한다.
+
+**구현 내용**
+- `scripts/evaluate_mapping_bge.py`로 고정 합성 48건에서 RapidFuzz/BGE-M3 dense/순서를 보존한 BGE 보완을 비교했다. 공식 로컬 모델과 동일 별칭·검증 경계를 사용했다.
+- 업무 의미 반증을 보강했다. 한자 금액, 재고 평가액, 출고 수량과 기준/가용 혼용 열에 부적절한 수량 후보를 억제한다. API 필드와 운영 의존성은 기존 계약을 유지한다.
+- 이름을 바꾼 합성 수량 열을 사용자가 직접 확인한 뒤 변환 미리보기와 승인 전 저장을 거치는 회귀 테스트를 추가했다.
+
+**검증 결과**
+- 새 48건에서 RapidFuzz Top-1 25/32, Top-3 26/32, 오추천 3/48, 후보 HOLD 20/48. BGE 보완 31/32, 32/32, 7/48, 10/48. 지연 중앙값은 0.15ms와 45.63ms, RSS는 55.6MiB와 1,512.1MiB였다. 시작 커밋 RapidFuzz의 오추천도 같은 실행 환경에서 다시 측정해 6/48을 확인했다.
+- 전체 비DB pytest 1,114 passed / 0 failed / 66 skipped / 0 deselected. TypeScript·Vite 빌드 및 계약 동기화 통과. 변경 파일 보안 발견 0건. 전체 트리의 기존 분류기 샘플 관련 발견 201건은 별도로 기록했다.
+- 개발 DB는 읽기 전용 추천과 자료 보존을 검증했다. 격리 DB에서 실제 SQL `READY_FOR_APPROVAL` 및 공개 수요 0행을 확인하고 전체 롤백했다. 개발 60테이블·735객체와 격리 비교 34테이블은 전후 일치했다. 파괴적 DB pytest는 미실행이다.
+
+**기술적 결정**
+- BGE는 후보 정답 6건을 더 찾았지만 정답이 없는 열의 후보와 잘못된 첫 후보가 증가했다. 모델을 운영 API에 연결하지 않고 RapidFuzz와 사용자 확인을 유지한다.
+- 평가 모델 파일·라이브러리·상세 산출물은 로컬 Git 제외 경로에만 두었다. 기존 승인과 변환 계약을 재사용했다.
+
+**남은 문제**
+- 외부 검토로 고정한 별도 평가셋에서 업무 의미 반증·정답 없는 열 처리와 지연을 다시 확인해야 의미 후보를 운영에 연결할 수 있다. 모호한 이름은 현재 사용자 확인을 요구한다.
+
+**관련 자료**
+- [2026-11-22 새 평가와 검증](MAPPING_BGE_EVALUATION_20261122.md), [이전 RapidFuzz 평가](MAPPING_RECOMMENDATION_MVP_20261116.md), [통합 설계](AI_MAPPING_INTEGRATION_DESIGN.md).

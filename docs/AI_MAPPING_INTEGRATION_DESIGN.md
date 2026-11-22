@@ -1,5 +1,7 @@
 # 데이터 입력 보조 계약과 향후 AI 연결 설계
 
+2026-11-22, 고정 합성 48건의 로컬 BGE-M3 평가에서 후보 포함률과 동시에 오추천도 늘었다. 운영은 RapidFuzz를 유지하고 금액·출고·기준/가용 혼용에 대한 후보 반증을 보강했다. 요청·응답·수동 확인과 승인 게이트는 기존 계약을 따른다. [새 측정과 적용 결정](MAPPING_BGE_EVALUATION_20261122.md)
+
 2026-11-16 컬럼 추천 후속: [48건 비교·MVP 결정](MAPPING_RECOMMENDATION_MVP_20261116.md)에 따라 scorer를 RapidFuzz로 교체했다. 정확/별칭/수동 매핑·cutoff·Top-3·DTO·승인 게이트는 유지하고 괄호 속 의미 반증을 보강했다. 아래 SequenceMatcher 설명은 최초 구현 기록이다. 현재 PC의 Docker/PostgreSQL 구성·실DB 검사·0009 실제 적용은 금지·보류하며 기존 개발 PC로 이관한다. BGE-M3는 기존 연구를 재사용했고 Upstage/LLM은 호출하지 않는다.
 
 2026-11-16 후속: [분류·변환 이력 연결](INGESTION_INTEGRATION_HISTORY.md)에서 classified-mapping과 명시적 영구 저장 API, 신규 0009를 추가했다. 아래 무저장·원본 SHA 연결 한계는 기존 preview API의 당시 계약으로 보존한다. 새 저장 경로와 혼동하지 않는다. AI 호출·저장 매핑 규칙 자동 적용은 여전히 없다.

@@ -175,6 +175,56 @@ def test_manual_mapping_recovery_is_explicit_and_bad_choice_is_validation_error(
         assert approve(client, good.json()).status_code == 200
 
 
+def verify_manual_mapping_journey(client, sources):
+    from contracts.interfaces.ingestion import SalesColumns
+
+    original = next(content for path, content in sources.items() if path.startswith('raw/transactions'))
+    row = next(row for row in csv.DictReader(io.StringIO(original.decode('utf-8-sig'))) if row['구분'] == '정상')
+    row['거래확정팩수'] = row.pop('수량')
+    row['월수요金額'] = '999999'
+    stream = io.StringIO(newline='')
+    writer = csv.DictWriter(stream, fieldnames=list(row))
+    writer.writeheader()
+    writer.writerow(row)
+    content = stream.getvalue().encode()
+    original_file = ('synthetic-ambiguous-quantity.csv', content)
+    seed_masters(client, sources)
+    suggested = client.post('/ingest/mapping-suggestions', params=PARAMS, files={'file': original_file},
+                            data={'use_approved_master': 'true'})
+    assert suggested.status_code == 200
+    sheet = suggested.json()['sheets'][0]
+    assert sheet['status'] == 'HOLD' and 'demand_qty' not in sheet['existing_mapping']
+    money = next(column for column in sheet['suggestions'] if column['source_column'] == '월수요金額')
+    assert not any(candidate['target_field'] == 'demand_qty' for candidate in money['suggestions'])
+
+    columns = SalesColumns(quantity='거래확정팩수')
+    policy = SalesTransformPolicy(dataset_id=DATASET, columns=columns)
+    files = {'files': original_file}
+    form = {'policy': policy.model_dump_json(), 'use_approved_master': 'true'}
+    unconfirmed = client.post('/ingest/transform-preview', params=PARAMS, files=files, data=form)
+    assert unconfirmed.json()['status'] == 'POLICY_REVIEW_REQUIRED'
+    form['policy'] = policy.model_copy(update={'user_confirmed': True}).model_dump_json()
+    preview_response = client.post('/ingest/transform-preview', params=PARAMS, files=files, data=form)
+    assert preview_response.status_code == 200
+    preview = preview_response.json()
+    assert preview['status'] == 'TRANSFORMED_PREVIEW'
+    assert Decimal(preview['records'][0]['demand_qty']) == Decimal(row['거래확정팩수'])
+    assert preview['persisted'] is False and preview['auto_approve'] is False
+    response = client.post('/ingest/transformations', params=PARAMS, files=files,
+                           data={**form, 'expected_result_digest': preview['result_digest'], 'created_by': 'INGEST-E2E',
+                                 'source_note': 'Synthetic manual mapping regression'})
+    assert response.status_code == 201, response.text
+    saved = response.json()
+    assert saved['batch_status'] == 'READY_FOR_APPROVAL' and saved['auto_approve'] is False
+    return saved
+
+
+def test_unknown_order_quantity_requires_explicit_selection_before_staging(sources):
+    with memory_api() as (client, repositories):
+        verify_manual_mapping_journey(client, sources)
+        assert not repositories[DATASET].state.demand
+
+
 def test_cross_dataset_master_and_batch_ownership_do_not_fallback(sources):
     with memory_api() as (client, repositories):
         seed_masters(client, sources)

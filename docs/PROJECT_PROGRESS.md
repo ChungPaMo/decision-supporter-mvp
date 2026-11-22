@@ -1,6 +1,10 @@
 # 충파모 프로젝트 진행상황
 
-최종 확인 **2026-11-22 (KST), 기존 개발 PC**. 통합 사전검증 시작 `main`은 [`5552b56`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/5552b56dfce38a63f1fff1a45d6e76a0735772b7)이다. 이번 완료 커밋은 `fix: harden planning execution preflight and validation`으로 식별한다.
+최종 확인 **2026-11-22 (KST), 기존 개발 PC**. 컬럼 추천 비교 시작 `main`은 [`6e7056a`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/6e7056aeb09166b2bc82d994faaae47f5af15db9)이다. 완료 커밋은 `eval: compare local BGE-M3 and harden mapping suggestions`로 식별한다.
+
+같은 합성 헤더 48건에서 로컬 BGE-M3를 새로 실행했다. RapidFuzz 보완 방식의 Top-3는 26/32→32/32, 오추천은 3/48→7/48이었다. 운영 API는 RapidFuzz를 유지하며 금액·출고·기준/가용 혼용의 수량 오추천을 차단한다. 전체 비DB pytest **1,114 passed / 0 failed / 66 skipped / 0 deselected**. 격리 PostgreSQL 승인 전 저장은 실제 SQL로 확인하고 롤백했다. 개발 DB는 강제 읽기 전용으로 보존했다. [새 비교와 검증](MAPPING_BGE_EVALUATION_20261122.md)
+
+직전 통합 사전검증 시작 `main`은 [`5552b56`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/5552b56dfce38a63f1fff1a45d6e76a0735772b7)이며 완료 커밋은 [`6e7056a`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/6e7056aeb09166b2bc82d994faaae47f5af15db9)이다.
 
 제품 선택 순서에 따른 중복 실행을 방지하고, Preview와 신규 저장에 승인 입력 커버리지와 HARD 적용 상태 검증을 공통 적용했다. 실제 격리 PostgreSQL에서 TEST_DOUBLE 12개월 저장·재조회·계보·고유 제약·잠금·실패 롤백을 확인했다. 개발 DB는 읽기 전용으로 조회해 3개월 진단과 게이트를 확인하고 60개 테이블·735개 객체 지문을 보존했다. 전체 비DB pytest **1,109 passed / 0 failed / 66 skipped / 0 deselected**. `AVAILABLE=False`이며 실제 계획 엔진 영구 실행과 화면 연동은 후속이다. [사전검증·화면 API 인계](PLANNING_CONTRACT_V04_HANDOFF.md#2026-11-22-백엔드-통합-사전검증과-화면-연동)
 
@@ -48,7 +52,7 @@
 | --- | --- | --- | --- |
 | 데이터 입력·파싱 | CSV/XLSX·7종 배치·수동 매핑·재검증·승인/반려 유지. 공식8마스터+원장 변환9번째 배치를 실제 PostgreSQL로 검증 | 김대영 | 화면 전체 E2E는 별도. [실DB 검증](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md) |
 | 파일 자동 분류 | 업로드용 규칙 분류 `AVAILABLE=True`, `rules-0.2.0`; JSON/파일 API 통합. 표준 5종 추천, CAPA/Routing·판매 원장 HOLD. 실제 API 회귀 검증 | 이훤(알고리즘), 김대영(API) | HOLD는 직접 유형 확인/변환 안내. 별도 문서·임베딩 연구는 업로드 API와 별개. [통합 검증](INGESTION_INTEGRATION_VERIFICATION_20261116.md) |
-| 컬럼 매핑·AI 후보 추천 | 정확 일치·별칭·수동 override 유지, RapidFuzz Top-3/근거/사용자 검토 추천 구현. 소규모 48건 비교와 API 회귀 기록 존재 | 김대영 | 신규 표현·문맥 의존 오류 남음. BGE-M3는 과거 연구 재사용, 운영 연결/새 모델 실행 없음. LLM 호출 없음. [추천 평가·결정](MAPPING_RECOMMENDATION_MVP_20261116.md) |
+| 컬럼 매핑·AI 후보 추천 | 정확 일치·별칭·수동 override와 RapidFuzz Top-3 유지. 의미 반증 보강 후 같은 48건의 오추천 6→3, Top-3 26/32. 선택→미리보기→승인 전 SQL 저장 검증 | 김대영 | 로컬 BGE-M3는 Top-3 32/32이나 오추천 7/48로 운영 적용 보류. 문맥 모호성·신규 표현은 사용자 확인 필요. [새 평가](MAPPING_BGE_EVALUATION_20261122.md) |
 | 정제·변환 | 원본5파일86,214→498, SQL 이력·원본bytes/SHA·승인 전 batch 연결·재조회·동시201/200·실제DB 실패 rollback 검증 완료 | 김대영 | 회귀/개발DB0009 적용 확인. 개발DB는 기존공식자료 중복등록 없이 새이력0건 유지. SYNTHETIC_ONLY를 일반 기업에 자동 적용하지 않음. [이력 계약](INGESTION_INTEGRATION_HISTORY.md), [실DB 근거](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md) |
 | PostgreSQL·데이터셋 격리 | 신규v2의 로컬FK·UUID격리·불변/지연트리거 실제 검증. 보관dataset 포함3스키마·기존81테이블 보존 probe 후 rollback. 개발0009도 별도승인·백업확인 후 적용 | 김대영 | 개발/회귀 현재0009. 기존자료와 연결된 볼륨은 보존, downgrade2개 미실행. dataset_id는 인증권한 아님. [최신 근거](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md) |
 | 수요예측 | 단일 엔진/계약 유지. 실제 승인된 변환 수요498행→예측OK/27행 저장·재조회·P50≤P80≤P90, 미승인 probe 제외 확인 | 이희원(엔진), 김대영(API), 정마나미(화면) | 합성 회귀 결과를 실제 기업 적합성으로 일반화하지 않음. [이번 실DB 검증](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md) |

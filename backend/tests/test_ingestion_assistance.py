@@ -64,7 +64,9 @@ def test_profile_bounded_samples_distinct_count_and_redaction():
 
 @pytest.mark.parametrize('field,header', [('product_id', '자재코드'), ('material_id', '제품코드'),
     ('demand_qty', '판매금액'), ('demand_qty', '반품수량'), ('demand_qty', '생산한도'), ('demand_qty', '설비시간'),
-    ('demand_qty', '작업인시'), ('period', '출고일자'), ('on_hand_qty', '가용재고'), ('available_qty', '현재고')])
+    ('demand_qty', '작업인시'), ('period', '출고일자'), ('on_hand_qty', '가용재고'), ('available_qty', '현재고'),
+    ('demand_qty', '월수요金額'), ('on_hand_qty', 'on_hand_value'), ('demand_qty', '출고량'),
+    ('available_qty', '기준/가용수량')])
 def test_semantic_contradictions_are_not_candidates(field, header):
     from app.ingest.recommendation import compatible
     col = profile(parse_analysis_file('p.csv', f'{header},other\n1,x\n'.encode()), DATASET).sheets[0].columns[0]

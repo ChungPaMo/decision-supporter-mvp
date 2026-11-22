@@ -31,9 +31,10 @@ def compatible(field, header, column):
     if field == 'material_id' and any(word in label for word in ('제품', '상품', 'product')):
         return False, 'PRODUCT_IS_NOT_MATERIAL'
     if field in QUANTITIES:
-        if any(word in label for word in ('금액', '단가', 'amount', 'price', 'cost')):
+        money_terms = ('금액', '金額', '단가', 'amount', 'price', 'cost', 'onhandvalue', 'stockvalue', 'inventoryvalue')
+        if any(word in label for word in money_terms):
             return False, 'MONEY_IS_NOT_QUANTITY'
-        if field == 'demand_qty' and any(word in label for word in ('반품', '취소', 'return', 'cancel', '생산', '한도', 'capacity', '시간', '인시')):
+        if field == 'demand_qty' and any(word in label for word in ('반품', '취소', 'return', 'cancel', '출고', 'ship', '생산', '한도', 'capacity', '시간', '인시')):
             return False, 'OTHER_BUSINESS_MEASURE_IS_NOT_DEMAND'
         if column.total_rows > column.empty_count and column.format_match_rates['DECIMAL'] != 1:
             return False, 'NON_DECIMAL_VALUES'
@@ -41,8 +42,11 @@ def compatible(field, header, column):
         return False, 'SHIPPING_IS_NOT_CONFIRMED_DEMAND_DATE'
     if field == 'on_hand_qty' and any(word in label for word in ('가용', 'available')):
         return False, 'AVAILABLE_IS_NOT_ON_HAND'
-    if field == 'available_qty' and any(word in label for word in ('현재고', 'onhand')):
-        return False, 'ON_HAND_IS_NOT_AVAILABLE'
+    if field == 'available_qty':
+        if any(word in label for word in ('현재고', 'onhand')):
+            return False, 'ON_HAND_IS_NOT_AVAILABLE'
+        if 'baseoravailable' in label or ('기준' in label and '가용' in label):
+            return False, 'AMBIGUOUS_QUANTITY_ROLE'
     if field == 'product_id' and column.known_product_match_ratio == 0 and (column.known_material_match_ratio or 0) > 0:
         return False, 'ONLY_MATERIAL_MASTER_MATCHES'
     if field == 'material_id' and column.known_material_match_ratio == 0 and (column.known_product_match_ratio or 0) > 0:
