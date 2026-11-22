@@ -10,7 +10,7 @@
 | 1 | v0.3/HC가 구현 기준인가, 각 항목 확정 여부 | 희원 측에서는 **v0.4로 확정**(3개월·같은 비율 배분·잔업 먼저·세 안 모두 선행생산·비용절감형 = 잔업 0 + 결품 감수). 팀 계약 확정은 C01~C06 검토 후. HC 정답은 v0.4 기준으로 갱신한다 |
 | 2 | `run(PlanningInput)->PlanningOutput`·AVAILABLE 유지, DB/파일 접근 없이 계산 | **예.** 엔진은 주어진 Snapshot만 쓰고 CSV·DB를 읽지 않는다. 필요한 값은 아래 C01~C03 요청으로 전달받는다 |
 | 3 | 예정 입고: 미입고·부분입고·취소, 월중 입고, lead time 없는 PROCUREMENT_REQUIRED 해석 | 미입고 수량만 센다. 입고예정일이 속한 달 전체에 사용. 납기가 기준일 이전이면 1월 입고 + `RECEIPT_OVERDUE` 경고. 취소 발주는 백엔드가 넘기지 않는다고 본다. `PROCUREMENT_REQUIRED`는 "그달 이만큼 발주가 필요하나 리드타임이 없어 제때 받을 수 있는지는 확인 못 함"이라는 뜻(규칙서 §5) |
-| 4 | C05 음수 가용·부족 표현 | **교과서식 월별 MRP로 변경**: required = 그달 총소요, available = 월초 재고 + 그달 입고, shortage = 그달 발주 필요량. 정의상 모두 0 이상이므로 DTO·DB 비음수 제약을 그대로 쓴다. 손계산 예시는 규칙서 §10과 HC-09·HC-13(추가 예정) |
+| 4 | C05 음수 가용·부족 표현 | **교과서식 월별 MRP로 변경**: required = 그달 총소요, available = 월초 재고 + 그달 입고, shortage = 그달 발주 필요량. 정의상 모두 0 이상이므로 DTO·DB 비음수 제약을 그대로 쓴다. 손계산 예시는 규칙서 §10과 HC-09·HC-13 |
 | 5 | 누락·다중 BOM·라우팅 누락·공유 인력, 상태 경계 | 규칙서 §7 표. 예측 누락 = `INPUT_INVALID`(provider 409와 같은 기준). 재고 누락 = 0 + `INVENTORY_MISSING`·UNVERIFIED. 라우팅 누락 = 모든 CAP UNVERIFIED. 다단계 BOM·ELAPSED·GROSS = `UNSUPPORTED`. 셋업·대체 설비 = 반영 안 하고 UNVERIFIED. 공유 인력 LB1은 PERSON_HOUR 자원으로 같은 비율 규칙에 포함, 인원 수로 다시 곱하지 않음 |
 | 6 | SOFT/HARD/UNVERIFIED 합성과 승인 조건 | 엔진 feasibility: HARD VIOLATED → INFEASIBLE, HARD UNVERIFIED 또는 안별 unverified 있음 → UNVERIFIED, 나머지 FEASIBLE. SOFT(안전재고) 위반은 표시만. **승인 가능 여부는 백엔드 승인 정책이 정한다**(엔진은 승인 권한을 만들지 않음) |
 | 7 | What-if: 후보 하나 조정인지 전체 재생성인지, 월별 범위 | **세 안 모두 재계산.** 조정 항목은 수요 배수(전체/제품별), 잔업 한도(자원·월별 절대값), 입고 예정 취소·수량 변경(발주번호별) 3가지. 재고 변경·생산량 직접 지정은 이번 범위 제외 |

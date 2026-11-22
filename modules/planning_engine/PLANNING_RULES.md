@@ -109,8 +109,10 @@ U(p) > 0이면 m = 2, 3 순서로 그 달 남은 시간에 늦게라도 만든�
 
 - **미입고 수량만** 센다. 일부 입고된 발주의 이미 들어온 양은 재고(M₀)에 들어 있다.
 - 입고예정일이 속한 **달 전체**에 쓸 수 있다고 본다. 1/20 입고분은 1월 초 며칠은 실제로 모자랄 수 있지만 월 단위 계획에서는 1월에 넣는다.
-- 입고예정일이 기준일 이전(납기 지남)이면 **1월 입고로 보고** warning `RECEIPT_OVERDUE`(input_refs에 발주번호).
+- 입고예정일이 기준일 이전(납기 지남)이면 **1월 입고로 보고** warning `RECEIPT_OVERDUE`(input_refs에 발주번호). 정말 들어올지 모르므로 **그 자재의 1월 MAT 판정은 발주 필요량과 관계없이 `UNVERIFIED`**(reason `RECEIPT_OVERDUE`)로 둔다. 그래서 늦은 입고에 기대는 계획안이 FEASIBLE로 보이지 않는다(희원 결정 2026-11-22 보강).
 - 계획 기간 뒤에 들어오는 입고는 계산에 넣지 않는다.
+- 어느 BOM에도 쓰이지 않는 자재의 입고는 계획과 관계없으므로 조용히 무시한다.
+- 입고 단위가 자재 단위와 다르면 재고와 같은 기준으로 계산하지 않는다(status `INPUT_INVALID`, error `UNIT_MISMATCH`, §7).
 - 취소된 발주는 백엔드가 넘기지 않는다고 본다(승인 자료 기준).
 
 ## 6. ⑤ 판정 (ConstraintEvaluation)
@@ -121,7 +123,7 @@ U(p) > 0이면 m = 2, 3 순서로 그 달 남은 시간에 늦게라도 만든�
 | `QTY-{p}-{YYYY-MM}` | `QUANTITY` | HARD | LIM / P (EA) | SATISFIED. 한도에 걸린 달은 `QUANTITY_LIMIT_BINDING` |
 | `DEM-{p}-{YYYY-MM}` | `OTHER` | HARD | – | I(p,m) < 0 → **VIOLATED** (`STOCKOUT`), 아니면 SATISFIED |
 | `SS-{p}-{YYYY-MM}` | `SAFETY_STOCK` | SOFT | SS / I(p,m) | I < SS → VIOLATED (`BELOW_SAFETY_STOCK`) |
-| `MAT-{k}-{YYYY-MM}` | `MATERIAL` | HARD | AVL / N + SS(k) | NET > 0 → **UNVERIFIED** (`PROCUREMENT_REQUIRED`), 아니면 SATISFIED |
+| `MAT-{k}-{YYYY-MM}` | `MATERIAL` | HARD | AVL / N + SS(k) | NET > 0 → **UNVERIFIED** (`PROCUREMENT_REQUIRED`). 1월에 납기 지난 입고가 있으면 **UNVERIFIED** (`RECEIPT_OVERDUE`, 둘 다면 두 코드 모두). 아니면 SATISFIED |
 
 **계획안 판정(feasibility)**
 1. HARD 중 VIOLATED가 하나라도 있으면 `INFEASIBLE`
@@ -141,11 +143,13 @@ SOFT 위반(안전재고 미달)은 판정을 바꾸지 않고 표시만 한다.
 | 제품의 공정표(라우팅)가 없음 | 그 제품은 3장을 건너뛰고 P = T. 어느 자원을 쓰는지 모르므로 **모든 CAP**을 `UNVERIFIED` + application_state `MISSING_INPUT`(used = null), unverified에 `ROUTING_MISSING` |
 | 어떤 자원·월의 가용시간이 없음 | 그 자원은 한도 없음으로 보고 CAP-{r}-{m}을 `UNVERIFIED`/`MISSING_INPUT` |
 | BOM이 없거나 그 달 유효 BOM이 2개 이상 | 그 제품의 자재 소요 계산 제외, `BOM_MISSING` / `BOM_VERSION_AMBIGUOUS` 경고, 관련 MAT `UNVERIFIED` |
-| 단위가 서로 안 맞음(예: 수요 EA, 재고 kg) | 계산하지 않음. status `INPUT_INVALID`, error `UNIT_MISMATCH` |
+| 단위가 서로 안 맞음(예: 수요 EA, 재고 kg / 자재 kg, 입고 예정 m) | 계산하지 않음. status `INPUT_INVALID`, error `UNIT_MISMATCH` |
 | **다단계 BOM**(구성품이 제품), **ELAPSED 시간 기준**, **GROSS 가용시간** | 계산이 틀려지므로 계산하지 않음. status `UNSUPPORTED`, error `BOM_MULTILEVEL_UNSUPPORTED` / `TIME_BASIS_UNSUPPORTED` / `AVAILABILITY_BASIS_UNSUPPORTED` |
 | **셋업 시간**, **대체 설비 그룹** 값이 있음 | 반영하지 않고 계산. 모든 안의 unverified에 `SETUP_TIME_IGNORED` / `ALTERNATIVE_RESOURCE_IGNORED` → `UNVERIFIED` |
 
 없는 값을 0이나 무한으로 채운 경우에는 항상 경고·unverified 코드와 input_refs로 근거를 남긴다.
+
+**문제가 여러 개 겹칠 때**(희원 결정 2026-11-22 보강): 상태는 `INPUT_INVALID` > `UNSUPPORTED` > 계산(OK) 순서로 정한다. 입력 검사는 첫 문제에서 멈추지 않고 끝까지 하며, error_codes에는 발견한 문제를 모두 담는다(한 번에 고칠 수 있게). 계산하지 않는 상태에서는 계획안을 내지 않는다.
 
 ## 8. What-if (희원 결정 2026-11-22)
 
@@ -166,11 +170,11 @@ SOFT 위반(안전재고 미달)은 판정을 바꾸지 않고 표시만 한다.
 | 계획 기간 | target_month 한 달 | **3개월** (target_month = 시작 월) | 같음 | C01 대영 확인 필요 |
 | 선행생산 | 비용절감형만 | **세 안 모두** (잔업 허용 안은 잔업 먼저) | 같음 | C04 |
 | 공유 자원 배분 | product_id 순 | **같은 비율로 축소** | 같음 | C04 |
-| 입고 예정 | 무시 | 자재 판정에 반영 | **미입고 수량·달 전체·납기 지남은 1월+경고** | C02 칸 추가 요청 |
+| 입고 예정 | 무시 | 자재 판정에 반영 | **미입고 수량·달 전체·납기 지남은 1월+경고+1월 MAT UNVERIFIED, BOM 밖 자재 무시, 단위 오류 INPUT_INVALID** | C02 칸 추가 요청 |
 | 자재 결과 | 누적 부족 증가분 | 누적 부족 증가분(음수 가능) | **월별 MRP 표: 발주 필요량, 음수 없음** | C05 |
 | 판정 | SOFT 무시 | SOFT 무시 | **unverified 목록도 UNVERIFIED로, 승인은 백엔드** | C06 |
 | 예측 누락 | – | 빼고 PARTIAL | **INPUT_INVALID** | C07 |
-| 재고 누락·미지원 기능 | – | – | **0+경고 / UNSUPPORTED·경고 구분** | C08 |
+| 재고 누락·미지원 기능 | – | – | **0+경고 / UNSUPPORTED·경고 구분, 겹치면 INPUT_INVALID > UNSUPPORTED, 오류 모두 나열** | C08 |
 | What-if | 배수·재고·입고 | 배수·잔업·재고·입고 | **배수·잔업(월별)·입고, 세 안 모두 재계산** | C03 |
 | DEM dimension | `DUE_DATE` | `OTHER` | 같음 | |
 | KPI | 안별 kpis[] | 범위 제외 | 같음 | C09 |

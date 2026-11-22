@@ -17,6 +17,11 @@
 | HC-10 | What-if 수요배수 | 기준 FEASIBLE → INFEASIBLE |
 | HC-11 | 라우팅 빠짐 | UNVERIFIED |
 | HC-12 | 단위 오류 | INPUT_INVALID |
+| HC-13 | 입고 예정: 미입고 수량·납기 지남·기간 뒤·BOM 밖 | UNVERIFIED |
+| HC-14 | 재고 누락 → 0으로 계산 | UNVERIFIED |
+| HC-15 | 다단계 BOM | UNSUPPORTED |
+| HC-16 | 문제 겹침(입고 단위 오류 + 다단계 BOM) | INPUT_INVALID |
+| HC-17 | 셋업 시간 무시 | UNVERIFIED |
 
 공통: 1개당 시간 h = run_time ÷ reference_qty. 생산량 P = ⌊X × 비율⌋.
 
@@ -125,7 +130,7 @@ G 수요 30 / 70, 월 한도 50 / 50. 설비는 넉넉함.
 ## HC-09 BOM 전개·자재 부족
 
 A 생산 100 / 100 (설비 넉넉).
-- K1: 소요 2 ÷ 기준수량 1 × (1 + 0.05) = **2.1** /개. 재고 150, 안전재고 20, 2월 입고 예정 100
+- K1: 소요 2 ÷ 기준수량 1 × (1 + 0.05) = **2.1** /개. 재고 150, 안전재고 20, 2월 입고 예정 100 (PO-9, 2/10)
 - K2: 3 ÷ 2 × (1 + 0) = **1.5** /개. 재고 400, 안전재고 0
 
 | K1 | 1월 | 2월 |
@@ -159,3 +164,48 @@ A(수요 50)는 S를 씀, B(수요 30)는 라우팅이 없음. S 정규 100.
 ## HC-12 단위 오류
 
 A 수요는 EA인데 재고 단위가 kg → 서로 뺄 수 없음. 계산하지 않고 status **INPUT_INVALID**, error `UNIT_MISMATCH`, 계획안 없음.
+
+## HC-13 입고 예정
+
+기준일 12/31. A 수요 100 / 100 / 100(설비 넉넉) → 생산 100 / 100 / 100. 원단 K1: 1개에 1kg, 재고 50, 안전재고 0.
+
+| 발주 | 미입고 / 발주량 | 입고예정일 | 처리 |
+|---|---|---|---|
+| PO-1 | 150 / 500 | 12/20 | 납기 지남 → **1월**에 150만(이미 들어온 350은 재고에 있음), 경고 `RECEIPT_OVERDUE` |
+| PO-2 | 60 / 60 | 2/15 | 2월 |
+| PO-3 | 300 / 300 | 4/5 | 계획 기간(1~3월) 뒤 → 무시 |
+| PO-4 | 999 / 999 (자재 Z) | 1/10 | 어느 BOM에도 없는 자재 → 무시 |
+
+| K1 | 1월 | 2월 | 3월 |
+|---|---|---|---|
+| 총소요 N | 100 | 100 | 100 |
+| 가용 AVL | 50 + 150 = 200 | 100 + 60 = 160 | 60 |
+| 발주 필요량 NET | 0 | 0 | 100 − 60 = **40** |
+| 월말 재고 POH | 100 | 60 | 0 |
+| MAT 판정 | **UNVERIFIED** (`RECEIPT_OVERDUE`) | SATISFIED | **UNVERIFIED** (`PROCUREMENT_REQUIRED`) |
+
+1월은 발주 필요량이 0이지만, 늦은 입고 PO-1에 기대고 있으므로 UNVERIFIED다(규칙 §5.1). 결품 없음, HARD 중 UNVERIFIED 있음 → **UNVERIFIED**.
+
+## HC-14 재고 누락
+
+A: 재고 20, 안전재고 0, 수요 50. B: **재고 행 없음**, 안전재고 10, 수요 40. S 정규 200, 둘 다 1개에 1시간.
+- A: T = 50 + 0 − 20 = 30. B: 재고를 0으로 보고 T = 40 + 10 − 0 = 50
+- 부하 80 ≤ 200 → 생산 30 / 50, 월말 재고 A 0, B 10. 모든 판정 SATISFIED
+- 그래도 B 재고를 0으로 채웠으므로 warning `INVENTORY_MISSING`(input_refs B), unverified `INVENTORY_MISSING` → **UNVERIFIED**
+
+## HC-15 다단계 BOM
+
+A의 BOM 구성품이 자재가 아니라 제품 B다(B는 다시 원단 K1을 씀). 한 단계 BOM만 지원하므로 계산하지 않는다. status **UNSUPPORTED**, error `BOM_MULTILEVEL_UNSUPPORTED`, 계획안 없음.
+
+## HC-16 문제가 겹칠 때
+
+HC-15 입력에 입고 예정 1건을 더했다. 원단 K1은 kg인데 입고 단위가 m라서 단위 오류다.
+- 문제 2개: 단위 오류(INPUT_INVALID 대상), 다단계 BOM(UNSUPPORTED 대상)
+- 우선순위 INPUT_INVALID > UNSUPPORTED → status **INPUT_INVALID**
+- 검사는 첫 문제에서 멈추지 않으므로 error_codes에 `UNIT_MISMATCH`, `BOM_MULTILEVEL_UNSUPPORTED`를 **모두** 담는다(규칙 §7)
+
+## HC-17 셋업 시간
+
+A 수요 100, S 1개에 1시간, 정규 100. 공정표에 셋업 5시간이 있다.
+- 셋업을 반영하지 않으므로 부하 100 ≤ 100 → 생산 100, CAP 100/100 SATISFIED(넘친 적이 없으므로 `CAPACITY_BINDING` 아님)
+- 셋업을 넣으면 실제로는 105시간이 필요해 모자랄 수 있다. 그래서 unverified `SETUP_TIME_IGNORED` → **UNVERIFIED**

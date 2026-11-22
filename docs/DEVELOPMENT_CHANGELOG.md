@@ -480,3 +480,34 @@
 
 **관련 자료**
 - [계산 규칙 v0.4](../modules/planning_engine/PLANNING_RULES.md), [계약 답변](../modules/planning_engine/CONTRACT_REQUESTS.md), [작은 손계산](../modules/planning_engine/tests/hand_calc/SMALL_CASES.md), [통합 준비 보고서](PLANNING_ENGINE_INTEGRATION_READINESS.md).
+
+### 2026-11-22 — 계획 엔진 손계산 케이스 보강 HC-13~17 (이희원)
+
+**Git**
+- 시작 Commit `766d48ce4cb004e271408cfb67dc2d378dad2036`.
+- 완료 Commit은 고유 제목 `test: add planning hand-calc cases for receipts, missing inventory and unsupported inputs`으로 조회한다. `git log main -1 --format=%H --fixed-strings --grep='test: add planning hand-calc cases for receipts, missing inventory and unsupported inputs'`
+- 브랜치 `main`.
+
+**작업 목적**
+- 계산 코어 구현 전에, v0.4에서 정했지만 정답이 없던 입고 예정·재고 누락·미지원 기능 처리를 손계산 정답으로 고정하고, 그 과정에서 드러난 규칙 빈틈을 막는다.
+
+**구현 내용**
+- `modules/planning_engine/tests/hand_calc/small_cases.json`·`SMALL_CASES.md`: HC-13 입고 예정(미입고 수량만, 납기 지남 1월·경고·UNVERIFIED, 기간 뒤·BOM 밖 무시), HC-14 재고 누락(0으로 계산·UNVERIFIED), HC-15 다단계 BOM(UNSUPPORTED), HC-16 입고 단위 오류+다단계 BOM(INPUT_INVALID, 오류 모두 나열), HC-17 셋업 시간 무시(UNVERIFIED). 입고 예정 입력을 C02 요청 필드 모양(`po_id, material, open_qty, unit, expected_date`)으로 바꾸고 HC-09도 같은 모양으로 갱신(정답 변화 없음).
+- `modules/planning_engine/PLANNING_RULES.md` v0.4 보강: 납기 지난 입고가 있는 자재의 1월 MAT는 `UNVERIFIED`(`RECEIPT_OVERDUE`), BOM에 없는 자재 입고는 무시, 입고 단위 오류는 `INPUT_INVALID`/`UNIT_MISMATCH`, 문제가 겹치면 `INPUT_INVALID` > `UNSUPPORTED` 순서이고 error_codes에 모두 나열.
+- `CONTRACT_REQUESTS.md`: HC-13 참조 문구 정리.
+
+**검증 결과**
+- 2026-11-22 이희원 PC, 루트 `.venv`: `pytest modules/planning_engine` **34 passed / 0 failed**(계산 코드 없음, 기존 구조 검사).
+- 규칙서만 보고 별도 작성한 임시 검산 스크립트(판정·feasibility·경고·오류 코드까지 비교)로 HC-01~17 **17/17 일치**. 정답을 일부러 틀리게 바꾼 5건은 모두 불일치로 검출. JSON 파싱 통과.
+- 엔진 결과와 정답 비교는 계산 코드가 없어 미실행. Docker·DB·브라우저 미실행.
+
+**기술적 결정**
+- 희원이 추천안 중 선택: 납기 지난 입고는 계산에 넣되 판정은 UNVERIFIED(경고만 / 계산 제외 안은 채택 안 함), 입고 단위 오류는 INPUT_INVALID·BOM 밖 입고는 무시(행만 빼고 경고 / 모두 거절 안은 채택 안 함), 상태 우선순위 INPUT_INVALID > UNSUPPORTED이고 오류 모두 나열(첫 오류에서 멈춤 안은 채택 안 함).
+- 입고 예정 필드 모양은 C02 요청안을 따랐다. 대영 검토로 필드가 바뀌면 케이스 입력 모양만 고친다.
+
+**남은 문제**
+- 김대영: C01 기간·C02 입고 예정·C03 What-if 키·C06 모순 출력 검사 검토(변경 없음).
+- 이희원: 계산 코어 구현과 HC-01~17 자동 비교 pytest, 충파모 9제품×3개월×3안 정답 비교, What-if. 계약 확정 전 `AVAILABLE=False` 유지.
+
+**관련 자료**
+- [계산 규칙 v0.4](../modules/planning_engine/PLANNING_RULES.md), [작은 손계산](../modules/planning_engine/tests/hand_calc/SMALL_CASES.md), [계약 답변](../modules/planning_engine/CONTRACT_REQUESTS.md), [시작 Commit](https://github.com/ChungPaMo/decision-supporter-mvp/commit/766d48ce4cb004e271408cfb67dc2d378dad2036).
