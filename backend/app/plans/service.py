@@ -6,7 +6,8 @@ from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError,OperationalError,InterfaceError
 from app.errors import ApiError,ErrorCode
 from app.integrations import planning as adapter
-from contracts.interfaces.planning import PlanningInput,PlanningOutput,PlanCommand
+from app.integrations.planning_validation import validate_overrides
+from contracts.interfaces.planning import PlanningInput
 from contracts.interfaces.plan_execution import PlanExecutionReply
 from .repository import PlanRepository,digest
 from .approval import transition
@@ -18,34 +19,6 @@ def db_error(exc):
     return ApiError(500,ErrorCode.PERSISTENCE_ERROR,'Plan transaction failed; no partial execution was saved.')
 
 
-def validate_pair(snapshot,result):
-    # Reuse exactly the preview boundary checks, without running a calculation.
-    command=snapshot.command
-    if snapshot.dataset_id!=command.dataset_id:raise ValueError('Input and command dataset mismatch')
-    units={r.product_id:r.unit for r in snapshot.forecast_rows}
-    if set(command.product_ids)!=set(units) or any(r.target_month!=command.target_month for r in snapshot.forecast_rows):
-        raise ValueError('Missing forecast input scope')
-    if len(units)!=len(snapshot.forecast_rows): raise ValueError('Duplicate forecast input')
-    ids=[s.batch_id for s in snapshot.approved_inputs.sources]
-    if len(ids)!=len(set(ids)): raise ValueError('Duplicate input source')
-    for p in result.plans:
-        if any(r.product_id not in command.product_ids or r.period!=command.target_month or r.unit!=units[r.product_id] for r in p.production):
-            raise ValueError('Output scope or unit mismatch')
-        if result.status=='OK' and {r.product_id for r in p.production}!=set(command.product_ids): raise ValueError('Incomplete OK candidate')
-        if snapshot.missing_inputs and p.feasibility=='FEASIBLE': raise ValueError('Missing input cannot be verified')
-    resources={r.resource_id for d in (snapshot.capacity_snapshot,snapshot.routing_snapshot) if d for r in d.resources}
-    materials={m.material_id:m.base_unit for m in snapshot.approved_inputs.materials}
-    keys=set()
-    for r in result.constraint_evaluations:
-        if r.period!=command.target_month or (r.product_id and r.product_id not in command.product_ids) or (r.resource_id and r.resource_id not in resources):
-            raise ValueError('Constraint reference outside input')
-    for r in result.material_requirements:
-        k=(r.plan_id,r.material_id,r.period)
-        if k in keys or r.material_id not in materials or r.unit!=materials[r.material_id] or r.period!=command.target_month:
-            raise ValueError('Material reference or unit mismatch')
-        keys.add(k)
-
-
 def what_if_snapshot(base,command,*,allow_test=False):
     if base.data_origin!='REAL_ENGINE' and not allow_test:
         raise ApiError(404,ErrorCode.PLAN_NOT_FOUND,'Test doubles are not operational base plans.')
@@ -54,18 +27,14 @@ def what_if_snapshot(base,command,*,allow_test=False):
         raise ApiError(409,ErrorCode.DATASET_MISMATCH,'What-if parent and child must belong to the same dataset.')
     if (base.status not in ('COMPLETED','PARTIAL') or command.base_plan_execution_id!=base.execution_id or
         command.forecast_execution_id!=base.forecast_execution_id or command.target_month!=original.target_month or
-        command.as_of_date!=original.as_of_date or set(command.product_ids)!=set(original.product_ids)):
-        raise ApiError(409,ErrorCode.PLAN_INPUT_UNAVAILABLE,'What-if must preserve the saved forecast, products, month and as-of scope.')
-    hours=base.input_snapshot.capacity_snapshot.hours_budgets if base.input_snapshot.capacity_snapshot else []
-    allowed={f'production_qty.{p}' for p in command.product_ids}|{f'overtime_hours_limit.{h.capacity_id}' for h in hours}
-    if set(command.overrides)-allowed:
-        raise ApiError(422,ErrorCode.PLAN_OVERRIDE_UNSUPPORTED,'Only scoped production_qty.<product> and overtime_hours_limit.<capacity> requests are supported.')
+        command.horizon_months!=original.horizon_months or command.as_of_date!=original.as_of_date or
+        set(command.product_ids)!=set(original.product_ids)):
+        raise ApiError(409,ErrorCode.PLAN_INPUT_UNAVAILABLE,'What-if must preserve the saved forecast, products, horizon and as-of scope.')
+    validate_overrides(command, base.input_snapshot)
     data=base.input_snapshot.model_dump(mode='json')
     data['command']=command.model_dump(mode='json')
     data['base_plan_snapshot']={'execution_id':str(base.execution_id),'forecast_execution_id':str(base.forecast_execution_id),
         'input_digest':base.input_digest,'result_digest':base.result_digest,'result':base.result_snapshot.model_dump(mode='json')}
-    if command.overrides:
-        data['missing_inputs']=sorted(set([*data['missing_inputs'],'WHAT_IF_OVERRIDE_POLICY_UNCONFIRMED']))
     # Overrides are scenario requests, NOT edits to approved source facts. Engine interprets confirmed policy.
     return PlanningInput.model_validate(data)
 
@@ -90,6 +59,7 @@ class PlanService:
     def create(self,command):
         if command.dataset_id!=getattr(self.database,'dataset_id','TISSUE-LEGACY'):
             raise ApiError(409,ErrorCode.DATASET_MISMATCH,'Plan request and selected dataset do not match.')
+        validate_overrides(command)
         from engine import planning
         if not planning.AVAILABLE:
             raise ApiError(501,ErrorCode.MODULE_NOT_IMPLEMENTED,'Planning algorithm is not implemented; no execution was fabricated.')

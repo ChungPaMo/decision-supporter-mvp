@@ -1,5 +1,7 @@
 # 생산계획 실행 저장·검토·출력 기반
 
+2026-11-22 갱신 기준은 [v0.4 통합 계약](PLANNING_CONTRACT_V04_HANDOFF.md)이다. 실행 기간은 입력 JSONB에 저장하며 기존 행을 단일 월로 읽는다.
+
 2026-11-15. **저장 시스템 기반 구현이며 실제 계산·인증·정식 승인 활성화 완료가 아니다.** engine.planning.run은 AVAILABLE=False다. frontend와 알고리즘 담당 폴더는 변경하지 않았다.
 
 ## API와 예시
@@ -58,9 +60,9 @@
 
 ## What-if
 
-기본 정책은 **저장 당시 입력 재사용**이다. 현재 기준정보로 몰래 갱신하지 않는다. 실제 부모의 forecast UUID·제품 집합·대상 월·기준일이 같아야 한다. 새 승인 자료를 쓰려면 새 BASE를 만든다.
+기본 정책은 **저장 당시 입력 재사용**이다. 실제 부모의 dataset·forecast UUID·제품 집합·시작 월·기간·기준일이 같아야 한다. 새 승인 자료를 쓰려면 새 BASE를 만든다.
 
-허용 Override는 `production_qty.<선택 제품>`와 `overtime_hours_limit.<저장된 hours capacity_id>`, 값은 DecimalValue 비음수 문자열이다. 이는 시나리오 요청일 뿐 승인 원본을 수정하거나 계산식을 실행하지 않는다. 적용 정책 미확정은 WHAT_IF_OVERRIDE_POLICY_UNCONFIRMED로 남긴다. Forecast/배치/결과 변경 키는 422다.
+허용 Override는 `demand_multiplier`, `demand_multiplier.<product_id>`, `overtime_hours_limit.<resource_id>.<YYYY-MM>`, `receipt_qty.<po_id>`다. 값은 비음수 Decimal 문자열이며 입고 수량 0은 시나리오에서 취소를 뜻한다. 부모의 승인 원본과 결과는 보존한다. 레거시 생산량 키와 참조 범위 밖 조정은 422다.
 
 base_plan_snapshot에 실제 부모 ID·forecast UUID·input/result digest·전체 부모 결과를 넣고, 자식 실행에 원본 입력 사실과 새 command를 보존한다. 원본/변경 조건/각 평가 결과를 비교할 수 있으며 KPI 차이 공식을 발명하지 않는다. 기준 계획이 있어도 엔진 미구현이면 계산은 501이다.
 

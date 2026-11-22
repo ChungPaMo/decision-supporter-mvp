@@ -11,7 +11,7 @@ from app.exports.contract import EXPORT_CONTRACT_VERSION, PlanExportRequest
 from app.forecast.schemas import DevForecastRequest, ForecastResponse
 from app.forecast.runs_schemas import ForecastRunRequest, ForecastRunReply, ForecastHistory, ForecastExecution
 from contracts.interfaces.modules import ClassificationInput, ClassificationOutput, PlanCommand, PlanningInput, PlanningOutput, PlanningReply
-from contracts.interfaces.planning import PlanningInputDiagnostics
+from contracts.interfaces.planning import LegacyPlanPreviewCommand, PlanningInputDiagnostics
 from contracts.interfaces.capacity import CapacityRegistrationDraft
 from contracts.interfaces.dataset import DatasetCreate,DatasetDetail
 from contracts.interfaces.plan_execution import (PlanExecutionCreate,PlanExecutionDetail,PlanExecutionList,PlanExecutionReply,
@@ -51,7 +51,7 @@ def build_forecast_run() -> str:
 
 def build_modules() -> str:
     return json.dumps({m.__name__: m.model_json_schema() for m in
-                       (ClassificationInput, ClassificationOutput, PlanCommand, PlanningInput, PlanningInputDiagnostics, PlanningOutput, PlanningReply, CapacityRegistrationDraft, PlanExecutionCreate,PlanExecutionDetail,PlanExecutionList,PlanExecutionReply,PlanCandidateDetail,PlanDecisionRequest,PlanDecisionHistory,PlanExportMetadata,DatasetCreate,DatasetDetail)},
+                       (ClassificationInput, ClassificationOutput, PlanCommand, LegacyPlanPreviewCommand, PlanningInput, PlanningInputDiagnostics, PlanningOutput, PlanningReply, CapacityRegistrationDraft, PlanExecutionCreate,PlanExecutionDetail,PlanExecutionList,PlanExecutionReply,PlanCandidateDetail,PlanDecisionRequest,PlanDecisionHistory,PlanExportMetadata,DatasetCreate,DatasetDetail)},
                       ensure_ascii=False, indent=2, sort_keys=True) + "\n"
 
 

@@ -1,6 +1,6 @@
 # 프론트엔드 연동 안내
 
-계획 입력 진단은 `POST /planning-inputs/preview`에 선택 dataset query와 `PlanCommand`를 전달한다. 입력의 누락·경고·건수, 엔진 가용성, `persisted=false`를 표시하고 계획 계산·저장·승인 상태는 별도로 다룬다. 요청 예시와 오류 처리 기준은 [진단 API 인계](PLANNING_INPUT_DIAGNOSTICS_VERIFICATION.md)를 따른다.
+계획 입력 진단은 `POST /planning-inputs/preview`에 선택 dataset query와 `PlanCommand`를 전달한다. 시작 월과 `horizon_months` 1~12를 명시한다. 기본은 3이며 기존 `/plans`는 기간 생략 시 1개월이다. 진단은 입력 누락·경고·건수, 입고 공급 상태, 엔진 가용성, `persisted=false`를 반환한다. What-if의 월별 자원·발주 키, 영구 실행 기간, 오류 처리는 [v0.4 API 인계](PLANNING_CONTRACT_V04_HANDOFF.md)를 따른다.
 
 데이터 입력의 실제 사용자 동작별 Method/URL·DTO·확인/오류·예시는 [입력 UI API 인계](INGESTION_UI_API_HANDOFF.md), 현재 화면에서 부족한 부분만 정리한 요청은 [UI 변경 요청](INGESTION_UI_CHANGE_REQUEST.md)을 따른다. 대표 검증은 공식 CHUNGPAMO-2027 생성 자료 86,214→498이며 현재 PC의 실DB 작업은 금지·보류다.
 

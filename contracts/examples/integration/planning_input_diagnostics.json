@@ -5,6 +5,7 @@
     "forecast_execution_id": "00000000-0000-4000-8000-000000000001",
     "target_month": "2027-01",
     "as_of_date": "2026-12-31",
+    "horizon_months": 1,
     "scope": "SINGLE_MONTH",
     "status": "NEEDS_REVIEW",
     "inputs": {
@@ -43,6 +44,10 @@
       "routing": {
         "ready": false,
         "row_count": 0
+      },
+      "scheduled_receipts": {
+        "ready": false,
+        "row_count": 0
       }
     },
     "missing_inputs": [
@@ -50,6 +55,7 @@
       "CAPACITY_NOT_REGISTERED",
       "HOURS_COVERAGE",
       "INVENTORY_COVERAGE",
+      "RECEIPT_SOURCE_UNAVAILABLE",
       "ROUTING_COVERAGE",
       "ROUTING_NOT_REGISTERED"
     ],
@@ -67,7 +73,7 @@
       }
     ],
     "forecast_input_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
-    "input_digest": "sha256:8cd58efdb95144f8b24817b84928b3cdd0fe955d04e9767dd195ef9cdacd0d2e",
+    "input_digest": "sha256:b6142dfe66cf977bec8a37250b376fd4926c6e8cc7b95dde1cc5cc30143dc0d3",
     "engine_available": false,
     "persisted": false
   }

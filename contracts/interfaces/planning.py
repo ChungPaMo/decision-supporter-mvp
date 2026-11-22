@@ -3,7 +3,8 @@ from datetime import date, datetime
 from decimal import Decimal
 from typing import Literal
 from uuid import UUID
-from pydantic import Field, model_validator
+from pydantic import Field, ValidationError, field_validator, model_validator
+from pydantic_core import PydanticCustomError
 from .base import Code, Month, DecimalValue, StrictModel
 from .capacity import CapacityRegistrationDraft
 from .dataset import DatasetId,LEGACY_DATASET
@@ -15,19 +16,43 @@ class PlanCommand(StrictModel):
     forecast_execution_id: UUID
     product_ids: list[Code] = Field(min_length=1)
     target_month: Month
+    horizon_months: int = Field(default=3, strict=True, ge=1, le=12,
+                                description='Number of consecutive months from target_month.')
     as_of_date: date
     scenario: Literal['BASE', 'WHAT_IF'] = 'BASE'
     base_plan_execution_id: UUID | None = None
     overrides: dict[str, DecimalValue] = Field(default_factory=dict)
 
+    @field_validator('overrides', mode='wrap')
+    @classmethod
+    def validate_override_values(cls, value, handler):
+        try:
+            return handler(value)
+        except ValidationError:
+            raise PydanticCustomError('whatif_invalid', 'WHATIF_INVALID: overrides require non-negative decimal strings') from None
+
     @model_validator(mode='after')
     def explicit_scenario(self):
+        year, month = map(int, self.target_month.split('-'))
+        if year * 12 + month + self.horizon_months - 1 > 9999 * 12 + 12:
+            raise ValueError('Planning horizon exceeds the supported calendar')
         if len(self.product_ids) != len(set(self.product_ids)): raise ValueError('Duplicate products')
         if self.scenario == 'BASE' and (self.overrides or self.base_plan_execution_id):
             raise ValueError('BASE does not accept what-if overrides')
         if self.scenario == 'WHAT_IF' and self.base_plan_execution_id is None:
             raise ValueError('WHAT_IF requires a saved base plan')
         return self
+
+    @property
+    def months(self) -> tuple[str, ...]:
+        year, month = map(int, self.target_month.split('-'))
+        return tuple(f'{year + offset // 12:04d}-{offset % 12 + 1:02d}'
+                     for offset in range(month - 1, month - 1 + self.horizon_months))
+
+
+class LegacyPlanPreviewCommand(PlanCommand):
+    horizon_months: int = Field(default=1, strict=True, ge=1, le=12,
+                                description='Legacy preview defaults to one month. Send the desired horizon explicitly.')
 
 
 class ApprovedSource(StrictModel):
@@ -120,6 +145,28 @@ class ForecastFact(StrictModel):
         return self
 
 
+class ScheduledReceipt(StrictModel):
+    po_id: Code
+    material_id: Code
+    open_qty: DecimalValue
+    unit: Code
+    expected_date: date
+    supplier_id: Code | None = None
+    batch_id: UUID = Field(description='Reference to the approved receipt source in approved_inputs.sources.')
+
+    @model_validator(mode='after')
+    def positive_open_quantity(self):
+        if Decimal(self.open_qty) <= 0:
+            raise ValueError('An open receipt must have positive outstanding quantity')
+        return self
+
+    def period(self, command: PlanCommand) -> str | None:
+        if self.expected_date <= command.as_of_date:
+            return command.target_month
+        month = self.expected_date.isoformat()[:7]
+        return max(month, command.target_month) if month <= command.months[-1] else None
+
+
 class PlanningInput(StrictModel):
     dataset_id: DatasetId = LEGACY_DATASET
     contract_version: Literal['planning-handoff-0.2-draft'] = 'planning-handoff-0.2-draft'
@@ -129,6 +176,8 @@ class PlanningInput(StrictModel):
     forecast_runtime_identity: dict = Field(default_factory=dict)
     forecast_rows: list[ForecastFact]
     approved_inputs: ApprovedInputs
+    scheduled_receipts: list[ScheduledReceipt] | None = Field(
+        default=None, description='Null means no approved receipt feed. Empty means a checked feed with no applicable open receipts.')
     capacity_snapshot: CapacityRegistrationDraft | None = None
     routing_snapshot: CapacityRegistrationDraft | None = None
     policy_snapshot: dict[str, str] = Field(default_factory=dict)
@@ -152,10 +201,11 @@ class PlanningInputDiagnostics(StrictModel):
     forecast_execution_id: UUID
     target_month: Month
     as_of_date: date
-    scope: Literal['SINGLE_MONTH'] = 'SINGLE_MONTH'
+    horizon_months: int = Field(ge=1, le=12)
+    scope: Literal['SINGLE_MONTH', 'MULTI_MONTH'] = 'SINGLE_MONTH'
     status: Literal['INPUTS_PRESENT', 'NEEDS_REVIEW']
     inputs: dict[Literal['forecast', 'products', 'materials', 'bom', 'inventory',
-                         'resources', 'quantity_limits', 'hours_budgets', 'routing'], PlanningInputCoverage]
+                         'resources', 'quantity_limits', 'hours_budgets', 'routing', 'scheduled_receipts'], PlanningInputCoverage]
     missing_inputs: list[Code]
     warning_codes: list[Code]
     approved_sources: list[ApprovedSource]
@@ -201,9 +251,9 @@ class MaterialRequirement(StrictModel):
     plan_id: Code
     material_id: Code
     period: Month
-    required_qty: DecimalValue | None
-    available_qty: DecimalValue | None
-    shortage_qty: DecimalValue | None
+    required_qty: DecimalValue | None = Field(description='Gross requirement for this month.')
+    available_qty: DecimalValue | None = Field(description='Opening on-hand stock plus scheduled receipts for this month.')
+    shortage_qty: DecimalValue | None = Field(description='New purchasing requirement for this month.')
     unit: Code
     input_refs: list[str]
 
@@ -253,8 +303,12 @@ class PlanningOutput(StrictModel):
         # Do not invent a feasibility aggregation policy; reject only contradictory claims.
         for plan in self.plans:
             checks = [e for e in self.constraint_evaluations if e.plan_id == plan.plan_id]
-            if plan.feasibility == 'FEASIBLE' and (not checks or plan.policy_ref is None or plan.unverified
-                    or any(e.status == 'UNVERIFIED' for e in checks)):
+            if plan.feasibility != 'FEASIBLE':
+                continue
+            if any(e.strength == 'HARD' and e.status == 'VIOLATED' for e in checks):
+                raise ValueError('FEASIBLE contradicts a violated hard constraint')
+            if (not checks or not (plan.policy_ref or '').strip() or plan.unverified or self.unverified
+                    or any(e.strength != 'SOFT' and e.status != 'SATISFIED' for e in checks)):
                 raise ValueError('FEASIBLE needs policy and completed checks')
         return self
 

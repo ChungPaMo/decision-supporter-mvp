@@ -8,7 +8,7 @@ from app.integrations import modules
 from app.integrations import planning as plan_adapter
 from app.errors import ApiError, ErrorCode, ErrorResponse
 from contracts.interfaces.modules import ClassificationInput, ClassificationOutput, PlanCommand, PlanningReply
-from contracts.interfaces.planning import PlanningInputDiagnostics
+from contracts.interfaces.planning import LegacyPlanPreviewCommand, PlanningInputDiagnostics
 from app.ingest.parsing import MAX_BYTES, FileError, parse_file
 
 router = APIRouter(tags=['module-integration'], responses=ERROR_RESPONSES)
@@ -52,7 +52,7 @@ def plan_reply(body):
 
 
 @router.post('/planning-inputs/preview', response_model=PlanningInputDiagnostics,
-             summary='Read-only single-month approved input diagnostics, independent of plan calculation')
+             summary='Read-only approved input diagnostics for a consecutive planning horizon')
 def preview_planning_inputs(body: PlanCommand, dataset_id: str = Depends(dataset_context)):
     command = scoped_command(body, dataset_id)
     if command.scenario != 'BASE':
@@ -63,8 +63,8 @@ def preview_planning_inputs(body: PlanCommand, dataset_id: str = Depends(dataset
 @router.post('/plans', response_model=PlanningReply,
              responses={422: {'model': PlanningReply | ErrorResponse}, 500: {'model': PlanningReply | ErrorResponse}},
              summary='실제 예측 실행 ID를 참조하는 계획 진입점 (현재 501, 저장 없음)')
-def create_plan(body: PlanCommand, dataset_id: str = Depends(dataset_context)):
-    body = scoped_command(body,dataset_id)
+def create_plan(body: LegacyPlanPreviewCommand, dataset_id: str = Depends(dataset_context)):
+    body = PlanCommand.model_validate(scoped_command(body, dataset_id).model_dump())
     if body.scenario != 'BASE': raise ApiError(422, ErrorCode.REQUEST_INVALID, 'What-if는 /plans/what-if를 사용하세요.')
     return plan_reply(body)
 

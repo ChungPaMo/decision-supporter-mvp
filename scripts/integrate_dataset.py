@@ -84,7 +84,7 @@ def isolation_probes(base):
         assert c.execute(text(f'SELECT count(*) FROM "{schema}".import_batch')).scalar()==before
         forecast=c.execute(text('SELECT execution_id FROM public.forecast_run LIMIT 1')).scalar_one()
     try:
-        SqlPlanningSourceProvider(get_dataset_engine(target)).load(PlanCommand(dataset_id=target,forecast_execution_id=forecast,product_ids=['TP-10R'],target_month='2027-01',as_of_date='2026-12-31'))
+        SqlPlanningSourceProvider(get_dataset_engine(target)).load(PlanCommand(dataset_id=target,forecast_execution_id=forecast,product_ids=['TP-10R'],target_month='2027-01',horizon_months=1,as_of_date='2026-12-31'))
     except ApiError as exc:assert exc.status==404
     else:raise AssertionError('cross-dataset forecast accepted')
     checks.append('foreign dataset forecast UUID rejected; all probes rolled back')
@@ -133,7 +133,7 @@ def plan_lineage_probes():
     from sqlalchemy import text
     target='CHUNGPAMO-2027';engine=get_dataset_engine(target)
     with engine.connect() as c:forecast=c.execute(text('SELECT execution_id FROM forecast_run LIMIT 1')).scalar_one()
-    command=PlanCommand(dataset_id=target,forecast_execution_id=forecast,product_ids=['CP-N3-3030'],target_month='2027-01',as_of_date='2026-12-31')
+    command=PlanCommand(dataset_id=target,forecast_execution_id=forecast,product_ids=['CP-N3-3030'],target_month='2027-01',horizon_months=1,as_of_date='2026-12-31')
     snapshot=SqlPlanningSourceProvider(engine).load(command)
     result=PlanningOutput.model_validate(json.loads((ROOT/'contracts/examples/integration/planning_output.json').read_text(encoding='utf-8'))['payload'])
     for p in result.plans:
@@ -142,7 +142,7 @@ def plan_lineage_probes():
         outer=c.get_transaction()
         try:
             parent=PlanRepository.save(c,snapshot,result,{'test_double':True},'7'*64,origin='TEST_DOUBLE')
-            new=PlanCommand(**{**command.model_dump(),'scenario':'WHAT_IF','base_plan_execution_id':parent.execution_id,'overrides':{'production_qty.CP-N3-3030':'100'}})
+            new=PlanCommand(**{**command.model_dump(),'scenario':'WHAT_IF','base_plan_execution_id':parent.execution_id,'overrides':{'demand_multiplier.CP-N3-3030':'100'}})
             child_input=what_if_snapshot(parent,new,allow_test=True)
             child=PlanRepository.save(c,child_input,result,{'test_double':True},'8'*64,origin='TEST_DOUBLE')
             c.execute(text('SET CONSTRAINTS ALL IMMEDIATE'))
@@ -203,7 +203,7 @@ def main(approve=False):
     id=execution['execution_id'];assert client.get('/forecasts/'+id).status_code==404
     engine=get_dataset_engine(target)
     from uuid import UUID
-    snapshot=SqlPlanningSourceProvider(engine).load(PlanCommand(dataset_id=target,forecast_execution_id=UUID(id),product_ids=[p['product_id'] for p in new['items']],target_month='2027-01',as_of_date='2026-12-31'))
+    snapshot=SqlPlanningSourceProvider(engine).load(PlanCommand(dataset_id=target,forecast_execution_id=UUID(id),product_ids=[p['product_id'] for p in new['items']],target_month='2027-01',horizon_months=1,as_of_date='2026-12-31'))
     assert snapshot.dataset_id==target and snapshot.forecast_input_digest==execution['input_digest']
     assert len(snapshot.approved_inputs.products)==9 and len(snapshot.capacity_snapshot.resources)==6
     assert len(snapshot.routing_snapshot.routing_steps)==27

@@ -1,5 +1,7 @@
 # Module integration · draft 0.2
 
+> 2026-11-22 기준 계획 입력 진단과 저장 계약은 1~12개월을 받는다. 기본 3개월이며 기존 `/plans`는 기간 생략 시 1개월이다. `scheduled_receipts`의 `null`은 공급 미연결을 뜻한다. What-if 키와 모순 출력 기준도 갱신했다. 팀 계약 변환부와 공개 승인 게이트는 아직 연결 대기다. [최신 DTO·호환성·검증·팀 인계](PLANNING_CONTRACT_V04_HANDOFF.md)
+
 > 2026-11-18: `POST /planning-inputs/preview`가 기존 `PlanCommand`와 dataset scope의 단일 월 승인 입력을 진단한다. 계획 계산·저장과 별도로 사용하며 기존 엔진 게이트와 정책 미확인 상태를 유지한다. [진단 계약·B03 합의 명세](PLANNING_INPUT_DIAGNOSTICS_VERIFICATION.md) · [11/17 기존 개발 PC의 0009 적용 기록](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md)
 
 > 2026-11-16: 업로드 분류기 AVAILABLE=True/rules-0.2.0으로 두 분류 API는 실제 추천 또는 HOLD를 반환한다. 비활성/미구현만 501이며 기존 아래 미구현 설명은 초기 기록이다. [분류·매핑·이력 연계](INGESTION_INTEGRATION_HISTORY.md)는 기존 DTO·승인 gate를 재사용한다. 신규 0009는 이번 PC에서 PostgreSQL 미적용이다. 별도 문서 분류/임베딩 도구는 API에 연결하지 않았다.

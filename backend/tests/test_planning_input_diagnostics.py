@@ -12,7 +12,7 @@ from app.errors import ApiError, ErrorCode
 from app.integrations import planning as adapter
 from app.main import app
 from app.plans.service import PlanService
-from contracts.interfaces.planning import PlanningInput, PlanningInputDiagnostics
+from contracts.interfaces.planning import PlanCommand, PlanningInput, PlanningInputDiagnostics
 
 
 EXAMPLES = Path(__file__).resolve().parents[2] / 'contracts/examples/integration'
@@ -56,6 +56,7 @@ def snapshot_data():
          'quantity_unit': 'EA', 'run_time': '1', 'time_unit': 'min', 'time_basis': 'MACHINE_HOUR',
          'valid_from': '2026-12-01', 'valid_to': None}]}
     data['missing_inputs'] = ['POLICY_NOT_CONFIRMED']
+    data['scheduled_receipts'] = []
     return data
 
 
@@ -155,10 +156,43 @@ def test_example_matches_the_api_response(monkeypatch):
     assert response.status_code == 200 and response.json() == example('planning_input_diagnostics')
 
 
+def test_diagnostics_default_to_three_months_and_check_each_months_budget(monkeypatch, snapshot_data):
+    command = snapshot_data['command']
+    command.pop('horizon_months')
+    row = snapshot_data['forecast_rows'][0]
+    snapshot_data['forecast_rows'] = [{**row, 'target_month': f'2027-{month:02}'} for month in range(1, 4)]
+    use_provider(monkeypatch, snapshot_data)
+    with TestClient(app) as client:
+        response = client.post(PATH, json=command)
+    assert response.status_code == 200
+    report = response.json()
+    assert (report['horizon_months'], report['scope']) == (3, 'MULTI_MONTH')
+    assert report['inputs']['forecast']['row_count'] == 3
+    assert report['inputs']['hours_budgets'] == {'ready': False, 'row_count': 1}
+    assert 'HOURS_COVERAGE' in report['missing_inputs']
+
+
+def test_overdue_approved_receipt_marks_diagnostics_for_review(monkeypatch, snapshot_data):
+    source = {**snapshot_data['approved_inputs']['sources'][0], 'batch_id': str(UUID(int=40)),
+              'entity': 'scheduled_receipt', 'result_digest': 'a' * 64}
+    snapshot_data['approved_inputs']['sources'].append(source)
+    snapshot_data['scheduled_receipts'] = [{'po_id': 'PO1', 'material_id': 'M', 'open_qty': '3', 'unit': 'kg',
+                                           'batch_id': source['batch_id'], 'expected_date': '2026-12-31'}]
+    use_provider(monkeypatch, snapshot_data)
+    report = adapter.preview_inputs(PlanCommand.model_validate(snapshot_data['command']))
+    assert report.status == 'NEEDS_REVIEW'
+    assert report.inputs['scheduled_receipts'].row_count == 1
+    assert 'RECEIPT_OVERDUE' in report.warning_codes
+
+
 @pytest.mark.parametrize(('change', 'status', 'code'), [
     ({'dataset_id': 'OTHER'}, 409, 'DATASET_MISMATCH'),
     ({'forecast_execution_id': 'not-a-uuid'}, 422, 'REQUEST_INVALID'),
     ({'target_month': '2027-13'}, 422, 'REQUEST_INVALID'),
+    ({'horizon_months': 0}, 422, 'REQUEST_INVALID'),
+    ({'horizon_months': 13}, 422, 'REQUEST_INVALID'),
+    ({'horizon_months': '3'}, 422, 'REQUEST_INVALID'),
+    ({'horizon_months': 2, 'target_month': '9999-12'}, 422, 'REQUEST_INVALID'),
     ({'as_of_date': '2026-02-30'}, 422, 'REQUEST_INVALID'),
     ({'scenario': 'WHAT_IF', 'base_plan_execution_id': str(UUID(int=4))}, 422, 'REQUEST_INVALID'),
 ])

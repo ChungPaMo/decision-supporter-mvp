@@ -33,8 +33,10 @@ def delivered(monkeypatch):
 
 
 def test_delivered_module_is_called_without_saving_or_approving(delivered):
+    command = payload('planning_input.json')['command']
+    command.pop('horizon_months')  # Existing preview client never sent a horizon.
     with TestClient(app) as client:
-        response = client.post('/plans', json=payload('planning_input.json')['command'])
+        response = client.post('/plans', json=command)
     assert response.status_code == 200
     reply = response.json()
     assert reply['result']['status'] == 'PARTIAL' and len(reply['result']['plans']) == 2
@@ -48,14 +50,20 @@ def test_what_if_calls_same_module_with_explicit_base_snapshot(delivered, monkey
     seen = []
     monkeypatch.setattr(planning, 'run', lambda request: (seen.append(request), delivered[1])[1])
     command = {**payload('planning_input.json')['command'], 'scenario': 'WHAT_IF',
-               'base_plan_execution_id': '00000000-0000-4000-8000-000000000003', 'overrides': {'production_qty': '8500'}}
+               'base_plan_execution_id': '00000000-0000-4000-8000-000000000003', 'overrides': {'demand_multiplier': '1.1'}}
     with TestClient(app) as client:
         assert client.post('/plans', json=command).status_code == 422
-        assert client.post('/plans/what-if', json=command).status_code == 200
-    assert seen[0].command.overrides == {'production_qty': '8500'}
+        incomplete = client.post('/plans/what-if', json=command)
+        assert incomplete.status_code == 500 and incomplete.json()['detail']['code'] == 'MODULE_ERROR'
+        result = copy.deepcopy(delivered[1])
+        result['plans'].append({**result['plans'][0], 'plan_id': 'STABLE', 'plan_type': 'STABLE'})
+        monkeypatch.setattr(planning, 'run', lambda request: (seen.append(request), result)[1])
+        response = client.post('/plans/what-if', json=command)
+        assert response.status_code == 200 and len(response.json()['result']['plans']) == 3
+    assert seen[0].command.overrides == {'demand_multiplier': '1.1'}
 
 
-@pytest.mark.parametrize('mutation', ['out_of_scope', 'unit', 'duplicate', 'fake_feasible', 'too_few', 'exception'])
+@pytest.mark.parametrize('mutation', ['out_of_scope', 'unit', 'duplicate', 'fake_feasible', 'hard_violation', 'still_typed', 'too_few', 'exception'])
 def test_bad_module_output_is_safe_error(delivered, monkeypatch, mutation):
     from engine import planning
     result = copy.deepcopy(delivered[1])
@@ -63,6 +71,17 @@ def test_bad_module_output_is_safe_error(delivered, monkeypatch, mutation):
     if mutation == 'unit': result['plans'][0]['production'][0]['unit'] = 'kg'
     if mutation == 'duplicate': result['plans'][0]['production'] *= 2
     if mutation == 'fake_feasible': result['plans'][0]['feasibility'] = 'FEASIBLE'
+    if mutation in ('hard_violation', 'still_typed'):
+        from contracts.interfaces.planning import PlanningOutput
+        plan = result['plans'][0]
+        plan.update(feasibility='FEASIBLE', policy_ref='TEST-POLICY', unverified=[])
+        result['unverified'] = []
+        for check in result['constraint_evaluations']:
+            if check['plan_id'] == plan['plan_id']:
+                check.update(strength='HARD', status='VIOLATED' if mutation == 'hard_violation' else 'SATISFIED')
+        if mutation == 'still_typed':
+            result = PlanningOutput.model_validate(result)
+            result.constraint_evaluations[0].status = 'VIOLATED'
     if mutation == 'too_few': result['plans'] = result['plans'][:1]
     def execute(request):
         if mutation == 'exception': raise RuntimeError('secret internal data')
@@ -72,6 +91,22 @@ def test_bad_module_output_is_safe_error(delivered, monkeypatch, mutation):
         response = client.post('/plans', json=payload('planning_input.json')['command'])
     assert response.status_code == 500 and response.json()['detail']['code'] == 'MODULE_ERROR'
     assert 'secret' not in response.text
+
+
+@pytest.mark.parametrize(('overrides', 'code'), [
+    ({'production_qty.TP-10R': '1'}, 'PLAN_OVERRIDE_UNSUPPORTED'),
+    ({'demand_multiplier': '-1'}, 'REQUEST_INVALID'),
+    ({'demand_multiplier.OTHER': '1'}, 'PLAN_OVERRIDE_UNSUPPORTED'),
+    ({'overtime_hours_limit.SAW1.2027-02': '1'}, 'PLAN_OVERRIDE_UNSUPPORTED'),
+])
+def test_invalid_what_if_request_is_explicit_even_when_calculation_is_disabled(overrides, code):
+    body = {**payload('planning_input.json')['command'], 'scenario': 'WHAT_IF',
+            'base_plan_execution_id': str(UUID(int=3)), 'overrides': overrides}
+    with TestClient(app) as client:
+        reply = client.post('/plans/what-if', json=body)
+    detail = reply.json()['detail']
+    assert reply.status_code == 422 and detail['code'] == code
+    assert 'WHATIF_INVALID' in str(detail['details'])
 
 
 def test_module_failure_is_not_http_success(delivered, monkeypatch):

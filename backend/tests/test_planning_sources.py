@@ -6,10 +6,11 @@ from uuid import UUID
 
 import pytest
 from fastapi.testclient import TestClient
-from app.batches.repository import ApprovedProduct, ApprovedInventory
+from app.batches.repository import ApprovedMaterial, ApprovedProduct, ApprovedInventory
 from app.errors import ApiError
 from app.forecast.runs_schemas import InputBatchSnapshot
 from app.integrations import planning as adapter
+from app.integrations.planning_receipts import ReceiptLedgerRow, open_receipts
 from app.main import app
 from contracts.interfaces.modules import PlanCommand
 
@@ -35,7 +36,8 @@ def sources(monkeypatch):
             sql = str(query); seen.append(sql)
             if sql.startswith('SET'): return None
             assert "status='APPROVED'" in sql and 'blocking_error_count=0' in sql
-            assert parameters == {'ids': [PRODUCT_BATCH, DEMAND_BATCH], 'dataset_id': database.dataset_id}
+            assert parameters['ids'][:2] == [PRODUCT_BATCH, DEMAND_BATCH]
+            assert parameters['dataset_id'] == database.dataset_id
             return SimpleNamespace(mappings=lambda: SimpleNamespace(all=lambda: approved))
     class Database:
         dataset_id = 'TISSUE-LEGACY'
@@ -59,7 +61,7 @@ def sources(monkeypatch):
 
 def command(**changes):
     return PlanCommand.model_validate({'forecast_execution_id': str(UUID(int=1)), 'product_ids': ['TP-10R'],
-                                      'target_month': '2027-01', 'as_of_date': '2026-12-31', **changes})
+                                      'target_month': '2027-01', 'horizon_months': 1, 'as_of_date': '2026-12-31', **changes})
 
 
 def test_approved_snapshot_is_read_only_and_missing_inventory_is_not_zero(sources):
@@ -130,3 +132,90 @@ def test_stale_tampered_or_unapproved_forecast_source_is_rejected(sources, chang
 def test_pagination_reads_every_page_and_refuses_truncated_input():
     assert len(adapter._all_pages(lambda limit, offset: (list(range(min(limit, 201-offset))), 201))) == 201
     with pytest.raises(ApiError): adapter._all_pages(lambda l, o: ([], 5))
+
+
+@pytest.mark.parametrize(('horizon', 'last'), [(1, '2027-11'), (3, '2028-01'), (6, '2028-04'), (12, '2028-10')])
+def test_one_snapshot_covers_the_entire_requested_horizon(sources, horizon, last):
+    provider, forecast, sql, _ = sources
+    periods = [f'2027-{m:02}' for m in (11, 12)] + [f'2028-{m:02}' for m in range(1, 12)]
+    row = vars(forecast.result.forecasts[0])
+    forecast.result.forecasts = [SimpleNamespace(**{**row, 'target_month': period}) for period in periods]
+    request = command(target_month='2027-11', horizon_months=horizon)
+    snapshot = provider.load(request)
+    assert request.months[-1] == last
+    assert [row.target_month for row in snapshot.forecast_rows] == periods[:horizon]
+    assert sql.count('SET TRANSACTION READ ONLY') == 1
+    assert snapshot.scheduled_receipts is None
+    assert 'RECEIPT_SOURCE_UNAVAILABLE' in snapshot.missing_inputs
+
+
+def test_missing_later_month_is_rejected_before_loading_other_sources(sources):
+    provider, _, sql, _ = sources
+    with pytest.raises(ApiError) as error:
+        provider.load(command(horizon_months=3))
+    assert error.value.status == 409
+    assert error.value.details == {'reason': 'FORECAST_PRODUCT_MONTH_COVERAGE'}
+    assert sql == ['SET TRANSACTION READ ONLY']
+
+
+def ledger_row(**changes):
+    return ReceiptLedgerRow.model_validate({
+        'dataset_id': 'TISSUE-LEGACY', 'batch_id': UUID(int=5), 'po_id': 'PO1', 'material_id': 'M',
+        'ordered_qty': '7.25', 'received_qty': '2', 'unit': 'kg', 'expected_date': '2026-12-31',
+        'status': 'OPEN', **changes,
+    })
+
+
+@pytest.mark.parametrize(('changes', 'period'), [
+    ({}, '2027-01'), ({'expected_date': '2027-02-01'}, '2027-02'),
+    ({'expected_date': '2027-04-01'}, None), ({'status': 'CANCELLED'}, None),
+    ({'received_qty': '7.25'}, None),
+])
+def test_receipt_ledger_projects_only_the_remaining_applicable_quantity(changes, period):
+    request = command(horizon_months=3)
+    rows = open_receipts([ledger_row(**changes)], request, {'M': 'kg'})
+    if period is None:
+        assert rows == []
+    else:
+        assert rows[0].period(request) == period and rows[0].open_qty == '5.25'
+
+
+@pytest.mark.parametrize(('changes', 'reason'), [
+    ({'dataset_id': 'OTHER'}, 'RECEIPT_DATASET_MISMATCH'),
+    ({'received_qty': '8'}, 'RECEIPT_BALANCE_INVALID'),
+    ({'unit': 'EA'}, 'RECEIPT_MATERIAL_OR_UNIT_MISMATCH'),
+    ({}, 'RECEIPT_DUPLICATE_PO'),
+])
+def test_receipt_ledger_checks_scope_balance_unit_and_unique_po(changes, reason):
+    rows = [ledger_row(**changes)] if changes else [ledger_row(), ledger_row()]
+    with pytest.raises(ApiError) as error:
+        open_receipts(rows, command(), {'M': 'kg'})
+    assert error.value.details == {'reason': reason}
+
+
+@pytest.mark.parametrize(('entity', 'reason'), [
+    ('scheduled_receipt', None), ('inventory', 'RECEIPT_SOURCE_MISMATCH'), (None, 'APPROVED_SOURCE_MISMATCH'),
+])
+def test_receipt_reader_uses_same_approved_batch_lookup(sources, monkeypatch, entity, reason):
+    provider, _, sql, approved = sources
+    template = approved[0]
+    batch_id = UUID(int=4)
+    approved.append({**template, 'batch_id': batch_id, 'entity': 'material'})
+    if entity:
+        approved.append({**template, 'batch_id': UUID(int=5), 'entity': entity})
+    monkeypatch.setattr(adapter.SqlBatchTx, 'list_materials', lambda *args: (
+        [ApprovedMaterial('M', 'Synthetic', 'kg', Decimal('0'), 'SYNTHETIC', batch_id)], 1))
+
+    def read_receipts(connection, dataset_id):
+        assert sql == ['SET TRANSACTION READ ONLY'] and dataset_id == 'TISSUE-LEGACY'
+        return [ledger_row()]
+
+    provider.receipt_reader = read_receipts
+    if reason:
+        with pytest.raises(ApiError) as error:
+            provider.load(command())
+        assert error.value.details == {'reason': reason}
+    else:
+        snapshot = provider.load(command())
+        assert snapshot.scheduled_receipts[0].open_qty == '5.25'
+        assert snapshot.approved_inputs.sources[-1].entity == 'scheduled_receipt'

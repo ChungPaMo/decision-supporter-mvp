@@ -5,6 +5,7 @@ from sqlalchemy import text
 from app.errors import ApiError, ErrorCode
 from contracts.interfaces.plan_execution import PlanExecutionDetail, PlanExecutionSummary, PlanExecutionList
 from app.integrations.planning import _json
+from app.integrations.planning_validation import validate_pair
 
 
 def digest(value):
@@ -13,6 +14,7 @@ def digest(value):
 
 
 SUMMARY = '''e.dataset_id,e.execution_id,e.forecast_execution_id,e.base_plan_execution_id,e.scenario_type,e.target_month,
+ COALESCE(e.input_snapshot->'command'->'horizon_months','1'::jsonb) AS horizon_months,
  e.as_of_date::text,e.status,e.input_digest,e.result_digest,e.engine_version,e.policy_version,e.runtime_identity,
  e.created_at,e.completed_at,e.error_code,e.data_origin,r.status AS decision_status,r.selected_plan_id,r.version'''
 
@@ -26,11 +28,20 @@ class PlanRepository:
                             ('' if include_test else " AND e.data_origin='REAL_ENGINE'")),{'id':execution_id}).mappings().first()
         if not row: raise ApiError(404,ErrorCode.PLAN_NOT_FOUND,'Plan execution not found.')
         events=c.execute(text('SELECT decision_id,execution_id,plan_id,action,status_before,status_after,actor_id,auth_verified,reason,input_digest,decided_at,exception_codes FROM plan_decision WHERE execution_id=:id ORDER BY review_version'),{'id':execution_id}).mappings().all()
-        result=PlanExecutionDetail.model_validate({**row,'decisions':[dict(e) for e in events]})
-        from .service import validate_pair
+        raw_input = row['input_snapshot']
+        if not isinstance(raw_input, dict) or not isinstance(raw_input.get('command'), dict):
+            raise ValueError('Invalid stored plan input')
+        # Historical rows predate horizon_months and were always stored at one month.
+        input_snapshot = {**raw_input, 'command': {**raw_input['command'], 'horizon_months': row['horizon_months']}}
+        result=PlanExecutionDetail.model_validate({**row,'input_snapshot':input_snapshot,'decisions':[dict(e) for e in events]})
         validate_pair(result.input_snapshot,result.result_snapshot)
         if result.dataset_id!=result.input_snapshot.dataset_id: raise ValueError("Stored dataset ownership mismatch")
-        if digest(row['input_snapshot'])!=result.input_digest or digest(result.result_snapshot.model_dump(mode='json'))!=result.result_digest:
+        command = result.input_snapshot.command
+        if (command.target_month != result.target_month or command.forecast_execution_id != result.forecast_execution_id
+                or command.base_plan_execution_id != result.base_plan_execution_id or command.scenario != result.scenario_type
+                or command.as_of_date.isoformat() != result.as_of_date):
+            raise ValueError('Stored plan scope mismatch')
+        if digest(raw_input)!=result.input_digest or digest(result.result_snapshot.model_dump(mode='json'))!=result.result_digest:
             raise ValueError('Stored plan digest mismatch')
         from contracts.interfaces.planning import ApprovedSource
         sources=c.execute(text('''SELECT i.batch_id,i.batch_version,b.entity,i.source_sha256,i.result_digest,i.approved_at
@@ -60,7 +71,6 @@ class PlanRepository:
     @staticmethod
     def save(c,snapshot,result,runtime,dedup_key,*,origin='REAL_ENGINE'):
         """Internal transport only, never exposed as an upload-result API."""
-        from .service import validate_pair
         from contracts.interfaces.planning import PlanningInput,PlanningOutput
         snapshot=PlanningInput.model_validate(snapshot)
         result=PlanningOutput.model_validate(result)

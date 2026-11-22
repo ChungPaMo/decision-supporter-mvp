@@ -832,6 +832,93 @@
     "title": "DatasetDetail",
     "type": "object"
   },
+  "LegacyPlanPreviewCommand": {
+    "additionalProperties": false,
+    "properties": {
+      "as_of_date": {
+        "format": "date",
+        "title": "As Of Date",
+        "type": "string"
+      },
+      "base_plan_execution_id": {
+        "anyOf": [
+          {
+            "format": "uuid",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Base Plan Execution Id"
+      },
+      "contract_version": {
+        "const": "planning-integration-0.1-draft",
+        "default": "planning-integration-0.1-draft",
+        "title": "Contract Version",
+        "type": "string"
+      },
+      "dataset_id": {
+        "default": "TISSUE-LEGACY",
+        "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+        "title": "Dataset Id",
+        "type": "string"
+      },
+      "forecast_execution_id": {
+        "format": "uuid",
+        "title": "Forecast Execution Id",
+        "type": "string"
+      },
+      "horizon_months": {
+        "default": 1,
+        "description": "Legacy preview defaults to one month. Send the desired horizon explicitly.",
+        "maximum": 12,
+        "minimum": 1,
+        "title": "Horizon Months",
+        "type": "integer"
+      },
+      "overrides": {
+        "additionalProperties": {
+          "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+          "type": "string"
+        },
+        "title": "Overrides",
+        "type": "object"
+      },
+      "product_ids": {
+        "items": {
+          "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+          "type": "string"
+        },
+        "minItems": 1,
+        "title": "Product Ids",
+        "type": "array"
+      },
+      "scenario": {
+        "default": "BASE",
+        "enum": [
+          "BASE",
+          "WHAT_IF"
+        ],
+        "title": "Scenario",
+        "type": "string"
+      },
+      "target_month": {
+        "pattern": "^([1-9][0-9]{3}|0[1-9][0-9]{2}|00[1-9][0-9]|000[1-9])-(0[1-9]|1[0-2])$",
+        "title": "Target Month",
+        "type": "string"
+      }
+    },
+    "required": [
+      "forecast_execution_id",
+      "product_ids",
+      "target_month",
+      "as_of_date"
+    ],
+    "title": "LegacyPlanPreviewCommand",
+    "type": "object"
+  },
   "PlanCandidateDetail": {
     "$defs": {
       "PlanningIssue": {
@@ -1001,6 +1088,14 @@
         "format": "uuid",
         "title": "Forecast Execution Id",
         "type": "string"
+      },
+      "horizon_months": {
+        "default": 3,
+        "description": "Number of consecutive months from target_month.",
+        "maximum": 12,
+        "minimum": 1,
+        "title": "Horizon Months",
+        "type": "integer"
       },
       "overrides": {
         "additionalProperties": {
@@ -1230,6 +1325,14 @@
         "format": "uuid",
         "title": "Forecast Execution Id",
         "type": "string"
+      },
+      "horizon_months": {
+        "default": 3,
+        "description": "Number of consecutive months from target_month.",
+        "maximum": 12,
+        "minimum": 1,
+        "title": "Horizon Months",
+        "type": "integer"
       },
       "overrides": {
         "additionalProperties": {
@@ -2012,6 +2115,7 @@
                 "type": "null"
               }
             ],
+            "description": "Opening on-hand stock plus scheduled receipts for this month.",
             "title": "Available Qty"
           },
           "input_refs": {
@@ -2046,6 +2150,7 @@
                 "type": "null"
               }
             ],
+            "description": "Gross requirement for this month.",
             "title": "Required Qty"
           },
           "shortage_qty": {
@@ -2058,6 +2163,7 @@
                 "type": "null"
               }
             ],
+            "description": "New purchasing requirement for this month.",
             "title": "Shortage Qty"
           },
           "unit": {
@@ -2186,6 +2292,14 @@
             "format": "uuid",
             "title": "Forecast Execution Id",
             "type": "string"
+          },
+          "horizon_months": {
+            "default": 3,
+            "description": "Number of consecutive months from target_month.",
+            "maximum": 12,
+            "minimum": 1,
+            "title": "Horizon Months",
+            "type": "integer"
           },
           "overrides": {
             "additionalProperties": {
@@ -2406,6 +2520,22 @@
               }
             ],
             "default": null
+          },
+          "scheduled_receipts": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/$defs/ScheduledReceipt"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Null means no approved receipt feed. Empty means a checked feed with no applicable open receipts.",
+            "title": "Scheduled Receipts"
           }
         },
         "required": [
@@ -3003,6 +3133,65 @@
         ],
         "title": "RoutingStep",
         "type": "object"
+      },
+      "ScheduledReceipt": {
+        "additionalProperties": false,
+        "properties": {
+          "batch_id": {
+            "description": "Reference to the approved receipt source in approved_inputs.sources.",
+            "format": "uuid",
+            "title": "Batch Id",
+            "type": "string"
+          },
+          "expected_date": {
+            "format": "date",
+            "title": "Expected Date",
+            "type": "string"
+          },
+          "material_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Material Id",
+            "type": "string"
+          },
+          "open_qty": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Open Qty",
+            "type": "string"
+          },
+          "po_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Po Id",
+            "type": "string"
+          },
+          "supplier_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Supplier Id"
+          },
+          "unit": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "po_id",
+          "material_id",
+          "open_qty",
+          "unit",
+          "expected_date",
+          "batch_id"
+        ],
+        "title": "ScheduledReceipt",
+        "type": "object"
       }
     },
     "additionalProperties": false,
@@ -3088,6 +3277,13 @@
         "format": "uuid",
         "title": "Forecast Execution Id",
         "type": "string"
+      },
+      "horizon_months": {
+        "default": 1,
+        "maximum": 12,
+        "minimum": 1,
+        "title": "Horizon Months",
+        "type": "integer"
       },
       "input_digest": {
         "title": "Input Digest",
@@ -3262,6 +3458,13 @@
             "format": "uuid",
             "title": "Forecast Execution Id",
             "type": "string"
+          },
+          "horizon_months": {
+            "default": 1,
+            "maximum": 12,
+            "minimum": 1,
+            "title": "Horizon Months",
+            "type": "integer"
           },
           "input_digest": {
             "title": "Input Digest",
@@ -4121,6 +4324,7 @@
                 "type": "null"
               }
             ],
+            "description": "Opening on-hand stock plus scheduled receipts for this month.",
             "title": "Available Qty"
           },
           "input_refs": {
@@ -4155,6 +4359,7 @@
                 "type": "null"
               }
             ],
+            "description": "Gross requirement for this month.",
             "title": "Required Qty"
           },
           "shortage_qty": {
@@ -4167,6 +4372,7 @@
                 "type": "null"
               }
             ],
+            "description": "New purchasing requirement for this month.",
             "title": "Shortage Qty"
           },
           "unit": {
@@ -4295,6 +4501,14 @@
             "format": "uuid",
             "title": "Forecast Execution Id",
             "type": "string"
+          },
+          "horizon_months": {
+            "default": 3,
+            "description": "Number of consecutive months from target_month.",
+            "maximum": 12,
+            "minimum": 1,
+            "title": "Horizon Months",
+            "type": "integer"
           },
           "overrides": {
             "additionalProperties": {
@@ -4503,6 +4717,13 @@
             "title": "Forecast Execution Id",
             "type": "string"
           },
+          "horizon_months": {
+            "default": 1,
+            "maximum": 12,
+            "minimum": 1,
+            "title": "Horizon Months",
+            "type": "integer"
+          },
           "input_digest": {
             "title": "Input Digest",
             "type": "string"
@@ -4694,6 +4915,22 @@
               }
             ],
             "default": null
+          },
+          "scheduled_receipts": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/$defs/ScheduledReceipt"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "description": "Null means no approved receipt feed. Empty means a checked feed with no applicable open receipts.",
+            "title": "Scheduled Receipts"
           }
         },
         "required": [
@@ -5290,6 +5527,65 @@
           "valid_from"
         ],
         "title": "RoutingStep",
+        "type": "object"
+      },
+      "ScheduledReceipt": {
+        "additionalProperties": false,
+        "properties": {
+          "batch_id": {
+            "description": "Reference to the approved receipt source in approved_inputs.sources.",
+            "format": "uuid",
+            "title": "Batch Id",
+            "type": "string"
+          },
+          "expected_date": {
+            "format": "date",
+            "title": "Expected Date",
+            "type": "string"
+          },
+          "material_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Material Id",
+            "type": "string"
+          },
+          "open_qty": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Open Qty",
+            "type": "string"
+          },
+          "po_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Po Id",
+            "type": "string"
+          },
+          "supplier_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Supplier Id"
+          },
+          "unit": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "po_id",
+          "material_id",
+          "open_qty",
+          "unit",
+          "expected_date",
+          "batch_id"
+        ],
+        "title": "ScheduledReceipt",
         "type": "object"
       }
     },
@@ -5929,6 +6225,14 @@
             "title": "Forecast Execution Id",
             "type": "string"
           },
+          "horizon_months": {
+            "default": 3,
+            "description": "Number of consecutive months from target_month.",
+            "maximum": 12,
+            "minimum": 1,
+            "title": "Horizon Months",
+            "type": "integer"
+          },
           "overrides": {
             "additionalProperties": {
               "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
@@ -6406,6 +6710,65 @@
         ],
         "title": "RoutingStep",
         "type": "object"
+      },
+      "ScheduledReceipt": {
+        "additionalProperties": false,
+        "properties": {
+          "batch_id": {
+            "description": "Reference to the approved receipt source in approved_inputs.sources.",
+            "format": "uuid",
+            "title": "Batch Id",
+            "type": "string"
+          },
+          "expected_date": {
+            "format": "date",
+            "title": "Expected Date",
+            "type": "string"
+          },
+          "material_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Material Id",
+            "type": "string"
+          },
+          "open_qty": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Open Qty",
+            "type": "string"
+          },
+          "po_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Po Id",
+            "type": "string"
+          },
+          "supplier_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null,
+            "title": "Supplier Id"
+          },
+          "unit": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "po_id",
+          "material_id",
+          "open_qty",
+          "unit",
+          "expected_date",
+          "batch_id"
+        ],
+        "title": "ScheduledReceipt",
+        "type": "object"
       }
     },
     "additionalProperties": false,
@@ -6504,6 +6867,22 @@
           }
         ],
         "default": null
+      },
+      "scheduled_receipts": {
+        "anyOf": [
+          {
+            "items": {
+              "$ref": "#/$defs/ScheduledReceipt"
+            },
+            "type": "array"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "description": "Null means no approved receipt feed. Empty means a checked feed with no applicable open receipts.",
+        "title": "Scheduled Receipts"
       }
     },
     "required": [
@@ -6621,6 +7000,12 @@
         "title": "Forecast Input Digest",
         "type": "string"
       },
+      "horizon_months": {
+        "maximum": 12,
+        "minimum": 1,
+        "title": "Horizon Months",
+        "type": "integer"
+      },
       "input_digest": {
         "title": "Input Digest",
         "type": "string"
@@ -6639,7 +7024,8 @@
             "resources",
             "quantity_limits",
             "hours_budgets",
-            "routing"
+            "routing",
+            "scheduled_receipts"
           ]
         },
         "title": "Inputs",
@@ -6660,8 +7046,11 @@
         "type": "boolean"
       },
       "scope": {
-        "const": "SINGLE_MONTH",
         "default": "SINGLE_MONTH",
+        "enum": [
+          "SINGLE_MONTH",
+          "MULTI_MONTH"
+        ],
         "title": "Scope",
         "type": "string"
       },
@@ -6692,6 +7081,7 @@
       "forecast_execution_id",
       "target_month",
       "as_of_date",
+      "horizon_months",
       "status",
       "inputs",
       "missing_inputs",
@@ -6907,6 +7297,7 @@
                 "type": "null"
               }
             ],
+            "description": "Opening on-hand stock plus scheduled receipts for this month.",
             "title": "Available Qty"
           },
           "input_refs": {
@@ -6941,6 +7332,7 @@
                 "type": "null"
               }
             ],
+            "description": "Gross requirement for this month.",
             "title": "Required Qty"
           },
           "shortage_qty": {
@@ -6953,6 +7345,7 @@
                 "type": "null"
               }
             ],
+            "description": "New purchasing requirement for this month.",
             "title": "Shortage Qty"
           },
           "unit": {
@@ -7397,6 +7790,7 @@
                 "type": "null"
               }
             ],
+            "description": "Opening on-hand stock plus scheduled receipts for this month.",
             "title": "Available Qty"
           },
           "input_refs": {
@@ -7431,6 +7825,7 @@
                 "type": "null"
               }
             ],
+            "description": "Gross requirement for this month.",
             "title": "Required Qty"
           },
           "shortage_qty": {
@@ -7443,6 +7838,7 @@
                 "type": "null"
               }
             ],
+            "description": "New purchasing requirement for this month.",
             "title": "Shortage Qty"
           },
           "unit": {

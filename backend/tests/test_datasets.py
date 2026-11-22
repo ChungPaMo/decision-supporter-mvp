@@ -82,7 +82,8 @@ def test_two_memory_datasets_same_codes_refs_and_page_totals():
 
 
 def test_plan_context_and_what_if_dataset_cannot_be_changed():
-    from app.plans.service import what_if_snapshot,validate_pair
+    from app.integrations.planning_validation import validate_pair
+    from app.plans.service import what_if_snapshot
     from app.api.integrations import scoped_command
     from app.integrations.planning import SqlPlanningSourceProvider
     command=PlanCommand(dataset_id='CHUNGPAMO-2027',forecast_execution_id=UUID(int=1),product_ids=['SAME'],target_month='2027-01',as_of_date='2026-12-31')

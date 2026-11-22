@@ -75,7 +75,7 @@ def test_actual_dataset_api_forecast_and_input(api,dataset,products,resources,de
     assert reused.status_code==200 and reused.json()['reused']
     assert execution['input_digest']!=execution['dataset_input_digest']
     ids=[r['product_id'] for r in client.get('/products',params=p).json()['items']]
-    snapshot=SqlPlanningSourceProvider(get_dataset_engine(dataset)).load(PlanCommand(dataset_id=dataset,forecast_execution_id=execution['execution_id'],product_ids=ids,target_month='2027-01',as_of_date='2026-12-31'))
+    snapshot=SqlPlanningSourceProvider(get_dataset_engine(dataset)).load(PlanCommand(dataset_id=dataset,forecast_execution_id=execution['execution_id'],product_ids=ids,target_month='2027-01',horizon_months=1,as_of_date='2026-12-31'))
     assert snapshot.dataset_id==dataset and len(snapshot.capacity_snapshot.resources)==resources
     assert client.post('/plans',params=p,json=snapshot.command.model_dump(mode='json')).status_code==501
     assert client.post('/plan-executions',params=p,json=snapshot.command.model_dump(mode='json')).status_code==501
@@ -102,7 +102,7 @@ def test_plan_dedup_lineage_concurrent_review_and_audit(api):
     forecast=client.post('/forecasts',params=p,json={'trained_until':'2026-12-31','horizon_months':3})
     assert forecast.status_code in (200,201),forecast.json()
     fid=forecast.json()['execution']['execution_id']
-    snapshot=SqlPlanningSourceProvider(get_dataset_engine(dataset)).load(PlanCommand(dataset_id=dataset,forecast_execution_id=fid,product_ids=['CP-N3-3030'],target_month='2027-01',as_of_date='2026-12-31'))
+    snapshot=SqlPlanningSourceProvider(get_dataset_engine(dataset)).load(PlanCommand(dataset_id=dataset,forecast_execution_id=fid,product_ids=['CP-N3-3030'],target_month='2027-01',horizon_months=1,as_of_date='2026-12-31'))
     result=PlanningOutput.model_validate(json.loads((ROOT/'contracts/examples/integration/planning_output.json').read_text(encoding='utf-8'))['payload'])
     for plan in result.plans:
         for row in plan.production:row.product_id='CP-N3-3030'
@@ -118,7 +118,7 @@ def test_plan_dedup_lineage_concurrent_review_and_audit(api):
         except IntegrityError as e:return e.orig.sqlstate
     with ThreadPoolExecutor(max_workers=2) as pool:out=list(pool.map(lambda _:duplicate(),range(2)))
     assert sorted(out)==['23505','stored']
-    child_cmd=PlanCommand(**{**snapshot.command.model_dump(),'scenario':'WHAT_IF','base_plan_execution_id':parent.execution_id,'overrides':{'production_qty.CP-N3-3030':'100'}})
+    child_cmd=PlanCommand(**{**snapshot.command.model_dump(),'scenario':'WHAT_IF','base_plan_execution_id':parent.execution_id,'overrides':{'demand_multiplier.CP-N3-3030':'100'}})
     child_input=what_if_snapshot(parent,child_cmd,allow_test=True)
     with scoped.begin() as c:child=PlanRepository.save(c,child_input,result,{'test_double':True},'c'*64,origin='TEST_DOUBLE')
     assert child.base_plan_execution_id==parent.execution_id

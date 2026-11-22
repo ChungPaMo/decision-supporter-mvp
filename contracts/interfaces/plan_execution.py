@@ -52,6 +52,7 @@ class PlanExecutionSummary(StrictModel):
     base_plan_execution_id: UUID | None
     scenario_type: Literal['BASE','WHAT_IF']
     target_month: str
+    horizon_months: int = Field(default=1, ge=1, le=12, strict=True)
     as_of_date: str
     status: Literal['COMPLETED','PARTIAL','FAILED']
     input_digest: str

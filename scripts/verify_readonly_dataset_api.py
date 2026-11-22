@@ -72,7 +72,7 @@ def main():
             batches=client.get('/batches',params={'dataset_id':dataset,'limit':200}).json()['items']
             assert ids<={b['batch_id'] for b in batches if b['status']=='APPROVED' and b['entity']=='monthly_demand'}
             executions[dataset]=execution
-            command=PlanCommand(dataset_id=dataset,forecast_execution_id=UUID(execution['execution_id']),product_ids=[r['product_id'] for r in client.get('/products',params={'dataset_id':dataset}).json()['items']],target_month='2027-01',as_of_date='2026-12-31')
+            command=PlanCommand(dataset_id=dataset,forecast_execution_id=UUID(execution['execution_id']),product_ids=[r['product_id'] for r in client.get('/products',params={'dataset_id':dataset}).json()['items']],target_month='2027-01',horizon_months=1,as_of_date='2026-12-31')
             snapshot=SqlPlanningSourceProvider(get_dataset_engine(dataset)).load(command)
             assert snapshot.dataset_id==dataset
             assert {s.batch_id for s in snapshot.approved_inputs.sources}<={UUID(b['batch_id']) for b in batches}
@@ -92,7 +92,7 @@ def main():
         for source,target in [('TISSUE-LEGACY','CHUNGPAMO-2027'),('CHUNGPAMO-2027','TISSUE-LEGACY')]:
             foreign=executions[source]['execution_id']
             assert client.get('/forecasts/'+foreign,params={'dataset_id':target}).status_code==404
-            try:SqlPlanningSourceProvider(get_dataset_engine(target)).load(PlanCommand(dataset_id=target,forecast_execution_id=UUID(foreign),product_ids=['TP-10R'],target_month='2027-01',as_of_date='2026-12-31'))
+            try:SqlPlanningSourceProvider(get_dataset_engine(target)).load(PlanCommand(dataset_id=target,forecast_execution_id=UUID(foreign),product_ids=['TP-10R'],target_month='2027-01',horizon_months=1,as_of_date='2026-12-31'))
             except ApiError as exc:assert exc.status==404
             else:raise AssertionError('Foreign forecast accepted')
         ok('forecast UUID cross-access rejected in both API and actual SQL provider')

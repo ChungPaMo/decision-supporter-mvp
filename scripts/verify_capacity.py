@@ -28,7 +28,7 @@ def main():
     # Real forecast persisted through the existing approved-demand service, idempotent dedup.
     reply=ForecastRuns(e).create(ForecastRunRequest(trained_until='2026-12-31',horizon_months=1))
     assert reply.execution.status in ('OK','PARTIAL')
-    cmd=PlanCommand(forecast_execution_id=reply.execution.execution_id,product_ids=['TP-10R'],target_month='2027-01',as_of_date='2026-12-31')
+    cmd=PlanCommand(forecast_execution_id=reply.execution.execution_id,product_ids=['TP-10R'],target_month='2027-01',horizon_months=1,as_of_date='2026-12-31')
     a=SqlPlanningSourceProvider(e).load(cmd); b=SqlPlanningSourceProvider(e).load(cmd)
     assert _json(a.model_dump(mode='json'))==_json(b.model_dump(mode='json'))
     assert len(a.capacity_snapshot.resources)==2 and len(a.routing_snapshot.routing_steps)==1

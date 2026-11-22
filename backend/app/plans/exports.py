@@ -5,7 +5,7 @@ from app.errors import ApiError,ErrorCode
 from app.exports.xlsx import _put_text,_put_number,MAX_ROWS
 from .approval import approval_allowed,ApprovalContext
 
-NUMERIC={'p50','p80','p90','production_qty','limit_value','used_value','required_qty','available_qty','shortage_qty'}
+NUMERIC={'p50','p80','p90','production_qty','limit_value','used_value','required_qty','available_qty','shortage_qty','horizon_months'}
 
 
 def _render(execution,plan,banner):
@@ -14,7 +14,8 @@ def _render(execution,plan,banner):
     output=execution.result_snapshot
     sections={
         'Overview':[{'execution_id':str(execution.execution_id),'plan_id':plan.plan_id,'month':execution.target_month,
-                     'calculation_status':execution.status,'review_status':execution.decision_status,'label':plan.label}],
+                     'calculation_status':execution.status,'review_status':execution.decision_status,'label':plan.label,
+                     'horizon_months':str(execution.horizon_months),'end_month':execution.input_snapshot.command.months[-1]}],
         'Forecast':[{'forecast_execution_id':str(execution.forecast_execution_id),**r.model_dump(mode='json')} for r in execution.input_snapshot.forecast_rows],
         'MPS':[r.model_dump(mode='json') for r in plan.production],
         'RCCP':[r.model_dump(mode='json') for r in output.constraint_evaluations if r.plan_id==plan.plan_id],

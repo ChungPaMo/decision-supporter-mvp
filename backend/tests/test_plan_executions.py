@@ -11,8 +11,9 @@ from openpyxl import load_workbook
 from fastapi.testclient import TestClient
 from app.main import app
 from app.errors import ApiError,ErrorCode
-from app.plans.service import validate_pair,what_if_snapshot,PlanService
-from app.plans.repository import digest
+from app.integrations.planning_validation import validate_pair
+from app.plans.service import what_if_snapshot, PlanService
+from app.plans.repository import PlanRepository, digest
 from app.plans.approval import transition,ApprovalContext
 from app.plans.exports import test_double_export as make_test_export,formal_export
 from contracts.interfaces.planning import PlanningInput,PlanningOutput,PlanCommand
@@ -87,14 +88,144 @@ def test_what_if_scope_and_test_double_isolation(problem):
     with pytest.raises(ApiError):what_if_snapshot(e,PlanCommand.model_validate(data),allow_test=problem!='quarantine')
 
 
+@pytest.mark.parametrize(('changes', 'status'), [
+    ({'overrides': {'overtime_hours_limit.UNKNOWN.2027-01': '1'}}, 422),
+    ({'overrides': {'receipt_qty.UNKNOWN': '0'}}, 422),
+    ({'horizon_months': 3}, 409),
+])
+def test_what_if_parent_scope_checks_resources_purchase_orders_and_horizon(changes, status):
+    parent = example()
+    body = {**parent.input_snapshot.command.model_dump(), 'scenario': 'WHAT_IF',
+            'base_plan_execution_id': parent.execution_id, **changes}
+    with pytest.raises(ApiError) as error:
+        what_if_snapshot(parent, PlanCommand.model_validate(body), allow_test=True)
+    assert error.value.status == status
+    if status == 422:
+        assert error.value.details == {'status': 'INPUT_INVALID', 'reason': 'WHATIF_INVALID'}
+
+
 def test_what_if_preserves_original_snapshot_and_results():
     e=example();before=e.model_dump(mode='json')
-    cmd=PlanCommand(**{**e.input_snapshot.command.model_dump(),'scenario':'WHAT_IF','base_plan_execution_id':e.execution_id,'overrides':{'production_qty.TP-10R':'100'}})
+    cmd=PlanCommand(**{**e.input_snapshot.command.model_dump(),'scenario':'WHAT_IF','base_plan_execution_id':e.execution_id,'overrides':{'demand_multiplier.TP-10R':'100'}})
     child=what_if_snapshot(e,cmd,allow_test=True)
-    assert child.command.overrides['production_qty.TP-10R']=='100'
+    assert child.command.overrides['demand_multiplier.TP-10R']=='100'
     assert child.base_plan_snapshot['result']==e.result_snapshot.model_dump(mode='json')
     child.forecast_rows[0].p50='0'
     assert e.model_dump(mode='json')==before
+
+
+def test_what_if_preserves_absolute_monthly_and_receipt_overrides_without_editing_facts():
+    from contracts.interfaces.capacity import CapacityRegistrationDraft
+    from contracts.interfaces.planning import ScheduledReceipt
+
+    parent = example()
+    parent.input_snapshot.command.horizon_months = parent.horizon_months = 3
+    parent.input_snapshot.scheduled_receipts = [ScheduledReceipt(
+        po_id='PO1', material_id='MAT1', open_qty='50', unit='EA', expected_date='2027-01-20', batch_id=UUID(int=4),
+    )]
+    parent.input_snapshot.capacity_snapshot = CapacityRegistrationDraft.model_validate({
+        'resources': [{'resource_id': 'SAW1', 'resource_name': 'Synthetic', 'kind': 'EQUIPMENT',
+                       'time_basis': 'MACHINE_HOUR', 'parallel_units': 1}],
+        'quantity_limits': [], 'hours_budgets': [], 'routing_steps': [],
+    })
+    overrides = {'demand_multiplier': '1.1', 'demand_multiplier.TP-10R': '0.9',
+                 'overtime_hours_limit.SAW1.2027-02': '80', 'receipt_qty.PO1': '0'}
+    command = PlanCommand.model_validate({**parent.input_snapshot.command.model_dump(), 'scenario': 'WHAT_IF',
+                                         'base_plan_execution_id': parent.execution_id, 'overrides': overrides})
+    child = what_if_snapshot(parent, command, allow_test=True)
+    assert child.command.overrides == overrides
+    assert child.approved_inputs == parent.input_snapshot.approved_inputs
+    assert child.scheduled_receipts == parent.input_snapshot.scheduled_receipts
+    assert child.scheduled_receipts[0].open_qty == '50'
+
+
+@pytest.mark.parametrize('horizon', [1, 3, 6, 12])
+def test_output_validation_covers_each_requested_product_month(horizon):
+    execution = example()
+    snapshot, result = execution.input_snapshot, execution.result_snapshot
+    snapshot.command.horizon_months = horizon
+    periods = snapshot.command.months
+    snapshot.forecast_rows = [snapshot.forecast_rows[0].model_copy(update={'target_month': period}) for period in periods]
+    result.status = 'OK'
+    for candidate in result.plans:
+        candidate.production = [candidate.production[0].model_copy(update={'period': period}) for period in periods]
+    validate_pair(snapshot, result)
+    result.plans[0].production.pop()
+    with pytest.raises(ValueError, match='Incomplete OK candidate'):
+        validate_pair(snapshot, result)
+
+
+@pytest.mark.parametrize(('strength', 'status', 'valid'), [
+    ('HARD', 'VIOLATED', False), ('HARD', 'UNVERIFIED', False),
+    ('SOFT', 'VIOLATED', True), ('SOFT', 'UNVERIFIED', True),
+    (None, 'VIOLATED', False), (None, 'UNVERIFIED', False), (None, 'SATISFIED', True),
+])
+def test_feasibility_considers_only_the_candidate_checks_and_their_strength(strength, status, valid):
+    result = eligible_in_memory_only().result_snapshot
+    result.plans[1].feasibility = 'INFEASIBLE'
+    for check in result.constraint_evaluations:
+        if check.plan_id == result.plans[0].plan_id:
+            check.strength, check.status = strength, status
+        else:
+            check.strength, check.status = 'HARD', 'VIOLATED'
+    if valid:
+        assert PlanningOutput.model_validate(result.model_dump()).plans[0].feasibility == 'FEASIBLE'
+    else:
+        with pytest.raises(ValueError):
+            PlanningOutput.model_validate(result.model_dump())
+
+
+@pytest.mark.parametrize('issue', ['result', 'candidate', 'policy_ref'])
+def test_feasible_requires_resolved_issues_and_policy_reference(issue):
+    result = eligible_in_memory_only().result_snapshot.model_dump(mode='json')
+    notice = {'code': 'MISSING', 'message': 'Unresolved input'}
+    if issue == 'result':
+        result['unverified'] = [notice]
+    elif issue == 'candidate':
+        result['plans'][0]['unverified'] = [notice]
+    else:
+        result['plans'][0]['policy_ref'] = ' '
+    with pytest.raises(ValueError):
+        PlanningOutput.model_validate(result)
+
+
+def test_contradictory_output_is_rejected_before_persistence():
+    execution = eligible_in_memory_only()
+    check = execution.result_snapshot.constraint_evaluations[0]
+    check.strength, check.status = 'HARD', 'VIOLATED'
+    with pytest.raises(ValueError, match='violated hard constraint'):
+        PlanRepository.save(None, execution.input_snapshot, execution.result_snapshot, {}, 'a' * 64)
+
+
+def test_legacy_snapshot_replay_keeps_the_raw_digest_and_one_month():
+    execution = example()
+    row = execution.model_dump(mode='json', exclude={'decisions'})
+    row['input_snapshot']['command'].pop('horizon_months')
+    row['input_snapshot'].pop('scheduled_receipts')
+    row['input_digest'] = digest(row['input_snapshot'])
+    projections = execution.result_snapshot.model_dump(mode='json')
+
+    class Connection:
+        def execute(self, query, parameters):
+            sql = str(query)
+            if 'FROM plan_execution e' in sql:
+                assert "'1'::jsonb" in sql
+                return SimpleNamespace(mappings=lambda: SimpleNamespace(first=lambda: row))
+            if 'FROM plan_decision' in sql:
+                data = []
+            elif 'FROM plan_execution_input' in sql:
+                data = row['input_snapshot']['approved_inputs']['sources']
+            else:
+                collection = {'plan_candidate': 'plans', 'plan_constraint_evaluation': 'constraint_evaluations',
+                              'plan_material_requirement': 'material_requirements'}[sql.split()[3]]
+                data = projections[collection]
+            return SimpleNamespace(mappings=lambda: SimpleNamespace(all=lambda: data),
+                                   scalars=lambda: SimpleNamespace(all=lambda: data))
+
+    reloaded = PlanRepository.detail(Connection(), execution.execution_id, include_test=True)
+    assert reloaded.input_snapshot.command.months == ('2027-01',)
+    assert reloaded.input_digest == row['input_digest']
+    assert 'horizon_months' not in row['input_snapshot']['command']
 
 
 def test_review_reject_and_final_state_conflicts():

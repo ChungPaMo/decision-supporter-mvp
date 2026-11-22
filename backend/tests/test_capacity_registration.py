@@ -76,7 +76,7 @@ def test_snapshot_excludes_other_month_and_preserves_midmonth_versions(sample,mo
     rows['routing_steps'].append({'batch_id':UUID(int=3),'payload':{**sample['routing_steps'][0],'routing_version':'V2','valid_from':'2027-01-16','valid_to':None}})
     rows['hours_budgets'].append({'batch_id':UUID(int=4),'payload':{**sample['hours_budgets'][0],'period':'2027-02','capacity_id':'NEXT'}})
     monkeypatch.setattr(service,'approved_rows',lambda c,s:rows[s])
-    cmd=PlanCommand(forecast_execution_id=UUID(int=1),product_ids=['TP-10R'],target_month='2027-01',as_of_date='2026-12-31')
+    cmd=PlanCommand(forecast_execution_id=UUID(int=1),product_ids=['TP-10R'],target_month='2027-01',horizon_months=1,as_of_date='2026-12-31')
     capacity,routing,ids,missing=service.planning_snapshot(None,cmd)
     assert len(routing['routing_steps'])==2
     assert len(capacity['hours_budgets'])==2 and UUID(int=4) not in ids

@@ -27,7 +27,7 @@ def main():
         assert c.execute(text('SELECT version_num FROM alembic_version')).scalar()=='0007'
         forecast=c.execute(text("SELECT execution_id FROM forecast_run WHERE status IN ('OK','PARTIAL') ORDER BY created_at LIMIT 1")).scalar_one()
         before={t:c.execute(text('SELECT count(*) FROM '+t)).scalar() for t in ('plan_execution','plan_candidate','plan_decision','import_batch')}
-    command=PlanCommand(forecast_execution_id=forecast,product_ids=['TP-10R'],target_month='2027-01',as_of_date='2026-12-31')
+    command=PlanCommand(forecast_execution_id=forecast,product_ids=['TP-10R'],target_month='2027-01',horizon_months=1,as_of_date='2026-12-31')
     snapshot=SqlPlanningSourceProvider(e).load(command)
     result=PlanningOutput.model_validate(json.loads((ROOT/'contracts/examples/integration/planning_output.json').read_text(encoding='utf-8'))['payload'])
     # A nullable, exact-decimal MRP test row, not an engine-calculated requirement.
@@ -52,7 +52,7 @@ def main():
             else:raise AssertionError('Test execution exported formally')
             assert test_double_export(first).startswith(b'PK')
             ok('test double excluded from real detail, formal export and real base lineage')
-            new_command=PlanCommand(**{**command.model_dump(),'scenario':'WHAT_IF','base_plan_execution_id':first.execution_id,'overrides':{'production_qty.TP-10R':'100'}})
+            new_command=PlanCommand(**{**command.model_dump(),'scenario':'WHAT_IF','base_plan_execution_id':first.execution_id,'overrides':{'demand_multiplier.TP-10R':'100'}})
             child_input=what_if_snapshot(first,new_command,allow_test=True)
             with c.begin_nested():
                 child=PlanRepository.save(c,child_input,result,{'test_double':True},'2'*64,origin='TEST_DOUBLE')

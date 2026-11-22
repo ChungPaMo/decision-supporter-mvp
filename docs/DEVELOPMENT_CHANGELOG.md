@@ -609,3 +609,35 @@
 
 **관련 자료**
 - [결과 요약](../modules/planning_engine/tests/chungpamo/RESULT.md), [계산 규칙 v0.4 §8](../modules/planning_engine/PLANNING_RULES.md), [계약 답변 C03](../modules/planning_engine/CONTRACT_REQUESTS.md), [시작 Commit](https://github.com/ChungPaMo/decision-supporter-mvp/commit/d49818f2d9038e31e52f6a95027005a91d97eb2a).
+
+### 2026-11-22 — 생산계획 v0.4 백엔드 계약 준비 (김대영)
+
+**Git**
+- 시작 Commit `5c65cf38986fb1a5804f357bdb52efed33e2d650`. Clean `main`과 최신 `origin/main`을 확인했다.
+- 완료 Commit 조회는 `git log main -1 --format=%H --fixed-strings --grep='feat: prepare backend for planning v0.4 integration'`을 사용한다.
+- 브랜치 `main`.
+
+**작업 목적**
+- 현재 엔진 코어와 기존 승인 조회·진단·저장 경계를 대조하고 C01·C02·C03·C06을 후속 엔진 연동에 필요한 수준으로 반영한다.
+
+**구현 내용**
+- `PlanCommand`에 연속 1~12개월을 추가했다. 기존 provider와 CAPA 조회를 확장하고, 진단·Preview·저장의 기간과 출력 범위를 검증한다. 실행 목록·상세·XLSX에 기간을 전달한다.
+- 예정 입고 DTO와 승인 공급 검증 경계를 추가했다. 같은 데이터셋의 승인 출처, 부분 입고 잔량, 취소·중복·날짜·단위를 검사한다. 운영 스키마에 승인 원장이 없어 `RECEIPT_SOURCE_UNAVAILABLE`을 표시한다.
+- What-if 허용 키와 부모 scope를 갱신했다. 새 계산 응답에는 기준형·안정형·비용절감형 세 후보가 필요하다. C06은 HARD 위반·미확인과 FEASIBLE의 모순을 거절한다. C05 MRP 값의 월별 의미와 비음수 제약을 기록했다.
+- OpenAPI·생성 Schema·진단 예시·화면 안내와 함께 상세 인계 및 현재 현황을 갱신했다.
+
+**검증 결과**
+- 기존 개발 PC의 전체 비DB pytest 1,102 passed / 0 failed / 66 skipped / 0 deselected. 최초 집중 검사의 진단 예시 불일치 1건은 응답 갱신 후 통과했다. TypeScript·Vite 빌드 통과. 브라우저·실DB 쓰기·파괴적 회귀·migration 미실행.
+- 전용 Docker와 `chungpamo` 0009의 강제 읽기 전용 트랜잭션 확인. CP 3개월에 예측 27행·시간예산 18행·수량 한도 3행·승인 출처 9개 조립. CP 6·12개월 및 LEGACY 3개월은 예측 범위 409, 교차 dataset 예측은 404. 데이터/객체 지문 60테이블·735객체와 원본 SHA 전후 일치.
+- 변경 후보 보안 발견 0건. 전체 트리에 표시된 기존 분류기 Excel 200건과 합성 전화번호 생성 코드 1건은 시작 커밋의 파일과 대조했다.
+
+**기술적 결정**
+- 일반 요청 기본 기간은 3개월이며 기존 `/plans`의 생략 호출은 1개월로 유지한다. 이전 행은 1개월을 복원하고 원본 JSON의 지문을 비교한다. 기간은 기존 JSONB를 사용한다.
+- 승인 입고 공급 미연결 `null`과 검증된 빈 목록을 구분한다. 공식 합성 입고 CSV는 실제 승인 공급으로 사용하지 않는다. 정책 참조와 서버 승인 권한은 별도이며 공개 승인 501을 유지한다.
+
+**남은 문제**
+- 이희원은 팀 `run` 변환과 월별 버전/기간 검증, 정마나미는 기간·오류·What-if·저장 이력 화면 연계를 맡는다.
+- 승인 입고 원장과 실제 저장·재조회 시험에는 별도 데이터 계약과 DB 적용 또는 격리 DB 검증 승인이 필요하다.
+
+**관련 자료**
+- [v0.4 인계·실DB 검증](PLANNING_CONTRACT_V04_HANDOFF.md), [공통 계약](INTEGRATION_CONTRACT.md), [계획 저장 계약](PLAN_EXECUTION_PERSISTENCE.md), [현재 현황](PROJECT_PROGRESS.md), [희원 요청](../modules/planning_engine/CONTRACT_REQUESTS.md).
