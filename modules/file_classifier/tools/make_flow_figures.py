@@ -185,11 +185,13 @@ def fig_meaning(links):
         ax.add_patch(FancyArrowPatch((3.0 + w1 + 0.2, y), (18.2, y), arrowstyle="-|>", mutation_scale=20, linewidth=1.5 + 4.5 * max(sim - 0.6, 0),
                                      color=TEAL if ok else GRAY, linestyle="-" if ok else (0, (4, 4)), zorder=4))
         ax.text(13.3, y + 0.33, f"유사도 {sim:.2f}", ha="center", fontsize=12.5, color=INK if ok else MUTED, fontweight="bold" if ok else "normal")
-        if ok:
+        if ok and cat == de.COMMON:
+            chip(ax, 27.6, y, "공통 · 세지 않음", "white", MUTED, edge=GRID, size=12.5, w=3.9)
+        elif ok:
             chip(ax, 27.6, y, cat, TEAL, "white", size=15, bold=True, w=2.6)
         else:
             ax.text(27.6, y, "제외", fontsize=14, color=MUTED, va="center")
-    ax.text(3.0, 0.55, f"유사도 {de.TAU} 이상만 채택 (점선: 기준 미달로 제외)", fontsize=13, color=MUTED)
+    ax.text(3.0, 0.55, f"유사도 {de.TAU} 이상만 채택 (점선: 기준 미달로 제외). 어느 문서에나 나오는 공통 낱말에 가장 가까우면 단서로 세지 않는다.", fontsize=13, color=MUTED)
     save(fig, "f5_meaning.png")
 
 
