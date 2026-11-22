@@ -16,13 +16,25 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from engine.planning_core import PLAN_SPECS, calculate_plans, decimal_str  # noqa: E402
+from what_if.core import run_what_if  # noqa: E402
 
 DIR = ROOT / 'tests' / 'chungpamo'
+SCENARIOS = [
+    ('2월 절단기 특근', {'overtime_hours_limit.SAW1.2027-02': '80'}),
+    ('수요 10% 증가', {'demand_multiplier': '1.1'}),
+    ('1/20 원단 입고 취소', {'receipt_qty.PO-2701-001': '0'}),
+]
 LABEL = {'BASELINE': '기준형 (P50 + 잔업)', 'STABLE': '안정형 (P80 + 잔업)', 'COST_SAVING': '비용절감형 (P50, 잔업 0)'}
 
 
 def fmt(x) -> str:
     return '–' if x is None else decimal_str(x)
+
+
+def jan_orders(r) -> str:
+    """1월 발주 필요량이 있는 자재 (장면 비교용)."""
+    items = [f'{k} {fmt(m.shortage[0])}' for k, m in r.materials.items() if m.shortage[0] > 0]
+    return ', '.join(items) or '없음'
 
 
 def main() -> None:
@@ -60,6 +72,15 @@ def main() -> None:
                        f'| {" / ".join(fmt(x) for x in mr.shortage)} | {" / ".join(fmt(x) for x in mr.end_on_hand)} |')
         if r.warnings or r.unverified:
             out += ['', '경고·확인 불가: ' + ', '.join(sorted({i.code for i in r.warnings + r.unverified}))]
+    out += ['', '## What-if 시연 장면', '', '각 장면은 세 안을 모두 다시 계산한 결과다(규칙서 §8). 화살표 왼쪽이 기준, 오른쪽이 변경 후.', '',
+            '| 장면 | 변경 | 안 | 판정 | 결품 합계 | 잔업 합계(h) | 1월 발주 필요(자재 단위) |', '|---|---|---|---|---|---|---|']
+    for title, overrides in SCENARIOS:
+        r = run_what_if(data, overrides)
+        for d in r.deltas():
+            out.append(f'| {title} | `{", ".join(f"{k}={v}" for k, v in overrides.items())}` | {LABEL[d.plan_id]} '
+                       f'| {d.feasibility[0]} → {d.feasibility[1]} | {d.stockout_total[0]:,} → {d.stockout_total[1]:,} '
+                       f'| {fmt(d.overtime_total[0])} → {fmt(d.overtime_total[1])} '
+                       f'| {jan_orders(r.base[d.plan_id])} → {jan_orders(r.scenario[d.plan_id])} |')
     out.append('')
     (DIR / 'RESULT.md').write_text('\n'.join(out), encoding='utf-8')
     print(DIR / 'RESULT.md')

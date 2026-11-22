@@ -578,3 +578,34 @@
 
 **관련 자료**
 - [결과 요약](../modules/planning_engine/tests/chungpamo/RESULT.md), [계산 규칙 v0.4](../modules/planning_engine/PLANNING_RULES.md), [합성 데이터 README](../modules/planning_engine/synthetic/README.md), [시작 Commit](https://github.com/ChungPaMo/decision-supporter-mvp/commit/fbd641967500762c42b1d9193cca13bfafecffc8).
+
+### 2026-11-22 — 계획 What-if 재계산 (이희원)
+
+**Git**
+- 시작 Commit `d49818f2d9038e31e52f6a95027005a91d97eb2a`.
+- 완료 Commit은 고유 제목 `feat: planning what-if recalculation for three plans`으로 조회한다. `git log main -1 --format=%H --fixed-strings --grep='feat: planning what-if recalculation for three plans'`
+- 브랜치 `main`.
+
+**작업 목적**
+- 과제 7의 What-if(조건을 바꾸면 계획안이 어떻게 달라지는가)를 계산 코어 위에 구현하고 시연 장면을 준비한다.
+
+**구현 내용**
+- `modules/planning_engine/what_if/core.py`: C03 요청 키(`demand_multiplier`, `demand_multiplier.<제품>`, `overtime_hours_limit.<자원>.<YYYY-MM>`, `receipt_qty.<발주번호>`)를 적용한 새 입력으로 세 안 재계산, 기준 결과와 함께 반환, 안별 판정·결품·잔업 변화(`deltas`). 원본 입력은 바꾸지 않음.
+- `engine/planning_core.py`: 제품별 수요 배수(`demand_multipliers`) 지원.
+- `tests/test_what_if.py`: 손계산 기대값 6개 + 충파모 2월 절단기 특근 장면. `synthetic/plan_report.py`·`RESULT.md`: What-if 시연 장면 3개(2월 SAW1 특근, 수요 10% 증가, 1/20 원단 입고 취소)와 1월 발주 필요 자재 열.
+- `PLANNING_RULES.md` §8 세부 규칙, `what_if/README.md` 갱신.
+
+**검증 결과**
+- 2026-11-22 이희원 PC, 루트 `.venv`: `pytest modules/planning_engine` **86 passed / 0 failed**. What-if 규칙을 일부러 바꾼 4가지(배수 곱하기, 취소 시 행 유지, 원본 수정, 월 검사 생략)는 모두 실패로 검출.
+- 시연 결과: 2월 SAW1 특근 80h → 안정형 결품 3,612→1,437(비용절감형 변화 없음), 수요 10% 증가 → 기준형 UNVERIFIED→INFEASIBLE(결품 0→6,063), 1/20 원단 취소 → 결품 변화 없고 1월 MR-N3 발주 필요(기준형 약 4,028kg).
+- What-if 결과는 계산 코어(독립 정답으로 검증됨)에 입력 변경만 더한 것이며 What-if 자체의 충파모 독립 정답은 만들지 않았다. backend 테스트는 이 PC `rapidfuzz` 누락으로 미실행. Docker·DB·브라우저 미실행.
+
+**기술적 결정**
+- 희원 선택: C03 키 그대로 입력, 제품 배수가 전체 배수보다 우선(곱하지 않음), 잔업 변경은 비용절감형에 적용 안 함(잔업 0 정의 유지), 잘못된 변경은 계산 없이 `INPUT_INVALID`/`WHATIF_INVALID`로 모두 나열.
+
+**남은 문제**
+- 김대영: C01 기간·C02 입고 예정·C03 What-if 키 확정 → 이희원이 PlanningInput/PlanCommand overrides → 내부 형식 변환부와 PlanningOutput 변환, `AVAILABLE` 전환. C06 모순 출력 검사.
+- 화면: What-if 비교(기준→변경 후 판정·결품·잔업·발주 필요량) 표시 방식 정마나미와 조율.
+
+**관련 자료**
+- [결과 요약](../modules/planning_engine/tests/chungpamo/RESULT.md), [계산 규칙 v0.4 §8](../modules/planning_engine/PLANNING_RULES.md), [계약 답변 C03](../modules/planning_engine/CONTRACT_REQUESTS.md), [시작 Commit](https://github.com/ChungPaMo/decision-supporter-mvp/commit/d49818f2d9038e31e52f6a95027005a91d97eb2a).

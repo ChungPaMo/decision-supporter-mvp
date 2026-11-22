@@ -224,10 +224,12 @@ def calculate(data: dict) -> PlanResult:
         else:
             start_inv[p['id']] = int(_frac(p['on_hand'])) - int(_frac(p.get('allocated', 0)))
 
-    # ① 계획 수요·목표 생산량
+    # ① 계획 수요·목표 생산량 (제품별 배수가 있으면 전체 배수보다 우선, §8)
+    product_multiplier = data.get('demand_multipliers', {})
     for p in data['products']:
         pid = p['id']
-        result.planned_demand[pid] = planned_demand([_frac(q) for q in data['demand'][pid][:n]], multiplier)
+        mult = _frac(product_multiplier[pid]) if pid in product_multiplier else multiplier
+        result.planned_demand[pid] = planned_demand([_frac(q) for q in data['demand'][pid][:n]], mult)
         result.target[pid] = targets(result.planned_demand[pid], int(_frac(p['safety_stock'])), start_inv[pid])
 
     # ② 쓸 수 있는 시간 (§3, §7 가용시간·잔업 한도 없음)
