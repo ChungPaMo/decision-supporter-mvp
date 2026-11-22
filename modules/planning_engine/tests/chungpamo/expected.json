@@ -1,0 +1,3957 @@
+{
+ "BASELINE": {
+  "status": "OK",
+  "planned_demand": {
+   "CP-N3-3030": [
+    10051,
+    10051,
+    10051
+   ],
+   "CP-N3-2730": [
+    6520,
+    6520,
+    6520
+   ],
+   "CP-N3-2524": [
+    3232,
+    3232,
+    3232
+   ],
+   "CP-N2-3030": [
+    3285,
+    3285,
+    3285
+   ],
+   "CP-R2-3030": [
+    3528,
+    3528,
+    3528
+   ],
+   "CP-P4-2524": [
+    2326,
+    2326,
+    2326
+   ],
+   "CP-GIFT-12": [
+    495,
+    495,
+    495
+   ],
+   "CP-ON3-3030": [
+    2353,
+    2353,
+    2353
+   ],
+   "CP-B2-JUMBO": [
+    1007,
+    1007,
+    1007
+   ]
+  },
+  "target": {
+   "CP-N3-3030": [
+    8551,
+    10051,
+    10051
+   ],
+   "CP-N3-2730": [
+    5540,
+    6520,
+    6520
+   ],
+   "CP-N3-2524": [
+    2742,
+    3232,
+    3232
+   ],
+   "CP-N2-3030": [
+    2795,
+    3285,
+    3285
+   ],
+   "CP-R2-3030": [
+    2998,
+    3528,
+    3528
+   ],
+   "CP-P4-2524": [
+    1976,
+    2326,
+    2326
+   ],
+   "CP-GIFT-12": [
+    425,
+    495,
+    495
+   ],
+   "CP-ON3-3030": [
+    2003,
+    2353,
+    2353
+   ],
+   "CP-B2-JUMBO": [
+    857,
+    1007,
+    1007
+   ]
+  },
+  "production": {
+   "CP-N3-3030": [
+    9715,
+    8887,
+    10051
+   ],
+   "CP-N3-2730": [
+    6295,
+    5765,
+    6520
+   ],
+   "CP-N3-2524": [
+    3117,
+    2857,
+    3232
+   ],
+   "CP-N2-3030": [
+    3176,
+    2904,
+    3285
+   ],
+   "CP-R2-3030": [
+    3407,
+    3119,
+    3528
+   ],
+   "CP-P4-2524": [
+    2246,
+    2056,
+    2326
+   ],
+   "CP-GIFT-12": [
+    483,
+    437,
+    495
+   ],
+   "CP-ON3-3030": [
+    2276,
+    2080,
+    2353
+   ],
+   "CP-B2-JUMBO": [
+    974,
+    890,
+    1007
+   ]
+  },
+  "end_inventory": {
+   "CP-N3-3030": [
+    2174,
+    1010,
+    1010
+   ],
+   "CP-N3-2730": [
+    1405,
+    650,
+    650
+   ],
+   "CP-N3-2524": [
+    695,
+    320,
+    320
+   ],
+   "CP-N2-3030": [
+    711,
+    330,
+    330
+   ],
+   "CP-R2-3030": [
+    759,
+    350,
+    350
+   ],
+   "CP-P4-2524": [
+    500,
+    230,
+    230
+   ],
+   "CP-GIFT-12": [
+    108,
+    50,
+    50
+   ],
+   "CP-ON3-3030": [
+    513,
+    240,
+    240
+   ],
+   "CP-B2-JUMBO": [
+    217,
+    100,
+    100
+   ]
+  },
+  "stockout": {
+   "CP-N3-3030": [
+    0,
+    0,
+    0
+   ],
+   "CP-N3-2730": [
+    0,
+    0,
+    0
+   ],
+   "CP-N3-2524": [
+    0,
+    0,
+    0
+   ],
+   "CP-N2-3030": [
+    0,
+    0,
+    0
+   ],
+   "CP-R2-3030": [
+    0,
+    0,
+    0
+   ],
+   "CP-P4-2524": [
+    0,
+    0,
+    0
+   ],
+   "CP-GIFT-12": [
+    0,
+    0,
+    0
+   ],
+   "CP-ON3-3030": [
+    0,
+    0,
+    0
+   ],
+   "CP-B2-JUMBO": [
+    0,
+    0,
+    0
+   ]
+  },
+  "used_hours": {
+   "RW1": [
+    "396063/1190",
+    "51779/170",
+    "409963/1190"
+   ],
+   "RW2": [
+    "27541/240",
+    "25189/240",
+    "5699/48"
+   ],
+   "SAW1": [
+    "12839/25",
+    "11748/25",
+    "318919/600"
+   ],
+   "PK1": [
+    "24869/80",
+    "4551/16",
+    "25737/80"
+   ],
+   "PK2": [
+    "78407/900",
+    "14341/180",
+    "81131/900"
+   ],
+   "LB1": [
+    "33053/50",
+    "30243/50",
+    "34209/50"
+   ]
+  },
+  "overtime_hours": {
+   "RW1": [
+    "0",
+    "0",
+    "0"
+   ],
+   "RW2": [
+    "0",
+    "0",
+    "0"
+   ],
+   "SAW1": [
+    "339/25",
+    "998/25",
+    "18919/600"
+   ],
+   "PK1": [
+    "0",
+    "0",
+    "0"
+   ],
+   "PK2": [
+    "0",
+    "0",
+    "0"
+   ],
+   "LB1": [
+    "0",
+    "743/50",
+    "0"
+   ]
+  },
+  "material_requirements": {
+   "MR-N3": {
+    "required": [
+     "1662568011/20000",
+     "1521343269/20000",
+     "86035797/1000"
+    ],
+    "available": [
+     "92100",
+     "179431989/20000",
+     "3000"
+    ],
+    "shortage": [
+     "0",
+     "17523891/250",
+     "86035797/1000"
+    ],
+    "end_on_hand": [
+     "179431989/20000",
+     "3000",
+     "3000"
+    ]
+   },
+   "MR-N2": {
+    "required": [
+     "2909853/125",
+     "2659563/125",
+     "24071409/1000"
+    ],
+    "available": [
+     "38900",
+     "1952647/125",
+     "2000"
+    ],
+    "shortage": [
+     "0",
+     "956916/125",
+     "24071409/1000"
+    ],
+    "end_on_hand": [
+     "1952647/125",
+     "2000",
+     "2000"
+    ]
+   },
+   "MR-N4": {
+    "required": [
+     "4858098/625",
+     "4447128/625",
+     "5031138/625"
+    ],
+    "available": [
+     "12900",
+     "3204402/625",
+     "500"
+    ],
+    "shortage": [
+     "0",
+     "1555226/625",
+     "5031138/625"
+    ],
+    "end_on_hand": [
+     "3204402/625",
+     "500",
+     "500"
+    ]
+   },
+   "MR-R2": {
+    "required": [
+     "1195857/125",
+     "1094769/125",
+     "1238328/125"
+    ],
+    "available": [
+     "16700",
+     "891643/125",
+     "1500"
+    ],
+    "shortage": [
+     "0",
+     "390626/125",
+     "1238328/125"
+    ],
+    "end_on_hand": [
+     "891643/125",
+     "1500",
+     "1500"
+    ]
+   },
+   "MC-CORE": {
+    "required": [
+     "896162",
+     "820046",
+     "927554"
+    ],
+    "available": [
+     "1469600",
+     "573438",
+     "50000"
+    ],
+    "shortage": [
+     "0",
+     "296608",
+     "927554"
+    ],
+    "end_on_hand": [
+     "573438",
+     "50000",
+     "50000"
+    ]
+   },
+   "MP-FILM30": {
+    "required": [
+     "24869",
+     "22755",
+     "25737"
+    ],
+    "available": [
+     "42400",
+     "17531",
+     "3000"
+    ],
+    "shortage": [
+     "0",
+     "8224",
+     "25737"
+    ],
+    "end_on_hand": [
+     "17531",
+     "3000",
+     "3000"
+    ]
+   },
+   "MP-FILM24": {
+    "required": [
+     "5363",
+     "4913",
+     "5558"
+    ],
+    "available": [
+     "9500",
+     "4137",
+     "1000"
+    ],
+    "shortage": [
+     "0",
+     "1776",
+     "5558"
+    ],
+    "end_on_hand": [
+     "4137",
+     "1000",
+     "1000"
+    ]
+   },
+   "MP-GIFTBOX": {
+    "required": [
+     "483",
+     "437",
+     "495"
+    ],
+    "available": [
+     "1100",
+     "617",
+     "300"
+    ],
+    "shortage": [
+     "0",
+     "120",
+     "495"
+    ],
+    "end_on_hand": [
+     "617",
+     "300",
+     "300"
+    ]
+   },
+   "MP-JUMBOBOX": {
+    "required": [
+     "974",
+     "890",
+     "1007"
+    ],
+    "available": [
+     "1800",
+     "826",
+     "200"
+    ],
+    "shortage": [
+     "0",
+     "264",
+     "1007"
+    ],
+    "end_on_hand": [
+     "826",
+     "200",
+     "200"
+    ]
+   }
+  },
+  "evaluations": [
+   {
+    "constraint_id": "CAP-RW1-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "440",
+    "used_value": "396063/1190",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-RW1-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "380",
+    "used_value": "51779/170",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-RW1-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "440",
+    "used_value": "409963/1190",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-RW2-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "160",
+    "used_value": "27541/240",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-RW2-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "140",
+    "used_value": "25189/240",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-RW2-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "160",
+    "used_value": "5699/48",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-SAW1-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "540",
+    "used_value": "12839/25",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-SAW1-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "470",
+    "used_value": "11748/25",
+    "reason_codes": [
+     "CAPACITY_BINDING"
+    ]
+   },
+   {
+    "constraint_id": "CAP-SAW1-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "540",
+    "used_value": "318919/600",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-PK1-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "410",
+    "used_value": "24869/80",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-PK1-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "350",
+    "used_value": "4551/16",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-PK1-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "410",
+    "used_value": "25737/80",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-PK2-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "130",
+    "used_value": "78407/900",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-PK2-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "110",
+    "used_value": "14341/180",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-PK2-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "130",
+    "used_value": "81131/900",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-LB1-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "750",
+    "used_value": "33053/50",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-LB1-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "650",
+    "used_value": "30243/50",
+    "reason_codes": [
+     "CAPACITY_BINDING"
+    ]
+   },
+   {
+    "constraint_id": "CAP-LB1-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "750",
+    "used_value": "34209/50",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "QTY-CP-GIFT-12-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "2500",
+    "used_value": "483",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "QTY-CP-GIFT-12-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "2500",
+    "used_value": "437",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "QTY-CP-GIFT-12-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "2500",
+    "used_value": "495",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-N3-3030-2027-01",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-N3-3030-2027-02",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-N3-3030-2027-03",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-N3-2730-2027-01",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-N3-2730-2027-02",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-N3-2730-2027-03",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-N3-2524-2027-01",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-N3-2524-2027-02",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-N3-2524-2027-03",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-N2-3030-2027-01",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-N2-3030-2027-02",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-N2-3030-2027-03",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-R2-3030-2027-01",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-R2-3030-2027-02",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-R2-3030-2027-03",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-P4-2524-2027-01",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-P4-2524-2027-02",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-P4-2524-2027-03",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-GIFT-12-2027-01",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-GIFT-12-2027-02",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-GIFT-12-2027-03",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-ON3-3030-2027-01",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-ON3-3030-2027-02",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-ON3-3030-2027-03",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-B2-JUMBO-2027-01",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-B2-JUMBO-2027-02",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-B2-JUMBO-2027-03",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-N3-3030-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "1010",
+    "used_value": "2174",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-N3-3030-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "1010",
+    "used_value": "1010",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-N3-3030-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "1010",
+    "used_value": "1010",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-N3-2730-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "650",
+    "used_value": "1405",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-N3-2730-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "650",
+    "used_value": "650",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-N3-2730-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "650",
+    "used_value": "650",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-N3-2524-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "320",
+    "used_value": "695",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-N3-2524-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "320",
+    "used_value": "320",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-N3-2524-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "320",
+    "used_value": "320",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-N2-3030-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "330",
+    "used_value": "711",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-N2-3030-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "330",
+    "used_value": "330",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-N2-3030-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "330",
+    "used_value": "330",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-R2-3030-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "350",
+    "used_value": "759",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-R2-3030-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "350",
+    "used_value": "350",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-R2-3030-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "350",
+    "used_value": "350",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-P4-2524-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "230",
+    "used_value": "500",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-P4-2524-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "230",
+    "used_value": "230",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-P4-2524-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "230",
+    "used_value": "230",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-GIFT-12-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "50",
+    "used_value": "108",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-GIFT-12-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "50",
+    "used_value": "50",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-GIFT-12-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "50",
+    "used_value": "50",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-ON3-3030-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "240",
+    "used_value": "513",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-ON3-3030-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "240",
+    "used_value": "240",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-ON3-3030-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "240",
+    "used_value": "240",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-B2-JUMBO-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "100",
+    "used_value": "217",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-B2-JUMBO-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "100",
+    "used_value": "100",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-B2-JUMBO-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "100",
+    "used_value": "100",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "MAT-MR-N3-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "92100",
+    "used_value": "1722568011/20000",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "MAT-MR-N3-2027-02",
+    "status": "UNVERIFIED",
+    "limit_value": "179431989/20000",
+    "used_value": "1581343269/20000",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MR-N3-2027-03",
+    "status": "UNVERIFIED",
+    "limit_value": "3000",
+    "used_value": "89035797/1000",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MR-N2-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "38900",
+    "used_value": "3159853/125",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "MAT-MR-N2-2027-02",
+    "status": "UNVERIFIED",
+    "limit_value": "1952647/125",
+    "used_value": "2909563/125",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MR-N2-2027-03",
+    "status": "UNVERIFIED",
+    "limit_value": "2000",
+    "used_value": "26071409/1000",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MR-N4-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "12900",
+    "used_value": "5170598/625",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "MAT-MR-N4-2027-02",
+    "status": "UNVERIFIED",
+    "limit_value": "3204402/625",
+    "used_value": "4759628/625",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MR-N4-2027-03",
+    "status": "UNVERIFIED",
+    "limit_value": "500",
+    "used_value": "5343638/625",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MR-R2-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "16700",
+    "used_value": "1383357/125",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "MAT-MR-R2-2027-02",
+    "status": "UNVERIFIED",
+    "limit_value": "891643/125",
+    "used_value": "1282269/125",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MR-R2-2027-03",
+    "status": "UNVERIFIED",
+    "limit_value": "1500",
+    "used_value": "1425828/125",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MC-CORE-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "1469600",
+    "used_value": "946162",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "MAT-MC-CORE-2027-02",
+    "status": "UNVERIFIED",
+    "limit_value": "573438",
+    "used_value": "870046",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MC-CORE-2027-03",
+    "status": "UNVERIFIED",
+    "limit_value": "50000",
+    "used_value": "977554",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MP-FILM30-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "42400",
+    "used_value": "27869",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "MAT-MP-FILM30-2027-02",
+    "status": "UNVERIFIED",
+    "limit_value": "17531",
+    "used_value": "25755",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MP-FILM30-2027-03",
+    "status": "UNVERIFIED",
+    "limit_value": "3000",
+    "used_value": "28737",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MP-FILM24-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "9500",
+    "used_value": "6363",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "MAT-MP-FILM24-2027-02",
+    "status": "UNVERIFIED",
+    "limit_value": "4137",
+    "used_value": "5913",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MP-FILM24-2027-03",
+    "status": "UNVERIFIED",
+    "limit_value": "1000",
+    "used_value": "6558",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MP-GIFTBOX-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "1100",
+    "used_value": "783",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "MAT-MP-GIFTBOX-2027-02",
+    "status": "UNVERIFIED",
+    "limit_value": "617",
+    "used_value": "737",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MP-GIFTBOX-2027-03",
+    "status": "UNVERIFIED",
+    "limit_value": "300",
+    "used_value": "795",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MP-JUMBOBOX-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "1800",
+    "used_value": "1174",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "MAT-MP-JUMBOBOX-2027-02",
+    "status": "UNVERIFIED",
+    "limit_value": "826",
+    "used_value": "1090",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MP-JUMBOBOX-2027-03",
+    "status": "UNVERIFIED",
+    "limit_value": "200",
+    "used_value": "1207",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   }
+  ],
+  "warnings": [],
+  "unverified_codes": [],
+  "feasibility": "UNVERIFIED"
+ },
+ "STABLE": {
+  "status": "OK",
+  "planned_demand": {
+   "CP-N3-3030": [
+    10480,
+    10365,
+    10266
+   ],
+   "CP-N3-2730": [
+    7169,
+    7056,
+    7080
+   ],
+   "CP-N3-2524": [
+    3698,
+    3659,
+    3598
+   ],
+   "CP-N2-3030": [
+    3674,
+    3618,
+    3564
+   ],
+   "CP-R2-3030": [
+    3967,
+    3892,
+    3900
+   ],
+   "CP-P4-2524": [
+    2588,
+    2615,
+    2546
+   ],
+   "CP-GIFT-12": [
+    495,
+    1962,
+    495
+   ],
+   "CP-ON3-3030": [
+    2527,
+    2489,
+    2509
+   ],
+   "CP-B2-JUMBO": [
+    1094,
+    1057,
+    1028
+   ]
+  },
+  "target": {
+   "CP-N3-3030": [
+    8980,
+    10365,
+    10266
+   ],
+   "CP-N3-2730": [
+    6189,
+    7056,
+    7080
+   ],
+   "CP-N3-2524": [
+    3208,
+    3659,
+    3598
+   ],
+   "CP-N2-3030": [
+    3184,
+    3618,
+    3564
+   ],
+   "CP-R2-3030": [
+    3437,
+    3892,
+    3900
+   ],
+   "CP-P4-2524": [
+    2238,
+    2615,
+    2546
+   ],
+   "CP-GIFT-12": [
+    425,
+    1962,
+    495
+   ],
+   "CP-ON3-3030": [
+    2177,
+    2489,
+    2509
+   ],
+   "CP-B2-JUMBO": [
+    944,
+    1057,
+    1028
+   ]
+  },
+  "production": {
+   "CP-N3-3030": [
+    9711,
+    8402,
+    9791
+   ],
+   "CP-N3-2730": [
+    6676,
+    5723,
+    6751
+   ],
+   "CP-N3-2524": [
+    3460,
+    2965,
+    3431
+   ],
+   "CP-N2-3030": [
+    3432,
+    2932,
+    3398
+   ],
+   "CP-R2-3030": [
+    3702,
+    3156,
+    3719
+   ],
+   "CP-P4-2524": [
+    2426,
+    2118,
+    2428
+   ],
+   "CP-GIFT-12": [
+    741,
+    1538,
+    472
+   ],
+   "CP-ON3-3030": [
+    2350,
+    2019,
+    2392
+   ],
+   "CP-B2-JUMBO": [
+    1014,
+    856,
+    980
+   ]
+  },
+  "end_inventory": {
+   "CP-N3-3030": [
+    1741,
+    -222,
+    -697
+   ],
+   "CP-N3-2730": [
+    1137,
+    -196,
+    -525
+   ],
+   "CP-N3-2524": [
+    572,
+    -122,
+    -289
+   ],
+   "CP-N2-3030": [
+    578,
+    -108,
+    -274
+   ],
+   "CP-R2-3030": [
+    615,
+    -121,
+    -302
+   ],
+   "CP-P4-2524": [
+    418,
+    -79,
+    -197
+   ],
+   "CP-GIFT-12": [
+    366,
+    -58,
+    -81
+   ],
+   "CP-ON3-3030": [
+    413,
+    -57,
+    -174
+   ],
+   "CP-B2-JUMBO": [
+    170,
+    -31,
+    -79
+   ]
+  },
+  "stockout": {
+   "CP-N3-3030": [
+    0,
+    222,
+    697
+   ],
+   "CP-N3-2730": [
+    0,
+    196,
+    525
+   ],
+   "CP-N3-2524": [
+    0,
+    122,
+    289
+   ],
+   "CP-N2-3030": [
+    0,
+    108,
+    274
+   ],
+   "CP-R2-3030": [
+    0,
+    121,
+    302
+   ],
+   "CP-P4-2524": [
+    0,
+    79,
+    197
+   ],
+   "CP-GIFT-12": [
+    0,
+    58,
+    81
+   ],
+   "CP-ON3-3030": [
+    0,
+    57,
+    174
+   ],
+   "CP-B2-JUMBO": [
+    0,
+    31,
+    79
+   ]
+  },
+  "used_hours": {
+   "RW1": [
+    "206699/595",
+    "36273/119",
+    "207246/595"
+   ],
+   "RW2": [
+    "4919/40",
+    "3139/30",
+    "29191/240"
+   ],
+   "SAW1": [
+    "80993/150",
+    "11749/25",
+    "10799/20"
+   ],
+   "PK1": [
+    "25871/80",
+    "2779/10",
+    "26051/80"
+   ],
+   "PK2": [
+    "9803/100",
+    "22327/225",
+    "2777/30"
+   ],
+   "LB1": [
+    "175201/250",
+    "78011/125",
+    "174121/250"
+   ]
+  },
+  "overtime_hours": {
+   "RW1": [
+    "0",
+    "0",
+    "0"
+   ],
+   "RW2": [
+    "0",
+    "0",
+    "0"
+   ],
+   "SAW1": [
+    "5993/150",
+    "999/25",
+    "799/20"
+   ],
+   "PK1": [
+    "0",
+    "0",
+    "0"
+   ],
+   "PK2": [
+    "0",
+    "2077/225",
+    "0"
+   ],
+   "LB1": [
+    "2701/250",
+    "4261/125",
+    "1621/250"
+   ]
+  },
+  "material_requirements": {
+   "MR-N3": {
+    "required": [
+     "862351947/10000",
+     "1515386367/20000",
+     "1729923831/20000"
+    ],
+    "available": [
+     "92100",
+     "58648053/10000",
+     "3000"
+    ],
+    "shortage": [
+     "0",
+     "1458090261/20000",
+     "1729923831/20000"
+    ],
+    "end_on_hand": [
+     "58648053/10000",
+     "3000",
+     "3000"
+    ]
+   },
+   "MR-N2": {
+    "required": [
+     "614601/25",
+     "5212521/250",
+     "11992599/500"
+    ],
+    "available": [
+     "38900",
+     "357899/25",
+     "2000"
+    ],
+    "shortage": [
+     "0",
+     "2133531/250",
+     "11992599/500"
+    ],
+    "end_on_hand": [
+     "357899/25",
+     "2000",
+     "2000"
+    ]
+   },
+   "MR-N4": {
+    "required": [
+     "5247438/625",
+     "4581234/625",
+     "5251764/625"
+    ],
+    "available": [
+     "12900",
+     "2815062/625",
+     "500"
+    ],
+    "shortage": [
+     "0",
+     "2078672/625",
+     "5251764/625"
+    ],
+    "end_on_hand": [
+     "2815062/625",
+     "500",
+     "500"
+    ]
+   },
+   "MR-R2": {
+    "required": [
+     "1299402/125",
+     "1107756/125",
+     "1305369/125"
+    ],
+    "available": [
+     "16700",
+     "788098/125",
+     "1500"
+    ],
+    "shortage": [
+     "0",
+     "507158/125",
+     "1305369/125"
+    ],
+    "end_on_hand": [
+     "788098/125",
+     "1500",
+     "1500"
+    ]
+   },
+   "MC-CORE": {
+    "required": [
+     "942510",
+     "821104",
+     "943490"
+    ],
+    "available": [
+     "1469600",
+     "527090",
+     "50000"
+    ],
+    "shortage": [
+     "0",
+     "344014",
+     "943490"
+    ],
+    "end_on_hand": [
+     "527090",
+     "50000",
+     "50000"
+    ]
+   },
+   "MP-FILM30": {
+    "required": [
+     "25871",
+     "22232",
+     "26051"
+    ],
+    "available": [
+     "42400",
+     "16529",
+     "3000"
+    ],
+    "shortage": [
+     "0",
+     "8703",
+     "26051"
+    ],
+    "end_on_hand": [
+     "16529",
+     "3000",
+     "3000"
+    ]
+   },
+   "MP-FILM24": {
+    "required": [
+     "5886",
+     "5083",
+     "5859"
+    ],
+    "available": [
+     "9500",
+     "3614",
+     "1000"
+    ],
+    "shortage": [
+     "0",
+     "2469",
+     "5859"
+    ],
+    "end_on_hand": [
+     "3614",
+     "1000",
+     "1000"
+    ]
+   },
+   "MP-GIFTBOX": {
+    "required": [
+     "741",
+     "1538",
+     "472"
+    ],
+    "available": [
+     "1100",
+     "359",
+     "300"
+    ],
+    "shortage": [
+     "0",
+     "1479",
+     "472"
+    ],
+    "end_on_hand": [
+     "359",
+     "300",
+     "300"
+    ]
+   },
+   "MP-JUMBOBOX": {
+    "required": [
+     "1014",
+     "856",
+     "980"
+    ],
+    "available": [
+     "1800",
+     "786",
+     "200"
+    ],
+    "shortage": [
+     "0",
+     "270",
+     "980"
+    ],
+    "end_on_hand": [
+     "786",
+     "200",
+     "200"
+    ]
+   }
+  },
+  "evaluations": [
+   {
+    "constraint_id": "CAP-RW1-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "440",
+    "used_value": "206699/595",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-RW1-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "380",
+    "used_value": "36273/119",
+    "reason_codes": [
+     "CAPACITY_BINDING"
+    ]
+   },
+   {
+    "constraint_id": "CAP-RW1-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "440",
+    "used_value": "207246/595",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-RW2-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "160",
+    "used_value": "4919/40",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-RW2-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "140",
+    "used_value": "3139/30",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-RW2-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "160",
+    "used_value": "29191/240",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-SAW1-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "540",
+    "used_value": "80993/150",
+    "reason_codes": [
+     "CAPACITY_BINDING"
+    ]
+   },
+   {
+    "constraint_id": "CAP-SAW1-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "470",
+    "used_value": "11749/25",
+    "reason_codes": [
+     "CAPACITY_BINDING"
+    ]
+   },
+   {
+    "constraint_id": "CAP-SAW1-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "540",
+    "used_value": "10799/20",
+    "reason_codes": [
+     "CAPACITY_BINDING"
+    ]
+   },
+   {
+    "constraint_id": "CAP-PK1-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "410",
+    "used_value": "25871/80",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-PK1-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "350",
+    "used_value": "2779/10",
+    "reason_codes": [
+     "CAPACITY_BINDING"
+    ]
+   },
+   {
+    "constraint_id": "CAP-PK1-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "410",
+    "used_value": "26051/80",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-PK2-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "130",
+    "used_value": "9803/100",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-PK2-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "110",
+    "used_value": "22327/225",
+    "reason_codes": [
+     "CAPACITY_BINDING"
+    ]
+   },
+   {
+    "constraint_id": "CAP-PK2-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "130",
+    "used_value": "2777/30",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-LB1-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "750",
+    "used_value": "175201/250",
+    "reason_codes": [
+     "CAPACITY_BINDING"
+    ]
+   },
+   {
+    "constraint_id": "CAP-LB1-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "650",
+    "used_value": "78011/125",
+    "reason_codes": [
+     "CAPACITY_BINDING"
+    ]
+   },
+   {
+    "constraint_id": "CAP-LB1-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "750",
+    "used_value": "174121/250",
+    "reason_codes": [
+     "CAPACITY_BINDING"
+    ]
+   },
+   {
+    "constraint_id": "QTY-CP-GIFT-12-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "2500",
+    "used_value": "741",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "QTY-CP-GIFT-12-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "2500",
+    "used_value": "1538",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "QTY-CP-GIFT-12-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "2500",
+    "used_value": "472",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-N3-3030-2027-01",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-N3-3030-2027-02",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-N3-3030-2027-03",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-N3-2730-2027-01",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-N3-2730-2027-02",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-N3-2730-2027-03",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-N3-2524-2027-01",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-N3-2524-2027-02",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-N3-2524-2027-03",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-N2-3030-2027-01",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-N2-3030-2027-02",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-N2-3030-2027-03",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-R2-3030-2027-01",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-R2-3030-2027-02",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-R2-3030-2027-03",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-P4-2524-2027-01",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-P4-2524-2027-02",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-P4-2524-2027-03",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-GIFT-12-2027-01",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-GIFT-12-2027-02",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-GIFT-12-2027-03",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-ON3-3030-2027-01",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-ON3-3030-2027-02",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-ON3-3030-2027-03",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-B2-JUMBO-2027-01",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-B2-JUMBO-2027-02",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-B2-JUMBO-2027-03",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-N3-3030-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "1010",
+    "used_value": "1741",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-N3-3030-2027-02",
+    "status": "VIOLATED",
+    "limit_value": "1010",
+    "used_value": "-222",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-N3-3030-2027-03",
+    "status": "VIOLATED",
+    "limit_value": "1010",
+    "used_value": "-697",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-N3-2730-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "650",
+    "used_value": "1137",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-N3-2730-2027-02",
+    "status": "VIOLATED",
+    "limit_value": "650",
+    "used_value": "-196",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-N3-2730-2027-03",
+    "status": "VIOLATED",
+    "limit_value": "650",
+    "used_value": "-525",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-N3-2524-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "320",
+    "used_value": "572",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-N3-2524-2027-02",
+    "status": "VIOLATED",
+    "limit_value": "320",
+    "used_value": "-122",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-N3-2524-2027-03",
+    "status": "VIOLATED",
+    "limit_value": "320",
+    "used_value": "-289",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-N2-3030-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "330",
+    "used_value": "578",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-N2-3030-2027-02",
+    "status": "VIOLATED",
+    "limit_value": "330",
+    "used_value": "-108",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-N2-3030-2027-03",
+    "status": "VIOLATED",
+    "limit_value": "330",
+    "used_value": "-274",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-R2-3030-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "350",
+    "used_value": "615",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-R2-3030-2027-02",
+    "status": "VIOLATED",
+    "limit_value": "350",
+    "used_value": "-121",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-R2-3030-2027-03",
+    "status": "VIOLATED",
+    "limit_value": "350",
+    "used_value": "-302",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-P4-2524-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "230",
+    "used_value": "418",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-P4-2524-2027-02",
+    "status": "VIOLATED",
+    "limit_value": "230",
+    "used_value": "-79",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-P4-2524-2027-03",
+    "status": "VIOLATED",
+    "limit_value": "230",
+    "used_value": "-197",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-GIFT-12-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "50",
+    "used_value": "366",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-GIFT-12-2027-02",
+    "status": "VIOLATED",
+    "limit_value": "50",
+    "used_value": "-58",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-GIFT-12-2027-03",
+    "status": "VIOLATED",
+    "limit_value": "50",
+    "used_value": "-81",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-ON3-3030-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "240",
+    "used_value": "413",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-ON3-3030-2027-02",
+    "status": "VIOLATED",
+    "limit_value": "240",
+    "used_value": "-57",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-ON3-3030-2027-03",
+    "status": "VIOLATED",
+    "limit_value": "240",
+    "used_value": "-174",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-B2-JUMBO-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "100",
+    "used_value": "170",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-B2-JUMBO-2027-02",
+    "status": "VIOLATED",
+    "limit_value": "100",
+    "used_value": "-31",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-B2-JUMBO-2027-03",
+    "status": "VIOLATED",
+    "limit_value": "100",
+    "used_value": "-79",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MR-N3-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "92100",
+    "used_value": "892351947/10000",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "MAT-MR-N3-2027-02",
+    "status": "UNVERIFIED",
+    "limit_value": "58648053/10000",
+    "used_value": "1575386367/20000",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MR-N3-2027-03",
+    "status": "UNVERIFIED",
+    "limit_value": "3000",
+    "used_value": "1789923831/20000",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MR-N2-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "38900",
+    "used_value": "664601/25",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "MAT-MR-N2-2027-02",
+    "status": "UNVERIFIED",
+    "limit_value": "357899/25",
+    "used_value": "5712521/250",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MR-N2-2027-03",
+    "status": "UNVERIFIED",
+    "limit_value": "2000",
+    "used_value": "12992599/500",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MR-N4-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "12900",
+    "used_value": "5559938/625",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "MAT-MR-N4-2027-02",
+    "status": "UNVERIFIED",
+    "limit_value": "2815062/625",
+    "used_value": "4893734/625",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MR-N4-2027-03",
+    "status": "UNVERIFIED",
+    "limit_value": "500",
+    "used_value": "5564264/625",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MR-R2-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "16700",
+    "used_value": "1486902/125",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "MAT-MR-R2-2027-02",
+    "status": "UNVERIFIED",
+    "limit_value": "788098/125",
+    "used_value": "1295256/125",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MR-R2-2027-03",
+    "status": "UNVERIFIED",
+    "limit_value": "1500",
+    "used_value": "1492869/125",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MC-CORE-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "1469600",
+    "used_value": "992510",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "MAT-MC-CORE-2027-02",
+    "status": "UNVERIFIED",
+    "limit_value": "527090",
+    "used_value": "871104",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MC-CORE-2027-03",
+    "status": "UNVERIFIED",
+    "limit_value": "50000",
+    "used_value": "993490",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MP-FILM30-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "42400",
+    "used_value": "28871",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "MAT-MP-FILM30-2027-02",
+    "status": "UNVERIFIED",
+    "limit_value": "16529",
+    "used_value": "25232",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MP-FILM30-2027-03",
+    "status": "UNVERIFIED",
+    "limit_value": "3000",
+    "used_value": "29051",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MP-FILM24-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "9500",
+    "used_value": "6886",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "MAT-MP-FILM24-2027-02",
+    "status": "UNVERIFIED",
+    "limit_value": "3614",
+    "used_value": "6083",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MP-FILM24-2027-03",
+    "status": "UNVERIFIED",
+    "limit_value": "1000",
+    "used_value": "6859",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MP-GIFTBOX-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "1100",
+    "used_value": "1041",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "MAT-MP-GIFTBOX-2027-02",
+    "status": "UNVERIFIED",
+    "limit_value": "359",
+    "used_value": "1838",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MP-GIFTBOX-2027-03",
+    "status": "UNVERIFIED",
+    "limit_value": "300",
+    "used_value": "772",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MP-JUMBOBOX-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "1800",
+    "used_value": "1214",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "MAT-MP-JUMBOBOX-2027-02",
+    "status": "UNVERIFIED",
+    "limit_value": "786",
+    "used_value": "1056",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MP-JUMBOBOX-2027-03",
+    "status": "UNVERIFIED",
+    "limit_value": "200",
+    "used_value": "1180",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   }
+  ],
+  "warnings": [],
+  "unverified_codes": [],
+  "feasibility": "INFEASIBLE"
+ },
+ "COST_SAVING": {
+  "status": "OK",
+  "planned_demand": {
+   "CP-N3-3030": [
+    10051,
+    10051,
+    10051
+   ],
+   "CP-N3-2730": [
+    6520,
+    6520,
+    6520
+   ],
+   "CP-N3-2524": [
+    3232,
+    3232,
+    3232
+   ],
+   "CP-N2-3030": [
+    3285,
+    3285,
+    3285
+   ],
+   "CP-R2-3030": [
+    3528,
+    3528,
+    3528
+   ],
+   "CP-P4-2524": [
+    2326,
+    2326,
+    2326
+   ],
+   "CP-GIFT-12": [
+    495,
+    495,
+    495
+   ],
+   "CP-ON3-3030": [
+    2353,
+    2353,
+    2353
+   ],
+   "CP-B2-JUMBO": [
+    1007,
+    1007,
+    1007
+   ]
+  },
+  "target": {
+   "CP-N3-3030": [
+    8551,
+    10051,
+    10051
+   ],
+   "CP-N3-2730": [
+    5540,
+    6520,
+    6520
+   ],
+   "CP-N3-2524": [
+    2742,
+    3232,
+    3232
+   ],
+   "CP-N2-3030": [
+    2795,
+    3285,
+    3285
+   ],
+   "CP-R2-3030": [
+    2998,
+    3528,
+    3528
+   ],
+   "CP-P4-2524": [
+    1976,
+    2326,
+    2326
+   ],
+   "CP-GIFT-12": [
+    425,
+    495,
+    495
+   ],
+   "CP-ON3-3030": [
+    2003,
+    2353,
+    2353
+   ],
+   "CP-B2-JUMBO": [
+    857,
+    1007,
+    1007
+   ]
+  },
+  "production": {
+   "CP-N3-3030": [
+    9458,
+    8131,
+    9454
+   ],
+   "CP-N3-2730": [
+    6129,
+    5275,
+    6133
+   ],
+   "CP-N3-2524": [
+    3035,
+    2614,
+    3040
+   ],
+   "CP-N2-3030": [
+    3091,
+    2657,
+    3090
+   ],
+   "CP-R2-3030": [
+    3317,
+    2854,
+    3318
+   ],
+   "CP-P4-2524": [
+    2186,
+    1881,
+    2188
+   ],
+   "CP-GIFT-12": [
+    469,
+    400,
+    465
+   ],
+   "CP-ON3-3030": [
+    2215,
+    1903,
+    2213
+   ],
+   "CP-B2-JUMBO": [
+    948,
+    814,
+    947
+   ]
+  },
+  "end_inventory": {
+   "CP-N3-3030": [
+    1917,
+    -3,
+    -600
+   ],
+   "CP-N3-2730": [
+    1239,
+    -6,
+    -393
+   ],
+   "CP-N3-2524": [
+    613,
+    -5,
+    -197
+   ],
+   "CP-N2-3030": [
+    626,
+    -2,
+    -197
+   ],
+   "CP-R2-3030": [
+    669,
+    -5,
+    -215
+   ],
+   "CP-P4-2524": [
+    440,
+    -5,
+    -143
+   ],
+   "CP-GIFT-12": [
+    94,
+    -1,
+    -31
+   ],
+   "CP-ON3-3030": [
+    452,
+    2,
+    -138
+   ],
+   "CP-B2-JUMBO": [
+    191,
+    -2,
+    -62
+   ]
+  },
+  "stockout": {
+   "CP-N3-3030": [
+    0,
+    3,
+    600
+   ],
+   "CP-N3-2730": [
+    0,
+    6,
+    393
+   ],
+   "CP-N3-2524": [
+    0,
+    5,
+    197
+   ],
+   "CP-N2-3030": [
+    0,
+    2,
+    197
+   ],
+   "CP-R2-3030": [
+    0,
+    5,
+    215
+   ],
+   "CP-P4-2524": [
+    0,
+    5,
+    143
+   ],
+   "CP-GIFT-12": [
+    0,
+    1,
+    31
+   ],
+   "CP-ON3-3030": [
+    0,
+    0,
+    138
+   ],
+   "CP-B2-JUMBO": [
+    0,
+    2,
+    62
+   ]
+  },
+  "used_hours": {
+   "RW1": [
+    "385569/1190",
+    "165813/595",
+    "22683/70"
+   ],
+   "RW2": [
+    "1117/10",
+    "4609/48",
+    "335/3"
+   ],
+   "SAW1": [
+    "24997/50",
+    "8599/20",
+    "299969/600"
+   ],
+   "PK1": [
+    "2421/8",
+    "1041/4",
+    "1513/5"
+   ],
+   "PK2": [
+    "76309/900",
+    "32801/450",
+    "76301/900"
+   ],
+   "LB1": [
+    "80439/125",
+    "69177/125",
+    "16088/25"
+   ]
+  },
+  "overtime_hours": {
+   "RW1": [
+    "0",
+    "0",
+    "0"
+   ],
+   "RW2": [
+    "0",
+    "0",
+    "0"
+   ],
+   "SAW1": [
+    "0",
+    "0",
+    "0"
+   ],
+   "PK1": [
+    "0",
+    "0",
+    "0"
+   ],
+   "PK2": [
+    "0",
+    "0",
+    "0"
+   ],
+   "LB1": [
+    "0",
+    "0",
+    "0"
+   ]
+  },
+  "material_requirements": {
+   "MR-N3": {
+    "required": [
+     "1618544781/20000",
+     "55678401/800",
+     "1618489161/20000"
+    ],
+    "available": [
+     "92100",
+     "223455219/20000",
+     "3000"
+    ],
+    "shortage": [
+     "0",
+     "614252403/10000",
+     "1618489161/20000"
+    ],
+    "end_on_hand": [
+     "223455219/20000",
+     "3000",
+     "3000"
+    ]
+   },
+   "MR-N2": {
+    "required": [
+     "22656807/1000",
+     "3892473/200",
+     "11319597/500"
+    ],
+    "available": [
+     "38900",
+     "16243193/1000",
+     "2000"
+    ],
+    "shortage": [
+     "0",
+     "1304793/250",
+     "11319597/500"
+    ],
+    "end_on_hand": [
+     "16243193/1000",
+     "2000",
+     "2000"
+    ]
+   },
+   "MR-N4": {
+    "required": [
+     "4728318/625",
+     "4068603/625",
+     "4732644/625"
+    ],
+    "available": [
+     "12900",
+     "3334182/625",
+     "500"
+    ],
+    "shortage": [
+     "0",
+     "1046921/625",
+     "4732644/625"
+    ],
+    "end_on_hand": [
+     "3334182/625",
+     "500",
+     "500"
+    ]
+   },
+   "MR-R2": {
+    "required": [
+     "1164267/125",
+     "1001754/125",
+     "1164618/125"
+    ],
+    "available": [
+     "16700",
+     "923233/125",
+     "1500"
+    ],
+    "shortage": [
+     "0",
+     "266021/125",
+     "1164618/125"
+    ],
+    "end_on_hand": [
+     "923233/125",
+     "1500",
+     "1500"
+    ]
+   },
+   "MC-CORE": {
+    "required": [
+     "872400",
+     "750304",
+     "872444"
+    ],
+    "available": [
+     "1469600",
+     "597200",
+     "50000"
+    ],
+    "shortage": [
+     "0",
+     "203104",
+     "872444"
+    ],
+    "end_on_hand": [
+     "597200",
+     "50000",
+     "50000"
+    ]
+   },
+   "MP-FILM30": {
+    "required": [
+     "24210",
+     "20820",
+     "24208"
+    ],
+    "available": [
+     "42400",
+     "18190",
+     "3000"
+    ],
+    "shortage": [
+     "0",
+     "5630",
+     "24208"
+    ],
+    "end_on_hand": [
+     "18190",
+     "3000",
+     "3000"
+    ]
+   },
+   "MP-FILM24": {
+    "required": [
+     "5221",
+     "4495",
+     "5228"
+    ],
+    "available": [
+     "9500",
+     "4279",
+     "1000"
+    ],
+    "shortage": [
+     "0",
+     "1216",
+     "5228"
+    ],
+    "end_on_hand": [
+     "4279",
+     "1000",
+     "1000"
+    ]
+   },
+   "MP-GIFTBOX": {
+    "required": [
+     "469",
+     "400",
+     "465"
+    ],
+    "available": [
+     "1100",
+     "631",
+     "300"
+    ],
+    "shortage": [
+     "0",
+     "69",
+     "465"
+    ],
+    "end_on_hand": [
+     "631",
+     "300",
+     "300"
+    ]
+   },
+   "MP-JUMBOBOX": {
+    "required": [
+     "948",
+     "814",
+     "947"
+    ],
+    "available": [
+     "1800",
+     "852",
+     "200"
+    ],
+    "shortage": [
+     "0",
+     "162",
+     "947"
+    ],
+    "end_on_hand": [
+     "852",
+     "200",
+     "200"
+    ]
+   }
+  },
+  "evaluations": [
+   {
+    "constraint_id": "CAP-RW1-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "400",
+    "used_value": "385569/1190",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-RW1-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "340",
+    "used_value": "165813/595",
+    "reason_codes": [
+     "CAPACITY_BINDING"
+    ]
+   },
+   {
+    "constraint_id": "CAP-RW1-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "400",
+    "used_value": "22683/70",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-RW2-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "140",
+    "used_value": "1117/10",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-RW2-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "120",
+    "used_value": "4609/48",
+    "reason_codes": [
+     "CAPACITY_BINDING"
+    ]
+   },
+   {
+    "constraint_id": "CAP-RW2-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "140",
+    "used_value": "335/3",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-SAW1-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "500",
+    "used_value": "24997/50",
+    "reason_codes": [
+     "CAPACITY_BINDING"
+    ]
+   },
+   {
+    "constraint_id": "CAP-SAW1-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "430",
+    "used_value": "8599/20",
+    "reason_codes": [
+     "CAPACITY_BINDING"
+    ]
+   },
+   {
+    "constraint_id": "CAP-SAW1-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "500",
+    "used_value": "299969/600",
+    "reason_codes": [
+     "CAPACITY_BINDING"
+    ]
+   },
+   {
+    "constraint_id": "CAP-PK1-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "370",
+    "used_value": "2421/8",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-PK1-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "310",
+    "used_value": "1041/4",
+    "reason_codes": [
+     "CAPACITY_BINDING"
+    ]
+   },
+   {
+    "constraint_id": "CAP-PK1-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "370",
+    "used_value": "1513/5",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-PK2-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "110",
+    "used_value": "76309/900",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-PK2-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "90",
+    "used_value": "32801/450",
+    "reason_codes": [
+     "CAPACITY_BINDING"
+    ]
+   },
+   {
+    "constraint_id": "CAP-PK2-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "110",
+    "used_value": "76301/900",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "CAP-LB1-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "690",
+    "used_value": "80439/125",
+    "reason_codes": [
+     "CAPACITY_BINDING"
+    ]
+   },
+   {
+    "constraint_id": "CAP-LB1-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "590",
+    "used_value": "69177/125",
+    "reason_codes": [
+     "CAPACITY_BINDING"
+    ]
+   },
+   {
+    "constraint_id": "CAP-LB1-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "690",
+    "used_value": "16088/25",
+    "reason_codes": [
+     "CAPACITY_BINDING"
+    ]
+   },
+   {
+    "constraint_id": "QTY-CP-GIFT-12-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "2500",
+    "used_value": "469",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "QTY-CP-GIFT-12-2027-02",
+    "status": "SATISFIED",
+    "limit_value": "2500",
+    "used_value": "400",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "QTY-CP-GIFT-12-2027-03",
+    "status": "SATISFIED",
+    "limit_value": "2500",
+    "used_value": "465",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-N3-3030-2027-01",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-N3-3030-2027-02",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-N3-3030-2027-03",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-N3-2730-2027-01",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-N3-2730-2027-02",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-N3-2730-2027-03",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-N3-2524-2027-01",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-N3-2524-2027-02",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-N3-2524-2027-03",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-N2-3030-2027-01",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-N2-3030-2027-02",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-N2-3030-2027-03",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-R2-3030-2027-01",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-R2-3030-2027-02",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-R2-3030-2027-03",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-P4-2524-2027-01",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-P4-2524-2027-02",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-P4-2524-2027-03",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-GIFT-12-2027-01",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-GIFT-12-2027-02",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-GIFT-12-2027-03",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-ON3-3030-2027-01",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-ON3-3030-2027-02",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-ON3-3030-2027-03",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-B2-JUMBO-2027-01",
+    "status": "SATISFIED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "DEM-CP-B2-JUMBO-2027-02",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "DEM-CP-B2-JUMBO-2027-03",
+    "status": "VIOLATED",
+    "limit_value": null,
+    "used_value": null,
+    "reason_codes": [
+     "STOCKOUT"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-N3-3030-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "1010",
+    "used_value": "1917",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-N3-3030-2027-02",
+    "status": "VIOLATED",
+    "limit_value": "1010",
+    "used_value": "-3",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-N3-3030-2027-03",
+    "status": "VIOLATED",
+    "limit_value": "1010",
+    "used_value": "-600",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-N3-2730-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "650",
+    "used_value": "1239",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-N3-2730-2027-02",
+    "status": "VIOLATED",
+    "limit_value": "650",
+    "used_value": "-6",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-N3-2730-2027-03",
+    "status": "VIOLATED",
+    "limit_value": "650",
+    "used_value": "-393",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-N3-2524-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "320",
+    "used_value": "613",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-N3-2524-2027-02",
+    "status": "VIOLATED",
+    "limit_value": "320",
+    "used_value": "-5",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-N3-2524-2027-03",
+    "status": "VIOLATED",
+    "limit_value": "320",
+    "used_value": "-197",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-N2-3030-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "330",
+    "used_value": "626",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-N2-3030-2027-02",
+    "status": "VIOLATED",
+    "limit_value": "330",
+    "used_value": "-2",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-N2-3030-2027-03",
+    "status": "VIOLATED",
+    "limit_value": "330",
+    "used_value": "-197",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-R2-3030-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "350",
+    "used_value": "669",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-R2-3030-2027-02",
+    "status": "VIOLATED",
+    "limit_value": "350",
+    "used_value": "-5",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-R2-3030-2027-03",
+    "status": "VIOLATED",
+    "limit_value": "350",
+    "used_value": "-215",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-P4-2524-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "230",
+    "used_value": "440",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-P4-2524-2027-02",
+    "status": "VIOLATED",
+    "limit_value": "230",
+    "used_value": "-5",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-P4-2524-2027-03",
+    "status": "VIOLATED",
+    "limit_value": "230",
+    "used_value": "-143",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-GIFT-12-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "50",
+    "used_value": "94",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-GIFT-12-2027-02",
+    "status": "VIOLATED",
+    "limit_value": "50",
+    "used_value": "-1",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-GIFT-12-2027-03",
+    "status": "VIOLATED",
+    "limit_value": "50",
+    "used_value": "-31",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-ON3-3030-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "240",
+    "used_value": "452",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-ON3-3030-2027-02",
+    "status": "VIOLATED",
+    "limit_value": "240",
+    "used_value": "2",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-ON3-3030-2027-03",
+    "status": "VIOLATED",
+    "limit_value": "240",
+    "used_value": "-138",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-B2-JUMBO-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "100",
+    "used_value": "191",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "SS-CP-B2-JUMBO-2027-02",
+    "status": "VIOLATED",
+    "limit_value": "100",
+    "used_value": "-2",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "SS-CP-B2-JUMBO-2027-03",
+    "status": "VIOLATED",
+    "limit_value": "100",
+    "used_value": "-62",
+    "reason_codes": [
+     "BELOW_SAFETY_STOCK"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MR-N3-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "92100",
+    "used_value": "1678544781/20000",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "MAT-MR-N3-2027-02",
+    "status": "UNVERIFIED",
+    "limit_value": "223455219/20000",
+    "used_value": "58078401/800",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MR-N3-2027-03",
+    "status": "UNVERIFIED",
+    "limit_value": "3000",
+    "used_value": "1678489161/20000",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MR-N2-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "38900",
+    "used_value": "24656807/1000",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "MAT-MR-N2-2027-02",
+    "status": "UNVERIFIED",
+    "limit_value": "16243193/1000",
+    "used_value": "4292473/200",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MR-N2-2027-03",
+    "status": "UNVERIFIED",
+    "limit_value": "2000",
+    "used_value": "12319597/500",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MR-N4-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "12900",
+    "used_value": "5040818/625",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "MAT-MR-N4-2027-02",
+    "status": "UNVERIFIED",
+    "limit_value": "3334182/625",
+    "used_value": "4381103/625",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MR-N4-2027-03",
+    "status": "UNVERIFIED",
+    "limit_value": "500",
+    "used_value": "5045144/625",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MR-R2-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "16700",
+    "used_value": "1351767/125",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "MAT-MR-R2-2027-02",
+    "status": "UNVERIFIED",
+    "limit_value": "923233/125",
+    "used_value": "1189254/125",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MR-R2-2027-03",
+    "status": "UNVERIFIED",
+    "limit_value": "1500",
+    "used_value": "1352118/125",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MC-CORE-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "1469600",
+    "used_value": "922400",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "MAT-MC-CORE-2027-02",
+    "status": "UNVERIFIED",
+    "limit_value": "597200",
+    "used_value": "800304",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MC-CORE-2027-03",
+    "status": "UNVERIFIED",
+    "limit_value": "50000",
+    "used_value": "922444",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MP-FILM30-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "42400",
+    "used_value": "27210",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "MAT-MP-FILM30-2027-02",
+    "status": "UNVERIFIED",
+    "limit_value": "18190",
+    "used_value": "23820",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MP-FILM30-2027-03",
+    "status": "UNVERIFIED",
+    "limit_value": "3000",
+    "used_value": "27208",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MP-FILM24-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "9500",
+    "used_value": "6221",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "MAT-MP-FILM24-2027-02",
+    "status": "UNVERIFIED",
+    "limit_value": "4279",
+    "used_value": "5495",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MP-FILM24-2027-03",
+    "status": "UNVERIFIED",
+    "limit_value": "1000",
+    "used_value": "6228",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MP-GIFTBOX-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "1100",
+    "used_value": "769",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "MAT-MP-GIFTBOX-2027-02",
+    "status": "UNVERIFIED",
+    "limit_value": "631",
+    "used_value": "700",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MP-GIFTBOX-2027-03",
+    "status": "UNVERIFIED",
+    "limit_value": "300",
+    "used_value": "765",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MP-JUMBOBOX-2027-01",
+    "status": "SATISFIED",
+    "limit_value": "1800",
+    "used_value": "1148",
+    "reason_codes": []
+   },
+   {
+    "constraint_id": "MAT-MP-JUMBOBOX-2027-02",
+    "status": "UNVERIFIED",
+    "limit_value": "852",
+    "used_value": "1014",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   },
+   {
+    "constraint_id": "MAT-MP-JUMBOBOX-2027-03",
+    "status": "UNVERIFIED",
+    "limit_value": "200",
+    "used_value": "1147",
+    "reason_codes": [
+     "PROCUREMENT_REQUIRED"
+    ]
+   }
+  ],
+  "warnings": [],
+  "unverified_codes": [],
+  "feasibility": "INFEASIBLE"
+ }
+}

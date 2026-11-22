@@ -6,7 +6,7 @@
     "routing": "제품 -> 자원 -> {run_time, reference_qty}. 1개당 시간 = run_time / reference_qty",
     "resources": "regular/overtime는 월별 시간 배열. ot_allowed=false면 잔업 한도는 쓰지 않는다",
     "arrays": "월별 값은 months 순서",
-    "receipts": "입고 예정 = {po_id, material, open_qty, unit, expected_date}. open_qty(미입고 수량)만 쓴다. ordered_qty는 참고용이며 계산에 쓰지 않는다. as_of(기준일)보다 이른 expected_date는 납기 지남",
+    "receipts": "입고 예정 = {po_id, material, open_qty, unit, expected_date}. open_qty(미입고 수량)만 쓴다. ordered_qty는 참고용이며 계산에 쓰지 않는다. expected_date가 as_of(기준일) 당일 또는 이전이면 납기 지남",
     "inventory": "제품·자재에 on_hand/allocated 키가 없으면 재고 행이 없는 것이다(§7 INVENTORY_MISSING)",
     "evaluations": "적힌 항목만 비교한다. 적지 않은 판정은 비교 대상이 아니다",
     "codes": "error_codes·unverified_codes·warnings는 순서 없이 집합으로 비교한다"

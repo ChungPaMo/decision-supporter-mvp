@@ -546,3 +546,35 @@
 
 **관련 자료**
 - [계산 규칙 v0.4](../modules/planning_engine/PLANNING_RULES.md), [작은 손계산](../modules/planning_engine/tests/hand_calc/SMALL_CASES.md), [계약 답변](../modules/planning_engine/CONTRACT_REQUESTS.md), [시작 Commit](https://github.com/ChungPaMo/decision-supporter-mvp/commit/c306d7d7daad7a76326faad988a0b3848701fc8f).
+
+### 2026-11-22 — 충파모 9제품×3개월×3안 계산 결과와 독립 정답 비교 (이희원)
+
+**Git**
+- 시작 Commit `fbd641967500762c42b1d9193cca13bfafecffc8`.
+- 완료 Commit은 고유 제목 `test: compare planning core with independent CHUNGPAMO-2027 answers`으로 조회한다. `git log main -1 --format=%H --fixed-strings --grep='test: compare planning core with independent CHUNGPAMO-2027 answers'`
+- 브랜치 `main`.
+
+**작업 목적**
+- 손계산 18개를 넘어, 시연에 쓸 공식 합성 데이터 전체에서 계산 코어가 규칙대로 계산하는지 엔진과 독립된 정답으로 확인하고 결과를 고정한다.
+
+**구현 내용**
+- `synthetic/plan_input.py`: upload 01~09·입고 예정·예측 결과 → 계산 코어 내부 형식 입력 `tests/chungpamo/plan_input.json`(원본 SHA digest·예측 input digest 기록). 2027-01-01 유효 BOM 1개, 라우팅 resource_requirements(LB1)를 자원 행으로 펼침.
+- `tests/chungpamo/expected.json`: 엔진·테스트 코드를 보지 않은 별도 에이전트가 PLANNING_RULES v0.4만 보고 만든 계산기의 정답(그 계산기도 HC-01~18 18/18 일치 후 산출). 세 안 × 판정 102개 전체 포함.
+- `tests/test_chungpamo_plan.py`: 엔진 결과와 정답 전 항목 비교(판정 ID 집합도 일치 요구). `synthetic/plan_report.py` → `tests/chungpamo/RESULT.md` 시연용 요약. `synthetic/README.md` 실행 순서 추가.
+- `small_cases.json` conventions의 납기 지남 문구를 규칙서(기준일 당일 포함)와 일치시킴(독립 계산기가 불일치 지적).
+
+**검증 결과**
+- 2026-11-22 이희원 PC, 루트 `.venv`: `pytest modules/planning_engine` **80 passed / 0 failed**. 정답을 일부러 바꾼 2건(생산량 1개, 판정 1개 누락)은 실패로 검출.
+- generate.py 재생성 후 upload 9개·입고 예정 파일 SHA가 이전과 같고, 예측을 다시 돌린 결과도 11/15와 input digest·27행 값 모두 동일함을 확인한 뒤 고정.
+- 결과: 기준형 결품 0·**UNVERIFIED**(9개 자재 모두 2·3월 발주 필요), 안정형 결품 3,612·INFEASIBLE, 비용절감형 결품 2,005·INFEASIBLE. 1월 MAT은 1/20 입고 예정 포함 모두 충분.
+- backend 테스트(대영 합성 데이터 계약 포함)는 이 PC `.venv`에 `rapidfuzz`가 없어 수집 오류로 미실행. 생성기 코드는 바꾸지 않았다. Docker·DB·브라우저 미실행.
+
+**기술적 결정**
+- 희원 선택: 정답은 별도 에이전트가 규칙서만 보고 계산, 입력·정답을 고정 파일로 커밋하고 pytest로 비교(LightGBM·생성 없이 결정적), 예측은 다시 돌려 확인 후 고정.
+
+**남은 문제**
+- 시연 관점: 미래 발주가 1/20 한 건뿐이라 기준형도 UNVERIFIED(발주 필요)로 나온다. **희원 결정: 데이터는 그대로 두고 "결품은 없지만 2·3월 발주 권고" 장면으로 쓴다**(공식 데이터·SHA manifest 유지). 화면은 UNVERIFIED 사유(PROCUREMENT_REQUIRED)와 발주 필요량을 보여 주도록 정마나미·김대영과 조율 필요.
+- 이희원: What-if, C01·C02 확정 후 PlanningInput 변환부·PlanningOutput 변환, AVAILABLE 전환. 김대영: C01~C06 검토, 이 PC `.venv` rapidfuzz 확인.
+
+**관련 자료**
+- [결과 요약](../modules/planning_engine/tests/chungpamo/RESULT.md), [계산 규칙 v0.4](../modules/planning_engine/PLANNING_RULES.md), [합성 데이터 README](../modules/planning_engine/synthetic/README.md), [시작 Commit](https://github.com/ChungPaMo/decision-supporter-mvp/commit/fbd641967500762c42b1d9193cca13bfafecffc8).

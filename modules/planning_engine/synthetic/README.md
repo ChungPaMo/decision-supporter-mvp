@@ -21,6 +21,8 @@ python -X utf8 modules/planning_engine/synthetic/generate.py
 | ledger.py | raw 거래 기록만 읽어 재고가 맞물리는지 확인, 월별 설비 사용시간 집계 |
 | bottleneck_check.py | 예측 P50/P80/P90별 설비 부하·자재 여유·수량 한도 어림 점검 (`data/forecast/bottleneck_check.md`). 계획 엔진 정답 아님 |
 | forecast_request.py | upload/05_monthly_demand.csv → 예측 엔진 입력 JSON (`data/forecast/request.json`, 기준일 2026-12-31, 3개월) |
+| plan_input.py | upload·입고 예정·`data/forecast/forecast.json` → 계획 계산 코어 입력 `tests/chungpamo/plan_input.json`(고정, 커밋). 순서: generate.py → forecast_request.py → `python -m engine.forecast --input … --output data/forecast/forecast.json` → plan_input.py (generate.py는 data/forecast도 지운다) |
+| plan_report.py | 고정 입력으로 세 계획안을 계산해 `tests/chungpamo/RESULT.md` 요약 생성. 정답 비교는 `tests/test_chungpamo_plan.py` |
 
 ## 1. 가상 회사
 

@@ -1,0 +1,730 @@
+{
+ "description": "㈜충파모제지(SYNTHETIC) 2027-01~03 계획 계산 입력. synthetic/plan_input.py로 생성. 손으로 고치지 말 것",
+ "dataset_id": "CHUNGPAMO-2027",
+ "source_digest": "sha256:503be410f2486385b78e3e693c46cff69866a2de8c7b68c1ee97ecf607eaa87b",
+ "forecast_input_digest": "sha256:13783a05f513652044cc9f0bf39fc44745054799101f1ca610df3855caf33083",
+ "forecast_run": "chungpamo-engine 0.1.0 (lightgbm 4.7.0)",
+ "months": [
+  "2027-01",
+  "2027-02",
+  "2027-03"
+ ],
+ "as_of": "2026-12-31",
+ "demand_multiplier": "1",
+ "products": [
+  {
+   "id": "CP-N3-3030",
+   "unit": "EA",
+   "safety_stock": 1010,
+   "on_hand": 2510,
+   "allocated": 0
+  },
+  {
+   "id": "CP-N3-2730",
+   "unit": "EA",
+   "safety_stock": 650,
+   "on_hand": 1630,
+   "allocated": 0
+  },
+  {
+   "id": "CP-N3-2524",
+   "unit": "EA",
+   "safety_stock": 320,
+   "on_hand": 810,
+   "allocated": 0
+  },
+  {
+   "id": "CP-N2-3030",
+   "unit": "EA",
+   "safety_stock": 330,
+   "on_hand": 820,
+   "allocated": 0
+  },
+  {
+   "id": "CP-R2-3030",
+   "unit": "EA",
+   "safety_stock": 350,
+   "on_hand": 880,
+   "allocated": 0
+  },
+  {
+   "id": "CP-P4-2524",
+   "unit": "EA",
+   "safety_stock": 230,
+   "on_hand": 580,
+   "allocated": 0
+  },
+  {
+   "id": "CP-GIFT-12",
+   "unit": "EA",
+   "safety_stock": 50,
+   "on_hand": 120,
+   "allocated": 0
+  },
+  {
+   "id": "CP-ON3-3030",
+   "unit": "EA",
+   "safety_stock": 240,
+   "on_hand": 590,
+   "allocated": 0
+  },
+  {
+   "id": "CP-B2-JUMBO",
+   "unit": "EA",
+   "safety_stock": 100,
+   "on_hand": 250,
+   "allocated": 0
+  }
+ ],
+ "forecast": {
+  "P50": {
+   "CP-N3-3030": [
+    "10050.8333",
+    "10050.8333",
+    "10050.8333"
+   ],
+   "CP-N3-2730": [
+    "6519.1667",
+    "6519.1667",
+    "6519.1667"
+   ],
+   "CP-N3-2524": [
+    "3231.6667",
+    "3231.6667",
+    "3231.6667"
+   ],
+   "CP-N2-3030": [
+    "3285",
+    "3285",
+    "3285"
+   ],
+   "CP-R2-3030": [
+    "3527.5",
+    "3527.5",
+    "3527.5"
+   ],
+   "CP-P4-2524": [
+    "2325.8333",
+    "2325.8333",
+    "2325.8333"
+   ],
+   "CP-GIFT-12": [
+    "494.1667",
+    "494.1667",
+    "494.1667"
+   ],
+   "CP-ON3-3030": [
+    "2352.5",
+    "2352.5",
+    "2352.5"
+   ],
+   "CP-B2-JUMBO": [
+    "1006.6667",
+    "1006.6667",
+    "1006.6667"
+   ]
+  },
+  "P80": {
+   "CP-N3-3030": [
+    "10479.3001",
+    "10364.9308",
+    "10265.3828"
+   ],
+   "CP-N3-2730": [
+    "7168.8702",
+    "7055.2568",
+    "7079.2264"
+   ],
+   "CP-N3-2524": [
+    "3697.329",
+    "3658.3409",
+    "3597.4148"
+   ],
+   "CP-N2-3030": [
+    "3673.9401",
+    "3617.4917",
+    "3563.4636"
+   ],
+   "CP-R2-3030": [
+    "3966.8657",
+    "3891.8562",
+    "3899.6817"
+   ],
+   "CP-P4-2524": [
+    "2587.7162",
+    "2614.2663",
+    "2545.8612"
+   ],
+   "CP-GIFT-12": [
+    "494.1667",
+    "1961.022",
+    "494.1667"
+   ],
+   "CP-ON3-3030": [
+    "2526.0345",
+    "2488.899",
+    "2508.5121"
+   ],
+   "CP-B2-JUMBO": [
+    "1093.4593",
+    "1056.7758",
+    "1027.5399"
+   ]
+  }
+ },
+ "resources": [
+  {
+   "id": "RW1",
+   "time_basis": "MACHINE_HOUR",
+   "regular": [
+    "400",
+    "340",
+    "400"
+   ],
+   "overtime": [
+    "40",
+    "40",
+    "40"
+   ],
+   "availability_basis": "NET"
+  },
+  {
+   "id": "RW2",
+   "time_basis": "MACHINE_HOUR",
+   "regular": [
+    "140",
+    "120",
+    "140"
+   ],
+   "overtime": [
+    "20",
+    "20",
+    "20"
+   ],
+   "availability_basis": "NET"
+  },
+  {
+   "id": "SAW1",
+   "time_basis": "MACHINE_HOUR",
+   "regular": [
+    "500",
+    "430",
+    "500"
+   ],
+   "overtime": [
+    "40",
+    "40",
+    "40"
+   ],
+   "availability_basis": "NET"
+  },
+  {
+   "id": "PK1",
+   "time_basis": "MACHINE_HOUR",
+   "regular": [
+    "370",
+    "310",
+    "370"
+   ],
+   "overtime": [
+    "40",
+    "40",
+    "40"
+   ],
+   "availability_basis": "NET"
+  },
+  {
+   "id": "PK2",
+   "time_basis": "MACHINE_HOUR",
+   "regular": [
+    "110",
+    "90",
+    "110"
+   ],
+   "overtime": [
+    "20",
+    "20",
+    "20"
+   ],
+   "availability_basis": "NET"
+  },
+  {
+   "id": "LB1",
+   "time_basis": "PERSON_HOUR",
+   "regular": [
+    "690",
+    "590",
+    "690"
+   ],
+   "overtime": [
+    "60",
+    "60",
+    "60"
+   ],
+   "availability_basis": "NET"
+  }
+ ],
+ "routing": {
+  "CP-N3-3030": {
+   "RW1": {
+    "run_time": "1",
+    "reference_qty": "70",
+    "time_unit": "h"
+   },
+   "SAW1": {
+    "run_time": "1",
+    "reference_qty": "60",
+    "time_unit": "h"
+   },
+   "PK1": {
+    "run_time": "1",
+    "reference_qty": "80",
+    "time_unit": "h"
+   },
+   "LB1": {
+    "run_time": "20",
+    "reference_qty": "1000",
+    "time_unit": "h"
+   }
+  },
+  "CP-N3-2730": {
+   "RW1": {
+    "run_time": "1",
+    "reference_qty": "70",
+    "time_unit": "h"
+   },
+   "SAW1": {
+    "run_time": "1",
+    "reference_qty": "60",
+    "time_unit": "h"
+   },
+   "PK1": {
+    "run_time": "1",
+    "reference_qty": "80",
+    "time_unit": "h"
+   },
+   "LB1": {
+    "run_time": "20",
+    "reference_qty": "1000",
+    "time_unit": "h"
+   }
+  },
+  "CP-ON3-3030": {
+   "RW1": {
+    "run_time": "1",
+    "reference_qty": "70",
+    "time_unit": "h"
+   },
+   "SAW1": {
+    "run_time": "1",
+    "reference_qty": "60",
+    "time_unit": "h"
+   },
+   "PK1": {
+    "run_time": "1",
+    "reference_qty": "80",
+    "time_unit": "h"
+   },
+   "LB1": {
+    "run_time": "20",
+    "reference_qty": "1000",
+    "time_unit": "h"
+   }
+  },
+  "CP-N2-3030": {
+   "RW2": {
+    "run_time": "1",
+    "reference_qty": "80",
+    "time_unit": "h"
+   },
+   "SAW1": {
+    "run_time": "1",
+    "reference_qty": "60",
+    "time_unit": "h"
+   },
+   "PK1": {
+    "run_time": "1",
+    "reference_qty": "80",
+    "time_unit": "h"
+   },
+   "LB1": {
+    "run_time": "20",
+    "reference_qty": "1000",
+    "time_unit": "h"
+   }
+  },
+  "CP-R2-3030": {
+   "RW2": {
+    "run_time": "1",
+    "reference_qty": "80",
+    "time_unit": "h"
+   },
+   "SAW1": {
+    "run_time": "1",
+    "reference_qty": "60",
+    "time_unit": "h"
+   },
+   "PK1": {
+    "run_time": "1",
+    "reference_qty": "80",
+    "time_unit": "h"
+   },
+   "LB1": {
+    "run_time": "20",
+    "reference_qty": "1000",
+    "time_unit": "h"
+   }
+  },
+  "CP-N3-2524": {
+   "RW1": {
+    "run_time": "1",
+    "reference_qty": "85",
+    "time_unit": "h"
+   },
+   "SAW1": {
+    "run_time": "1",
+    "reference_qty": "75",
+    "time_unit": "h"
+   },
+   "PK2": {
+    "run_time": "1",
+    "reference_qty": "90",
+    "time_unit": "h"
+   },
+   "LB1": {
+    "run_time": "24",
+    "reference_qty": "1000",
+    "time_unit": "h"
+   }
+  },
+  "CP-P4-2524": {
+   "RW1": {
+    "run_time": "1",
+    "reference_qty": "70",
+    "time_unit": "h"
+   },
+   "SAW1": {
+    "run_time": "1",
+    "reference_qty": "75",
+    "time_unit": "h"
+   },
+   "PK2": {
+    "run_time": "1",
+    "reference_qty": "90",
+    "time_unit": "h"
+   },
+   "LB1": {
+    "run_time": "24",
+    "reference_qty": "1000",
+    "time_unit": "h"
+   }
+  },
+  "CP-GIFT-12": {
+   "RW1": {
+    "run_time": "1",
+    "reference_qty": "170",
+    "time_unit": "h"
+   },
+   "SAW1": {
+    "run_time": "1",
+    "reference_qty": "150",
+    "time_unit": "h"
+   },
+   "PK2": {
+    "run_time": "1",
+    "reference_qty": "60",
+    "time_unit": "h"
+   },
+   "LB1": {
+    "run_time": "24",
+    "reference_qty": "1000",
+    "time_unit": "h"
+   }
+  },
+  "CP-B2-JUMBO": {
+   "RW2": {
+    "run_time": "1",
+    "reference_qty": "30",
+    "time_unit": "h"
+   },
+   "SAW1": {
+    "run_time": "1",
+    "reference_qty": "40",
+    "time_unit": "h"
+   },
+   "PK2": {
+    "run_time": "1",
+    "reference_qty": "50",
+    "time_unit": "h"
+   },
+   "LB1": {
+    "run_time": "24",
+    "reference_qty": "1000",
+    "time_unit": "h"
+   }
+  }
+ },
+ "quantity_limits": {
+  "CP-GIFT-12": [
+   2500,
+   2500,
+   2500
+  ]
+ },
+ "materials": [
+  {
+   "id": "MR-N3",
+   "unit": "kg",
+   "safety_stock": "3000",
+   "on_hand": "82100",
+   "allocated": "0"
+  },
+  {
+   "id": "MR-N2",
+   "unit": "kg",
+   "safety_stock": "2000",
+   "on_hand": "38900",
+   "allocated": "0"
+  },
+  {
+   "id": "MR-N4",
+   "unit": "kg",
+   "safety_stock": "500",
+   "on_hand": "12900",
+   "allocated": "0"
+  },
+  {
+   "id": "MR-R2",
+   "unit": "kg",
+   "safety_stock": "1500",
+   "on_hand": "16700",
+   "allocated": "0"
+  },
+  {
+   "id": "MC-CORE",
+   "unit": "EA",
+   "safety_stock": "50000",
+   "on_hand": "1469600",
+   "allocated": "0"
+  },
+  {
+   "id": "MP-FILM30",
+   "unit": "EA",
+   "safety_stock": "3000",
+   "on_hand": "42400",
+   "allocated": "0"
+  },
+  {
+   "id": "MP-FILM24",
+   "unit": "EA",
+   "safety_stock": "1000",
+   "on_hand": "9500",
+   "allocated": "0"
+  },
+  {
+   "id": "MP-GIFTBOX",
+   "unit": "EA",
+   "safety_stock": "300",
+   "on_hand": "1100",
+   "allocated": "0"
+  },
+  {
+   "id": "MP-JUMBOBOX",
+   "unit": "EA",
+   "safety_stock": "200",
+   "on_hand": "1800",
+   "allocated": "0"
+  }
+ ],
+ "bom": {
+  "CP-N3-3030": [
+   {
+    "material": "MR-N3",
+    "qty": "4.05",
+    "base_qty": "1",
+    "scrap_rate": "0.03"
+   },
+   {
+    "material": "MC-CORE",
+    "qty": "30",
+    "base_qty": "1",
+    "scrap_rate": "0"
+   },
+   {
+    "material": "MP-FILM30",
+    "qty": "1",
+    "base_qty": "1",
+    "scrap_rate": "0"
+   }
+  ],
+  "CP-N3-2730": [
+   {
+    "material": "MR-N3",
+    "qty": "3.645",
+    "base_qty": "1",
+    "scrap_rate": "0.03"
+   },
+   {
+    "material": "MC-CORE",
+    "qty": "30",
+    "base_qty": "1",
+    "scrap_rate": "0"
+   },
+   {
+    "material": "MP-FILM30",
+    "qty": "1",
+    "base_qty": "1",
+    "scrap_rate": "0"
+   }
+  ],
+  "CP-N3-2524": [
+   {
+    "material": "MR-N3",
+    "qty": "2.7",
+    "base_qty": "1",
+    "scrap_rate": "0.03"
+   },
+   {
+    "material": "MC-CORE",
+    "qty": "24",
+    "base_qty": "1",
+    "scrap_rate": "0"
+   },
+   {
+    "material": "MP-FILM24",
+    "qty": "1",
+    "base_qty": "1",
+    "scrap_rate": "0"
+   }
+  ],
+  "CP-N2-3030": [
+   {
+    "material": "MR-N2",
+    "qty": "2.7",
+    "base_qty": "1",
+    "scrap_rate": "0.03"
+   },
+   {
+    "material": "MC-CORE",
+    "qty": "30",
+    "base_qty": "1",
+    "scrap_rate": "0"
+   },
+   {
+    "material": "MP-FILM30",
+    "qty": "1",
+    "base_qty": "1",
+    "scrap_rate": "0"
+   }
+  ],
+  "CP-R2-3030": [
+   {
+    "material": "MR-R2",
+    "qty": "2.7",
+    "base_qty": "1",
+    "scrap_rate": "0.04"
+   },
+   {
+    "material": "MC-CORE",
+    "qty": "30",
+    "base_qty": "1",
+    "scrap_rate": "0"
+   },
+   {
+    "material": "MP-FILM30",
+    "qty": "1",
+    "base_qty": "1",
+    "scrap_rate": "0"
+   }
+  ],
+  "CP-P4-2524": [
+   {
+    "material": "MR-N4",
+    "qty": "3.36",
+    "base_qty": "1",
+    "scrap_rate": "0.03"
+   },
+   {
+    "material": "MC-CORE",
+    "qty": "24",
+    "base_qty": "1",
+    "scrap_rate": "0"
+   },
+   {
+    "material": "MP-FILM24",
+    "qty": "1",
+    "base_qty": "1",
+    "scrap_rate": "0"
+   }
+  ],
+  "CP-GIFT-12": [
+   {
+    "material": "MR-N3",
+    "qty": "1.62",
+    "base_qty": "1",
+    "scrap_rate": "0.03"
+   },
+   {
+    "material": "MC-CORE",
+    "qty": "12",
+    "base_qty": "1",
+    "scrap_rate": "0"
+   },
+   {
+    "material": "MP-GIFTBOX",
+    "qty": "1",
+    "base_qty": "1",
+    "scrap_rate": "0"
+   }
+  ],
+  "CP-ON3-3030": [
+   {
+    "material": "MR-N3",
+    "qty": "4.05",
+    "base_qty": "1",
+    "scrap_rate": "0.03"
+   },
+   {
+    "material": "MC-CORE",
+    "qty": "30",
+    "base_qty": "1",
+    "scrap_rate": "0"
+   },
+   {
+    "material": "MP-FILM30",
+    "qty": "1",
+    "base_qty": "1",
+    "scrap_rate": "0"
+   }
+  ],
+  "CP-B2-JUMBO": [
+   {
+    "material": "MR-N2",
+    "qty": "14.4",
+    "base_qty": "1",
+    "scrap_rate": "0.03"
+   },
+   {
+    "material": "MC-CORE",
+    "qty": "16",
+    "base_qty": "1",
+    "scrap_rate": "0"
+   },
+   {
+    "material": "MP-JUMBOBOX",
+    "qty": "1",
+    "base_qty": "1",
+    "scrap_rate": "0"
+   }
+  ]
+ },
+ "receipts": [
+  {
+   "po_id": "PO-2701-001",
+   "material": "MR-N3",
+   "open_qty": "10000",
+   "unit": "kg",
+   "expected_date": "2027-01-20"
+  }
+ ]
+}
