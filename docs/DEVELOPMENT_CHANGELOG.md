@@ -511,3 +511,38 @@
 
 **관련 자료**
 - [계산 규칙 v0.4](../modules/planning_engine/PLANNING_RULES.md), [작은 손계산](../modules/planning_engine/tests/hand_calc/SMALL_CASES.md), [계약 답변](../modules/planning_engine/CONTRACT_REQUESTS.md), [시작 Commit](https://github.com/ChungPaMo/decision-supporter-mvp/commit/766d48ce4cb004e271408cfb67dc2d378dad2036).
+
+### 2026-11-22 — 계획 엔진 계산 코어와 손계산 자동 비교 (이희원)
+
+**Git**
+- 시작 Commit `c306d7d7daad7a76326faad988a0b3848701fc8f`.
+- 완료 Commit은 고유 제목 `feat: planning calculation core with hand-calc comparison tests`으로 조회한다. `git log main -1 --format=%H --fixed-strings --grep='feat: planning calculation core with hand-calc comparison tests'`
+- 브랜치 `main`.
+
+**작업 목적**
+- 비어 있던 계획 계산(MPS/RCCP/MRP·판정)을 PLANNING_RULES v0.4대로 구현하고, 손계산 정답과 자동 비교해 규칙대로 계산함을 보인다.
+
+**구현 내용**
+- `modules/planning_engine/rccp/core.py`: 한 달 안 같은 비율 축소(정수 내림), 사용시간. `mps/core.py`: 계획 수요·목표량, 뒤에서부터 선행생산, 앞에서부터 보충, 재고 추적. `mrp/core.py`: BOM 단위 소요, 입고 예정 배치, 월별 MRP 표.
+- `engine/planning_core.py`: 내부 형식(손계산 JSON과 같은 모양) 입력 검사(§7, 오류 모두 수집, INPUT_INVALID > UNSUPPORTED), 판정 CAP/QTY/DEM/SS/MAT, 계획안 feasibility, 세 안(BASELINE P50+잔업 / STABLE P80+잔업 / COST_SAVING P50 정규만) 계산. 필드 이름은 계약 ConstraintEvaluation과 같게 맞춤.
+- `tests/test_hand_calc.py`: HC-01~18 자동 비교(적힌 항목만 비교, 모르는 항목·중복 판정 ID는 실패). `tests/test_planning_core_edges.py`: 입력 경계 16개. 손계산 HC-18(정수 내림 7.5→7) 추가.
+- `PLANNING_RULES.md` v0.4 보강: 라우팅 없는 제품도 수량 한도 적용, BOM 없는 제품 → 모든 MAT UNVERIFIED, BOM 자재가 목록에 없으면 `MATERIAL_MISSING`, 안 쓰는 자재 제외, 기준일 당일 미입고는 납기 지남, 가용시간·잔업 한도·수량 한도 누락 처리, `INVALID_QUANTITY`, QTY 표시는 수량 한도가 가장 빠듯한 원인일 때만.
+- `mps/`·`rccp/`·`mrp/` README를 구현 상태로 갱신. `engine/planning.py`의 `run()`·`AVAILABLE=False`는 바꾸지 않음.
+
+**검증 결과**
+- 2026-11-22 이희원 PC, 루트 `.venv`: `pytest modules/planning_engine` **76 passed / 0 failed**(HC 18 + 세 안 1 + 소수 형식 6 + 경계 16 + 기존 포함).
+- 엔진 규칙을 일부러 틀리게 바꾼 10가지(내림→반올림, 배수 순서, 보충 생략, 기준일 당일, QTY 과다표시, 0시간 자원, BOM 누락, 안 쓰는 자재, unverified 무시, 자재 안전재고)는 모두 테스트 실패로 검출. 첫 시도에서 반올림 변형이 통과해 HC-18을 추가했다.
+- 규칙서만 보고 별도 작성한 임시 검산 스크립트로 HC-01~18 **18/18 일치**.
+- 독립 코드 리뷰(별도 에이전트) 지적 중 HIGH 5건·MEDIUM 7건·LOW 일부를 수정하고 경계 테스트로 고정.
+- 루트 전체 pytest: **515 passed / 80 errors**. 오류 80건은 모두 이 PC `.venv`에 백엔드 의존성 `rapidfuzz`가 없어 생긴 수집 오류(이번 변경과 무관, 미해결). Docker·DB·브라우저 미실행.
+
+**기술적 결정**
+- 희원 선택: 기존 폴더에 단계별 구조, 코어 입출력은 내부 형식(팀 계약과는 변환부로 연결), 이번 범위는 코어 + HC 자동 비교(변환부는 C01·C02 확정 후). 리뷰 후속 4건도 추천안 선택(BOM 없음 → 모든 MAT UNVERIFIED, 라우팅 없어도 수량 한도 적용, 없는 자재 INPUT_INVALID·안 쓰는 자재 제외, 기준일 당일 미입고 = 납기 지남).
+- 잔업 한도 값이 없으면 잔업 0 + 경고(보수적이라 판정은 믿을 수 있어 unverified로 두지 않음).
+
+**남은 문제**
+- 이희원: 충파모 9제품×3개월×3안 독립 정답과 엔진 비교, What-if 구현, C01·C02 확정 후 PlanningInput→내부 형식 변환부(BOM 버전 선택 `BOM_VERSION_AMBIGUOUS` 포함)와 PlanningOutput 변환, 그 뒤 `AVAILABLE` 전환.
+- 김대영: C01 기간·C02 입고 예정·C03 What-if 키·C06 모순 출력 검사 검토(변경 없음). 이 PC `.venv`의 `rapidfuzz` 누락은 환경 정리 필요(대영 확인).
+
+**관련 자료**
+- [계산 규칙 v0.4](../modules/planning_engine/PLANNING_RULES.md), [작은 손계산](../modules/planning_engine/tests/hand_calc/SMALL_CASES.md), [계약 답변](../modules/planning_engine/CONTRACT_REQUESTS.md), [시작 Commit](https://github.com/ChungPaMo/decision-supporter-mvp/commit/c306d7d7daad7a76326faad988a0b3848701fc8f).

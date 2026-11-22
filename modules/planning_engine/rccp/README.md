@@ -1,4 +1,4 @@
 # RCCP · 이희원
 
-계산 미구현. 수량·인시·설비시간의 개별 제약과 공유 자원 병목을 보존한다.
-`docs/multi_capacity_contract_draft.md` 및 결정 질문을 먼저 확인한다.
+한 달 안에서 설비·수량 한도 맞추기(같은 비율 축소, 정수 내림)와 사용시간: [`core.py`](core.py), 규칙 [PLANNING_RULES v0.4](../PLANNING_RULES.md) §3.1·§4.
+수량·인시·설비시간을 각각 자원 한도로 다루며 공유 자원은 같은 비율로 줄인다.

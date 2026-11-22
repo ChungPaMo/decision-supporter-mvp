@@ -538,6 +538,35 @@
         "unverified_codes": ["SETUP_TIME_IGNORED"],
         "feasibility": "UNVERIFIED"
       }
+    },
+    {
+      "case_id": "HC-18",
+      "title": "정수 내림: 7.5개는 반올림하지 않고 7개",
+      "rule": "§3.1-4 P = ⌊X × f⌋",
+      "input": {
+        "months": ["2027-01"],
+        "ot_allowed": false,
+        "demand_multiplier": "1",
+        "products": [
+          {"id": "A", "unit": "EA", "safety_stock": 0, "on_hand": 0, "allocated": 0},
+          {"id": "B", "unit": "EA", "safety_stock": 0, "on_hand": 0, "allocated": 0}
+        ],
+        "demand": {"A": ["10"], "B": ["10"]},
+        "resources": [{"id": "S", "time_basis": "MACHINE_HOUR", "regular": [15], "overtime": [0]}],
+        "routing": {"A": {"S": {"run_time": "1", "reference_qty": "1"}}, "B": {"S": {"run_time": "1", "reference_qty": "1"}}}
+      },
+      "expected": {
+        "scale_factor": {"S": "3/4"},
+        "production": {"A": [7], "B": [7]},
+        "stockout": {"A": [3], "B": [3]},
+        "used_hours": {"S": ["14"]},
+        "evaluations": [
+          {"constraint_id": "CAP-S-2027-01", "status": "SATISFIED", "limit_value": "15", "used_value": "14", "reason_codes": ["CAPACITY_BINDING"]},
+          {"constraint_id": "DEM-A-2027-01", "status": "VIOLATED"},
+          {"constraint_id": "DEM-B-2027-01", "status": "VIOLATED"}
+        ],
+        "feasibility": "INFEASIBLE"
+      }
     }
   ]
 }

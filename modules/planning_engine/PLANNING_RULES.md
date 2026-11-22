@@ -109,7 +109,8 @@ U(p) > 0이면 m = 2, 3 순서로 그 달 남은 시간에 늦게라도 만든�
 
 - **미입고 수량만** 센다. 일부 입고된 발주의 이미 들어온 양은 재고(M₀)에 들어 있다.
 - 입고예정일이 속한 **달 전체**에 쓸 수 있다고 본다. 1/20 입고분은 1월 초 며칠은 실제로 모자랄 수 있지만 월 단위 계획에서는 1월에 넣는다.
-- 입고예정일이 기준일 이전(납기 지남)이면 **1월 입고로 보고** warning `RECEIPT_OVERDUE`(input_refs에 발주번호). 정말 들어올지 모르므로 **그 자재의 1월 MAT 판정은 발주 필요량과 관계없이 `UNVERIFIED`**(reason `RECEIPT_OVERDUE`)로 둔다. 그래서 늦은 입고에 기대는 계획안이 FEASIBLE로 보이지 않는다(희원 결정 2026-11-22 보강).
+- 입고예정일이 기준일 **당일 또는 이전**(납기 지남: 재고는 기준일이 끝난 시점이므로 당일 예정분이 미입고면 이미 늦음)이면 **1월 입고로 보고** warning `RECEIPT_OVERDUE`(input_refs에 발주번호). 정말 들어올지 모르므로 **그 자재의 1월 MAT 판정은 발주 필요량과 관계없이 `UNVERIFIED`**(reason `RECEIPT_OVERDUE`)로 둔다. 그래서 늦은 입고에 기대는 계획안이 FEASIBLE로 보이지 않는다(희원 결정 2026-11-22 보강).
+- 기준일 뒤이지만 계획 시작 월보다 앞인 입고는 1월에 넣는다(경고 없음).
 - 계획 기간 뒤에 들어오는 입고는 계산에 넣지 않는다.
 - 어느 BOM에도 쓰이지 않는 자재의 입고는 계획과 관계없으므로 조용히 무시한다.
 - 입고 단위가 자재 단위와 다르면 재고와 같은 기준으로 계산하지 않는다(status `INPUT_INVALID`, error `UNIT_MISMATCH`, §7).
@@ -120,7 +121,7 @@ U(p) > 0이면 m = 2, 3 순서로 그 달 남은 시간에 늦게라도 만든�
 | constraint_id | dimension | 강도 | limit / used | status |
 |---|---|---|---|---|
 | `CAP-{r}-{YYYY-MM}` | 설비 `EQUIPMENT_HOURS`, 작업자 `WORK_HOURS` | HARD | CAP / USED (h, MACHINE_HOUR·PERSON_HOUR) | 항상 USED ≤ CAP → SATISFIED. 3.1에서 넘쳤던 달은 reason `CAPACITY_BINDING` |
-| `QTY-{p}-{YYYY-MM}` | `QUANTITY` | HARD | LIM / P (EA) | SATISFIED. 한도에 걸린 달은 `QUANTITY_LIMIT_BINDING` |
+| `QTY-{p}-{YYYY-MM}` | `QUANTITY` | HARD | LIM / P (EA) | SATISFIED. 수량 한도가 그 제품을 줄인 **가장 빠듯한 원인**이었던 달만 `QUANTITY_LIMIT_BINDING`(설비 비율이 더 작으면 표시 안 함) |
 | `DEM-{p}-{YYYY-MM}` | `OTHER` | HARD | – | I(p,m) < 0 → **VIOLATED** (`STOCKOUT`), 아니면 SATISFIED |
 | `SS-{p}-{YYYY-MM}` | `SAFETY_STOCK` | SOFT | SS / I(p,m) | I < SS → VIOLATED (`BELOW_SAFETY_STOCK`) |
 | `MAT-{k}-{YYYY-MM}` | `MATERIAL` | HARD | AVL / N + SS(k) | NET > 0 → **UNVERIFIED** (`PROCUREMENT_REQUIRED`). 1월에 납기 지난 입고가 있으면 **UNVERIFIED** (`RECEIPT_OVERDUE`, 둘 다면 두 코드 모두). 아니면 SATISFIED |
@@ -140,10 +141,17 @@ SOFT 위반(안전재고 미달)은 판정을 바꾸지 않고 표시만 한다.
 |---|---|
 | 계획할 제품의 예측이 없음 | 계산하지 않음. status `INPUT_INVALID`, error `FORECAST_MISSING` (백엔드 provider의 409와 같은 기준) |
 | 품목의 재고 행이 없음 | 0으로 계산. warning `INVENTORY_MISSING` + 모든 안의 unverified에 같은 코드 → `UNVERIFIED` |
-| 제품의 공정표(라우팅)가 없음 | 그 제품은 3장을 건너뛰고 P = T. 어느 자원을 쓰는지 모르므로 **모든 CAP**을 `UNVERIFIED` + application_state `MISSING_INPUT`(used = null), unverified에 `ROUTING_MISSING` |
-| 어떤 자원·월의 가용시간이 없음 | 그 자원은 한도 없음으로 보고 CAP-{r}-{m}을 `UNVERIFIED`/`MISSING_INPUT` |
-| BOM이 없거나 그 달 유효 BOM이 2개 이상 | 그 제품의 자재 소요 계산 제외, `BOM_MISSING` / `BOM_VERSION_AMBIGUOUS` 경고, 관련 MAT `UNVERIFIED` |
-| 단위가 서로 안 맞음(예: 수요 EA, 재고 kg / 자재 kg, 입고 예정 m) | 계산하지 않음. status `INPUT_INVALID`, error `UNIT_MISMATCH` |
+| 제품의 공정표(라우팅)가 없음 | 그 제품은 설비 계산을 건너뛴다. **월 생산수량 한도가 있으면 그것만 적용**(선행생산·보충 포함, QTY 판정도 냄), 없으면 P = T. 어느 자원을 쓰는지 모르므로 **모든 CAP**을 `UNVERIFIED` + application_state `MISSING_INPUT`(used = null), unverified에 `ROUTING_MISSING` (희원 결정 2026-11-22 보강) |
+| 어떤 자원·월의 가용시간이 없음(값 없음·배열 짧음, 공정표에만 있고 자원 목록에 없는 자원 포함) | 그 자원·월은 한도 없음으로 보고 CAP-{r}-{m}을 `UNVERIFIED`/`MISSING_INPUT`(used는 계산값), unverified에 `CAPACITY_MISSING` |
+| 잔업 허용 안인데 잔업 한도 값이 없음 | 잔업 0으로 보수적으로 계산하고 warning `OVERTIME_LIMIT_MISSING`(판정은 그대로 믿을 수 있으므로 unverified 아님) |
+| 월 생산수량 한도의 어떤 달이 비어 있음 | 그달은 한도 없음 |
+| BOM이 없는 제품 | 그 제품이 쓰는 자재를 모르므로 warning·unverified `BOM_MISSING`, **모든 MAT**을 `UNVERIFIED`/`MISSING_INPUT`(계산된 숫자는 그대로 표시). 라우팅 누락과 같은 방식 (희원 결정 2026-11-22 보강) |
+| 그 달 유효 BOM이 2개 이상 | `BOM_VERSION_AMBIGUOUS` — 버전 고르기는 입력 변환부에서 처리(계산 코어 입력에는 제품당 BOM 1개) |
+| BOM이 가리키는 자재가 자재 목록에 없음 | 단위·안전재고를 모르므로 계산하지 않음. `INPUT_INVALID`, error `MATERIAL_MISSING` (희원 결정 2026-11-22 보강) |
+| 자재 목록에 있지만 어느 BOM에도 쓰이지 않는 자재 | MRP 표·MAT 판정·재고 누락 검사에서 제외(입고 규칙과 같은 생각) (희원 결정 2026-11-22 보강) |
+| 기준수량·BOM 기준수량이 0 이하, 제품 수량(재고·안전재고·한도)이 정수가 아님 | 계산하지 않음. `INPUT_INVALID`, error `INVALID_QUANTITY` |
+| 공정 시간 단위가 h·min이 아님 | `INPUT_INVALID`, error `UNIT_MISMATCH` |
+| 단위가 서로 안 맞음(예: 수요 EA, 재고 kg / 자재 kg, 자재 재고 g / 자재 kg, 입고 예정 m) | 계산하지 않음. status `INPUT_INVALID`, error `UNIT_MISMATCH` |
 | **다단계 BOM**(구성품이 제품), **ELAPSED 시간 기준**, **GROSS 가용시간** | 계산이 틀려지므로 계산하지 않음. status `UNSUPPORTED`, error `BOM_MULTILEVEL_UNSUPPORTED` / `TIME_BASIS_UNSUPPORTED` / `AVAILABILITY_BASIS_UNSUPPORTED` |
 | **셋업 시간**, **대체 설비 그룹** 값이 있음 | 반영하지 않고 계산. 모든 안의 unverified에 `SETUP_TIME_IGNORED` / `ALTERNATIVE_RESOURCE_IGNORED` → `UNVERIFIED` |
 
