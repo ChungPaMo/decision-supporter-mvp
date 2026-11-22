@@ -1,4 +1,4 @@
-"""문서 종류 분류용 실제 엑셀 더미 파일 생성기 v2 (SYNTHETIC). openpyxl 이 필요하다.
+"""문서 종류 분류용 실제 엑셀 더미 파일 생성기 v3 (SYNTHETIC). openpyxl 이 필요하다.
 
     python -X utf8 modules/file_classifier/samples/make_samples.py
 
@@ -8,6 +8,9 @@
 
 v1 은 "열 이름 한 줄 + 데이터"인 깔끔한 표뿐이라 실제 문서와 달랐다. v2 는 공개 자료에서 확인한 실제 표 형태를 본떴다.
 수치와 회사(㈜충파모제지)는 모두 가정이며 실제 기업 자료가 아니다.
+v3 는 v2 와 같은 200개(같은 파일명, 같은 표, 같은 정답)에 실제 사무실 엑셀의 겉모습과 흔적을 더했다: 문서 성격별 글꼴·머리글 색·테두리,
+결재란, 문서번호, 날짜·숫자 서식, 합계 수식, 틀 고정·필터·인쇄 설정, 형광펜·메모·취소선·숨긴 열, 옆에 적어 둔 말, 빈 Sheet2·3, 지난 버전 사본,
+숨긴 시트, 작성자 정보, "수 량"처럼 띄어 쓴 열 이름. 사람·거래처 이름도 실제처럼 바꿨다(모두 지어낸 이름이다).
 
 표 형태의 출처 (labels.json 의 source). verified=True 는 공개 문서에서 열·행 이름을 글자로 확인한 것,
 False 는 화면 캡처로만 공개되어 글자로 확인하지 못해 일반적으로 알려진 표기를 쓴 것이다.
@@ -38,7 +41,9 @@ import random
 import shutil
 
 from openpyxl import Workbook
-from openpyxl.styles import Alignment, Border, Font, Side
+from openpyxl.cell.cell import MergedCell
+from openpyxl.comments import Comment
+from openpyxl.styles import Alignment, Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
 
 SEED = 20261117
@@ -56,9 +61,9 @@ MATERIALS = [("MR-N2", "천연펄프 2겹 원단", "kg"), ("MR-N3", "천연펄�
 RESOURCES = [("RW1", "되감기·엠보기 1호"), ("RW2", "되감기·엠보기 2호"), ("SAW1", "롤 절단기"), ("PK1", "포장기 1호"), ("PK2", "포장기 2호")]
 WORK_CENTERS = ["1320-01", "1320-02", "1410-01", "1510-01"]
 DEPTS = [("D1", "R1"), ("D1", "R2"), ("D2", "R1"), ("D3", "R1")]
-CUSTOMERS = ["가상마트 본사", "가상편의점", "가상몰", "가상도매상사", "가상호텔"]
-SUPPLIERS = ["가상펄프상사", "가상원지공업", "가상지관산업", "가상포장"]
-PEOPLE = ["김가상", "이모의", "박예시", "최샘플", "정테스트", "강더미"]
+CUSTOMERS = ["한빛마트 본사", "누리편의점", "온누리몰", "대성도매상사", "청풍호텔"]
+SUPPLIERS = ["동방펄프상사", "한일원지공업", "성진지관산업", "우성포장"]
+PEOPLE = ["김민수", "이서연", "박준형", "최은정", "정대호", "강미란"]
 
 
 def q(rng, lo, hi, step=10):
@@ -95,7 +100,7 @@ def weeks(rng, n, style):
     if style == "week_num":
         return list(range(1, n + 1))
     if style == "sap":
-        return [f"W {35 + i}/2026" for i in range(n)]
+        return [f"W {(34 + i) % 52 + 1:02d}/{2026 + (34 + i) // 52}" for i in range(n)]
     if style == "date":
         start = dt.date(2027, 1, 4)
         return [(start + dt.timedelta(days=7 * i)).strftime("%d-%b") for i in range(n)]
@@ -243,7 +248,7 @@ def rccp_oracle_load_ratio(rng):
     dept, res = rng.choice(DEPTS)
     rows = []
     for w in weeks(rng, rng.randint(13, 26), "date"):
-        need, avail = q(rng, 80, 520, 20), rng.choice([140, 160])
+        need, avail = 70 + q(rng, 80, 520, 20) // 4, rng.choice([140, 160])
         rows.append([w, need, avail, f"{round(need / avail * 100)}%"])
     return [text(f"Capacity Load Ratio for {dept}, {res}"), table(["Week Start Date", "Required Hours", "Available Hours", "Load Ratio"], rows)], "oracle-capacity", True
 
@@ -282,6 +287,9 @@ def rccp_kr_form(rng):
     for r in RESOURCES:
         for lab in (need, have, rate):
             rows.append([r[1], lab] + [q(rng, 80, 220, 5) for _ in months])
+        need_row, have_row, rate_row = rows[-3], rows[-2], rows[-1]
+        have_row[2:] = [160 + have_row[2] // 20 * 5] * len(months)
+        rate_row[2:] = [round(n / h * 100) for n, h in zip(need_row[2:], have_row[2:])]
     title = rng.choice(["주요 설비 부하 검토", "개략 능력 검토(월)", "설비별 공수 검토"])
     return kr_form(rng, title, "생산관리팀", [kv(("기준", "MPS 2027년 1분기")), table(["설비", "구분"] + months, rows)]), "kr-form", False
 
@@ -488,33 +496,149 @@ FILE_HINTS = {"BOM": ["BOM", "자재명세서"], "MPS": ["MPS", "생산계획"],
 NEUTRAL_FILES = ["Book1", "새 Microsoft Excel 워크시트", "첨부", "자료", "export", "download", "최종", "수정본", "검토", "data", "보고", "Sheet", "EXPORT", "report"]
 
 
-def write_blocks(ws, rng, blocks, offset):
+# ---------------------------------------------------------------------------
+# 파일 쓰기 (v3: 실제 사무실 엑셀처럼 보이게 하는 서식·흔적)
+# ---------------------------------------------------------------------------
+YELLOW = PatternFill("solid", fgColor="FFFF00")
+SPACED = {"수량": "수 량", "품명": "품 명", "단위": "단 위", "비고": "비 고", "규격": "규 격", "결과": "결 과", "단가": "단 가", "금액": "금 액"}
+MEMOS = ["확인 필요", "수량 재확인 바랍니다", "전월 대비 증가", "단가 변경 반영", "1/15 회의 후 수정", "구매팀 회신 대기", "잠정치"]
+SIDE_NOTES = ["※ 1/20 수정", "→ 담당자 확인 중", "※ 잠정치", "※ 전월 이월분 포함", "※ 회의 후 재작성 예정"]
+APPROVAL_ROLES = [["담당", "팀장", "공장장"], ["작성", "검토", "승인"], ["담당", "과장", "부장", "대표"]]
+
+
+def profile_of(blocks, source):
+    """표 형태의 출처에 따라 문서의 겉모습을 정한다: 수작업 서식 / 국내 ERP 조회 화면 내보내기 / SAP 내보내기 / 담당자 계획표."""
+    has_title = any(b["kind"] == "title" for b in blocks)
+    is_form = any(b["kind"] == "kv" and b["pairs"] and b["pairs"][0][0] == "작성일자" for b in blocks)
+    if is_form:
+        return "form"
+    if source == "sap":
+        return "sap"
+    return "erp" if has_title else "planner"
+
+
+def make_style(srng, profile):
+    def side(style, color="000000"):
+        return Side(style=style, color=color)
+
+    if profile == "form":
+        name, size = srng.choice([("맑은 고딕", 10), ("맑은 고딕", 11), ("굴림", 10), ("돋움", 10), ("바탕", 10)])
+        st = {"head_fill": srng.choice(["D9D9D9", "F2F2F2", "FFF2CC", "DDEBF7", "E2EFDA"]), "head_font": "000000", "line": side("thin"), "borders": True,
+              "title_size": srng.choice([16, 18, 20]), "title_align": "center", "grid": srng.random() < 0.4, "band": None}
+    elif profile == "erp":
+        name, size = srng.choice([("굴림체", 9), ("돋움", 9), ("맑은 고딕", 9), ("맑은 고딕", 10)])
+        st = {"head_fill": srng.choice(["C0C0C0", "D9E1F2", "FFFFCC", "E7E6E6"]), "head_font": "000000", "line": side(srng.choice(["thin", "hair"])), "borders": True,
+              "title_size": srng.choice([12, 14]), "title_align": "left", "grid": True, "band": None}
+    elif profile == "sap":
+        name, size = srng.choice([("Arial", 10), ("Calibri", 11), ("Arial", 9)])
+        st = {"head_fill": srng.choice(["DBE5F1", "FFFF99", None]), "head_font": "000000", "line": side("thin", "BFBFBF"), "borders": srng.random() < 0.4,
+              "title_size": size + 1, "title_align": "left", "grid": True, "band": None}
+    else:
+        name, size = srng.choice([("Calibri", 11), ("Arial", 10), ("맑은 고딕", 10)])
+        fill, font = srng.choice([("1F4E78", "FFFFFF"), ("4472C4", "FFFFFF"), ("D9D9D9", "000000"), ("FCE4D6", "000000"), ("E2EFDA", "000000")])
+        st = {"head_fill": fill, "head_font": font, "line": side("thin", srng.choice(["BFBFBF", "808080", "000000"])), "borders": srng.random() < 0.8,
+              "title_size": srng.choice([12, 14]), "title_align": "left", "grid": True, "band": srng.choice([None, None, "F2F2F2", "EAF1FB"])}
+    st.update(profile=profile, font=name, size=size, date_fmt=srng.choice(["yyyy-mm-dd", "yyyy-mm-dd", "yyyy.mm.dd", "yyyy/mm/dd", "m/d", "yy.mm.dd"]),
+              date_text=profile in ("erp", "sap") and srng.random() < 0.3, formula=srng.random() < 0.3, spaced=profile == "form" and srng.random() < 0.15,
+              roles=srng.choice(APPROVAL_ROLES), neg_red=profile == "planner" and srng.random() < 0.5)
+    st["box"] = Border(left=st["line"], right=st["line"], top=st["line"], bottom=st["line"])
+    return st
+
+
+def _font(st, **kw):
+    return Font(name=st["font"], size=kw.pop("size", st["size"]), **kw)
+
+
+SURNAMES = ["김", "이", "박", "최", "정", "강", "조", "윤", "장", "임", "한", "오"]
+GIVEN = ["민수", "서연", "준형", "은정", "대호", "미란", "지훈", "수빈", "영호", "현주", "성민", "혜진"]
+
+
+def _value(v, st, srng, n=None):
+    if isinstance(v, dt.date) and st["date_text"]:
+        return v.strftime("%Y.%m.%d")
+    if n is not None and isinstance(v, str) and v in PEOPLE:      # 표 안의 사람 이름은 여섯 명만 되풀이되지 않게 넓힌다
+        i = PEOPLE.index(v)
+        return SURNAMES[(i + n) % 12] + GIVEN[(i * 5 + n * 7) % 12]
+    if v == "010-0000-0000":
+        return f"010-{srng.randint(2000, 9899)}-{srng.randint(1000, 9999)}"
+    return v
+
+
+def write_blocks(ws, rng, srng, blocks, offset, st):
+    """rng 는 v2 와 같은 순서로만 쓴다(배치가 v2 와 같게 유지된다). 새로 더한 꾸밈은 모두 srng 로 정한다."""
     r, c0 = 1 + rng.choice([0, 0, 1]), 1 + offset
+    tables, joined_file, table_cells = [], None, set()
+    col_width: dict[int, float] = {}
+    for b in blocks:
+        if b["kind"] == "table":
+            for j, h in enumerate(b["headers"]):
+                widest = max([_width(h)] + [_width(x[j]) for x in b["rows"] if j < len(x) and x[j] is not None])
+                col_width[c0 + j] = max(col_width.get(c0 + j, 0), min(max(widest + 2.5, 6), 42))
+
+    def skip(col, need):
+        """need 만큼의 글자 폭이 들어갈 때까지 오른쪽으로 건너뛴 다음 열 번호."""
+        used = 0.0
+        while used < need:
+            used += col_width.get(col, 10)
+            col += 1
+        return col
+
     for block in blocks:
         kind = block["kind"]
         if kind == "title":
-            ws.cell(row=r, column=c0, value=block["value"]).font = Font(bold=True, size=16)
+            cell = ws.cell(row=r, column=c0, value=block["value"])
+            cell.font = _font(st, bold=True, size=st["title_size"], underline="single" if st["profile"] == "form" and srng.random() < 0.3 else None)
             ws.merge_cells(start_row=r, start_column=c0, end_row=r, end_column=c0 + 5)
-            ws.cell(row=r, column=c0).alignment = Alignment(horizontal="center")
+            cell.alignment = Alignment(horizontal=st["title_align"], vertical="center")
+            ws.row_dimensions[r].height = st["title_size"] * 1.8
             if block["approval"]:
-                for k, role in enumerate(["담당", "팀장", "공장장"]):
-                    ws.cell(row=r, column=c0 + 7 + k, value=role).border = BOX
-                    ws.cell(row=r + 1, column=c0 + 7 + k, value="").border = BOX
-                ws.cell(row=r, column=c0 + 6, value="결재")
+                roles = st["roles"]
+                head = ws.cell(row=r, column=c0 + 6, value="결재")
+                ws.merge_cells(start_row=r, start_column=c0 + 6, end_row=r + 1, end_column=c0 + 6)
+                head.alignment, head.font = Alignment(horizontal="center", vertical="center", wrap_text=True), _font(st)
+                for rr in (r, r + 1):
+                    ws.cell(row=rr, column=c0 + 6).border = st["box"]
+                for k, role in enumerate(roles):
+                    top = ws.cell(row=r, column=c0 + 7 + k, value=role)
+                    top.border, top.font, top.alignment = st["box"], _font(st), Alignment(horizontal="center", vertical="center")
+                    ws.cell(row=r + 1, column=c0 + 7 + k, value="").border = st["box"]
+                ws.row_dimensions[r + 1].height = 36
+            if st["profile"] == "form" and srng.random() < 0.5:
+                dept = next((str(v) for b in blocks if b["kind"] == "kv" for k, v in b["pairs"] if k == "부서"), "생산")
+                prefix = "생관" if dept.startswith("생산관리") else dept[:2]
+                ws.cell(row=r + 2, column=c0, value=f"문서번호: {prefix}-26{srng.randint(10, 12)}-{srng.randint(1, 60):03d}").font = _font(st)
+            elif st["profile"] == "erp" and srng.random() < 0.6:
+                ws.cell(row=r + 1, column=c0, value="회사명 : ㈜충파모제지").font = _font(st)
             r += 3
         elif kind == "text":
-            ws.cell(row=r, column=c0, value=block["value"]).font = Font(bold=True)
+            ws.cell(row=r, column=c0, value=block["value"]).font = _font(st, bold=not str(block["value"]).startswith(("※", "출력일시")))
             r += 1 + rng.choice([0, 1])
         elif kind == "kv":
-            joined = rng.random() < 0.4
+            drawn = rng.random() < 0.4
+            joined_file = drawn if joined_file is None else joined_file
+            joined = joined_file
+            col = c0
             for i, (k, v) in enumerate(block["pairs"]):
-                col = c0 + (i % block["per_row"]) * (1 if joined else 2)
+                if i % block["per_row"] == 0:
+                    col = c0
                 row = r + i // block["per_row"]
                 if joined:
-                    ws.cell(row=row, column=col, value=f"{k}: {v}")
+                    ws.cell(row=row, column=col, value=f"{k}: {v}").font = _font(st)
+                    col = skip(col, _width(f"{k}: {v}") + 2)
                 else:
-                    ws.cell(row=row, column=col, value=k)
-                    ws.cell(row=row, column=col + 1, value=v)
+                    value_col = skip(col, _width(k) + 1)
+                    label, value = ws.cell(row=row, column=col, value=k), ws.cell(row=row, column=value_col, value=_value(v, st, srng))
+                    col = skip(value_col, _width(v) + 2)
+                    label.font, value.font = _font(st, bold=st["profile"] != "sap"), _font(st)
+                    if isinstance(v, dt.date):
+                        value.number_format = st["date_fmt"]
+                    if st["profile"] == "form":
+                        label.fill, label.alignment = PatternFill("solid", fgColor=st["head_fill"]), Alignment(horizontal="center")
+                        for first, last in ((label.column, value_col - 1), (value_col, col - 1)):
+                            for cc in range(first, last + 1):
+                                ws.cell(row=row, column=cc).border = st["box"]
+                            if last > first:
+                                ws.merge_cells(start_row=row, start_column=first, end_row=row, end_column=last)
             r += (len(block["pairs"]) - 1) // block["per_row"] + 1 + rng.choice([0, 1])
         elif kind == "table":
             headers, rows = block["headers"], block["rows"]
@@ -522,43 +646,156 @@ def write_blocks(ws, rng, blocks, offset):
                 col = c0
                 for name, span in block["groups"]:
                     if name:
-                        ws.cell(row=r, column=col, value=name).font = Font(bold=True)
-                        ws.cell(row=r, column=col).alignment = Alignment(horizontal="center")
+                        cell = ws.cell(row=r, column=col, value=name)
+                        cell.font, cell.alignment = _font(st, bold=True, color=st["head_font"]), Alignment(horizontal="center", vertical="center")
                         if span > 1:
                             ws.merge_cells(start_row=r, start_column=col, end_row=r, end_column=col + span - 1)
+                        for cc in range(col, col + span):
+                            if st["head_fill"]:
+                                ws.cell(row=r, column=cc).fill = PatternFill("solid", fgColor=st["head_fill"])
+                            ws.cell(row=r, column=cc).border = st["box"]
                     col += span
                 r += 1
+            header_row = r
             for j, h in enumerate(headers):
-                cell = ws.cell(row=r, column=c0 + j, value=h)
-                cell.font, cell.border = Font(bold=True), BOX
-            for row in rows:
+                cell = ws.cell(row=r, column=c0 + j, value=SPACED.get(h, h) if st["spaced"] else h)
+                cell.font, cell.border = _font(st, bold=True, color=st["head_font"]), st["box"]
+                cell.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+                if st["head_fill"]:
+                    cell.fill = PatternFill("solid", fgColor=st["head_fill"])
+            ws.row_dimensions[r].height = max(st["size"] * 2.0, 18)
+            centered = set()
+            for j, h in enumerate(headers):
+                strs = [x[j] for x in rows if j < len(x) and isinstance(x[j], str)]
+                if str(h).lower() in ("no", "no.", "순번", "번호") or (strs and max(len(x) for x in strs) <= 4):
+                    centered.add(j)
+            for n, row in enumerate(rows):
                 r += 1
                 for j, v in enumerate(row):
-                    cell = ws.cell(row=r, column=c0 + j, value=v)
-                    if isinstance(v, int) and not isinstance(v, bool) and abs(v) >= 1000:
-                        cell.number_format = "#,##0"
+                    cell = ws.cell(row=r, column=c0 + j, value=_value(v, st, srng, n if len(rows) > 8 else None))
+                    cell.font = _font(st)
+                    if st["borders"]:
+                        cell.border = st["box"]
+                    if st["band"] and n % 2:
+                        cell.fill = PatternFill("solid", fgColor=st["band"])
+                    if isinstance(v, bool):
+                        continue
+                    if j in centered:
+                        cell.alignment = Alignment(horizontal="center")
+                    if isinstance(v, int):
+                        cell.number_format = ("#,##0;[Red]-#,##0" if st["neg_red"] else "#,##0") if abs(v) >= 1000 or st["neg_red"] else "General"
+                    elif isinstance(v, float):
+                        cell.number_format = "#,##0.00;[Red]-#,##0.00" if st["neg_red"] else "#,##0.00"
+                    elif isinstance(v, dt.date):
+                        cell.number_format, cell.alignment = st["date_fmt"], Alignment(horizontal="center")
+                    elif isinstance(v, str) and v.endswith("%"):
+                        cell.alignment = Alignment(horizontal="right")
+                        if v.endswith("%") and v[:-1].strip().replace(".", "", 1).isdigit() and float(v[:-1]) > 100:
+                            cell.font = _font(st, bold=True, color="C00000")          # 부하율 100% 초과를 담당자가 빨갛게 표시한 흔적
+            total_row = None
             if block["total"] and rows:
                 r += 1
-                ws.cell(row=r, column=c0, value=rng.choice(["합계", "계", "Total"]))
+                total_row = r
+                word = rng.choice(["합계", "계", "Total"])
+                korean = any(ord(ch) > 0x1100 for h in headers for ch in str(h))
+                ws.cell(row=r, column=c0, value=("합계" if word == "Total" else word) if korean else "Total")
                 for j in range(1, len(headers)):
                     nums = [x[j] for x in rows if isinstance(x[j], (int, float)) and not isinstance(x[j], bool)]
                     if len(nums) == len(rows) and not str(headers[j]).lower().startswith(("no", "순번")):
-                        ws.cell(row=r, column=c0 + j, value=round(sum(nums), 2))
+                        letter = get_column_letter(c0 + j)
+                        cell = ws.cell(row=r, column=c0 + j, value=f"=SUM({letter}{header_row + 1}:{letter}{r - 1})" if st["formula"] else round(sum(nums), 2))
+                        cell.number_format = "#,##0.00" if any(isinstance(x, float) for x in nums) else "#,##0"
+                for j in range(len(headers)):
+                    cell = ws.cell(row=r, column=c0 + j)
+                    cell.font = _font(st, bold=True)
+                    cell.border = Border(left=st["line"], right=st["line"], bottom=st["line"], top=Side(style="double" if st["profile"] in ("form", "erp") else "thin"))
+                    if st["profile"] in ("form", "erp") and st["head_fill"]:
+                        cell.fill = PatternFill("solid", fgColor=st["head_fill"])
+                ws.cell(row=r, column=c0).alignment = Alignment(horizontal="center")
+            for rr in range(header_row, r + 1):
+                for j in range(len(headers)):
+                    table_cells.add((rr, c0 + j))
+            tables.append({"header": header_row, "first": header_row + 1, "last": header_row + len(rows), "c0": c0, "ncols": len(headers), "total": total_row})
             r += 2
+    return tables, r, table_cells
 
 
-def write_workbook(path, rng, blocks, offset, extra_sheet, sheet_name):
+def decorate(ws, srng, tables, last_row, st, author):
+    """사람이 쓰던 파일에 남는 흔적: 형광펜, 메모, 취소선, 숨긴 열, 옆에 적어 둔 말, 계산하다 남긴 숫자, 틀 고정, 필터, 인쇄 설정."""
+    big = max(tables, key=lambda t: t["last"] - t["first"], default=None)
+    if big and big["last"] >= big["first"]:
+        def pick():
+            return ws.cell(row=srng.randint(big["first"], big["last"]), column=big["c0"] + srng.randrange(big["ncols"]))
+
+        if srng.random() < 0.35:
+            fill = YELLOW if srng.random() < 0.7 else PatternFill("solid", fgColor=srng.choice(["FFC7CE", "C6EFCE", "FFEB9C"]))
+            for _ in range(srng.randint(1, 6)):
+                pick().fill = fill
+        if srng.random() < 0.2:
+            for _ in range(srng.randint(1, 3)):
+                pick().comment = Comment(srng.choice(MEMOS), author)
+        if srng.random() < 0.08:
+            row = srng.randint(big["first"], big["last"])
+            for j in range(big["ncols"]):
+                cell = ws.cell(row=row, column=big["c0"] + j)
+                cell.font = Font(name=st["font"], size=st["size"], strike=True, color="808080")
+        if srng.random() < 0.08 and big["ncols"] > 4:
+            ws.column_dimensions[get_column_letter(big["c0"] + srng.randrange(2, big["ncols"]))].hidden = True
+        if srng.random() < 0.15:
+            ws.cell(row=srng.randint(big["first"], big["last"]), column=big["c0"] + big["ncols"] + 1, value=srng.choice(SIDE_NOTES)).font = Font(
+                name=st["font"], size=st["size"], color=srng.choice(["FF0000", "0000FF", "000000"]))
+        if srng.random() < 0.1:
+            col, row = big["c0"] + big["ncols"] + 2, big["first"] + srng.randint(0, 3)
+            nums = [srng.randrange(100, 9000, 50) for _ in range(srng.randint(2, 4))]
+            for i, n in enumerate(nums):
+                ws.cell(row=row + i, column=col, value=n)
+            ws.cell(row=row + len(nums), column=col, value=f"=SUM({get_column_letter(col)}{row}:{get_column_letter(col)}{row + len(nums) - 1})")
+        if len(tables) == 1 and big["last"] - big["first"] >= 20 and srng.random() < 0.7:
+            ws.freeze_panes = ws.cell(row=big["first"], column=big["c0"] + (1 if st["profile"] == "planner" else 0))
+        if len(tables) == 1 and st["profile"] in ("erp", "sap") and srng.random() < 0.5:
+            ws.auto_filter.ref = f"{get_column_letter(big['c0'])}{big['header']}:{get_column_letter(big['c0'] + big['ncols'] - 1)}{big['last']}"
+        if st["profile"] == "form" and srng.random() < 0.4:
+            ws.cell(row=last_row + 1, column=big["c0"], value="㈜충파모제지").font = Font(name=st["font"], size=st["size"] + 1, bold=True)
+    ws.sheet_view.showGridLines = st["grid"]
+    ws.sheet_view.zoomScale = srng.choice([100, 100, 100, 90, 85, 115])
+    ws.page_setup.orientation = srng.choice(["landscape", "portrait"]) if st["profile"] == "form" else "landscape"
+    ws.page_setup.paperSize = ws.PAPERSIZE_A4
+    ws.page_setup.fitToWidth, ws.page_setup.fitToHeight = 1, 0
+    ws.sheet_properties.pageSetUpPr.fitToPage = True
+    if srng.random() < 0.4:
+        ws.oddFooter.center.text = "&P / &N"
+    if srng.random() < 0.12:
+        ws.sheet_properties.tabColor = srng.choice(["FF0000", "FFC000", "00B050", "0070C0"])
+
+
+def _width(value) -> float:
+    if isinstance(value, (dt.date, dt.datetime)):
+        return 11
+    s = str(value)
+    if s.startswith("="):
+        return 9
+    return sum(2 if ord(ch) > 0x1100 else 1.1 for ch in s)
+
+
+def write_workbook(path, rng, srng, blocks, offset, extra_sheet, sheet_name, source):
     wb = Workbook()
     ws = wb.active
     ws.title = sheet_name
-    write_blocks(ws, rng, blocks, offset)
-    for column in ws.columns:                       # 내용이 보이도록 열 폭을 글자 수에 맞춘다
-        width = max((len(str(c.value)) for c in column if c.value is not None), default=0)
-        ws.column_dimensions[get_column_letter(column[0].column)].width = min(max(width * 1.6 + 2, 8), 45)
+    st = make_style(srng, profile_of(blocks, source))
+    author = srng.choice(PEOPLE)
+    tables, last_row, table_cells = write_blocks(ws, rng, srng, blocks, offset, st)
+    for column in ws.columns:                       # 열 폭은 표 안의 칸 기준. 표가 지나지 않는 열만 그 열의 글 길이를 본다
+        inside = [_width(c.value) for c in column if c.value is not None and (c.row, c.column) in table_cells]
+        outside = [_width(c.value) for c in column if c.value is not None and not isinstance(c, MergedCell)]
+        width = max(inside) if inside else min(max(outside, default=0), 14)
+        ws.column_dimensions[get_column_letter(column[0].column)].width = min(max(width + 2.5, 6), 42)
+    decorate(ws, srng, tables, last_row, st, author)
     if extra_sheet == "cover":
         cover = wb.create_sheet("표지", 0)
         cover["B2"] = "㈜충파모제지"
+        cover["B2"].font = Font(name=st["font"], size=20, bold=True)
         cover["B4"] = rng.choice(["대외비", "내부 검토용", "배포 금지"])
+        cover["B4"].font = Font(name=st["font"], size=12, color="FF0000")
         wb.active = 1                               # 표지가 있어도 열면 자료 시트가 먼저 보인다
     elif extra_sheet == "empty":
         wb.create_sheet("Sheet2")
@@ -567,6 +804,21 @@ def write_workbook(path, rng, blocks, offset, extra_sheet, sheet_name):
         notes = wb.create_sheet("비고")
         notes["A1"] = "작성 안내"
         notes["A2"] = "수치는 검토용 초안입니다."
+    else:                                           # v3: 예전 엑셀 기본값인 빈 시트, 지난 버전 사본, 숨긴 시트
+        kind = srng.choices(["none", "empty", "copy", "hidden"], [0.6, 0.25, 0.1, 0.05])[0]
+        if kind == "empty":
+            wb.create_sheet("Sheet2")
+            wb.create_sheet("Sheet3")
+        elif kind == "copy":
+            wb.copy_worksheet(ws).title = srng.choice([f"{sheet_name} (2)", "이전", "수정전", "backup"])
+        elif kind == "hidden":
+            hidden = wb.create_sheet(srng.choice(["_tmp", "code", "참조"]))
+            hidden.sheet_state = "hidden"
+            for i, value in enumerate(["Y", "N", "EA", "kg", "BOX"], 1):
+                hidden.cell(row=i, column=1, value=value)
+    created = dt.datetime(2026, srng.randint(10, 12), srng.randint(1, 28), srng.randint(8, 18), srng.randint(0, 59))
+    wb.properties.creator, wb.properties.lastModifiedBy = author, srng.choice(PEOPLE)
+    wb.properties.created, wb.properties.modified = created, created + dt.timedelta(days=srng.randint(0, 20), hours=srng.randint(0, 8))
     wb.save(path)
 
 
@@ -599,7 +851,8 @@ def main() -> None:
     rng = random.Random(SEED + 1)
     for item in labels:
         blocks, offset, extra_sheet, sheet_name = item.pop("_write")
-        write_workbook(INBOX / item["file"], rng, blocks, offset, extra_sheet, sheet_name)
+        srng = random.Random(f"{SEED}-style-{item['file']}")       # 파일마다 따로 정하는 꾸밈(글꼴, 색, 메모 등)
+        write_workbook(INBOX / item["file"], rng, srng, blocks, offset, extra_sheet, sheet_name, item["source"])
     (HERE / "labels.json").write_text(json.dumps({"seed": SEED, "note": "SYNTHETIC. 실제 기업 자료가 아니다.", "files": labels}, ensure_ascii=False, indent=1) + "\n",
                                       encoding="utf-8")
     counts: dict[str, int] = {}
