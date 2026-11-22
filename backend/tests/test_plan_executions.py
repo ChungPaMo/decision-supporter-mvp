@@ -197,6 +197,28 @@ def test_contradictory_output_is_rejected_before_persistence():
         PlanRepository.save(None, execution.input_snapshot, execution.result_snapshot, {}, 'a' * 64)
 
 
+def test_missing_coverage_is_rejected_even_when_snapshot_does_not_list_missing_inputs():
+    execution = eligible_in_memory_only()
+    assert execution.input_snapshot.missing_inputs == []
+    with pytest.raises(ValueError, match='Missing approved input'):
+        PlanRepository.save(None, execution.input_snapshot, execution.result_snapshot, {}, 'a' * 64)
+
+
+def test_storage_revalidates_typed_result_that_was_mutated():
+    execution = example()
+    execution.result_snapshot.plans[0].production[0].production_qty = '-1'
+    with pytest.raises(ValueError, match='production_qty'):
+        PlanRepository.save(None, execution.input_snapshot, execution.result_snapshot, {}, 'a' * 64)
+
+
+@pytest.mark.parametrize('application_state', ['MISSING_INPUT', 'UNSUPPORTED'])
+def test_non_applied_hard_check_cannot_close_feasibility(application_state):
+    result = eligible_in_memory_only().result_snapshot.model_dump(mode='json')
+    result['constraint_evaluations'][0].update(strength='HARD', status='SATISFIED', application_state=application_state)
+    with pytest.raises(ValueError):
+        PlanningOutput.model_validate(result)
+
+
 def test_legacy_snapshot_replay_keeps_the_raw_digest_and_one_month():
     execution = example()
     row = execution.model_dump(mode='json', exclude={'decisions'})
@@ -288,9 +310,10 @@ def test_service_dedup_and_save_rollback_with_explicit_memory_double(monkeypatch
             before=list(self.ids)
             try:yield self
             except Exception:self.ids=before;raise
-        def execute(self,q,p=None):return SimpleNamespace(scalar=lambda:self.ids[0] if self.ids else None)
+        def execute(self,q,p=None):return SimpleNamespace(scalar_one_or_none=lambda:self.ids[0] if self.ids else None)
     db=Database();svc=PlanService(db)
     class Repo:
+        lock_and_find_reusable = staticmethod(PlanRepository.lock_and_find_reusable)
         def detail(self,c,id):return e
         def save(self,c,snapshot,result,identity,key):
             c.ids.append(e.execution_id)
@@ -302,6 +325,80 @@ def test_service_dedup_and_save_rollback_with_explicit_memory_double(monkeypatch
     monkeypatch.setattr(planning,'run',lambda snapshot:e.result_snapshot.model_dump(mode='json'))
     assert not svc.create(e.input_snapshot.command).reused
     assert svc.create(e.input_snapshot.command).reused
+    def corrupt(*args):
+        raise ValueError('private stored execution')
+    monkeypatch.setattr(svc.repo, 'detail', corrupt)
+    with pytest.raises(ApiError) as error:
+        svc.create(e.input_snapshot.command)
+    assert error.value.code == ErrorCode.PERSISTENCE_ERROR and 'private' not in error.value.message
+    assert db.ids == [e.execution_id]
     db.ids=[];db.fail=True
     with pytest.raises(ApiError) as error:svc.create(e.input_snapshot.command)
     assert db.ids==[] and 'secret' not in error.value.message
+
+
+def test_preview_and_store_share_canonical_selection_and_output_validation(monkeypatch):
+    from engine import planning
+    from app.api.plan_executions import get_service
+    from app.integrations import planning as adapter
+
+    execution = example()
+    source, output = execution.input_snapshot, execution.result_snapshot
+    source.approved_inputs.products.append(source.approved_inputs.products[0].model_copy(update={'product_id': 'P2'}))
+    source.forecast_rows.append(source.forecast_rows[0].model_copy(update={'product_id': 'P2'}))
+
+    class Provider:
+        def __init__(self, *args):
+            pass
+
+        def load(self, command):
+            return source.model_copy(update={'command': command, 'forecast_rows': [
+                row for row in source.forecast_rows if row.product_id in command.product_ids]}, deep=True)
+
+    class MemoryDatabase:
+        @contextmanager
+        def begin(self):
+            yield self
+
+    class MemoryRepository:
+        items = {}
+
+        def lock_and_find_reusable(self, _, key):
+            return key if key in self.items else None
+
+        def detail(self, _, key):
+            return self.items[key]
+
+        def save(self, _, snapshot, result, identity, key):
+            self.items[key] = execution.model_copy(update={'input_snapshot': snapshot, 'result_snapshot': result,
+                                                            'input_digest': digest(snapshot.model_dump(mode='json'))})
+            return self.items[key]
+
+    svc = PlanService(MemoryDatabase())
+    svc.repo = MemoryRepository()
+    monkeypatch.setattr(adapter, 'get_source_provider', Provider)
+    monkeypatch.setattr(adapter, 'SqlPlanningSourceProvider', Provider)
+    monkeypatch.setattr(planning, 'AVAILABLE', True)
+    monkeypatch.setattr(planning, 'run', lambda _: output.model_dump(mode='json'))
+    monkeypatch.setitem(app.dependency_overrides, get_service, lambda: svc)
+    command = source.command.model_dump(mode='json')
+    with TestClient(app) as client:
+        preview = client.post('/plans', json={**command, 'product_ids': ['TP-10R', 'P2']})
+        saved = client.post('/plan-executions', json={**command, 'product_ids': ['P2', 'TP-10R']})
+        retry = client.post('/plan-executions', json={**command, 'product_ids': ['TP-10R', 'P2']})
+        assert (preview.status_code, saved.status_code, retry.status_code) == (200, 201, 200)
+        assert saved.json()['reused'] is False and retry.json()['reused'] is True
+        assert saved.json()['execution']['input_digest'] == preview.json()['input_digest']
+        assert retry.json()['execution'] == saved.json()['execution'] and len(svc.repo.items) == 1
+
+        # Change the selection to avoid hitting the previously saved, reusable result.
+        output.constraint_evaluations[0].period = '2027-02'
+        for path in ('/plans', '/plan-executions'):
+            failure = client.post(path, json=command)
+            assert failure.status_code == 500 and failure.json()['detail']['code'] == 'MODULE_ERROR'
+        invalid = {**command, 'scenario': 'WHAT_IF', 'base_plan_execution_id': str(execution.execution_id),
+                   'overrides': {'production_qty.TP-10R': '100'}}
+        for path in ('/plans/what-if', '/plan-executions'):
+            failure = client.post(path, json=invalid)
+            assert failure.status_code == 422 and failure.json()['detail']['details']['reason'] == 'WHATIF_INVALID'
+        assert len(svc.repo.items) == 1

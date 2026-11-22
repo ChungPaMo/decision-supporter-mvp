@@ -63,7 +63,7 @@ def test_what_if_calls_same_module_with_explicit_base_snapshot(delivered, monkey
     assert seen[0].command.overrides == {'demand_multiplier': '1.1'}
 
 
-@pytest.mark.parametrize('mutation', ['out_of_scope', 'unit', 'duplicate', 'fake_feasible', 'hard_violation', 'still_typed', 'too_few', 'exception'])
+@pytest.mark.parametrize('mutation', ['out_of_scope', 'unit', 'duplicate', 'fake_feasible', 'missing_coverage', 'hard_violation', 'still_typed', 'too_few', 'exception'])
 def test_bad_module_output_is_safe_error(delivered, monkeypatch, mutation):
     from engine import planning
     result = copy.deepcopy(delivered[1])
@@ -71,17 +71,20 @@ def test_bad_module_output_is_safe_error(delivered, monkeypatch, mutation):
     if mutation == 'unit': result['plans'][0]['production'][0]['unit'] = 'kg'
     if mutation == 'duplicate': result['plans'][0]['production'] *= 2
     if mutation == 'fake_feasible': result['plans'][0]['feasibility'] = 'FEASIBLE'
-    if mutation in ('hard_violation', 'still_typed'):
+    if mutation in ('missing_coverage', 'hard_violation', 'still_typed'):
         from contracts.interfaces.planning import PlanningOutput
         plan = result['plans'][0]
         plan.update(feasibility='FEASIBLE', policy_ref='TEST-POLICY', unverified=[])
         result['unverified'] = []
         for check in result['constraint_evaluations']:
             if check['plan_id'] == plan['plan_id']:
-                check.update(strength='HARD', status='VIOLATED' if mutation == 'hard_violation' else 'SATISFIED')
+                check.update(strength='HARD', application_state='APPLIED',
+                             status='VIOLATED' if mutation == 'hard_violation' else 'SATISFIED')
         if mutation == 'still_typed':
             result = PlanningOutput.model_validate(result)
             result.constraint_evaluations[0].status = 'VIOLATED'
+        if mutation == 'missing_coverage':
+            delivered[0].missing_inputs = []
     if mutation == 'too_few': result['plans'] = result['plans'][:1]
     def execute(request):
         if mutation == 'exception': raise RuntimeError('secret internal data')
@@ -147,3 +150,18 @@ def test_missing_saved_base_does_not_fabricate_what_if(monkeypatch):
         'base_plan_execution_id': str(UUID(int=3))})
     with pytest.raises(ApiError) as error: adapter.SqlPlanningSourceProvider(None).load(command)
     assert error.value.status == 404 and error.value.code == ErrorCode.PLAN_NOT_FOUND
+
+
+def test_corrupt_saved_base_is_reported_as_persistence_error(monkeypatch):
+    from app.plans.repository import PlanRepository
+
+    def corrupt(*args):
+        raise ValueError('private stored snapshot')
+
+    monkeypatch.setattr(PlanRepository, 'get', corrupt)
+    command = PlanCommand.model_validate({**payload('planning_input.json')['command'], 'scenario': 'WHAT_IF',
+                                         'base_plan_execution_id': str(UUID(int=3))})
+    with pytest.raises(ApiError) as error:
+        adapter.SqlPlanningSourceProvider(None).load(command)
+    assert error.value.code == ErrorCode.PERSISTENCE_ERROR
+    assert 'private' not in error.value.message

@@ -1,6 +1,10 @@
 # 충파모 프로젝트 진행상황
 
-최종 확인 **2026-11-22 (KST), 기존 개발 PC**. 시작 `main`은 [`5c65cf3`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/5c65cf38986fb1a5804f357bdb52efed33e2d650)이다. 이번 변경은 `feat: prepare backend for planning v0.4 integration` 커밋으로 식별한다.
+최종 확인 **2026-11-22 (KST), 기존 개발 PC**. 통합 사전검증 시작 `main`은 [`5552b56`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/5552b56dfce38a63f1fff1a45d6e76a0735772b7)이다. 이번 완료 커밋은 `fix: harden planning execution preflight and validation`으로 식별한다.
+
+제품 선택 순서에 따른 중복 실행을 방지하고, Preview와 신규 저장에 승인 입력 커버리지와 HARD 적용 상태 검증을 공통 적용했다. 실제 격리 PostgreSQL에서 TEST_DOUBLE 12개월 저장·재조회·계보·고유 제약·잠금·실패 롤백을 확인했다. 개발 DB는 읽기 전용으로 조회해 3개월 진단과 게이트를 확인하고 60개 테이블·735개 객체 지문을 보존했다. 전체 비DB pytest **1,109 passed / 0 failed / 66 skipped / 0 deselected**. `AVAILABLE=False`이며 실제 계획 엔진 영구 실행과 화면 연동은 후속이다. [사전검증·화면 API 인계](PLANNING_CONTRACT_V04_HANDOFF.md#2026-11-22-백엔드-통합-사전검증과-화면-연동)
+
+직전 v0.4 계약 작업의 시작 `main`은 [`5c65cf3`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/5c65cf38986fb1a5804f357bdb52efed33e2d650)이며 완료 커밋은 [`5552b56`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/5552b56dfce38a63f1fff1a45d6e76a0735772b7)이다.
 
 김대영이 C01 기간 1~12개월, C03 What-if 검증, C06 모순 판정 차단을 공통 계약과 기존 백엔드에 반영했다. C02는 승인 입고 DTO와 공급 검증 경계까지 구현했다. 개발 DB 0009에는 승인 입고 원장이 없어 실제 진단은 `RECEIPT_SOURCE_UNAVAILABLE`을 표시한다. 공식 데이터 3개월 스냅샷의 예측 27행·시간예산 18행·수량한도 3행을 실제 SQL로 검증했다. 비DB 전체 **1,102 passed / 0 failed / 66 skipped / 0 deselected**, TypeScript·Vite 빌드 통과. 개발 DB 전후 지문과 원본 SHA 일치. 계획 엔진의 팀 계약 변환부와 정식 승인 게이트 후속은 [v0.4 인계](PLANNING_CONTRACT_V04_HANDOFF.md)에 정리했다.
 

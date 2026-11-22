@@ -89,3 +89,71 @@ OK 후보의 생산행에는 요청 제품×월마다 정확히 한 행이 필�
 - `CHUNGPAMO-2027` 1개월/3개월 진단 200. 3개월 단일 스냅샷에 9제품×3개월 예측 27행, BOM 9개, 재고 18행, 시간예산 18행, 수량한도 3행, 라우팅 27행 및 승인 출처 9개가 들어왔다. 공식 예측 밖 6·12개월과 LEGACY의 3개월 요청은 409, LEGACY 1개월은 200, 교차 dataset forecast 404였다. 두 데이터셋 계획 목록은 200/0건, 미존재 상세는 404다.
 - 개발 DB 테이블 60개와 스키마 객체 735개의 지문, 승인 배치 7+9건, 예측 각 1건, 전용 Docker 자원이 전후 일치했다. manifest 14개와 별도 예정 입고 CSV SHA도 보존했다. 운영 계획 저장, SQL 승인 입고, DB 쓰기·migration·파괴적 회귀 및 브라우저는 미실행이다. 로컬 증거는 Git 제외 `.artifacts/planning-contract-20261122/`에 있다.
 - 변경 후보의 휴리스틱 보안 검사 결과는 0건이다. 전체 트리 검사는 시작 커밋에 이미 있던 분류기 샘플 Excel 200건과 샘플 전화번호 생성 코드 1건을 표시했다. 이번 변경 목록과 교차 대조했다.
+
+## 2026-11-22 백엔드 통합 사전검증과 화면 연동
+
+2026-11-22 KST, 기존 개발 PC. 아래는 `5552b56` 이후 통합 사전검증에서 확인한 계약이다. 일반 요청에서 제품 선택 순서를 정규화하므로 동일 제품·기간·승인 입력·엔진 소스 조합은 같은 실행 키를 사용한다. 진단의 digest와 실행의 digest는 같은 입력에서 일치한다. 두 요청 사이에 승인 입력이 달라지면 지문도 달라지며, 진단의 지문은 저장 예약 토큰이 아니다. 실패 실행은 재사용 대상에서 제외된다. [공통 라우터](../backend/app/api/integrations.py) · [영구 실행 서비스](../backend/app/plans/service.py) · [저장소](../backend/app/plans/repository.py)
+
+프론트엔드는 위 BASE 및 WHAT_IF 예시를 사용하고 데이터셋 query와 `horizon_months`를 항상 명시한다. 아래 `:id`는 저장된 **계획 실행 UUID**다. 부모 실행과 후보의 선택을 함께 보관하고 결과 재조회 시 서버의 `input_digest`와 `version`을 사용한다.
+
+| 경로 | 정상 응답 | 현재 실제 환경의 동작 |
+| --- | --- | --- |
+| `POST /planning-inputs/preview?dataset_id=CHUNGPAMO-2027` | 200 `PlanningInputDiagnostics` | 사용 가능. `engine_available=false` 및 입고 공급 상태 표시 |
+| `POST /plans`, `POST /plans/what-if` | 200 `PlanningReply` | 유효 요청은 501 `MODULE_NOT_IMPLEMENTED`; 공개 모듈 연결 후에도 Preview는 `persisted=false` |
+| `POST /plan-executions` | 201 `{execution,reused:false}`, 동일 성공 실행 재시도는 200 `{execution,reused:true}` | 정상 형식과 사용 가능한 저장소 기준으로 501 `MODULE_NOT_IMPLEMENTED` |
+| `GET /plan-executions?dataset_id=CHUNGPAMO-2027&limit=20&offset=0` | 200 `{items,total,limit,offset}` | 현재 빈 목록. `TEST_DOUBLE`은 목록 대상에서 제외 |
+| `GET /plan-executions/:id`, `GET /plan-executions/:id/candidates`, `GET /plan-executions/:id/decisions` | 상세, 후보 배열, `{items}` | 누락·다른 데이터셋·테스트 실행은 404 `PLAN_NOT_FOUND` |
+| `POST /plan-executions/:id/decisions` | 200 업데이트된 실행과 감사 이력 | `REVIEW`/`REJECT`는 저장된 실행과 일치하는 버전·지문 필요. `APPROVE`는 501 `PLAN_APPROVAL_DISABLED` |
+| `GET /plan-executions/:id/export.xlsx` | 200 XLSX | 정식 승인된 저장 실행만 출력. 누락 404, 승인 조건 미충족 409 `PLAN_EXPORT_BLOCKED` |
+
+정상적으로 비어 있는 이력 응답이다.
+
+```json
+{"items": [], "total": 0, "limit": 20, "offset": 0}
+```
+
+계산 모듈 연결 후 신규 실행 응답에서 화면이 우선 사용할 필드다. 아래는 표시용 발췌다. 전체 타입에는 입력 스냅샷, 결과 스냅샷과 결정 이력이 포함된다. 성공 시 `execution.status`와 각 후보의 `feasibility`를 각각 사용한다. [실행 DTO](../contracts/interfaces/plan_execution.py)
+
+```json
+{
+  "reused": false,
+  "execution": {
+    "dataset_id": "CHUNGPAMO-2027",
+    "execution_id": "00000000-0000-4000-8000-000000000003",
+    "forecast_execution_id": "00000000-0000-4000-8000-000000000001",
+    "base_plan_execution_id": null,
+    "scenario_type": "BASE",
+    "target_month": "2027-01",
+    "horizon_months": 3,
+    "status": "COMPLETED",
+    "decision_status": "DRAFT",
+    "version": 1,
+    "input_digest": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+  }
+}
+```
+
+아래는 미지원 override의 전체 오류 응답이다. 422과 500에는 이 오류 봉투 또는 서비스가 보존한 계산 실패 실행 봉투가 올 수 있다. `detail`이 있으면 오류 메시지를 표시하고 `execution`이 있으면 실패 실행 이력을 표시한다. 저장 없는 Preview의 계산 실패는 `result.status`와 `result.errors`에 들어간다. [OpenAPI](../contracts/openapi.json)
+
+```json
+{
+  "detail": {
+    "code": "PLAN_OVERRIDE_UNSUPPORTED",
+    "message": "Invalid or unsupported What-if override.",
+    "details": {"status": "INPUT_INVALID", "reason": "WHATIF_INVALID"}
+  }
+}
+```
+
+- `409 PLAN_INPUT_UNAVAILABLE`의 `FORECAST_PRODUCT_MONTH_COVERAGE`는 저장 예측으로 선택 기간과 제품을 채울 수 없다는 뜻이다. 더 짧은 기간이나 해당 기간을 지원하는 예측을 선택하게 한다. What-if는 부모 실행의 dataset·forecast·제품·시작 월·기간·기준일을 유지한다.
+- `409 VERSION_CONFLICT`에서는 실행 상세를 다시 읽고 서버의 새 version과 digest를 표시한다. `404 PLAN_NOT_FOUND`는 같은 데이터셋의 목록으로 돌아가게 하고, 데이터셋 변경 시 이전 요청 응답을 폐기한다.
+- `500 MODULE_ERROR`는 잘못된 계산 출력 또는 실행 오류, `500 PERSISTENCE_ERROR`는 저장·이력 검증 실패다. 이미 저장된 입력과 지문을 바꾸지 말고 이력을 다시 조회한다. 연결 장애 `503 DB_UNAVAILABLE`, 기능 비활성 `501 MODULE_NOT_IMPLEMENTED` / `PERSISTENCE_DISABLED` / `PLAN_APPROVAL_DISABLED`를 구분한다.
+- 희원님은 `HARD` 또는 강도 미지정 검사에서 `SATISFIED`를 내려 FEASIBLE로 표시하려면 `application_state=APPLIED`를 사용한다. 필수 승인 자료가 비어 있거나 계획 기간 일부에서 누락되면 해당 후보를 FEASIBLE로 반납하지 않는다. 기존 이력 재조회는 저장된 검사와 지문을 확인하며, 새 진단 규칙으로 과거 입력의 커버리지를 다시 판정하지 않는다.
+
+검증 근거는 다음과 같다.
+
+- 전체 비DB pytest **1,109 passed / 0 failed / 66 skipped / 0 deselected**. 기존 경고 1건. 타입 검사와 Vite 빌드, 생성 OpenAPI와 Schema·예시 일치 검사도 통과했다. TestClient의 명시적 메모리 대역에서 Preview `200`, 저장 `201`, 순서만 다른 재시도 `200/reused=true`와 같은 입력 지문을 확인했다. 동일한 범위 밖 평가의 Preview·영구 저장 500, 미지원 override 422 및 손상된 부모·재사용 이력의 저장소 오류도 확인했다.
+- 개발 DB 강제 READ ONLY에서 공식 3개월 예측 27행과 순서를 바꾼 진단의 동일 지문을 확인했다. 생성·What-if는 501, 미지원 override는 422, 두 이력 목록은 빈 200, 없는 상세·후보·결정·출력 및 교차 데이터셋 예측은 404였다. 테이블 60개 및 객체 735개 지문이 전후 일치했다.
+- 확인된 전용 회귀 DB `chungpamo_regression`·revision `0009`에서 실제 승인 경로와 예측으로 검증 자료를 만들었다. 계획은 오직 `TEST_DOUBLE`로 저장했다. 12개월 생산·MRP, 입력 지문·원본 보존·What-if 계보·외래키 `23503`, 중복 재사용 조회·고유 제약 `23505`, 타 스키마 404, 두 연결 잠금 경합과 롤백 뒤 재획득, 중간 저장 실패의 원자적 롤백을 확인했다. 외부 트랜잭션 롤백 뒤 30개 비교 테이블의 행 수·지문이 동일했다. [격리 SQL 검사](../scripts/verify_plan_storage.py)
+- 초기 회귀 검증 스크립트의 자재 열 조회는 실제 승인 뷰 조회로 고쳤다. 강제 검사 추가로 기존 대역 하나는 유효한 상태에서 모순 상태로 변경하도록 바로잡았다. 두 초기 실패를 수정한 뒤 최종 검증을 다시 통과했다.
+- 스키마 초기화가 필요한 pytest 66건은 실행하지 않았다. 실제 계획 엔진의 계산·영구 실행, PostgreSQL에서 정상 요청 두 건의 201/200 완료 경쟁, 브라우저 연계는 미검증이다. 다음 단계는 실제 `run` 변환 연결과 화면 인수 검증이다.

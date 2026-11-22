@@ -40,8 +40,13 @@ def what_if_snapshot(base,command,*,allow_test=False):
 
 
 def load_what_if(database,command):
-    try: return what_if_snapshot(PlanRepository(database).get(command.base_plan_execution_id),command)
-    except DBAPIError as exc: raise db_error(exc) from None
+    try:
+        parent = PlanRepository(database).get(command.base_plan_execution_id)
+    except DBAPIError as exc:
+        raise db_error(exc) from None
+    except ValueError:
+        raise ApiError(500, ErrorCode.PERSISTENCE_ERROR, 'Stored parent plan integrity validation failed.') from None
+    return what_if_snapshot(parent, command)
 
 
 def runtime_identity():
@@ -68,9 +73,13 @@ class PlanService:
             identity=runtime_identity()
             key=digest({'input':snapshot.model_dump(mode='json'),'runtime':identity})[7:]
             with self.database.begin() as c:
-                c.execute(text('SELECT pg_advisory_xact_lock(:k)'),{'k':int(key[:15],16)})
-                existing=c.execute(text("SELECT execution_id FROM plan_execution WHERE dedup_key=:k AND data_origin='REAL_ENGINE' AND status<>'FAILED'"),{'k':key}).scalar()
-                if existing: return PlanExecutionReply(execution=self.repo.detail(c,existing),reused=True)
+                existing = self.repo.lock_and_find_reusable(c, key)
+                if existing:
+                    try:
+                        detail = self.repo.detail(c, existing)
+                    except ValueError:
+                        raise ApiError(500, ErrorCode.PERSISTENCE_ERROR, 'Stored plan integrity validation failed.') from None
+                    return PlanExecutionReply(execution=detail, reused=True)
                 result=adapter.run_snapshot(command,snapshot).result
                 detail=self.repo.save(c,snapshot,result,identity,key)
             return PlanExecutionReply(execution=detail,reused=False)

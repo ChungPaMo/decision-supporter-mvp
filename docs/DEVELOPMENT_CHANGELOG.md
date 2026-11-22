@@ -641,3 +641,34 @@
 
 **관련 자료**
 - [v0.4 인계·실DB 검증](PLANNING_CONTRACT_V04_HANDOFF.md), [공통 계약](INTEGRATION_CONTRACT.md), [계획 저장 계약](PLAN_EXECUTION_PERSISTENCE.md), [현재 현황](PROJECT_PROGRESS.md), [희원 요청](../modules/planning_engine/CONTRACT_REQUESTS.md).
+
+### 2026-11-22 — 생산계획 저장·조회 통합 사전검증 (김대영)
+
+**Git**
+- 시작 Commit `5552b56dfce38a63f1fff1a45d6e76a0735772b7`. 시작 `main`과 원격이 일치했고 작업 트리가 깨끗했다.
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='fix: harden planning execution preflight and validation'`으로 확인한다.
+- 브랜치 `main`.
+
+**작업 목적**
+- 실계산 모듈 연결에 앞서 계획 저장·조회·What-if의 입력 지문, 중복 실행, 실패·롤백 경계를 보강한다.
+
+**구현 내용**
+- 공통 계획 HTTP 입구에서 제품 ID 순서를 정규화해 제품 선택 순서가 달라도 동일한 입력 지문을 사용한다.
+- Preview와 신규 저장은 누락된 승인 입력을 FEASIBLE로 표시하는 결과를 거절한다. 적용하지 못한 HARD 검사와 모순되는 결과 및 수정된 typed 결과도 거절한다. 손상된 부모·재사용 이력은 `PERSISTENCE_ERROR`로 반환한다.
+- 같은 트랜잭션의 advisory lock과 재사용 조회를 저장소 메서드로 묶었다. `verify_plan_storage.py`는 전용 회귀 DB 식별·sentinel·빈 테스트 데이터 검사를 통과할 때만 외부 롤백 트랜잭션을 실행한다.
+- 화면 담당자용 API 경로, 요청·응답 JSON, 422/500 결과 봉투와 상태 코드 처리 사례를 인계 문서에 추가했다.
+
+**검증 결과**
+- 2026-11-22 기존 개발 PC에서 전체 비DB pytest 1,109 passed / 0 failed / 66 skipped / 0 deselected. Schema/OpenAPI·예시 회귀, TypeScript·Vite 빌드 통과. 변경 파일의 보안 발견 0건이며 전체 트리의 분류기 샘플 관련 기존 발견 201건은 유지된다.
+- 개발 DB 0009 강제 READ ONLY에서 3개월 27행 진단, 동일 입력 지문, 501 계산 게이트·422 잘못된 override·404 격리를 확인했다. 테이블 60개와 객체 735개가 사전 지문과 일치했다.
+- `chungpamo_regression` 0009에서 TEST_DOUBLE 12개월 저장·재조회, 계보/FK, 중복 재사용·고유 제약, 두 연결 잠금 경합·해제, 저장 실패 롤백을 확인했다. 비교 테이블 30개가 전후 동일했다. 초기 조회/대역 오류의 수정과 최종 결과는 인계 문서에 기록했다.
+
+**기술적 결정**
+- 기존 이력의 원본 지문과 계산 상태를 보존한다. 적용하지 못한 HARD 검사나 모순된 계산 상태는 거절하되 새 승인 입력 커버리지 검사는 새 계산과 새 저장에 적용한다.
+- 격리 시험에서는 계획 결과를 TEST_DOUBLE로 구분했고 개발 DB는 읽기 전용으로 연결했다. 기존 스키마·DB 초기화 없이 외부 트랜잭션을 롤백했다.
+
+**남은 문제**
+- 희원 `run` 변환 및 실계산 결과 검증, 나미 UI 연결, 실제 성공 요청 두 건의 PostgreSQL 201/200 경쟁 시험, 정식 승인과 승인 입고 공급은 후속이다. 초기화가 필요한 전체 PostgreSQL pytest는 미실행이다.
+
+**관련 자료**
+- [사전검증과 화면 API 인계](PLANNING_CONTRACT_V04_HANDOFF.md#2026-11-22-백엔드-통합-사전검증과-화면-연동), [격리 SQL 검사](../scripts/verify_plan_storage.py), [현재 현황](PROJECT_PROGRESS.md).

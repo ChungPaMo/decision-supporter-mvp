@@ -308,7 +308,8 @@ class PlanningOutput(StrictModel):
             if any(e.strength == 'HARD' and e.status == 'VIOLATED' for e in checks):
                 raise ValueError('FEASIBLE contradicts a violated hard constraint')
             if (not checks or not (plan.policy_ref or '').strip() or plan.unverified or self.unverified
-                    or any(e.strength != 'SOFT' and e.status != 'SATISFIED' for e in checks)):
+                    or any(e.strength != 'SOFT' and (e.status != 'SATISFIED' or e.application_state != 'APPLIED')
+                           for e in checks)):
                 raise ValueError('FEASIBLE needs policy and completed checks')
         return self
 

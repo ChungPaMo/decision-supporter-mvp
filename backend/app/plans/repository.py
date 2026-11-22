@@ -34,7 +34,8 @@ class PlanRepository:
         # Historical rows predate horizon_months and were always stored at one month.
         input_snapshot = {**raw_input, 'command': {**raw_input['command'], 'horizon_months': row['horizon_months']}}
         result=PlanExecutionDetail.model_validate({**row,'input_snapshot':input_snapshot,'decisions':[dict(e) for e in events]})
-        validate_pair(result.input_snapshot,result.result_snapshot)
+        # Replay verifies stored claims and facts without reassessing historical coverage rules.
+        validate_pair(result.input_snapshot, result.result_snapshot, check_current_coverage=False)
         if result.dataset_id!=result.input_snapshot.dataset_id: raise ValueError("Stored dataset ownership mismatch")
         command = result.input_snapshot.command
         if (command.target_month != result.target_month or command.forecast_execution_id != result.forecast_execution_id
@@ -69,11 +70,19 @@ class PlanRepository:
             return PlanExecutionList(items=[PlanExecutionSummary.model_validate(r) for r in rows],total=total,limit=limit,offset=offset)
 
     @staticmethod
+    def lock_and_find_reusable(connection, key, *, origin='REAL_ENGINE'):
+        # Keep the SELECT separate so READ COMMITTED sees commits by the previous lock holder.
+        connection.execute(text('SELECT pg_advisory_xact_lock(:key)'), {'key': int(key[:15], 16)})
+        return connection.execute(text('''SELECT execution_id FROM plan_execution
+            WHERE dedup_key=:key AND data_origin=:origin AND status<>'FAILED' '''),
+            {'key': key, 'origin': origin}).scalar_one_or_none()
+
+    @staticmethod
     def save(c,snapshot,result,runtime,dedup_key,*,origin='REAL_ENGINE'):
         """Internal transport only, never exposed as an upload-result API."""
         from contracts.interfaces.planning import PlanningInput,PlanningOutput
-        snapshot=PlanningInput.model_validate(snapshot)
-        result=PlanningOutput.model_validate(result)
+        snapshot = PlanningInput.model_validate(snapshot.model_dump() if isinstance(snapshot, PlanningInput) else snapshot)
+        result = PlanningOutput.model_validate(result.model_dump() if isinstance(result, PlanningOutput) else result)
         validate_pair(snapshot,result)
         id=uuid4();cmd=snapshot.command
         status={'OK':'COMPLETED','PARTIAL':'PARTIAL'}.get(result.status,'FAILED')

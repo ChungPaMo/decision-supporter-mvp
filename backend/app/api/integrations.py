@@ -81,4 +81,5 @@ def what_if(body: PlanCommand, dataset_id: str = Depends(dataset_context)):
 def scoped_command(body,dataset_id):
     if 'dataset_id' in body.model_fields_set and body.dataset_id!=dataset_id:
         raise ApiError(409,ErrorCode.DATASET_MISMATCH,'Query dataset and command dataset disagree.')
-    return body.model_copy(update={'dataset_id':dataset_id})
+    # Product selection is a set in the planning contract and in What-if parent checks.
+    return body.model_copy(update={'dataset_id': dataset_id, 'product_ids': sorted(body.product_ids)})

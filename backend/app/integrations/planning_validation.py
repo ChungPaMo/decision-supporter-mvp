@@ -190,7 +190,7 @@ def validate_overrides(command: PlanCommand, parent: PlanningInput | None = None
                        {'status': 'INPUT_INVALID', 'reason': 'WHATIF_INVALID'})
 
 
-def validate_pair(snapshot: PlanningInput, result: PlanningOutput) -> None:
+def validate_pair(snapshot: PlanningInput, result: PlanningOutput, *, check_current_coverage: bool = True) -> None:
     """Apply the same output scope and invariants to preview, storage and replay."""
     result.references_and_cardinality()
     command = snapshot.command
@@ -210,8 +210,10 @@ def validate_pair(snapshot: PlanningInput, result: PlanningOutput) -> None:
             raise ValueError('Output scope or unit mismatch')
         if result.status == 'OK' and keys != units.keys():
             raise ValueError('Incomplete OK candidate')
-        if snapshot.missing_inputs and plan.feasibility == 'FEASIBLE':
-            raise ValueError('Missing input cannot be verified')
+
+    if any(plan.feasibility == 'FEASIBLE' for plan in result.plans):
+        if snapshot.missing_inputs or (check_current_coverage and input_coverage(snapshot)[1]):
+            raise ValueError('Missing approved input cannot be reported as verified')
 
     resources = {row.resource_id for draft in (snapshot.capacity_snapshot, snapshot.routing_snapshot)
                  if draft for row in draft.resources}
