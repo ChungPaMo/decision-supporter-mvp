@@ -4,7 +4,7 @@
   "BOM": {
    "n": 16,
    "before": 10,
-   "after": 16
+   "after": 10
   },
   "MPS": {
    "n": 14,
@@ -19,7 +19,7 @@
   "RCCP": {
    "n": 15,
    "before": 10,
-   "after": 12
+   "after": 15
   },
   "CRP": {
    "n": 15,
@@ -39,7 +39,7 @@
   "미분류": {
    "n": 11,
    "before": 11,
-   "after": 10
+   "after": 11
   }
  },
  "before": {
@@ -49,16 +49,16 @@
   "wrong": 5
  },
  "semantic": {
-  "ok": 91,
-  "review": 7,
-  "missed": 9,
-  "wrong": 2
+  "ok": 86,
+  "missed": 20,
+  "review": 3,
+  "wrong": 0
  },
  "after": {
-  "ok": 99,
-  "missed": 1,
-  "review": 8,
-  "wrong": 1
+  "ok": 97,
+  "missed": 7,
+  "wrong": 3,
+  "review": 2
  },
  "dropped_methods": {
   "파일을 통째로 비교": 0.25688073394495414,

@@ -21,7 +21,7 @@ from dataclasses import dataclass, field
 from .doctype import UNKNOWN, Verdict, _collect
 
 MODEL = "BAAI/bge-m3"
-VERSION = "doctype-embed-0.1.0"
+VERSION = "doctype-embed-0.2.0"
 MAX_TERMS = 90          # 파일 하나에서 보는 낱말 수 상한
 TAU = 0.65              # 낱말과 기준 용어의 유사도가 이 이상일 때만 단서로 센다
 MIN_SCORE = 1.5         # 범주 점수(연결된 기준 용어들의 유사도 합)가 이 이상이어야 한다
@@ -49,6 +49,14 @@ CONCEPTS = {
               "employee", "attendance", "meeting minutes", "survey response", "training course", "vehicle log", "utility cost", "safety checklist"],
 }
 REVIEW = "확인 필요"
+COMMON = "공통"
+# 어느 문서에나 나오는 낱말. 여기에 가장 가까운 낱말은 어느 범주의 단서로도 세지 않는다.
+# 이 묶음이 없으면 '자재코드', '품목명', '단위' 같은 흔한 열 이름이 뜻이 비슷한 BOM 용어('자재명세서', '자품목', '단위 소요량')에 붙어,
+# 자재 목록이나 재고 자료가 BOM 으로 분류된다 (팀원이 만든 자료로 시험해 확인한 오분류).
+CONCEPTS[COMMON] = ["품목 코드", "품목명", "품목 구분", "자재 코드", "자재명", "자재 구분", "제품 코드", "제품명", "제품", "자재", "원자재", "부자재",
+                    "단위", "수량", "규격", "구분", "비고", "일자", "번호", "코드", "이름", "사용 여부",
+                    "item code", "item name", "item type", "material code", "material name", "material", "product code", "product name", "product",
+                    "unit", "quantity", "specification", "remarks", "date", "number", "code", "name", "type", "status", "period", "currency"]
 
 
 @dataclass
@@ -118,6 +126,8 @@ class SemanticMatcher:
         for term, vec in zip(terms, self._vectors(terms)):
             sims = self.concept_vectors @ vec
             j = int(sims.argmax())
+            if self.concepts[j][0] == COMMON:
+                continue
             if sims[j] >= self.tau and float(sims[j]) > best.get(self.concepts[j], (0.0, ""))[0]:
                 best[self.concepts[j]] = (float(sims[j]), term)          # 기준 용어 하나는 한 번만 센다
         scores: dict[str, float] = {}

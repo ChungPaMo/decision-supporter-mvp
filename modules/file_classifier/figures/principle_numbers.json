@@ -5,10 +5,8 @@
   "template": "mes_kr_weekly_status",
   "rule_score": 2.0,
   "semantic_scores": {
-   "MES": 4.91,
-   "미분류": 1.66,
-   "CRP": 0.769,
-   "ERP": 0.666
+   "MES": 4.103,
+   "미분류": 1.0
   },
   "links_shown": [
    [
@@ -37,9 +35,9 @@
    ],
    [
     "정품수량",
-    "양품 수량",
-    "MES",
-    0.808
+    "수량",
+    "공통",
+    0.821
    ],
    [
     "작업인원",
@@ -48,22 +46,22 @@
     0.8
    ],
    [
-    "공장장",
-    "작업장",
-    "CRP",
-    0.769
-   ],
-   [
     "주간 생산현황표",
     "생산 실적",
     "MES",
     0.754
    ],
    [
-    "Total",
-    "amount",
-    "ERP",
-    0.648
+    "작성일자",
+    "date",
+    "공통",
+    0.748
+   ],
+   [
+    "과장",
+    "부서",
+    "미분류",
+    0.643
    ],
    [
     "담당",
@@ -86,30 +84,29 @@
   ]
  },
  "why_terms": {
-  "whole_gap_ratio_median": 0.027954991906881332,
-  "term_gap_ratio_median": 0.5573339703774487,
-  "whole_top1_correct": 63,
+  "whole_gap_ratio_median": 0.028854742646217346,
+  "term_gap_ratio_median": 0.712685337726524,
+  "whole_top1_correct": 60,
   "n_test": 109
  },
  "threshold": {
-  "right_total": 1122,
-  "wrong_total": 4313,
-  "right_kept": 468,
-  "wrong_kept": 445
+  "right_total": 789,
+  "wrong_total": 4739,
+  "right_kept": 406,
+  "wrong_kept": 584
  },
  "combine": {
   "둘이 같은 답": {
-   "맞음": 61
+   "맞음": 58
   },
   "사전만 답함": {
-   "맞음": 10,
-   "틀림": 1
+   "맞음": 13,
+   "틀림": 3
   },
   "뜻만 답함": {
-   "맞음": 18
+   "맞음": 15
   },
   "둘이 다른 답": {
-   "둘 다 틀림": 2,
    "뜻이 맞음": 2
   }
  }
