@@ -215,7 +215,7 @@ print(result["category"], result["confidence"], result["reason"])
 고친 뒤에는 반드시 다시 잰다.
 
 ```powershell
-# 기존에 맞히던 답이 그대로인지 확인 (시험 322개)
+# 기존에 맞히던 답이 그대로인지 확인 (시험 332개)
 ./.venv/Scripts/python.exe -m pytest modules/file_classifier -q
 
 # 처음 보는 양식 109개의 수치가 나빠지지 않았는지 확인 (GPU 권장)
@@ -341,13 +341,13 @@ python -X utf8 modules/file_classifier/samples/make_samples.py
 | `src/file_classifier/doctype.py` | 낱말 사전 규칙 (`doctype-0.3.0`) |
 | `src/file_classifier/doctype_embed.py` | 낱말의 뜻으로 판단, 사전과 합치기 (`doctype-embed-0.3.0`) |
 | `src/file_classifier/doctype_io.py` | 파일 내용을 받아 분류 결과를 돌려준다. 서버가 쓴다 |
-| `src/file_classifier/rules.py`, `__init__.py` | 업로드 화면용 테이블 분류 (`rules-0.3.0`, 아래 "이전 연구 요약" 참고) |
+| `src/file_classifier/rules.py`, `__init__.py` | 업로드 화면용 테이블 분류 (`rules-0.4.0`, 아래 "이전 연구 요약" 참고) |
 | `tools/sort_folder.py` | 폴더 일괄 분류 → 결과 엑셀 |
 | `tools/eval_embed.py` | 처음 보는 양식 수치 재기 |
 | `tools/make_figures.py`, `make_principle_figures.py`, `make_flow_figures.py`, `make_readme_figures.py` | 이 문서의 그림 만들기 |
 | `samples/make_samples.py`, `samples/labels.json`, `samples/inbox/` | 더미 엑셀 200개 생성기, 정답, 파일 |
 | `figures/` | 이 문서의 그림과 그림에 쓴 숫자(`numbers.json`, `principle_numbers.json`, `readme_numbers.json`) |
-| `tests/` | 시험 322개 |
+| `tests/` | 시험 332개 |
 
 그림 중 `s1_dropzone.png`, `s2_sorted.png`는 화면을 찍은 것이라 스크립트로 다시 만들지 않는다.
 
@@ -356,7 +356,7 @@ python -X utf8 modules/file_classifier/samples/make_samples.py
 ### 다른 모듈과의 연동
 
 - **문서 종류 분류**: 백엔드 `POST /classifications/documents`와 데이터 업로드 화면의 "엑셀 문서 종류 일괄 분류" 영역에 연결돼 있다. 사전만 쓴다.
-- **업로드용 테이블 분류**(`rules-0.3.0`): 백엔드 분류 API, 컬럼 매핑 추천, 화면의 "파일 유형 추천" 패널에 연결돼 있다. 열 이름을 보고 product / material / bom / inventory / monthly_demand 중 하나를 추천하거나 보류한다.
+- **업로드용 테이블 분류**(`rules-0.4.0`): 백엔드 분류 API, 컬럼 매핑 추천, 화면의 "파일 유형 추천" 패널에 연결돼 있다. 열 이름을 보고 product / material / bom / inventory / monthly_demand 중 하나를 추천하거나 보류한다. 보류할 때는 이유의 종류(`hold_kind`: 변환 필요, 다른 등록 경로, 모호함, 근거 부족)를 함께 돌려준다.
 - 팀 공식 합성 자료(CHUNGPAMO-2027) 48개 파일로 확인한 결과와 다른 담당자에게 요청한 사항은 [CONTRACT_REQUESTS.md](CONTRACT_REQUESTS.md)에 있다.
 
 ---

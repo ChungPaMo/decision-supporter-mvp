@@ -15,7 +15,9 @@ from __future__ import annotations
 import re
 from dataclasses import dataclass, field
 
-MODULE_VERSION = "rules-0.3.0"
+MODULE_VERSION = "rules-0.4.0"
+# 보류한 이유의 종류 (contracts.interfaces.modules.HoldKind 와 같은 값). 화면이 안내 문구를 고를 때 쓴다.
+NEEDS_TRANSFORM, OTHER_ROUTE, AMBIGUOUS, UNKNOWN_KIND = "NEEDS_TRANSFORM", "OTHER_ROUTE", "AMBIGUOUS", "UNKNOWN"
 MIN_COVERAGE = 0.6      # 추천에 필요한 "아는 열" 비율
 MASTER_MIN_COVERAGE = 0.7   # 제품·자재 마스터는 모르는 열이 섞이면 다른 자료일 가능성이 커서 더 엄격하게 본다
 MIN_MARGIN = 0.15       # 1순위와 2순위 점수 차이
@@ -106,6 +108,7 @@ class SheetResult:
     entity: str | None = None
     guidance: str | None = None                                 # 변환 안내 문구
     guidance_score: float = 0.0                                 # 월 수요 열 구성과의 일치도 (안내 후보용)
+    hold_kind: str | None = None                                # 유형을 정하지 못한 표의 보류 종류. 정했으면 None
     reasons: list[str] = field(default_factory=list)
 
 
@@ -195,6 +198,7 @@ def classify_sheet(name: str | None, columns: list[str], sample_rows: list[list[
     result = SheetResult(name=name, is_table=len(judged) >= 2)
     if not result.is_table:
         result.reasons.append("열 이름이 없거나 한 개뿐이라 표로 보지 않았습니다.")
+        result.hold_kind = UNKNOWN_KIND
         return result
     if recovered:
         result.reasons.append("첫 행이 열 이름이 아니어서 샘플 행에서 열 이름 줄을 찾았습니다.")
@@ -211,6 +215,7 @@ def classify_sheet(name: str | None, columns: list[str], sample_rows: list[list[
         known = sum(1 for n in judged if any(n in GROUPS[g] for g in vocab))
         result.scores[entity] = round(known / len(judged), 3)
 
+    result.hold_kind = UNKNOWN_KIND
     ranked = sorted(result.scores.items(), key=lambda kv: -kv[1])
     if ranked:
         top, top_score = ranked[0]
@@ -220,8 +225,9 @@ def classify_sheet(name: str | None, columns: list[str], sample_rows: list[list[
             result.reasons.append(f"{LABEL[top]}의 핵심 열({evidence})이 있지만 알 수 없는 열이 많습니다(아는 열 {top_score:.0%}). 다른 종류의 보고서일 수 있습니다.")
         elif top_score - second < MIN_MARGIN:
             result.reasons.append(f"{LABEL[top]}와 {LABEL[ranked[1][0]]}의 열이 함께 있어 하나로 정하지 못했습니다.")
+            result.hold_kind = AMBIGUOUS
         else:
-            result.entity = top
+            result.entity, result.hold_kind = top, None
             result.reasons.append(f"{LABEL[top]}의 핵심 열이 있습니다: {evidence} (아는 열 {top_score:.0%}).")
             return result
 
@@ -236,11 +242,16 @@ def classify_sheet(name: str | None, columns: list[str], sample_rows: list[list[
         demand_like = sum(1 for n in judged if n in month_headers or any(n in GROUPS[g] for g in VOCAB["monthly_demand"]))
         result.guidance_score = round(demand_like / len(judged), 3)
         result.reasons.append(result.guidance)
+        if result.hold_kind != AMBIGUOUS:
+            result.hold_kind = NEEDS_TRANSFORM
     elif (route := _other_route(names)) is not None:
         result.reasons.append(route)
+        if result.hold_kind != AMBIGUOUS:
+            result.hold_kind = OTHER_ROUTE
     elif not ranked:
         if has("g_code") and generic >= MIN_COVERAGE * len(judged):
             result.reasons.append("품목 코드·이름만 있어 제품인지 자재인지 열 이름으로는 구분할 수 없습니다.")
+            result.hold_kind = AMBIGUOUS
         else:
             result.reasons.append("다섯 가지 자료 유형(제품, 자재, BOM, 재고, 월 수요)의 핵심 열 조합을 찾지 못했습니다.")
     return result
@@ -267,7 +278,7 @@ def classify_sheets(sheets: list[tuple[str | None, list[str], list[list[str | No
                   for e, s in sorted(scores.items(), key=lambda kv: -kv[1])]
 
     if not tables:
-        return {"recommended_entity": None, "candidates": [], "hold": True,
+        return {"recommended_entity": None, "candidates": [], "hold": True, "hold_kind": UNKNOWN_KIND,
                 "reasons": ["표로 볼 수 있는 시트가 없습니다(열 이름이 없거나 한 개뿐). 파일 유형을 직접 선택해 주세요."]}
     entities = {r.entity for r in tables}
     if len(entities) == 1 and None not in entities:
@@ -275,9 +286,16 @@ def classify_sheets(sheets: list[tuple[str | None, list[str], list[list[str | No
         if multi and len(tables) > 1:
             reasons.insert(0, f"표가 있는 시트 {len(tables)}개가 모두 {LABEL[entity]}로 판단됩니다.")
         return {"recommended_entity": entity, "candidates": candidates, "hold": False, "reasons": reasons}
+    held = {r.hold_kind for r in tables if r.entity is None}
+    if len(entities) > 1 or AMBIGUOUS in held:
+        hold_kind = AMBIGUOUS                 # 시트마다 유형이 다르거나, 한 표가 두 유형에 걸쳐 있다
+    elif len(held) == 1:
+        hold_kind = next(iter(held))          # 모든 표가 같은 이유로 보류됐다
+    else:
+        hold_kind = UNKNOWN_KIND              # 보류 이유가 섞여 있어 한 가지 안내로 묶을 수 없다
     if len(entities - {None}) > 1:
         kinds = ", ".join(f"{r.name or '시트'}={LABEL[r.entity]}" for r in tables if r.entity)
         reasons.insert(0, f"한 파일에 서로 다른 유형의 시트가 있습니다({kinds}). 유형별로 파일을 나눠 올려 주세요.")
     elif len(entities) > 1:
         reasons.insert(0, "일부 시트만 유형을 알 수 있어 파일 전체를 하나로 정하지 못했습니다.")
-    return {"recommended_entity": None, "candidates": candidates, "hold": True, "reasons": reasons}
+    return {"recommended_entity": None, "candidates": candidates, "hold": True, "hold_kind": hold_kind, "reasons": reasons}
