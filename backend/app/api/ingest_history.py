@@ -1,10 +1,10 @@
 """Explicit staging command. No approval or generated credentials."""
 from typing import Annotated
 from uuid import UUID
-from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Response, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, Request, Response, UploadFile
 from pydantic import ValidationError
 from app.api.datasets import dataset_context
-from app.api.ingest_assistance import parse_json_object
+from app.api.ingest_assistance import parse_json_object, parse_transform_selections
 from app.config import get_settings
 from app.datasets import get_dataset_engine
 from app.errors import ApiError, ErrorCode, ERROR_RESPONSES
@@ -29,16 +29,19 @@ Service = Annotated[TransformationService, Depends(get_history_service)]
 
 @router.post('', response_model=TransformationDetail, status_code=201,
              summary='Explicitly preserve source evidence and create an unapproved monthly-demand batch atomically')
-async def create_transformation(svc: Service, response: Response, files: list[UploadFile] = File(...),
+async def create_transformation(request: Request, svc: Service, response: Response, files: list[UploadFile] = File(...),
         policy: str = Form(...), expected_result_digest: str = Form(..., pattern=r'^[a-f0-9]{64}$'),
         source_note: str = Form(..., min_length=1, max_length=1000), created_by: str = Form(...),
-        use_approved_master: bool = Form(False)):
+        use_approved_master: bool = Form(False),
+        table_selection: str | None = Form(None, description='JSON XlsxTableSelection when exactly one file is uploaded'),
+        table_selections: str | None = Form(None, description='JSON object from zero-based upload index to XlsxTableSelection')):
     try:
         recipe = SalesTransformPolicy.model_validate(parse_json_object(policy, 'TRANSFORM_POLICY_INVALID'))
     except ValidationError:
         raise HTTPException(422, {'code': 'TRANSFORM_POLICY_INVALID', 'message': 'Unsupported synthetic transformation policy.'}) from None
     if not 1 <= len(files) <= MAX_FILES:
         raise ApiError(413, ErrorCode.ANALYSIS_LIMIT, 'At most 8 source files.')
+    selections = await parse_transform_selections(request, len(files), table_selection, table_selections)
     sources, total = [], 0
     for file in files:
         filename = file.filename or ''
@@ -50,7 +53,8 @@ async def create_transformation(svc: Service, response: Response, files: list[Up
         if len(content) > MAX_BYTES or total > MAX_TOTAL_BYTES:
             raise ApiError(413, ErrorCode.FILE_TOO_LARGE, '10 MiB per source / 50 MiB combined maximum.')
         sources.append((filename, content))
-    result, reused = svc.create(sources, recipe, expected_result_digest, source_note, created_by, use_approved_master)
+    result, reused = svc.create(sources, recipe, expected_result_digest, source_note, created_by,
+                                use_approved_master, selections=selections)
     if reused:
         response.status_code = 200
     return result

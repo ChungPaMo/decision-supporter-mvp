@@ -758,3 +758,30 @@
 
 **관련 자료**
 - [기준 Commit 5002853](https://github.com/ChungPaMo/decision-supporter-mvp/commit/50028536a4af176306704be574409b142f10eaaf), [선택 검증](XLSX_TABLE_SELECTION_VERIFICATION_20261123.md), [화면 계약](XLSX_TABLE_SELECTION_HANDOFF.md).
+
+### 2026-11-23 — XLSX 선택 범위의 변환 이력 저장과 승인 연동
+
+**Git**
+- 시작 Commit `423c456cf11d090866293c0812c78d6cd7bb81e2`.
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='feat: persist selected xlsx transformation evidence'`로 확인한다.
+- 브랜치 `main`.
+
+**작업 목적**
+- 검토한 범위를 기존 변환 이력과 승인 배치에 연결하고 원본·정책·좌표를 재현한다.
+
+**구현 내용**
+- `ingest_assistance.py`/`ingest_history.py`에 단일 `table_selection`과 인덱스별 `table_selections` 공통 검증을 연결했다. `transformation.py`/`history.py`에서 역할별 절대 열과 선택, 원본 바이트·정규 CSV를 기존 manifest와 재생 경로에 연결했다.
+- XLSX TestClient·메모리 회귀, 미래 SQL 회귀 1개, OpenAPI/Schema와 화면·Docker PC 체크리스트를 추가했다.
+
+**검증 결과**
+- 전체 비DB **1,164 passed / 0 failed / 67 skipped**. 저장→재조회→재검증→승인, 200 재시도, 다른 시트/범위, 불량 입력, 격리, 변조 감지, 롤백과 기존 이력 보존을 대역에서 검증했다. 200개 헤더/평면 BOM 비교, RapidFuzz 48건 회귀, OpenAPI/Schema 통과.
+- 보조 PC의 실제 PostgreSQL과 마이그레이션 적용은 미실행이다. 기존 0009를 위한 새 SQL 시험은 `--no-db`에서 제외됐다.
+
+**기술적 결정**
+- 선택 정보는 기존 불변 JSONB manifest에 저장한다. 별도 시스템이나 migration을 추가하지 않는다. 같은 정규 CSV의 중복과 업무 수요 키의 승인 충돌은 기존 정책을 적용한다.
+
+**남은 문제**
+- 기존 개발 PC의 실제 SQL 제약·동시성 검증 및 나미님 화면 연계가 남았다. 이 연동은 기존 합성 판매 정책의 월수요 변환에 적용된다.
+
+**관련 자료**
+- [검증 및 PostgreSQL 체크리스트](XLSX_SELECTION_PERSISTENCE_VERIFICATION.md), [프론트엔드 인계](XLSX_SELECTION_PERSISTENCE_HANDOFF.md), [기존 이력 계약](INGESTION_INTEGRATION_HISTORY.md).

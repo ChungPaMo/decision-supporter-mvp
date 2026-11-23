@@ -1694,6 +1694,23 @@
               "title": "Filename",
               "type": "string"
             },
+            "resolved_columns": {
+              "anyOf": [
+                {
+                  "additionalProperties": {
+                    "maximum": 64,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Resolved Columns"
+            },
             "row_count": {
               "title": "Row Count",
               "type": "integer"
@@ -2507,6 +2524,23 @@
               "title": "Filename",
               "type": "string"
             },
+            "resolved_columns": {
+              "anyOf": [
+                {
+                  "additionalProperties": {
+                    "maximum": 64,
+                    "minimum": 1,
+                    "type": "integer"
+                  },
+                  "type": "object"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Resolved Columns"
+            },
             "row_count": {
               "title": "Row Count",
               "type": "integer"
@@ -3143,6 +3177,75 @@
         "last_col"
       ],
       "title": "XlsxTableSelection",
+      "type": "object"
+    },
+    "XlsxTableSelections": {
+      "$defs": {
+        "XlsxTableSelection": {
+          "additionalProperties": false,
+          "properties": {
+            "data_end_row": {
+              "maximum": 100000,
+              "minimum": 1,
+              "title": "Data End Row",
+              "type": "integer"
+            },
+            "data_start_row": {
+              "maximum": 100000,
+              "minimum": 1,
+              "title": "Data Start Row",
+              "type": "integer"
+            },
+            "first_col": {
+              "maximum": 64,
+              "minimum": 1,
+              "title": "First Col",
+              "type": "integer"
+            },
+            "header_row": {
+              "maximum": 100000,
+              "minimum": 1,
+              "title": "Header Row",
+              "type": "integer"
+            },
+            "last_col": {
+              "maximum": 64,
+              "minimum": 1,
+              "title": "Last Col",
+              "type": "integer"
+            },
+            "sheet": {
+              "maxLength": 31,
+              "minLength": 1,
+              "title": "Sheet",
+              "type": "string"
+            },
+            "source_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "title": "Source Sha256",
+              "type": "string"
+            }
+          },
+          "required": [
+            "source_sha256",
+            "sheet",
+            "header_row",
+            "data_start_row",
+            "data_end_row",
+            "first_col",
+            "last_col"
+          ],
+          "title": "XlsxTableSelection",
+          "type": "object"
+        }
+      },
+      "description": "JSON object keyed by the zero-based multipart source index.",
+      "patternProperties": {
+        "^[0-7]$": {
+          "$ref": "#/$defs/XlsxTableSelection"
+        }
+      },
+      "title": "XlsxTableSelections",
       "type": "object"
     }
   }

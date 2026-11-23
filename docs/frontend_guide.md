@@ -1,6 +1,6 @@
 # 프론트엔드 연동 안내
 
-`/ingest/xlsx-layout`에서 시트 목록과 원본 좌표의 구조를 확인한 뒤 `table_selection`을 보내 선택 표를 다시 분석한다. 범위 선택에 따른 변환은 미리보기에서 검토한다. [나미님 범위 선택 UI 계약](XLSX_TABLE_SELECTION_HANDOFF.md)
+`/ingest/xlsx-layout`에서 시트 목록과 원본 좌표의 구조를 확인한 뒤 `table_selection`을 보내 선택 표를 다시 분석한다. 변환 미리보기 검토 후 동일한 범위와 지문으로 `/ingest/transformations`에 저장하고 반환 배치에서 기존 승인 절차를 진행한다. [범위 선택 UI 계약](XLSX_TABLE_SELECTION_HANDOFF.md) · [저장·승인 인계](XLSX_SELECTION_PERSISTENCE_HANDOFF.md)
 
 선택 오류는 `XLSX_SOURCE_CHANGED`, `XLSX_SHEET_INVALID`, `XLSX_RANGE_INVALID`, `XLSX_MERGED_RANGE`, `XLSX_HEADER_INVALID`로 표시한다.
 

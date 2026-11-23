@@ -4,7 +4,7 @@ from pydantic import Field, model_validator
 from .base import StrictModel
 from .dataset import DatasetId
 from .modules import ClassificationOutput
-from .xlsx import XlsxTableSelection
+from .xlsx import Column, XlsxTableSelection
 
 INGESTION_VERSION = 'ingestion-assistance-0.1'
 Entity = Literal['product', 'material', 'monthly_demand', 'bom', 'inventory']
@@ -185,6 +185,7 @@ class TransformSource(StrictModel):
     sha256: str
     row_count: int
     table_selection: XlsxTableSelection | None = Field(default=None, exclude_if=lambda value: value is None)
+    resolved_columns: dict[str, Column] | None = Field(default=None, exclude_if=lambda value: value is None)
 
 
 class TransformedDemand(StrictModel):

@@ -8,12 +8,16 @@ from sqlalchemy.exc import DBAPIError
 import pytest
 
 from app.batches.service import BatchService
+from app.batches.repository import RepositoryError
 from app.batches.sql_repository import SqlBatchRepository
 from app.dataset_schema_v2 import schema_for
+from app.errors import ApiError
 from app.ingest.history import TransformationService
-from app.ingest.history_repository import SqlTransformationRepository
+from app.ingest.history_repository import SqlTransformationRepository, SqlTransformationTx
 from app.ingest.transformation import transform
+from contracts.interfaces.xlsx import XlsxTableSelection
 from tests.test_ingestion_history import sales, policy
+from tests.test_xlsx_transformation_history import bounds, selected_workbook
 
 
 class RollbackEngine:
@@ -84,3 +88,65 @@ def test_postgres_new_dataset_provisions_history_tables_and_local_foreign_keys(c
         JOIN pg_namespace n ON n.oid=t.relnamespace JOIN pg_class r ON r.oid=k.confrelid
         JOIN pg_namespace rn ON rn.oid=r.relnamespace WHERE n.nspname=:s AND k.contype='f' '''), {'s': schema}).all()
     assert all(namespace == schema or (namespace == 'public' and table == 'dataset') for namespace, table in refs)
+
+
+def test_postgres_selected_xlsx_history_replay_approval_and_rollback(conn, monkeypatch):
+    engine = RollbackEngine(conn, 'CHUNGPAMO-2027')
+    batches = BatchService(SqlBatchRepository(engine))
+    history = TransformationService(SqlTransformationRepository(engine))
+    product = batches.create_batch('p.csv', b'product_id,product_name,base_unit\nP1,Synthetic,EA\n',
+        entity='product', source_type='SYNTHETIC', source_note='Selected XLSX history regression')
+    batches.approve(product.batch_id, approved_by='TEST-REVIEWER', expected_result_digest=product.result_digest)
+    files = selected_workbook()
+    recipe = policy()
+
+    def stage(sheet, end=6):
+        selections = {0: XlsxTableSelection.model_validate(bounds(files, sheet=sheet, data_end_row=end))}
+        preview = transform(files, recipe, selections=selections)
+        return history.create(files, recipe, preview.result_digest, 'Selected XLSX probe', 'TEST-REVIEWER', selections=selections)
+
+    first, reused = stage('January', 8)
+    assert not reused and first.batch_status == 'READY_FOR_APPROVAL'
+    conn.exec_driver_sql('SET CONSTRAINTS ALL IMMEDIATE')
+    conn.exec_driver_sql('SET CONSTRAINTS ALL DEFERRED')
+    assert stage('January', 8)[0].transformation_id == first.transformation_id
+    view = history.get(first.transformation_id)
+    assert view.preview.sources[0].table_selection.sheet == 'January'
+    assert view.preview.sources[0].resolved_columns['quantity'] == 5
+    assert [item.row for item in view.preview.records[0].source_locations] == [6, 8]
+    assert batches.list_approved_demand(None, None, None, 10, 0)[1] == 0
+    batch = batches.get_batch(first.batch_id)
+    validated = batches.revalidate(batch.batch_id, expected_version=batch.version, column_overrides={}, default_unit=None, sheet=None)
+    batches.approve(batch.batch_id, approved_by='TEST-REVIEWER', expected_result_digest=validated.result_digest)
+    conn.exec_driver_sql('SET CONSTRAINTS ALL IMMEDIATE')
+    conn.exec_driver_sql('SET CONSTRAINTS ALL DEFERRED')
+    assert history.get(first.transformation_id).batch_status == 'APPROVED'
+    assert batches.list_approved_demand(None, None, None, 10, 0)[1] == 1
+    other = TransformationService(SqlTransformationRepository(RollbackEngine(conn, 'TISSUE-LEGACY')))
+    with pytest.raises(ApiError) as exc:
+        other.get(first.transformation_id)
+    assert exc.value.status == 404
+
+    tables = ('import_batch', 'batch_source_file', 'ingestion_transformation', 'ingestion_transform_source', 'monthly_demand')
+    schema = schema_for(engine.dataset_id)
+
+    def counts():
+        return [conn.exec_driver_sql(f'SELECT count(*) FROM "{schema}".{table}').scalar_one() for table in tables]
+
+    before = counts()
+    original_insert = SqlTransformationTx.insert_transformation
+
+    def fail_after_insert(tx, record, inputs):
+        original_insert(tx, record, inputs)
+        raise RepositoryError('Injected failure after all history inserts')
+
+    with monkeypatch.context() as patch:
+        patch.setattr(SqlTransformationTx, 'insert_transformation', fail_after_insert)
+        with pytest.raises(ApiError) as exc:
+            stage('February')
+        assert exc.value.code == 'PERSISTENCE_ERROR'
+    assert counts() == before and history.get(first.transformation_id).manifest_digest == first.manifest_digest
+    second, reused = stage('February')
+    assert not reused and second.input_digest != first.input_digest
+    assert second.preview.sources[0].sha256 == first.preview.sources[0].sha256
+    conn.exec_driver_sql('SET CONSTRAINTS ALL IMMEDIATE')

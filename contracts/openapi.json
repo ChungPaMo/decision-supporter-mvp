@@ -822,6 +822,30 @@
             "title": "Source Note",
             "type": "string"
           },
+          "table_selection": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "JSON XlsxTableSelection when exactly one file is uploaded",
+            "title": "Table Selection"
+          },
+          "table_selections": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "JSON object from zero-based upload index to XlsxTableSelection",
+            "title": "Table Selections"
+          },
           "use_approved_master": {
             "default": false,
             "title": "Use Approved Master",
@@ -990,6 +1014,18 @@
           "policy": {
             "title": "Policy",
             "type": "string"
+          },
+          "table_selection": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "JSON XlsxTableSelection when exactly one file is uploaded",
+            "title": "Table Selection"
           },
           "table_selections": {
             "anyOf": [
@@ -8078,6 +8114,22 @@
           "filename": {
             "title": "Filename",
             "type": "string"
+          },
+          "resolved_columns": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "maximum": 64.0,
+                  "minimum": 1.0,
+                  "type": "integer"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved Columns"
           },
           "row_count": {
             "title": "Row Count",

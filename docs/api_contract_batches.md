@@ -1,6 +1,6 @@
 # 배치 API 계약 v0.3 — 업로드 · 검증 · 승인 (monthly_demand, product, material, bom, inventory)
 
-2026-11-23: 엑셀 `table_selection`은 분석 API에만 적용한다. 배치 생성·승인 및 변환 이력 저장은 기존 입력 계약을 사용한다. `XLSX_SOURCE_CHANGED`, `XLSX_SHEET_INVALID`, `XLSX_RANGE_INVALID`, `XLSX_MERGED_RANGE`, `XLSX_HEADER_INVALID`의 계약은 [엑셀 선택 인계](XLSX_TABLE_SELECTION_HANDOFF.md)를 따른다.
+2026-11-23: 분석에서 확인한 XLSX 선택 범위를 `POST /ingest/transformations`로 명시적 저장할 수 있다. 반환된 정규 월수요 배치는 기존 재검증·승인 계약을 사용한다. `XLSX_SOURCE_CHANGED`, `XLSX_SHEET_INVALID`, `XLSX_RANGE_INVALID`, `XLSX_MERGED_RANGE`, `XLSX_HEADER_INVALID`의 계약은 [엑셀 저장·승인 인계](XLSX_SELECTION_PERSISTENCE_HANDOFF.md)를 따른다.
 
 2026-11-16: [변환 이력 연결](INGESTION_INTEGRATION_HISTORY.md)의 명시적 저장 API는 기존 BatchService로 승인 전 월수요 배치를 만든다. 신규 0009가 필요하며 이번 PC에서는 실DB 미적용이다. 변환 digest를 승인에 사용하지 않고 기존 배치 digest와 승인·재검증 게이트를 유지한다. 연결 배치의 canonical 열 설정을 바꾸면 TRANSFORM_BLOCKED 409다. 선택 데이터셋 내 변환 이력 없음은 TRANSFORM_NOT_FOUND 404다.
 

@@ -1,7 +1,7 @@
 """Coordinates are 1-based indexes in the original workbook."""
 from typing import Annotated, Literal
 
-from pydantic import Field, model_validator
+from pydantic import Field, RootModel, model_validator
 
 from .base import StrictModel
 
@@ -25,6 +25,10 @@ class XlsxTableSelection(StrictModel):
         if not self.header_row < self.data_start_row <= self.data_end_row or self.first_col > self.last_col:
             raise ValueError('Specify an ordered header, body rows and column interval')
         return self
+
+
+class XlsxTableSelections(RootModel[dict[Annotated[str, Field(pattern=r'^[0-7]$')], XlsxTableSelection]]):
+    """JSON object keyed by the zero-based multipart source index."""
 
 
 class XlsxSheetLayout(StrictModel):

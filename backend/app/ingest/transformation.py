@@ -170,9 +170,12 @@ def transform_complete(files: list[tuple[str, bytes]], policy: SalesTransformPol
         for source_index, ((filename, data), sha) in enumerate(zip(files, hashes)):
             file_rows = 0
             selection = selections.get(source_index)
+            resolved_columns = None
             for sheet_name, header, rows, first_col in source_rows(filename, data, selection):
                 columns = resolve_columns(header, policy, first_col)
                 source_columns = {key: index + (first_col or 1) for key, index in columns.items()}
+                if selection is not None:
+                    resolved_columns = source_columns
                 for row_number, cells in rows:
                     counts['source_rows'] += 1
                     file_rows += 1
@@ -250,7 +253,8 @@ def transform_complete(files: list[tuple[str, bytes]], policy: SalesTransformPol
                         totals['returns'] += qty
                         returns[group_key] += qty
             sources.append(TransformSource(source_index=source_index, filename=os.path.basename(filename.replace('\\', '/'))[:200],
-                                           sha256=sha, row_count=file_rows, table_selection=selection))
+                                           sha256=sha, row_count=file_rows, table_selection=selection,
+                                           resolved_columns=resolved_columns))
         output = [TransformedDemand(product_id=product, period=period, demand_qty=decimal_text(item.quantity),
                    source_row_count=item.count, source_locations=item.locations) for (product, period), item in sorted(groups.items())]
         # The final aggregate must still satisfy the existing storage contract's precision/range.
@@ -279,7 +283,6 @@ def transform_complete(files: list[tuple[str, bytes]], policy: SalesTransformPol
     input_identity = {'sources': hashes, 'policy': policy_hash, 'dataset_id': policy.dataset_id, 'master_digest': reference_hash}
     if selections:
         input_identity['table_selections'] = {index: item.model_dump(mode='json') for index, item in selections.items()}
-        warnings.add('XLSX_TABLE_SELECTION_PREVIEW_ONLY')
     input_hash = digest(input_identity)
     result_hash = digest({'input': input_hash, 'counts': counts, 'reconciliation': reconciliation,
                           'records': [row.model_dump(mode='json') for row in output],

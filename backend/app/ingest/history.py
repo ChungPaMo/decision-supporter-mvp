@@ -14,6 +14,7 @@ from app.ingest.transformation import digest, transform_complete
 from app.ingest.validation import KnownMaterial, KnownProduct, MasterData
 from contracts.interfaces.ingestion import SalesTransformPolicy, TransformReply
 from contracts.interfaces.ingestion_history import TransformationDetail
+from contracts.interfaces.xlsx import XlsxTableSelection
 
 ENGINE_VERSION = 'synthetic-sales-reducer-1.0'
 
@@ -62,7 +63,8 @@ class TransformationService:
         with BatchService(self.repo)._tx() as tx:
             yield tx
 
-    def create(self, files, policy, expected_result_digest, source_note, created_by, use_approved_master=False):
+    def create(self, files, policy, expected_result_digest, source_note, created_by, use_approved_master=False, *,
+               selections: dict[int, XlsxTableSelection] | None = None):
         actor = _check_actor(created_by, '변환 검토자')
         if not source_note or not source_note.strip() or len(source_note) > 1000:
             raise ApiError(422, ErrorCode.SOURCE_NOTE_REQUIRED, 'Bounded synthetic source description is required.')
@@ -78,7 +80,7 @@ class TransformationService:
                 {row.product_id: row for row in tx.list_known_products()},
                 {row.material_id: row for row in tx.list_known_materials()})) if use_approved_master else None
             try:
-                result = transform_complete(files, policy, master)
+                result = transform_complete(files, policy, master, selections=selections)
             except FileError as exc:
                 raise ApiError(exc.http_status, ErrorCode(exc.code), exc.message) from None
             if result.result_digest != expected_result_digest:
@@ -131,7 +133,8 @@ class TransformationService:
         preview = result.model_copy(update={'offset': offset, 'limit': limit,
             'records': result.records[offset:offset + limit], 'returns': result.returns[offset:offset + limit]})
         batch = tx.get_batch(record['batch_id'])
-        if batch is None or batch.dataset_id != record['dataset_id'] or batch.source_sha256 != record['output_sha256']:
+        if (batch is None or batch.dataset_id != record['dataset_id'] or batch.source_sha256 != record['output_sha256']
+                or tx.get_file(batch.batch_id) != canonical_csv(result)):
             raise ApiError(500, ErrorCode.PERSISTENCE_ERROR, 'Transformation batch evidence is inconsistent.')
         return TransformationDetail(**{k: v for k, v in record.items() if k != 'manifest'},
             created_by=record['manifest']['created_by'], engine_version=record['manifest']['engine_version'],
@@ -153,15 +156,19 @@ def verify_evidence(record, files):
         require(result.input_digest == record['input_digest'] and result.result_digest == record['result_digest'])
         require(result.total == len(result.records) and result.returns_total == len(result.returns))
         require(len(files) == len(result.sources))
+        selections = {}
         for index, ((name, content), source) in enumerate(zip(files, result.sources)):
             require(source.source_index == index and source.filename == name)
             require(hashlib.sha256(content).hexdigest() == source.sha256)
+            if source.table_selection is not None:
+                require(source.table_selection.source_sha256 == source.sha256)
+                selections[index] = source.table_selection
         output = canonical_csv(result)
         require(hashlib.sha256(output).hexdigest() == manifest['output_sha256'] == record['output_sha256'])
         master = restore_master(manifest['master_snapshot'])
         require(master_digest(master) == result.master_digest)
         # Recompute using the preserved reference snapshot, never today's mutable master.
-        replay = transform_complete(files, SalesTransformPolicy.model_validate(result.policy), master)
+        replay = transform_complete(files, SalesTransformPolicy.model_validate(result.policy), master, selections=selections)
         require(replay.model_dump() == result.model_dump())
     except (KeyError, ValueError, TypeError, AttributeError, FileError):
         raise ApiError(500, ErrorCode.PERSISTENCE_ERROR, 'Stored transformation integrity verification failed.') from None

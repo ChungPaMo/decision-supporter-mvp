@@ -14,7 +14,7 @@ from app.ingest.validation import MasterData
 from app.ingest.xlsx_layout import inspect_xlsx
 from app.errors import ERROR_RESPONSES
 from contracts.interfaces.ingestion import ClassifiedMappingReply, Entity, MappingReply, ProfileReply, SalesTransformPolicy, TransformReply
-from contracts.interfaces.xlsx import XlsxLayoutReply, XlsxTableSelection
+from contracts.interfaces.xlsx import XlsxLayoutReply, XlsxTableSelection, XlsxTableSelections
 
 router = APIRouter(prefix='/ingest', tags=['ingest-assistance'], responses=ERROR_RESPONSES)
 
@@ -75,6 +75,27 @@ async def parse_table_selection(request: Request, value: str | None):
     return None if value is None else validate_table_selection(parse_json_object(value, 'XLSX_RANGE_INVALID'))
 
 
+async def parse_transform_selections(request: Request, file_count: int, table_selection: str | None,
+                                     table_selections: str | None) -> dict[int, XlsxTableSelection]:
+    table_selection = await optional_range_form(request, 'table_selection', table_selection)
+    table_selections = await optional_range_form(request, 'table_selections', table_selections)
+    if table_selection is not None:
+        if file_count != 1 or table_selections is not None:
+            raise HTTPException(422, {'code': 'XLSX_RANGE_INVALID', 'message': 'Use one table_selection for one file, or table_selections by source index.'})
+        return {0: validate_table_selection(parse_json_object(table_selection, 'XLSX_RANGE_INVALID'))}
+    if table_selections is None:
+        return {}
+    raw = parse_json_object(table_selections, 'XLSX_RANGE_INVALID')
+    try:
+        indexed = XlsxTableSelections.model_validate(raw).root
+    except ValidationError:
+        raise HTTPException(422, {'code': 'XLSX_RANGE_INVALID', 'message': 'Each source index must have one valid XLSX range.'}) from None
+    selections = {int(index): item for index, item in indexed.items()}
+    if selections.keys() - range(file_count):
+        raise HTTPException(422, {'code': 'XLSX_RANGE_INVALID', 'message': 'Each selection must name an uploaded source index.'})
+    return selections
+
+
 @router.post('/xlsx-layout', response_model=XlsxLayoutReply, summary='List worksheets and inspect a bounded source cell window')
 async def xlsx_layout(file: UploadFile = File(...), sheet: str | None = Query(None, min_length=1, max_length=31),
                       row_start: int = Query(1, ge=1, le=100_000), row_limit: int = Query(20, ge=1, le=50),
@@ -113,6 +134,7 @@ async def mapping_suggestions(request: Request, dataset_id: Dataset, master: Mas
 
 @router.post('/transform-preview', response_model=TransformReply, summary='Synthetic sales policy preview; no batch creation or approval')
 async def transform_preview(request: Request, dataset_id: Dataset, master: Master, policy: str = Form(...), files: list[UploadFile] = File(...),
+                            table_selection: str | None = Form(None, description='JSON XlsxTableSelection when exactly one file is uploaded'),
                             table_selections: str | None = Form(None, description='JSON object from zero-based upload index to XlsxTableSelection'),
                             offset: int = Query(0, ge=0), limit: int = Query(500, ge=1, le=500)):
     body = parse_json_object(policy, 'TRANSFORM_POLICY_INVALID')
@@ -124,13 +146,7 @@ async def transform_preview(request: Request, dataset_id: Dataset, master: Maste
         raise HTTPException(409, {'code': 'DATASET_MISMATCH', 'message': 'Policy and selected dataset must agree.'})
     if len(files) > MAX_FILES:
         raise HTTPException(413, {'code': 'ANALYSIS_LIMIT', 'message': 'At most 8 source files.'})
-    table_selections = await optional_range_form(request, 'table_selections', table_selections)
-    selections = {}
-    if table_selections is not None:
-        raw = parse_json_object(table_selections, 'XLSX_RANGE_INVALID')
-        if raw.keys() - {str(index) for index in range(len(files))}:
-            raise HTTPException(422, {'code': 'XLSX_RANGE_INVALID', 'message': 'Each selection must name an uploaded source index.'})
-        selections = {int(index): validate_table_selection(body) for index, body in raw.items()}
+    selections = await parse_transform_selections(request, len(files), table_selection, table_selections)
     data, total = [], 0
     for file in files:
         content = await file.read(MAX_BYTES + 1)

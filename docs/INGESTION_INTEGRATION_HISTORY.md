@@ -1,5 +1,7 @@
 # 파일 분류·매핑·변환 이력 연결
 
+> 2026-11-23: XLSX의 `table_selection`/`table_selections`는 미리보기와 저장에 공통으로 적용한다. 선택 범위와 역할별 원본 열 위치는 기존 불변 manifest의 `result.sources[]`에 보존한다. 새 마이그레이션은 필요하지 않으며 저장 후 기존 배치 승인으로 이어진다. [요청·오류·화면 인계](XLSX_SELECTION_PERSISTENCE_HANDOFF.md) · [비DB 검증·PostgreSQL 체크리스트](XLSX_SELECTION_PERSISTENCE_VERIFICATION.md)
+
 2026-11-16, 기준 main `0762ebff937a3e4cebbd63f608d9fd0963bf024c`. 김대영 담당 backend/contracts/tests/scripts/docs만 수정한다. 분류기·계획 엔진·frontend 구현은 변경하지 않았다.
 
 ## 분류와 매핑

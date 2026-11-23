@@ -46,4 +46,4 @@
 | 422 `XLSX_HEADER_INVALID` | 정규화 시 중복되는 열 이름, 수식·오류 또는 헤더가 없는 행을 확인한다. |
 | 415 `UNSUPPORTED_TYPE`, 413 `ANALYSIS_LIMIT`/`FILE_TOO_LARGE` | XLSX 여부와 용량·행열 한도를 확인한다. |
 
-선택 범위는 미리보기용이다. 응답의 `persisted=false`를 표시하고 `XLSX_TABLE_SELECTION_PREVIEW_ONLY` 경고가 있는 변환은 저장 버튼을 비활성화한다. `/batches`, 재검증·승인, `/ingest/transformations`의 저장 경로는 범위 저장을 지원하지 않는다. 선택형 변환 지문은 기본 파싱 결과의 지문과 구분된다. [OpenAPI](../contracts/openapi.json) · [응답·요청 스키마](../contracts/schemas/ingestion_assistance_v1.json)
+선택형 변환은 기존 `/ingest/transformations`로 명시적 저장을 요청할 수 있다. 저장과 승인의 버튼 상태 및 지문 사용은 [나미님 저장·승인 인계](XLSX_SELECTION_PERSISTENCE_HANDOFF.md)를 따른다. 일반 `/batches` 원본 업로드에는 선택 범위를 보내지 않는다. [OpenAPI](../contracts/openapi.json) · [응답·요청 스키마](../contracts/schemas/ingestion_assistance_v1.json)
