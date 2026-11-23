@@ -116,7 +116,11 @@ function BatchPanel({ batch, disabled, act, linked }: { batch: BatchDetail; disa
     {batch.status === 'REJECTED' && <Notice tone="muted">{batch.rejected_by} 반려 · 사유: {batch.reject_reason}</Notice>}
     {!finished && <fieldset className="stack review-fields" disabled={disabled}>
       <legend>재검증 설정</legend>
-      {linked ? <Notice tone="muted">판매 원장 변환으로 만든 배치는 열 설정을 바꿀 수 없습니다. 설정을 바꾸려면 변환 정책을 다시 확인하고 새로 저장하세요.</Notice> : <>
+      {linked ? <>
+        <Notice tone="muted">판매 원장 변환으로 만든 배치는 열 설정을 바꿀 수 없습니다. 범위나 열을 바꾸려면 변환 미리보기와 저장을 새로 하세요. 제품 등 기준정보를 승인한 뒤에는 같은 설정으로 다시 검증할 수 있습니다.</Notice>
+        <button className="button" type="button" onClick={() => void act(() => apiClient.revalidateBatch(batch.batch_id, {
+          expected_version: batch.version, column_overrides: {}, default_unit: null, sheet: null,
+        }))}>서버 재검증</button></> : <>
       {holds.map((hold, i) => <label className="field" key={`${hold.field}-${i}`}><span>{hold.message}</span>
         <input aria-label={`${hold.field} 매핑 열`} list={`columns-${i}`} value={overrides[hold.field] ?? ''}
           onChange={(e) => setOverrides({ ...overrides, [hold.field]: e.target.value })} placeholder="원본 헤더 또는 열 문자" />

@@ -28,6 +28,9 @@ const short = (digest: string) => `${digest.slice(0, 16)}…`;
 const failure = (error: unknown) => {
   const detail = (error as { detail?: { code?: string; message?: string } })?.detail;
   if (detail?.code === 'PERSISTENCE_DISABLED') return `서버 저장 기능이 꺼져 있어 저장·이력 조회를 할 수 없습니다. 저장된 것으로 표시하지 않습니다. (${detail.code})`;
+  if (detail?.code === 'RESULT_CHANGED') return `원본·범위·정책·승인 마스터 중 하나가 검토한 미리보기와 다릅니다. 변환 미리보기를 다시 실행하고 확인한 뒤 저장하세요. (${detail.code})`;
+  if (detail?.code === 'TRANSFORM_BLOCKED') return `정책을 확인하지 않았거나, 오류가 있거나, 정상 월별 수요가 없어 저장할 수 없습니다. (${detail.code})`;
+  if (detail?.code === 'DUPLICATE_UPLOAD') return `같은 월별 수요 결과가 이미 등록되어 있습니다. 변환 이력에서 기존 배치를 확인하세요. (${detail.code})`;
   if (detail?.code === 'TRANSFORM_MAPPING_HOLD') return `필수 열을 찾지 못했습니다. 열 지정을 확인하세요. 범위를 지정했다면 그 범위의 헤더 이름이나 열 문자(예: C)를 입력합니다. (${detail.code})`;
   if (/^XLSX_|ANALYSIS_LIMIT|FILE_TOO_LARGE|UNSUPPORTED_TYPE/.test(detail?.code ?? '')) return rangeFailure(error);
   return detail?.code ? `${detail.message ?? '요청이 거부되었습니다.'} (${detail.code})` : errorMessage(error);
@@ -97,7 +100,7 @@ export default function SalesTransformPanel({ canUseMaster, disabled, onBatch }:
     const ticket = ++seq.current;
     setBusy(true); setError('');
     try { await job(ticket); }
-    catch (problem) { if (alive.current && ticket === seq.current && (problem as { detail?: { code?: string } })?.detail?.code !== 'DATASET_CHANGED') setError(failure(problem)); }
+    catch (problem) { if (alive.current && ticket === seq.current && (problem as { detail?: { code?: string } })?.detail?.code !== 'DATASET_CHANGED') { setError(failure(problem)); if (['RESULT_CHANGED', 'XLSX_SOURCE_CHANGED'].includes((problem as { detail?: { code?: string } })?.detail?.code ?? '')) setPreview(null); } }
     finally { if (alive.current && ticket === seq.current) setBusy(false); }
   }
   async function loadHistory() {
@@ -172,7 +175,7 @@ export default function SalesTransformPanel({ canUseMaster, disabled, onBatch }:
       <button type="button" className="button primary" disabled={!canSave} onClick={() => void save()}>변환 이력 저장 · 배치 생성</button>
       {(preview.status !== 'TRANSFORMED_PREVIEW' || preview.issues_total > 0 || preview.total === 0) && <p className="muted">상태가 "변환 미리보기 완료"이고 오류가 0건이며 월별 수요가 1행 이상일 때만 저장할 수 있습니다.</p>}
     </fieldset>}
-    {saved && <Notice tone="ok">변환 이력 저장 완료 ({saved.reused ? '같은 이력 재사용 · 200' : '신규 · 201'}). 배치 {saved.detail.batch_id} · 상태 {saved.detail.batch_status}. 아직 승인되지 않았습니다. 아래 배치에서 검증 결과를 확인하고 승인하세요.</Notice>}
+    {saved && <Notice tone="ok">변환 이력 저장 완료 ({saved.reused ? '같은 이력 재사용 · 200' : '신규 · 201'}). 배치 {saved.detail.batch_id} · 상태 {saved.detail.batch_status}. {saved.detail.batch_status === 'APPROVED' ? '이 배치는 이미 승인되어 있습니다.' : saved.detail.batch_status === 'REJECTED' ? '이 배치는 반려된 상태입니다.' : '아직 승인되지 않았습니다. 아래 배치에서 검증 결과를 확인하고 승인하세요.'}</Notice>}
 
     <div className="stack"><div className="panel-heading"><h4>변환 이력</h4><button type="button" className="button" disabled={disabled || busy} onClick={() => void loadHistory()}>변환 이력 새로고침</button></div>
       {historyError && <Notice tone="warn">{historyError}</Notice>}

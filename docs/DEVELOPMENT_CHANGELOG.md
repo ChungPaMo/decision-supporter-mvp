@@ -855,3 +855,28 @@
 **관련 자료**
 - [표 범위 선택 인계](XLSX_TABLE_SELECTION_HANDOFF.md), [저장·승인 인계](XLSX_SELECTION_PERSISTENCE_HANDOFF.md)
 
+### 2026-11-23 — 선택 범위 변환의 저장·재검증·승인 화면 보완 (frontend)
+
+**Git**
+- 시작 Commit `d4cac67`.
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='fix(frontend): revalidate transformation-linked batches and clarify save errors'`로 확인한다.
+- 브랜치 `main`.
+
+**작업 목적**
+- 김대영의 저장·승인 연동 완료 안내에 따라 [저장·승인 인계](XLSX_SELECTION_PERSISTENCE_HANDOFF.md)와 화면을 다시 대조한다. 저장 버튼은 `d4cac67`에서 이미 문서 조건으로 활성화되어 있었다.
+
+**구현 내용**
+- `DataUploadScreen.tsx`: 변환 연결 배치에 `column_overrides={}`, `default_unit=null`, `sheet=null` 고정 설정의 "서버 재검증" 추가(열 입력은 계속 막음).
+- `SalesTransformPanel.tsx`: RESULT_CHANGED·TRANSFORM_BLOCKED·DUPLICATE_UPLOAD 안내, RESULT_CHANGED·XLSX_SOURCE_CHANGED 시 검토한 미리보기 폐기, 재사용 이력의 배치가 이미 승인·반려 상태일 때의 문구 수정.
+
+**검증 결과**
+- 2026-11-23 보조 PC. type-check, Vite build 통과.
+- 이 PC의 로컬 PostgreSQL에서 실제 백엔드로 Playwright(Edge) 확인: 범위 변환 저장 201 → 연결 배치 재검증 200(버전 2) → 화면 승인 9건 → 같은 입력 재저장 200 재사용. 문구 수정 후에는 type-check·build만 다시 실행했다.
+- 미실행: `tests/e2e/browser`, RESULT_CHANGED·DUPLICATE_UPLOAD·TRANSFORM_BLOCKED 실제 발생 경로, HAS_ERRORS 배치의 재검증.
+
+**남은 문제**
+- 실제 PostgreSQL 검증은 김대영이 별도 진행. `tests/e2e/browser` 갱신 필요.
+
+**관련 자료**
+- [저장·승인 인계](XLSX_SELECTION_PERSISTENCE_HANDOFF.md)
+
