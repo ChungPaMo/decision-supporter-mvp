@@ -301,7 +301,7 @@ def fig_why_combine(d):
             groups["뜻만 답함"]["맞음" if sem == truth else "틀림"] += 1
     fig, ax = plt.subplots(figsize=(15, 5.2))
     colors = {"맞음": BLUE, "틀림": CRITICAL, "사전이 맞음": YELLOW, "뜻이 맞음": "#f6cf73", "둘 다 틀림": CRITICAL}
-    notes = {"둘이 같은 답": "그대로 분류", "사전만 답함": "사전의 답으로 분류", "뜻만 답함": "뜻의 답으로 분류", "둘이 다른 답": "어느 쪽이 맞는지 알 수 없다 → 사람에게 확인 요청"}
+    notes = {"둘이 같은 답": "그대로 분류", "사전만 답함": "사전의 답으로 분류 (근거가 약하면 확인 요청)", "뜻만 답함": "뜻의 답으로 분류", "둘이 다른 답": "어느 쪽이 맞는지 알 수 없다 → 사람에게 확인 요청"}
     names = list(groups)[::-1]
     for row, name in enumerate(names):
         left = 0

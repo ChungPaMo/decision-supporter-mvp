@@ -176,7 +176,7 @@ def fig_combine():
     ax.text(0.6, 11.6, "두 답을 합치는 규칙", fontsize=21, fontweight="bold", va="center")
     cols = ["뜻 판단이 종류를 정함", "뜻 판단이 미분류", "뜻 판단이 정하지 못함\n(1등과 2등이 비슷)"]
     rows = ["사전이\n종류를 정함", "사전이\n단서 부족 (미분류)", "사전이\n확인 필요"]
-    cells = [[("같은 종류면 그 종류\n다른 종류면 확인 필요", "mix"), ("사전의 종류", "ok"), ("사전의 종류", "ok")],
+    cells = [[("같은 종류면 그 종류\n다른 종류면 확인 필요", "mix"), ("사전의 종류 *", "ok"), ("사전의 종류 *", "ok")],
              [("뜻 판단의 종류", "ok"), ("미분류", "none"), ("확인 필요", "warn")],
              [("뜻 판단의 종류", "ok"), ("확인 필요", "warn"), ("확인 필요", "warn")]]
     x0, y0, cw, rh, lw = 6.4, 8.6, 6.2, 2.25, 5.6
@@ -191,6 +191,7 @@ def fig_combine():
             box(ax, x0 + j * cw + 0.1, y + 0.1, cw - 0.2, rh - 0.2, face, YELLOW if kind == "warn" else face, 1.8)
             ax.text(x0 + j * cw + cw / 2, y + rh / 2, text, fontsize=13, ha="center", va="center",
                     color="white" if kind == "ok" else INK, fontweight="bold", linespacing=1.4)
+    ax.text(0.6, 1.25, "* 사전의 확신이 '높음'이 아니고, 뜻 판단에서 다른 종류의 점수가 더 높으면 확인 필요로 돌린다.", fontsize=11, color=INK2, va="center")
     ax.text(0.6, 0.55, "설명 그림. doctype_embed.combine() 의 규칙을 그대로 옮겼다. 측정값은 '두 방법이 서로를 확인해 준다' 그림에 있다.",
             fontsize=9.5, color=MUTED, va="center")
     save(fig, "r3_combine.png")

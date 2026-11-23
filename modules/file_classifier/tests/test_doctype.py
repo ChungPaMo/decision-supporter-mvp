@@ -106,3 +106,22 @@ def test_both_undecided_stays_undecided():
     from file_classifier.doctype_embed import REVIEW, SemanticResult, combine
     assert combine(_verdict(UNKNOWN, score=0.0), SemanticResult(UNKNOWN, {}, []))[0] == UNKNOWN
     assert combine(_verdict('MPS', needs_review=True), SemanticResult(None, {}, []))[0] == REVIEW
+
+
+def test_weak_rule_answer_is_not_trusted_when_semantic_scores_point_elsewhere():
+    """규칙 혼자 답했고 확신이 높지 않은데, 의미 매칭은 (결론은 못 냈어도) 다른 범주 점수가 더 높으면 확인 필요로 돌린다."""
+    from file_classifier.doctype import Verdict
+    from file_classifier.doctype_embed import REVIEW, SemanticResult, combine
+    undecided = SemanticResult(None, {'ERP': 1.53, 'MES': 1.51, 'CRP': 0.98}, [])
+    assert combine(_verdict('CRP', score=3.0), undecided)[0] == REVIEW
+    # 규칙의 확신이 높으면 그대로 둔다
+    assert combine(Verdict('MES', False, '높음', 7.5, reason='규칙 근거'), undecided)[0] == 'MES'
+    # 다른 범주의 점수가 기준에 못 미치거나 규칙의 범주보다 낮으면 그대로 둔다
+    assert combine(_verdict('CRP', score=3.0), SemanticResult(UNKNOWN, {'ERP': 0.9}, []))[0] == 'CRP'
+    assert combine(_verdict('CRP', score=3.0), SemanticResult(None, {'CRP': 1.6, 'ERP': 1.5}, []))[0] == 'CRP'
+
+
+def test_semantic_minimum_score_means_two_linked_terms():
+    from file_classifier import doctype_embed as de
+    assert de.MIN_SCORE == 2 * de.TAU
+

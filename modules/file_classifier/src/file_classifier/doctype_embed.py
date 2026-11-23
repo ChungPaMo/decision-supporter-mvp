@@ -21,10 +21,11 @@ from dataclasses import dataclass, field
 from .doctype import UNKNOWN, Verdict, _collect
 
 MODEL = "BAAI/bge-m3"
-VERSION = "doctype-embed-0.2.0"
+VERSION = "doctype-embed-0.3.0"
 MAX_TERMS = 90          # 파일 하나에서 보는 낱말 수 상한
 TAU = 0.65              # 낱말과 기준 용어의 유사도가 이 이상일 때만 단서로 센다
-MIN_SCORE = 1.5         # 범주 점수(연결된 기준 용어들의 유사도 합)가 이 이상이어야 한다
+MIN_SCORE = 1.3         # 범주 점수(연결된 기준 용어들의 유사도 합)가 이 이상이어야 한다. 1.3 = TAU × 2: 서로 다른 기준 용어 2개에 연결되면 통과
+                        # (1.5 일 때는 두 낱말이 0.72, 0.69 로 연결된 BOM 구조표가 1.41 점으로 탈락했다. 1.0~1.4 에서는 결과가 같았다)
 MIN_MARGIN = 0.6        # 1순위와 2순위 점수 차이
 # 범주별 기준 용어. 특정 더미 파일의 열 이름이 아니라 업무에서 통용되는 용어로 골랐다.
 CONCEPTS = {
@@ -152,4 +153,10 @@ def combine(verdict: Verdict, semantic: SemanticResult) -> tuple[str, str]:
         return sem, f"규칙은 정하지 못했고, 뜻이 가까운 낱말로 {sem} 로 판단: {near}"
     if sem not in (UNKNOWN, REVIEW, rule):
         return REVIEW, f"규칙은 {rule}, 의미 매칭은 {sem} 로 달라 확인이 필요합니다 ({near})"
+    if sem != rule and verdict.confidence != "높음":
+        # 규칙 혼자 답했는데 확신이 높지 않고, 의미 매칭에서는 다른 범주의 점수가 더 높다 → 규칙의 답을 그대로 믿지 않는다.
+        # ('Work center' 한 낱말로 CRP 라고 답한 SAP 실적 확인 양식이 실제로는 MES 였다)
+        other, top = max(((c, v) for c, v in semantic.scores.items() if c not in (rule, UNKNOWN)), key=lambda kv: kv[1], default=("", 0.0))
+        if top >= MIN_SCORE and top > semantic.scores.get(rule, 0.0):
+            return REVIEW, f"규칙은 {rule} 인데 근거가 약하고, 뜻이 가까운 낱말은 {other} 쪽이 더 많아 확인이 필요합니다"
     return rule, verdict.reason

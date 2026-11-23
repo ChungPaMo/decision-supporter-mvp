@@ -4,7 +4,7 @@
   "BOM": {
    "n": 16,
    "before": 10,
-   "after": 10
+   "after": 16
   },
   "MPS": {
    "n": 14,
@@ -49,16 +49,16 @@
   "wrong": 5
  },
  "semantic": {
-  "ok": 86,
-  "missed": 20,
+  "ok": 95,
+  "missed": 11,
   "review": 3,
   "wrong": 0
  },
  "after": {
-  "ok": 97,
-  "missed": 7,
-  "wrong": 3,
-  "review": 2
+  "ok": 103,
+  "missed": 1,
+  "review": 5,
+  "wrong": 0
  },
  "dropped_methods": {
   "파일을 통째로 비교": 0.25688073394495414,
