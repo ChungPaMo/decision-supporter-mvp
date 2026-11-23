@@ -126,4 +126,5 @@ def recommend(parsed: ParsedFile, entity: str, dataset_id: str, master: ScopedMa
         result.append(MappingSheetReply(sheet=sheet.name, status=status, existing_mapping={name: item.col for name, item in baseline.fields.items()},
                                        suggestions=suggestions, holds=sorted(set(holds))))
     return MappingReply(dataset_id=dataset_id, entity=entity, source_sha256=parsed.sha256,
-                        master_scope=master.dataset_id if master else None, master_digest=analysis.master_digest, sheets=result)
+                        master_scope=master.dataset_id if master else None, master_digest=analysis.master_digest, sheets=result,
+                        table_selection=parsed.table_selection)

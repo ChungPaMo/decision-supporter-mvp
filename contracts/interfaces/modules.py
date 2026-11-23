@@ -2,6 +2,7 @@
 from typing import Annotated, Literal, Protocol
 from pydantic import Field, model_validator
 from .base import StrictModel, Code, DecimalValue
+from .xlsx import XlsxTableSelection
 
 Entity = Literal['product', 'material', 'bom', 'inventory', 'monthly_demand']
 HoldKind = Literal['NEEDS_TRANSFORM', 'OTHER_ROUTE', 'AMBIGUOUS', 'UNKNOWN']
@@ -57,6 +58,7 @@ class ClassificationOutput(StrictModel):
     module_version: str = Field(min_length=1, max_length=80)
     hold_kind: HoldKind | None = None
     registration_hint: RegistrationHint | None = None
+    table_selection: XlsxTableSelection | None = Field(default=None, exclude_if=lambda value: value is None)
 
     @model_validator(mode='after')
     def recommendation_is_candidate(self):

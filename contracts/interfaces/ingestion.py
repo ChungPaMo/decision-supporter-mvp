@@ -4,6 +4,7 @@ from pydantic import Field, model_validator
 from .base import StrictModel
 from .dataset import DatasetId
 from .modules import ClassificationOutput
+from .xlsx import XlsxTableSelection
 
 INGESTION_VERSION = 'ingestion-assistance-0.1'
 Entity = Literal['product', 'material', 'monthly_demand', 'bom', 'inventory']
@@ -49,6 +50,7 @@ class ProfileReply(StrictModel):
     master_digest: str | None
     samples_included: bool
     sheets: list[ProfileSheet]
+    table_selection: XlsxTableSelection | None = Field(default=None, exclude_if=lambda value: value is None)
     approval_required: Literal[True] = True
     auto_approve: Literal[False] = False
     persisted: Literal[False] = False
@@ -84,6 +86,7 @@ class MappingReply(StrictModel):
     master_scope: DatasetId | None
     master_digest: str | None
     sheets: list[MappingSheetReply]
+    table_selection: XlsxTableSelection | None = Field(default=None, exclude_if=lambda value: value is None)
     saved_rule_storage: Literal['NOT_IMPLEMENTED'] = 'NOT_IMPLEMENTED'
     approval_required: Literal[True] = True
     auto_approve: Literal[False] = False
@@ -181,6 +184,7 @@ class TransformSource(StrictModel):
     filename: str
     sha256: str
     row_count: int
+    table_selection: XlsxTableSelection | None = Field(default=None, exclude_if=lambda value: value is None)
 
 
 class TransformedDemand(StrictModel):

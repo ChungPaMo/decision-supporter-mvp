@@ -125,6 +125,10 @@ class SheetMapping:
 
 def _find_override(sheet: ParsedSheet, ref: str):
     ref = ref.strip()
+    if sheet.explicit_range:
+        absolute = next((h for h in sheet.header if ref == col_letter(h.col)), None)
+        if absolute is not None:
+            return absolute
     for h in sheet.header:
         if ref == col_letter(h.col) or ref in h.labels or norm_header(ref) in {norm_header(x) for x in h.labels}:
             return h

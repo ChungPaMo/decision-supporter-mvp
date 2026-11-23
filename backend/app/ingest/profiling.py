@@ -10,12 +10,12 @@ import re
 import zipfile
 
 from contracts.interfaces.ingestion import ColumnProfile, ProfileReply, ProfileSheet, ValueExample
+from contracts.interfaces.xlsx import XlsxTableSelection
 from app.ingest.mapping import norm_header
 from app.ingest.parsing import Cell, FileError, MAX_BYTES, ParsedFile, detect_delimiter, detect_encoding, parse_file
 from app.ingest.validation import MasterData, normalize_unit, parse_qty
+from app.ingest.xlsx_layout import MAX_CELLS, MAX_COLUMNS, parse_selected_xlsx
 
-MAX_COLUMNS = 64
-MAX_CELLS = 2_000_000
 MAX_DISTINCT = 2048
 MAX_EXAMPLES = 3
 CODE = re.compile(r'^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$')
@@ -60,7 +60,9 @@ def csv_rows(data: bytes):
             raise FileError('CSV_MALFORMED', 'Malformed CSV; repair quoting and row structure.') from None
 
 
-def parse_analysis_file(filename: str, data: bytes) -> ParsedFile:
+def parse_analysis_file(filename: str, data: bytes, selection: XlsxTableSelection | None = None) -> ParsedFile:
+    if selection is not None:
+        return parse_selected_xlsx(filename, data, selection)
     # Preflight limits before the existing materializing parser allocates cells.
     if len(data) > MAX_BYTES:
         raise FileError('FILE_TOO_LARGE', 'Analysis file exceeds 10 MiB.', 413)
@@ -123,14 +125,14 @@ def profile(parsed: ParsedFile, dataset_id: str, master: ScopedMaster | None = N
     sheets = []
     for sheet in parsed.sheets:
         columns = []
-        for header in sheet.header:
+        for index, header in enumerate(sheet.header):
             counts, previews, formats, date_formats, units = Counter(), {}, Counter(), Counter(), set()
             format_cache = {}
             empty = product_matches = material_matches = 0
             distinct_exact = True
             anomalies = set()
             for row in sheet.rows:
-                cell = row.cells[header.col - 1] if header.col <= len(row.cells) else Cell(None, 'empty')
+                cell = row.cells[index] if index < len(row.cells) else Cell(None, 'empty')
                 value = (cell.value or '').strip()
                 if len(row.cells) != len(sheet.header):
                     anomalies.add('ROW_WIDTH_MISMATCH')
@@ -192,4 +194,5 @@ def profile(parsed: ParsedFile, dataset_id: str, master: ScopedMaster | None = N
                 date_formats=dict(sorted(date_formats.items())), unit_candidates=sorted(units), anomalies=sorted(anomalies), uncertainty_reasons=reasons))
         sheets.append(ProfileSheet(sheet=sheet.name, row_count=len(sheet.rows), columns=columns))
     return ProfileReply(dataset_id=dataset_id, source_sha256=parsed.sha256, master_scope=master.dataset_id if master else None,
-                        master_digest=master_digest(master), samples_included=include_samples, sheets=sheets)
+                        master_digest=master_digest(master), samples_included=include_samples, sheets=sheets,
+                        table_selection=parsed.table_selection)

@@ -640,6 +640,18 @@
             "title": "Sample Row Limit",
             "type": "integer"
           },
+          "table_selection": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "JSON XlsxTableSelection for an explicit XLSX range",
+            "title": "Table Selection"
+          },
           "use_approved_master": {
             "default": false,
             "title": "Use Approved Master",
@@ -665,6 +677,18 @@
             "minimum": 0.0,
             "title": "Sample Row Limit",
             "type": "integer"
+          },
+          "table_selection": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "JSON XlsxTableSelection for an explicit XLSX range",
+            "title": "Table Selection"
           }
         },
         "required": [
@@ -838,6 +862,18 @@
             "title": "File",
             "type": "string"
           },
+          "table_selection": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "JSON XlsxTableSelection for an explicit XLSX range",
+            "title": "Table Selection"
+          },
           "use_approved_master": {
             "default": false,
             "title": "Use Approved Master",
@@ -917,6 +953,18 @@
             "title": "Include Samples",
             "type": "boolean"
           },
+          "table_selection": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "JSON XlsxTableSelection for an explicit XLSX range",
+            "title": "Table Selection"
+          },
           "use_approved_master": {
             "default": false,
             "title": "Use Approved Master",
@@ -943,6 +991,18 @@
             "title": "Policy",
             "type": "string"
           },
+          "table_selections": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "JSON object from zero-based upload index to XlsxTableSelection",
+            "title": "Table Selections"
+          },
           "use_approved_master": {
             "default": false,
             "title": "Use Approved Master",
@@ -954,6 +1014,20 @@
           "files"
         ],
         "title": "Body_transform_preview_ingest_transform_preview_post",
+        "type": "object"
+      },
+      "Body_xlsx_layout_ingest_xlsx_layout_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_xlsx_layout_ingest_xlsx_layout_post",
         "type": "object"
       },
       "BomFact": {
@@ -1600,6 +1674,16 @@
             "anyOf": [
               {
                 "$ref": "#/components/schemas/RegistrationHint"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "table_selection": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/XlsxTableSelection"
               },
               {
                 "type": "null"
@@ -2502,6 +2586,11 @@
       "ErrorCode": {
         "enum": [
           "ANALYSIS_LIMIT",
+          "XLSX_RANGE_INVALID",
+          "XLSX_SOURCE_CHANGED",
+          "XLSX_SHEET_INVALID",
+          "XLSX_MERGED_RANGE",
+          "XLSX_HEADER_INVALID",
           "CSV_MALFORMED",
           "TRANSFORM_POLICY_INVALID",
           "TRANSFORM_POLICY_UNSUPPORTED",
@@ -4231,6 +4320,16 @@
           "source_sha256": {
             "title": "Source Sha256",
             "type": "string"
+          },
+          "table_selection": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/XlsxTableSelection"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -6560,6 +6659,16 @@
           "source_sha256": {
             "title": "Source Sha256",
             "type": "string"
+          },
+          "table_selection": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/XlsxTableSelection"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -7981,6 +8090,16 @@
           "source_index": {
             "title": "Source Index",
             "type": "integer"
+          },
+          "table_selection": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/XlsxTableSelection"
+              },
+              {
+                "type": "null"
+              }
+            ]
           }
         },
         "required": [
@@ -8332,6 +8451,267 @@
           "count"
         ],
         "title": "ValueExample",
+        "type": "object"
+      },
+      "XlsxLayoutCell": {
+        "additionalProperties": false,
+        "properties": {
+          "col": {
+            "maximum": 64.0,
+            "minimum": 1.0,
+            "title": "Col",
+            "type": "integer"
+          },
+          "kind": {
+            "enum": [
+              "text",
+              "number",
+              "date",
+              "bool",
+              "formula",
+              "error",
+              "merged",
+              "empty"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "row": {
+            "maximum": 100000.0,
+            "minimum": 1.0,
+            "title": "Row",
+            "type": "integer"
+          },
+          "value": {
+            "anyOf": [
+              {
+                "maxLength": 80,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Value"
+          }
+        },
+        "required": [
+          "row",
+          "col",
+          "kind",
+          "value"
+        ],
+        "title": "XlsxLayoutCell",
+        "type": "object"
+      },
+      "XlsxLayoutReply": {
+        "additionalProperties": false,
+        "properties": {
+          "filename": {
+            "title": "Filename",
+            "type": "string"
+          },
+          "persisted": {
+            "const": false,
+            "default": false,
+            "title": "Persisted",
+            "type": "boolean"
+          },
+          "sheets": {
+            "items": {
+              "$ref": "#/components/schemas/XlsxSheetLayout"
+            },
+            "maxItems": 8,
+            "title": "Sheets",
+            "type": "array"
+          },
+          "source_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Source Sha256",
+            "type": "string"
+          },
+          "window": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/XlsxLayoutWindow"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "required": [
+          "source_sha256",
+          "filename",
+          "sheets"
+        ],
+        "title": "XlsxLayoutReply",
+        "type": "object"
+      },
+      "XlsxLayoutWindow": {
+        "additionalProperties": false,
+        "properties": {
+          "cells": {
+            "items": {
+              "$ref": "#/components/schemas/XlsxLayoutCell"
+            },
+            "maxItems": 1600,
+            "title": "Cells",
+            "type": "array"
+          },
+          "first_col": {
+            "maximum": 64.0,
+            "minimum": 1.0,
+            "title": "First Col",
+            "type": "integer"
+          },
+          "first_row": {
+            "maximum": 100000.0,
+            "minimum": 1.0,
+            "title": "First Row",
+            "type": "integer"
+          },
+          "hidden_columns": {
+            "items": {
+              "maximum": 64.0,
+              "minimum": 1.0,
+              "type": "integer"
+            },
+            "title": "Hidden Columns",
+            "type": "array"
+          },
+          "last_col": {
+            "maximum": 64.0,
+            "minimum": 1.0,
+            "title": "Last Col",
+            "type": "integer"
+          },
+          "last_row": {
+            "maximum": 100000.0,
+            "minimum": 1.0,
+            "title": "Last Row",
+            "type": "integer"
+          },
+          "merged_ranges": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Merged Ranges",
+            "type": "array"
+          },
+          "merges_truncated": {
+            "title": "Merges Truncated",
+            "type": "boolean"
+          },
+          "sheet": {
+            "title": "Sheet",
+            "type": "string"
+          }
+        },
+        "required": [
+          "sheet",
+          "first_row",
+          "last_row",
+          "first_col",
+          "last_col",
+          "hidden_columns",
+          "merged_ranges",
+          "merges_truncated",
+          "cells"
+        ],
+        "title": "XlsxLayoutWindow",
+        "type": "object"
+      },
+      "XlsxSheetLayout": {
+        "additionalProperties": false,
+        "properties": {
+          "max_col": {
+            "title": "Max Col",
+            "type": "integer"
+          },
+          "max_row": {
+            "title": "Max Row",
+            "type": "integer"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "visibility": {
+            "enum": [
+              "visible",
+              "hidden",
+              "veryHidden"
+            ],
+            "title": "Visibility",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "visibility",
+          "max_row",
+          "max_col"
+        ],
+        "title": "XlsxSheetLayout",
+        "type": "object"
+      },
+      "XlsxTableSelection": {
+        "additionalProperties": false,
+        "properties": {
+          "data_end_row": {
+            "maximum": 100000.0,
+            "minimum": 1.0,
+            "title": "Data End Row",
+            "type": "integer"
+          },
+          "data_start_row": {
+            "maximum": 100000.0,
+            "minimum": 1.0,
+            "title": "Data Start Row",
+            "type": "integer"
+          },
+          "first_col": {
+            "maximum": 64.0,
+            "minimum": 1.0,
+            "title": "First Col",
+            "type": "integer"
+          },
+          "header_row": {
+            "maximum": 100000.0,
+            "minimum": 1.0,
+            "title": "Header Row",
+            "type": "integer"
+          },
+          "last_col": {
+            "maximum": 64.0,
+            "minimum": 1.0,
+            "title": "Last Col",
+            "type": "integer"
+          },
+          "sheet": {
+            "maxLength": 31,
+            "minLength": 1,
+            "title": "Sheet",
+            "type": "string"
+          },
+          "source_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Source Sha256",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_sha256",
+          "sheet",
+          "header_row",
+          "data_start_row",
+          "data_end_row",
+          "first_col",
+          "last_col"
+        ],
+        "title": "XlsxTableSelection",
         "type": "object"
       }
     }
@@ -11690,6 +12070,185 @@
         "summary": "Verified transformation evidence and paged results; raw source bytes are never returned",
         "tags": [
           "ingest-history"
+        ]
+      }
+    },
+    "/ingest/xlsx-layout": {
+      "post": {
+        "operationId": "xlsx_layout_ingest_xlsx_layout_post",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "sheet",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maxLength": 31,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sheet"
+            }
+          },
+          {
+            "in": "query",
+            "name": "row_start",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 100000,
+              "minimum": 1,
+              "title": "Row Start",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "row_limit",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "maximum": 50,
+              "minimum": 1,
+              "title": "Row Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "col_start",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "maximum": 64,
+              "minimum": 1,
+              "title": "Col Start",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "col_limit",
+            "required": false,
+            "schema": {
+              "default": 16,
+              "maximum": 32,
+              "minimum": 1,
+              "title": "Col Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_xlsx_layout_ingest_xlsx_layout_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/XlsxLayoutReply"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "413": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "415": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          }
+        },
+        "summary": "List worksheets and inspect a bounded source cell window",
+        "tags": [
+          "ingest-assistance"
         ]
       }
     },

@@ -19,6 +19,7 @@ from decimal import Decimal
 
 import openpyxl
 from openpyxl.utils import get_column_letter
+from contracts.interfaces.xlsx import XlsxTableSelection
 
 MAX_BYTES = 10 * 1024 * 1024
 MAX_ROWS = 100_000
@@ -70,6 +71,7 @@ class ParsedSheet:
     header: list[HeaderCol]
     rows: list[RawRow]
     width: int
+    explicit_range: bool = False
 
 
 @dataclass
@@ -80,6 +82,7 @@ class ParsedFile:
     sha256: str
     sheets: list[ParsedSheet]
     meta: dict = field(default_factory=dict)
+    table_selection: XlsxTableSelection | None = None
 
 
 def col_letter(col: int) -> str:

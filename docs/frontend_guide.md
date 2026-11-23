@@ -1,5 +1,9 @@
 # 프론트엔드 연동 안내
 
+`/ingest/xlsx-layout`에서 시트 목록과 원본 좌표의 구조를 확인한 뒤 `table_selection`을 보내 선택 표를 다시 분석한다. 범위 선택에 따른 변환은 미리보기에서 검토한다. [나미님 범위 선택 UI 계약](XLSX_TABLE_SELECTION_HANDOFF.md)
+
+선택 오류는 `XLSX_SOURCE_CHANGED`, `XLSX_SHEET_INVALID`, `XLSX_RANGE_INVALID`, `XLSX_MERGED_RANGE`, `XLSX_HEADER_INVALID`로 표시한다.
+
 파일 분류의 `hold_kind`는 보류 사유를 구분한다. `registration_hint`가 있으면 사용자에게 `capacity` 또는 `routing`의 기존 등록 경로를 안내한다. 등록과 승인은 기존 절차에서 명시적으로 진행한다. [필드·화면 인계](CLASSIFIER_XLSX_MAPPING_VERIFICATION_20261123.md#분류-api-계약과-담당자-인계)
 
 계획 입력 진단은 `POST /planning-inputs/preview`에 선택 dataset query와 `PlanCommand`를 전달한다. 시작 월과 `horizon_months` 1~12를 명시한다. 기본은 3이며 기존 `/plans`는 기간 생략 시 1개월이다. 진단은 입력 누락·경고·건수, 입고 공급 상태, 엔진 가용성, `persisted=false`를 반환한다. What-if의 월별 자원·발주 키, 영구 실행 기간, 오류 처리는 [v0.4 API 인계](PLANNING_CONTRACT_V04_HANDOFF.md)를 따른다.

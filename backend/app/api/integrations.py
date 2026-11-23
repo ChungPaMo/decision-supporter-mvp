@@ -1,4 +1,4 @@
-from fastapi import APIRouter, File, Form, UploadFile, Depends
+from fastapi import APIRouter, File, Form, Request, UploadFile, Depends
 from app.api.datasets import dataset_context
 from pydantic import ValidationError
 from fastapi.responses import JSONResponse
@@ -10,6 +10,7 @@ from app.errors import ApiError, ErrorCode, ErrorResponse
 from contracts.interfaces.modules import ClassificationInput, ClassificationOutput, PlanCommand, PlanningReply
 from contracts.interfaces.planning import LegacyPlanPreviewCommand, PlanningInputDiagnostics
 from app.ingest.parsing import MAX_BYTES, FileError, parse_file
+from app.ingest.xlsx_layout import parse_selected_xlsx
 
 router = APIRouter(tags=['module-integration'], responses=ERROR_RESPONSES)
 
@@ -33,15 +34,20 @@ def classify(body: ClassificationInput):
 
 @router.post('/classifications/file', response_model=ClassificationOutput,
              summary='원본 파일을 분류 DTO로 변환 (샘플 행은 명시적으로 허용한 만큼만, 저장 없음)')
-async def classify_file(file: UploadFile = File(...), sample_row_limit: int = Form(0, ge=0, le=20)):
+async def classify_file(request: Request, file: UploadFile = File(...), sample_row_limit: int = Form(0, ge=0, le=20),
+                        table_selection: str | None = Form(None, description='JSON XlsxTableSelection for an explicit XLSX range')):
+    from app.api.ingest_assistance import parse_table_selection
+
+    selection = await parse_table_selection(request, table_selection)
     try:
-        parsed = parse_file(file.filename or '', await file.read(MAX_BYTES + 1))
+        name, data = file.filename or '', await file.read(MAX_BYTES + 1)
+        parsed = parse_selected_xlsx(name, data, selection) if selection else parse_file(name, data)
         descriptor = modules.descriptor(parsed, sample_row_limit)
     except FileError as exc:
         raise ApiError(exc.http_status, ErrorCode(exc.code), exc.message) from None
     except ValidationError:
         raise ApiError(422, ErrorCode.REQUEST_INVALID, '분류 입력 한도(20시트·100열·20행·셀 500자)를 확인하세요.') from None
-    return modules.classify(descriptor)
+    return modules.classify(descriptor).model_copy(update={'table_selection': selection})
 
 
 def plan_reply(body):

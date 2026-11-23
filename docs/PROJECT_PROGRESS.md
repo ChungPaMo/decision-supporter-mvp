@@ -1,6 +1,8 @@
 # 충파모 프로젝트 진행상황
 
-최종 확인 **2026-11-23 (KST), 보조 PC**. 시작 `main`은 [`b2b3ecd`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/b2b3ecd7941b2e6b3cc706d95614d09a584f0115)이며 이번 커밋은 `feat: expose structured file classification routes and audit xlsx mapping`으로 식별한다.
+최종 확인 **2026-11-23 (KST), 보조 PC**. 원본 SHA에 연결된 시트·헤더·데이터 범위 선택이 구조 미리보기, 분류, 컬럼 추천, 프로파일 및 변환 미리보기에 적용된다. 같은 XLSX 200개에서 기본 헤더 포착 18/200과 실제 좌표를 제공한 200/200을 대조했다. 평면 BOM 9개는 Top-3 0/27→9/27이며 필수 필드 부족으로 모두 HOLD다. 비DB **1,128 passed / 0 failed / 66 skipped / 6 deselected**. 화면 연동과 범위 영구 저장은 후속이다. [검증과 범위](XLSX_TABLE_SELECTION_VERIFICATION_20261123.md) · [화면 인계](XLSX_TABLE_SELECTION_HANDOFF.md)
+
+직전 11/23 분류 계약 작업의 시작 `main`은 [`b2b3ecd`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/b2b3ecd7941b2e6b3cc706d95614d09a584f0115)이며 완료는 [`5002853`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/50028536a4af176306704be574409b142f10eaaf)이다.
 
 현실형 합성 XLSX 200개를 읽어 실제 첫 표 헤더를 포착한 18개, 제목·병합·숨김·수식 동작을 확인했다. 문서 종류 분류 라벨은 200개 모두 일치했다. 평면 BOM 9개의 원본 매핑은 모두 HOLD였다. 표만 복사했을 때 27열 중 9열을 찾았고 숫자 열의 잘못된 단위 하위 후보 9건을 차단했다. 기존 승인 게이트 앞에 구조화 HOLD와 CAPA·Routing 등록 안내를 추가했다. [XLSX 검증과 인계](CLASSIFIER_XLSX_MAPPING_VERIFICATION_20261123.md)
 
@@ -57,7 +59,7 @@
 | 기능 | 실제 구현·검증 수준 | 담당 | 남은 문제·근거 |
 | --- | --- | --- | --- |
 | 데이터 입력·파싱 | CSV/XLSX·7종 배치·수동 매핑·재검증·승인/반려 유지. 공식8마스터+원장 변환9번째 배치를 실제 PostgreSQL로 검증 | 김대영 | 화면 전체 E2E는 별도. [실DB 검증](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md) |
-| 파일 자동 분류 | 업로드용 `rules-0.3.0`과 백엔드에서 표준 5종 및 구조화 HOLD 제공. 정확 CAPA·Routing 양식은 등록 경로 힌트를 별도 제공. 공식 자료와 기존 XLSX 양식의 비DB API 회귀 검증 | 이훤(알고리즘), 김대영(API) | 모듈의 구조화 코드 제공과 화면 안내 연계, 범용 XLSX 제목·표 범위 처리는 후속. [실측·새 계약](CLASSIFIER_XLSX_MAPPING_VERIFICATION_20261123.md) |
+| 파일 자동 분류 | 업로드용 `rules-0.3.0`과 백엔드에서 표준 5종 및 구조화 HOLD 제공. 정확 CAPA·Routing 양식은 등록 경로 힌트를 별도 제공. 사용자 선택 범위로 재분류 가능 | 이훤(알고리즘), 김대영(API) | 모듈의 구조화 코드 제공과 화면 안내, 범위 선택 화면 연계는 후속. [분류 계약](CLASSIFIER_XLSX_MAPPING_VERIFICATION_20261123.md) · [표 선택](XLSX_TABLE_SELECTION_HANDOFF.md) |
 | 컬럼 매핑·AI 후보 추천 | 정확 일치·별칭·수동 override와 RapidFuzz Top-3 유지. 11/22 48건의 오추천 6→3, Top-3 26/32 및 승인 전 SQL 저장 검증. 11/23 숫자 열의 단위 후보 반증 추가 | 김대영 | 11/22 BGE-M3 보완은 Top-3 32/32이나 오추천 7/48로 운영 적용 보류. 평면 BOM 원본의 헤더 위치와 식별자 부족은 수동 확인 필요. [기존 평가](MAPPING_BGE_EVALUATION_20261122.md) · [현실형 XLSX](CLASSIFIER_XLSX_MAPPING_VERIFICATION_20261123.md) |
 | 정제·변환 | 원본5파일86,214→498, SQL 이력·원본bytes/SHA·승인 전 batch 연결·재조회·동시201/200·실제DB 실패 rollback 검증 완료 | 김대영 | 회귀/개발DB0009 적용 확인. 개발DB는 기존공식자료 중복등록 없이 새이력0건 유지. SYNTHETIC_ONLY를 일반 기업에 자동 적용하지 않음. [이력 계약](INGESTION_INTEGRATION_HISTORY.md), [실DB 근거](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md) |
 | PostgreSQL·데이터셋 격리 | 신규v2의 로컬FK·UUID격리·불변/지연트리거 실제 검증. 보관dataset 포함3스키마·기존81테이블 보존 probe 후 rollback. 개발0009도 별도승인·백업확인 후 적용 | 김대영 | 개발/회귀 현재0009. 기존자료와 연결된 볼륨은 보존, downgrade2개 미실행. dataset_id는 인증권한 아님. [최신 근거](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md) |

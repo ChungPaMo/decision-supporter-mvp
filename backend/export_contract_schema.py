@@ -56,13 +56,14 @@ def build_modules() -> str:
 
 
 def build_ingestion() -> str:
+    from contracts.interfaces.xlsx import XlsxLayoutReply, XlsxTableSelection
     from contracts.interfaces.ingestion import (ProfileReply, MappingReply, ClassifiedMappingReply, SavedMappingRuleDraft,
         SalesTransformPolicy, TransformReply, INGESTION_VERSION)
     from contracts.interfaces.ingestion_history import TransformationDetail, TransformationPage
     return json.dumps({'contract_version': INGESTION_VERSION,
         'models': {model.__name__: model.model_json_schema() for model in
                    (ProfileReply, MappingReply, ClassifiedMappingReply, SavedMappingRuleDraft, SalesTransformPolicy,
-                    TransformReply, TransformationDetail, TransformationPage)}},
+                    TransformReply, TransformationDetail, TransformationPage, XlsxLayoutReply, XlsxTableSelection)}},
         ensure_ascii=False, indent=2, sort_keys=True) + '\n'
 
 

@@ -83,9 +83,14 @@ def request_json(client, path, name, content, data=None):
     return response.json()
 
 
-def mapping_probe(client, name, content, sheet, first_col):
-    result = request_json(client, '/ingest/mapping-suggestions', name, content, {'entity': 'bom'})
+def mapping_probe(client, name, content, sheet, first_col, selection=None):
+    form = {'entity': 'bom'}
+    if selection is not None:
+        form['table_selection'] = json.dumps(selection)
+    result = request_json(client, '/ingest/mapping-suggestions', name, content, form)
     assert result['persisted'] is False and result['auto_approve'] is False
+    if selection is not None:
+        assert result['table_selection'] == selection and result['source_sha256'] == selection['source_sha256']
     reply = next(row for row in result['sheets'] if row['sheet'] == sheet)
     columns = {col['col']: col for col in reply['suggestions']}
     cases = []
@@ -139,9 +144,29 @@ def check_workbook(client, label, blocks, data):
                   'hidden_sheets_skipped': parsed.meta['hidden_sheets_skipped'], 'disposition': disposition,
                   'document_kind': document.category, 'document_hold': document.needs_review,
                   'upload_entity': upload['recommended_entity'], 'upload_hold_kind': upload['hold_kind']}
+        first_table = tables[0]
+        selection = {'source_sha256': parsed.sha256, 'sheet': ws.title, 'header_row': first_table['row'],
+                     'data_start_row': first_table['row'] + 1, 'data_end_row': first_table['row'] + first_table['body_rows'],
+                     'first_col': first_table['first_col'], 'last_col': first_table['last_col']}
+        selected = client.post('/ingest/profile', files={'file': (name, data)},
+                               data={'table_selection': json.dumps(selection)})
+        if selected.status_code == 200:
+            body = selected.json()
+            assert body['source_sha256'] == parsed.sha256 and body['table_selection'] == selection
+            assert len(body['sheets']) == 1 and body['sheets'][0]['sheet'] == ws.title
+            columns = body['sheets'][0]['columns']
+            assert [column['col'] for column in columns] == list(range(first_table['first_col'], first_table['last_col'] + 1))
+            expected = next(block['headers'] for block in blocks if block['kind'] == 'table')
+            assert [fold(column['column']) for column in columns] == list(map(fold, expected))
+            result['selected_profile'] = {'header_verified': True, 'row_count': body['sheets'][0]['row_count']}
+        else:
+            code = selected.json()['detail']['code']
+            assert selected.status_code == 422 and code in ('XLSX_HEADER_INVALID', 'XLSX_MERGED_RANGE'), selected.text
+            result['selected_profile'] = {'header_verified': False, 'error': code}
         if flat_bom:
             table = tables[0]
             result['raw_mapping'] = mapping_probe(client, name, data, ws.title, table['first_col'])
+            result['selected_mapping'] = mapping_probe(client, name, data, ws.title, table['first_col'], selection)
             # Isolate ranking from layout using the exact source rectangle (no rewritten headers,
             # inserted units or generated rows). This copy cannot be registered as a complete BOM.
             first = table['first_col']
@@ -184,7 +209,9 @@ def summarize(rows):
                 'wrong': sum(r['document_kind'] != r['category'] and not r['document_hold'] for r in rows if r['split'] == split),
             } for split in sorted({r['split'] for r in rows})}},
             'upload_routes': dict(Counter(r['upload_entity'] or r['upload_hold_kind'] for r in rows)),
+            'selected_profile': dict(Counter(r['selected_profile'].get('error', 'HEADER_VERIFIED') for r in rows)),
             'raw_mapping': mapping_scores([r['raw_mapping'] for r in rows if 'raw_mapping' in r]),
+            'selected_mapping': mapping_scores([r['selected_mapping'] for r in rows if 'selected_mapping' in r]),
             'extracted_mapping': mapping_scores([r['extracted_mapping'] for r in rows if 'extracted_mapping' in r])}
 
 

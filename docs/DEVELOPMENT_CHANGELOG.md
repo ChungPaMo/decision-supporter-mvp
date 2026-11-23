@@ -731,3 +731,30 @@
 
 **관련 자료**
 - [시작 Commit b2b3ecd](https://github.com/ChungPaMo/decision-supporter-mvp/commit/b2b3ecd7941b2e6b3cc706d95614d09a584f0115), [XLSX 검증·계약 인계](CLASSIFIER_XLSX_MAPPING_VERIFICATION_20261123.md), [11/22 BGE-M3 비교](MAPPING_BGE_EVALUATION_20261122.md).
+
+### 2026-11-23 — 사용자 지정 엑셀 헤더·표 범위
+
+**Git**
+- 시작 Commit `50028536a4af176306704be574409b142f10eaaf`.
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='feat: analyze user-selected xlsx table ranges'`로 확인한다.
+- 브랜치 `main`.
+
+**작업 목적**
+- 원본 Excel의 제목·결재란·주석 대신 사용자가 확인한 표를 분석하고 시트·셀 좌표와 SHA를 유지한다.
+
+**구현 내용**
+- `backend/app/ingest/xlsx_layout.py`, `contracts/interfaces/xlsx.py`에 시트·구조 창과 범위 검증을 구현했다. `POST /ingest/xlsx-layout`과 분류·프로파일·추천·변환 미리보기의 선택 필드를 추가했다.
+- 변환 입력 지문과 원본 열 번호에 선택을 반영했다. OpenAPI·Schema, API 회귀, 200개 원본 재현 스크립트와 화면 인계를 갱신했다.
+
+**검증 결과**
+- 실제 첫 헤더 확인은 기본 18/200, 정답 좌표를 공급한 선택형 API 200/200이다. 평면 BOM Top-1/Top-3는 각각 0/27에서 9/27이며 9개 파일이 계속 HOLD다. 원본 SHA와 절대 좌표를 확인했다.
+- 비DB **1,128 passed / 0 failed / 66 skipped / 6 deselected**. 기존 48건 회귀·OpenAPI·Schema 통과. 변경 파일 보안 발견 0건, 기존 합성 샘플 관련 201건. Docker·실DB·Alembic·모델 재실행은 미실행이다.
+
+**기술적 결정**
+- 사용자 좌표를 원본 SHA에 묶고 파일당 한 개 표를 분석한다. 병합이 걸친 범위, 중복 헤더, 숨긴 시트는 오류로 돌려주고 수식은 캐시 값만 읽는다. 기존 기본 파싱과 배치 승인 경로를 유지한다.
+
+**남은 문제**
+- 나미님의 시트·좌표 선택 UI 연동이 필요하다. 선택 범위의 영구 저장, 반복 블록 결합 및 누락된 BOM 필드 보완은 후속이다.
+
+**관련 자료**
+- [기준 Commit 5002853](https://github.com/ChungPaMo/decision-supporter-mvp/commit/50028536a4af176306704be574409b142f10eaaf), [선택 검증](XLSX_TABLE_SELECTION_VERIFICATION_20261123.md), [화면 계약](XLSX_TABLE_SELECTION_HANDOFF.md).

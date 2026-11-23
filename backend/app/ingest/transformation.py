@@ -13,9 +13,10 @@ import re
 
 from contracts.interfaces.ingestion import (SalesTransformPolicy, SeparateReturns, SourceLocation, TransformedDemand,
     TransformIssue, TransformOperation, TransformReply, TransformSource)
+from contracts.interfaces.xlsx import XlsxTableSelection
 from app.contracts import CODE_PATTERN
 from app.ingest.mapping import norm_header
-from app.ingest.parsing import Cell, FileError, MAX_BYTES
+from app.ingest.parsing import Cell, FileError, MAX_BYTES, col_letter
 from app.ingest.profiling import MAX_COLUMNS, ScopedMaster, check_scope, csv_rows, master_digest, parse_analysis_file
 from app.ingest.validation import parse_qty, restore_code
 
@@ -53,13 +54,16 @@ def compile_recipe(policy):
     ]]
 
 
-def resolve_columns(header, policy):
+def resolve_columns(header, policy, first_col=None):
     if len(header) > MAX_COLUMNS or any(len(name) > 200 for name in header):
         raise FileError('ANALYSIS_LIMIT', 'Source header exceeds bounded recipe limits.', 413)
     resolved = {}
     for semantic, reference in policy.columns.model_dump().items():
-        hits = [index for index, name in enumerate(header) if name == reference]
-        if not hits and re.fullmatch(r'[A-Z]{1,2}', reference):
+        hits = ([index for index in range(len(header)) if col_letter(first_col + index) == reference]
+                if first_col is not None else [])
+        if not hits:
+            hits = [index for index, name in enumerate(header) if name == reference]
+        if not hits and first_col is None and re.fullmatch(r'[A-Z]{1,2}', reference):
             index = 0
             for char in reference:
                 index = index * 26 + ord(char) - ord('A') + 1
@@ -79,10 +83,10 @@ def resolve_columns(header, policy):
     return resolved
 
 
-def source_rows(filename, data):
+def source_rows(filename, data, selection=None):
     if len(data) > MAX_BYTES:
         raise FileError('FILE_TOO_LARGE', 'Each source is limited to 10 MiB.', 413)
-    if filename.lower().endswith('.csv'):
+    if selection is None and filename.lower().endswith('.csv'):
         if not data:
             raise FileError('FILE_EMPTY', 'Empty source file.')
         rows = iter(csv_rows(data))
@@ -95,11 +99,12 @@ def source_rows(filename, data):
                     raise FileError('ANALYSIS_LIMIT', 'At most 64 columns per row.', 413)
                 if any(value.strip() for value in row):
                     yield line, [Cell(value, 'text') for value in row]
-        yield '', [name.strip() for name in header], records()
+        yield '', [name.strip() for name in header], records(), None
     else:
-        parsed = parse_analysis_file(filename, data)
+        parsed = parse_analysis_file(filename, data, selection)
         for sheet in parsed.sheets:
-            yield sheet.name, [column.display for column in sheet.header], ((row.row, row.cells) for row in sheet.rows)
+            yield (sheet.name, [column.display for column in sheet.header],
+                   ((row.row, row.cells) for row in sheet.rows), selection.first_col if selection else None)
 
 
 def month(value, formats):
@@ -123,20 +128,24 @@ class Aggregate:
 
 
 def transform(files: list[tuple[str, bytes]], policy: SalesTransformPolicy, master: ScopedMaster | None = None,
-              *, offset=0, limit=500) -> TransformReply:
+              *, offset=0, limit=500, selections: dict[int, XlsxTableSelection] | None = None) -> TransformReply:
     if not (0 <= offset and 1 <= limit <= 500):
         raise FileError('REQUEST_INVALID', 'Page bounds are offset>=0, limit=1..500.')
-    result = transform_complete(files, policy, master)
+    result = transform_complete(files, policy, master, selections=selections)
     return result.model_copy(update={'offset': offset, 'limit': limit,
         'records': result.records[offset:offset + limit], 'returns': result.returns[offset:offset + limit]})
 
 
 def transform_complete(files: list[tuple[str, bytes]], policy: SalesTransformPolicy,
-                       master: ScopedMaster | None = None) -> TransformReply:
+                       master: ScopedMaster | None = None, *,
+                       selections: dict[int, XlsxTableSelection] | None = None) -> TransformReply:
     """Complete bounded computation for persistence; API previews page the same result."""
     check_scope(policy.dataset_id, master)
     if not 1 <= len(files) <= MAX_FILES or sum(len(data) for _, data in files) > MAX_TOTAL_BYTES:
         raise FileError('ANALYSIS_LIMIT', 'At most 8 files / 50 MiB combined per transformation.', 413)
+    selections = selections or {}
+    if selections.keys() - range(len(files)):
+        raise FileError('XLSX_RANGE_INVALID', 'Selection must identify an uploaded source index.')
     hashes = [hashlib.sha256(data).hexdigest() for _, data in files]
     if len(set(hashes)) != len(hashes):
         raise FileError('TRANSFORM_DUPLICATE_SOURCE', 'Identical source files cannot be aggregated twice.')
@@ -160,8 +169,10 @@ def transform_complete(files: list[tuple[str, bytes]], policy: SalesTransformPol
         context.prec = 40  # Exact sum of bounded NUMERIC(18,4) inputs, no binary floats.
         for source_index, ((filename, data), sha) in enumerate(zip(files, hashes)):
             file_rows = 0
-            for sheet_name, header, rows in source_rows(filename, data):
-                columns = resolve_columns(header, policy)
+            selection = selections.get(source_index)
+            for sheet_name, header, rows, first_col in source_rows(filename, data, selection):
+                columns = resolve_columns(header, policy, first_col)
+                source_columns = {key: index + (first_col or 1) for key, index in columns.items()}
                 for row_number, cells in rows:
                     counts['source_rows'] += 1
                     file_rows += 1
@@ -174,46 +185,46 @@ def transform_complete(files: list[tuple[str, bytes]], policy: SalesTransformPol
                     values = {key: (cells[col].value or '').strip() for key, col in columns.items()}
                     missing = next((key for key, value in values.items() if not value), None)
                     if missing:
-                        error('REQUIRED_VALUE_MISSING', location.model_copy(update={'col': columns[missing] + 1}), missing)
+                        error('REQUIRED_VALUE_MISSING', location.model_copy(update={'col': source_columns[missing]}), missing)
                         continue
                     if any(len(value) > 128 for value in values.values()):
                         error('VALUE_TOO_LONG', location)
                         continue
                     status = values['status']
                     if status not in (policy.included_status, policy.excluded_status, policy.separate_status):
-                        error('TRANSACTION_STATUS_UNKNOWN', location.model_copy(update={'col': columns['status'] + 1}), 'status')
+                        error('TRANSACTION_STATUS_UNKNOWN', location.model_copy(update={'col': source_columns['status']}), 'status')
                         continue
                     date_key = values['order_date']
                     period = dates.get(date_key) or month(date_key, policy.date_formats)
                     if period is None:
-                        error('DATE_INVALID', location.model_copy(update={'col': columns['order_date'] + 1}), 'order_date')
+                        error('DATE_INVALID', location.model_copy(update={'col': source_columns['order_date']}), 'order_date')
                         continue
                     if len(dates) < 4096:
                         dates[date_key] = period
                     product, code_warning = restore_code(cells[columns['product_id']], 'product_id')
                     if code_warning:
                         # The user must resolve potentially lost leading zeroes; no silent repair in this recipe.
-                        error('NUMERIC_PRODUCT_CODE_REQUIRES_REVIEW', location.model_copy(update={'col': columns['product_id'] + 1}), 'product_id')
+                        error('NUMERIC_PRODUCT_CODE_REQUIRES_REVIEW', location.model_copy(update={'col': source_columns['product_id']}), 'product_id')
                         continue
                     if not product or not CODE.fullmatch(product):
-                        error('PRODUCT_CODE_INVALID', location.model_copy(update={'col': columns['product_id'] + 1}), 'product_id')
+                        error('PRODUCT_CODE_INVALID', location.model_copy(update={'col': source_columns['product_id']}), 'product_id')
                         continue
                     if values['unit'] not in policy.unit_mapping:
-                        error('UNIT_UNSUPPORTED_BY_POLICY', location.model_copy(update={'col': columns['unit'] + 1}), 'unit')
+                        error('UNIT_UNSUPPORTED_BY_POLICY', location.model_copy(update={'col': source_columns['unit']}), 'unit')
                         continue
                     if master:
                         known = master.data.products.get(product)
                         if known is None or known.base_unit != 'EA':
-                            error('PRODUCT_REFERENCE_OR_UNIT_INVALID', location.model_copy(update={'col': columns['product_id'] + 1}), 'product_id')
+                            error('PRODUCT_REFERENCE_OR_UNIT_INVALID', location.model_copy(update={'col': source_columns['product_id']}), 'product_id')
                             continue
                     negative = values['quantity'].startswith('-')
                     qty, qty_error = parse_qty(Cell(values['quantity'].removeprefix('-'), 'text'))
                     if qty_error or (negative and status != policy.separate_status):
                         error(qty_error[0] if qty_error else 'NEGATIVE_NON_RETURN_QUANTITY',
-                              location.model_copy(update={'col': columns['quantity'] + 1}), 'quantity')
+                              location.model_copy(update={'col': source_columns['quantity']}), 'quantity')
                         continue
                     if not re.fullmatch(r'[1-9][0-9]{0,5}', values['line_id']):
-                        error('TRANSACTION_LINE_INVALID', location.model_copy(update={'col': columns['line_id'] + 1}), 'line_id')
+                        error('TRANSACTION_LINE_INVALID', location.model_copy(update={'col': source_columns['line_id']}), 'line_id')
                         continue
                     key = (values['order_id'], values['line_id'])
                     if key in seen:
@@ -238,7 +249,8 @@ def transform_complete(files: list[tuple[str, bytes]], policy: SalesTransformPol
                         counts['returns_separate'] += 1
                         totals['returns'] += qty
                         returns[group_key] += qty
-            sources.append(TransformSource(source_index=source_index, filename=os.path.basename(filename.replace('\\', '/'))[:200], sha256=sha, row_count=file_rows))
+            sources.append(TransformSource(source_index=source_index, filename=os.path.basename(filename.replace('\\', '/'))[:200],
+                                           sha256=sha, row_count=file_rows, table_selection=selection))
         output = [TransformedDemand(product_id=product, period=period, demand_qty=decimal_text(item.quantity),
                    source_row_count=item.count, source_locations=item.locations) for (product, period), item in sorted(groups.items())]
         # The final aggregate must still satisfy the existing storage contract's precision/range.
@@ -264,7 +276,11 @@ def transform_complete(files: list[tuple[str, bytes]], policy: SalesTransformPol
     policy_body = policy.model_dump(mode='json')
     policy_hash = digest(policy_body)
     reference_hash = master_digest(master)
-    input_hash = digest({'sources': hashes, 'policy': policy_hash, 'dataset_id': policy.dataset_id, 'master_digest': reference_hash})
+    input_identity = {'sources': hashes, 'policy': policy_hash, 'dataset_id': policy.dataset_id, 'master_digest': reference_hash}
+    if selections:
+        input_identity['table_selections'] = {index: item.model_dump(mode='json') for index, item in selections.items()}
+        warnings.add('XLSX_TABLE_SELECTION_PREVIEW_ONLY')
+    input_hash = digest(input_identity)
     result_hash = digest({'input': input_hash, 'counts': counts, 'reconciliation': reconciliation,
                           'records': [row.model_dump(mode='json') for row in output],
                           'returns': [row.model_dump(mode='json') for row in separate],
