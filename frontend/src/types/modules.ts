@@ -1,8 +1,10 @@
 // Mirrored transport types. Source of truth: contracts/interfaces and generated JSON Schema.
 export type ClassificationResult = {
-  contract_version: 'classification-0.1-draft'; recommended_entity: import('./api').Entity | null;
-  candidates: Array<{ entity: import('./api').Entity; score: number; reasons: string[] }>;
+  contract_version: 'classification-0.1-draft'; recommended_entity: import('./api').CoreEntity | null;
+  candidates: Array<{ entity: import('./api').CoreEntity; score: number; reasons: string[] }>;
   hold: boolean; reasons: string[]; module_version: string;
+  // rules-0.4.0: 보류 종류와 CAPA·Routing 등록 안내. 없을 수 있다.
+  hold_kind?: string | null; registration_hint?: { entity?: string; sections?: string[] } | null;
 };
 // contracts/interfaces/dataset.py — schema_name 은 서버 내부 값이라 응답에 없다.
 export type DatasetDetail = {

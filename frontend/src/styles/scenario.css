@@ -599,3 +599,20 @@
 .sc-main-real .fact-list { max-width: 440px; margin-bottom: 8px; }
 .sc-main-real .fact-list dd { font-variant-numeric: tabular-nums; }
 @media (max-width: 820px) { .sc-main-real::before { display: none; } }
+
+/* 유형 추천에서 넘겨받은 파일: 다시 고르지 않고 바로 등록 */
+.suggested-file { grid-column: 1 / -1; display: flex; align-items: center; flex-wrap: wrap; gap: 8px 12px; padding: 12px 14px; border: 1px solid var(--sc-info-line); border-radius: 10px; background: #f7f9fd; }
+.suggested-file p { flex: 1 1 240px; display: grid; gap: 2px; min-width: 0; }
+.suggested-file b { color: var(--sc-blue-dark); font-size: 13px; }
+.suggested-file span { font-size: 15px; font-weight: 700; overflow-wrap: anywhere; }
+.suggested-file small { flex-basis: 100%; color: var(--sc-ink-2); font-size: 13px; }
+
+/* 데이터 종류 7단계(제품~월별 수요) */
+.sc-main-real .entity-list ul { grid-template-columns: repeat(7, minmax(0, 1fr)); }
+.sc-main-real .entity-list li button { padding: 10px 10px; gap: 2px 8px; }
+@media (max-width: 1280px) { .sc-main-real .entity-list ul { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+@media (max-width: 820px) { .sc-main-real .entity-list ul { grid-template-columns: minmax(0, 1fr); } }
+/* 판매 원장 변환 */
+.sales-columns { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px 14px; }
+.sc-main-real .policy-list { display: grid; gap: 4px; padding-left: 20px; list-style: disc; font-size: 14px; }
+.sc-main-real .panel h4 { font-size: 15px; font-weight: 700; }

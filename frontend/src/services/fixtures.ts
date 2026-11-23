@@ -19,12 +19,12 @@ import inventory24 from '../mocks/24_list_inventory.json';
 import demand25 from '../mocks/25_list_demand.json';
 import planBase from '../mocks/plan_response.json';
 import planWhatIf from '../mocks/plan_response_whatif_demand120.json';
-import { BatchDetail, Entity } from '../types/api';
+import { BatchDetail, CoreEntity } from '../types/api';
 import { PlanResponse } from '../types/engine';
 
 const batch = (fixture: unknown) => (fixture as { response: unknown }).response as BatchDetail;
 
-export const uploadFixtures: Record<Entity, BatchDetail> = {
+export const uploadFixtures: Record<CoreEntity, BatchDetail> = {
   product: batch(product01),
   material: batch(material03),
   bom: batch(bom05),
@@ -32,7 +32,7 @@ export const uploadFixtures: Record<Entity, BatchDetail> = {
   monthly_demand: batch(demand09),
 };
 
-export const approveFixtures: Record<Entity, BatchDetail> = {
+export const approveFixtures: Record<CoreEntity, BatchDetail> = {
   product: batch(product02),
   material: batch(material04),
   bom: batch(bom06),
@@ -56,7 +56,7 @@ const flattenBom = (rows: Array<Record<string, unknown>>) =>
     }))
   );
 
-export const approvedRows: Record<Entity, Array<Record<string, unknown>>> = {
+export const approvedRows: Record<CoreEntity, Array<Record<string, unknown>>> = {
   product: items(products21),
   material: items(materials22),
   bom: flattenBom(items(boms23)),

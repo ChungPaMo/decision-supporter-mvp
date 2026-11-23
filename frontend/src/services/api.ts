@@ -2,11 +2,13 @@ import { BatchDetail, BatchSummary, Entity, Page, ValidationResult } from '../ty
 import { ForecastExecution, ForecastExecutionSummary, ForecastRunParameters, ForecastRunReply } from '../types/engine';
 import { ClassificationResult, DatasetDetail, PlanCandidate, PlanDecisionEvent, PlanDecisionRequest, PlanExecutionCommand, PlanExecutionDetail, PlanExecutionReply, PlanExecutionSummary, PlanningReply } from '../types/modules';
 import { useProductionStore } from '../store/productionStore';
+import { ClassifiedMappingReply, MappingReply, ProfileReply, SalesTransformPolicy, TransformationDetail, TransformationSummary, TransformReply } from '../types/ingestion';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
 // 데이터셋 DB를 조회하지 않는 경로. 그 외 모든 요청에는 dataset_id 를 붙인다.
-const UNSCOPED = ['/health', '/datasets', '/classifications/', '/ingest/', '/exports/plans/xlsx', '/dev/'];
+// /ingest/* 는 데이터셋 범위 요청이다(이력은 영구 API). 무저장 분류(/classifications/file)만 범위 밖이다.
+const UNSCOPED = ['/health', '/datasets', '/classifications/', '/exports/plans/xlsx', '/dev/'];
 const STALE = { detail: { code: 'DATASET_CHANGED', message: '데이터셋이 변경되어 이전 요청 결과를 버렸습니다.' } };
 const currentDataset = () => useProductionStore.getState().datasetId;
 
@@ -14,6 +16,68 @@ class ApiClient {
   private scoped(path: string, datasetId: string) {
     if (UNSCOPED.some((prefix) => path.startsWith(prefix))) return path;
     return `${path}${path.includes('?') ? '&' : '?'}dataset_id=${encodeURIComponent(datasetId)}`;
+  }
+
+  // ── 데이터 입력 보조 (저장하지 않음). 분류·후보·미리보기 성공은 등록·승인 성공이 아니다. ──
+  private assistForm(file: File, useApprovedMaster: boolean) {
+    const form = new FormData();
+    form.append('file', file);
+    form.append('use_approved_master', String(useApprovedMaster));
+    return form;
+  }
+
+  async profileFile(file: File, useApprovedMaster: boolean): Promise<ProfileReply> {
+    const form = this.assistForm(file, useApprovedMaster);
+    form.append('include_samples', 'false');
+    return this.request('POST', '/ingest/profile', { formData: form });
+  }
+
+  async classifiedMapping(file: File, entity: Entity | null, overrides: Record<string, string>, useApprovedMaster: boolean): Promise<ClassifiedMappingReply> {
+    const form = this.assistForm(file, useApprovedMaster);
+    if (entity) form.append('entity', entity);
+    form.append('column_overrides', JSON.stringify(overrides));
+    form.append('sample_row_limit', '0');
+    return this.request('POST', '/ingest/classified-mapping', { formData: form });
+  }
+
+  async mappingSuggestions(file: File, entity: Entity, overrides: Record<string, string>, useApprovedMaster: boolean): Promise<MappingReply> {
+    const form = this.assistForm(file, useApprovedMaster);
+    form.append('entity', entity);
+    form.append('column_overrides', JSON.stringify(overrides));
+    return this.request('POST', '/ingest/mapping-suggestions', { formData: form });
+  }
+
+  private transformForm(files: File[], policy: SalesTransformPolicy, useApprovedMaster: boolean) {
+    const form = new FormData();
+    // 파일 순서가 지문에 포함되므로 미리보기와 저장에서 같은 순서를 유지한다.
+    files.forEach((file) => form.append('files', file));
+    form.append('policy', JSON.stringify(policy));
+    form.append('use_approved_master', String(useApprovedMaster));
+    return form;
+  }
+
+  async transformPreview(files: File[], policy: SalesTransformPolicy, useApprovedMaster: boolean): Promise<TransformReply> {
+    return this.request('POST', '/ingest/transform-preview?offset=0&limit=500', { formData: this.transformForm(files, policy, useApprovedMaster) });
+  }
+
+  // 변환 이력 저장 + 승인 전 배치 생성. 201 신규 / 200 재사용. 승인은 별도의 배치 승인으로만 일어난다.
+  async createTransformation(files: File[], policy: SalesTransformPolicy, useApprovedMaster: boolean,
+    expectedResultDigest: string, createdBy: string, sourceNote: string): Promise<{ detail: TransformationDetail; reused: boolean }> {
+    const form = this.transformForm(files, policy, useApprovedMaster);
+    form.append('expected_result_digest', expectedResultDigest);
+    form.append('created_by', createdBy);
+    form.append('source_note', sourceNote);
+    let status = 201;
+    const detail = await this.request<TransformationDetail>('POST', '/ingest/transformations', { formData: form, onStatus: (code) => { status = code; } });
+    return { detail, reused: status === 200 };
+  }
+
+  async transformations(limit = 50, offset = 0): Promise<Page<TransformationSummary>> {
+    return this.request('GET', `/ingest/transformations?limit=${limit}&offset=${offset}`);
+  }
+
+  async getTransformation(transformationId: string): Promise<TransformationDetail> {
+    return this.request('GET', `/ingest/transformations/${encodeURIComponent(transformationId)}?offset=0&limit=500`);
   }
 
   async listDatasets(): Promise<DatasetDetail[]> {
@@ -53,6 +117,7 @@ class ApiClient {
       headers?: Record<string, string>;
       body?: any;
       formData?: FormData;
+      onStatus?: (status: number) => void;
     }
   ): Promise<T> {
     // 요청 시점의 데이터셋을 고정한다. 응답 전에 데이터셋이 바뀌면 결과를 화면에 넘기지 않는다.
@@ -83,6 +148,7 @@ class ApiClient {
     }
     const payload = await res.json();
     if (stale()) throw STALE;
+    options?.onStatus?.(res.status);
     return payload;
   }
 
@@ -175,11 +241,12 @@ class ApiClient {
   }
 
   async approvedData(entity: Entity): Promise<Array<Record<string, unknown>>> {
-    const paths: Record<Entity, string> = { product: '/products', material: '/materials', bom: '/boms', inventory: '/inventory', monthly_demand: '/demand/monthly' };
+    const paths: Record<Entity, string> = { product: '/products', material: '/materials', bom: '/boms', inventory: '/inventory', monthly_demand: '/demand/monthly', capacity: '/capacity', routing: '/routings' };
     const page = await this.request<Page<Record<string, unknown>>>('GET', `${paths[entity]}?limit=100&offset=0`);
-    return entity === 'bom'
-      ? page.items.flatMap((row) => (row.lines as Array<Record<string, unknown>>).map((line) => ({ ...row, lines: undefined, ...line })))
-      : page.items;
+    if (entity === 'bom') return page.items.flatMap((row) => (row.lines as Array<Record<string, unknown>>).map((line) => ({ ...row, lines: undefined, ...line })));
+    // CAPA·Routing 은 section/payload 구조다. 수량·설비시간·인시를 합치거나 환산하지 않고 원래 값 그대로 편다.
+    if (entity === 'capacity' || entity === 'routing') return page.items.map((row) => ({ section: row.section, ...(row.payload as Record<string, unknown>), batch_id: row.batch_id }));
+    return page.items;
   }
 
   // 배치 상세

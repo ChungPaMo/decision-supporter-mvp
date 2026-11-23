@@ -6,7 +6,9 @@ import { DatasetDetail, PlanningReply } from '../types/modules';
 
 export type Step = 'dashboard' | 'data' | 'verify' | 'forecast' | 'plans' | 'diagnosis' | 'mrp' | 'whatif' | 'approval';
 
-export const ENTITY_ORDER: Entity[] = ['product', 'material', 'bom', 'inventory', 'monthly_demand'];
+// 승인 순서: 제품·자재 → BOM·재고 → CAPA(자원 → 수량한도·시간예산) → Routing → 월별 수요
+export const ENTITY_ORDER: Entity[] = ['product', 'material', 'bom', 'inventory', 'capacity', 'routing', 'monthly_demand'];
+export const CORE_ENTITIES: Entity[] = ['product', 'material', 'bom', 'inventory', 'monthly_demand'];
 
 export const LEGACY_DATASET = 'TISSUE-LEGACY';
 const DATASET_KEY = 'chungpamo.dataset.v1';

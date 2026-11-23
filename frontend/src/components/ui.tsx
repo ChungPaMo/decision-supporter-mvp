@@ -8,6 +8,8 @@ export const ENTITY_LABEL: Record<Entity, string> = {
   bom: 'BOM',
   inventory: '재고',
   monthly_demand: '월별 수요',
+  capacity: 'CAPA',
+  routing: 'Routing',
 };
 
 export const PLAN_LABEL: Record<PlanType, string> = {

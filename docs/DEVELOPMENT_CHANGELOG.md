@@ -785,3 +785,39 @@
 
 **관련 자료**
 - [검증 및 PostgreSQL 체크리스트](XLSX_SELECTION_PERSISTENCE_VERIFICATION.md), [프론트엔드 인계](XLSX_SELECTION_PERSISTENCE_HANDOFF.md), [기존 이력 계약](INGESTION_INTEGRATION_HISTORY.md).
+
+### 2026-11-23 — 데이터 입력 화면의 분류·매핑·변환·이력 API 연결 (frontend)
+
+**Git**
+- 시작 Commit `1a7a424`.
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='feat(frontend): connect ingestion assistance, sales transformation and history'`로 확인한다.
+- 브랜치 `main`.
+
+**작업 목적**
+- [화면 변경 요청](INGESTION_UI_CHANGE_REQUEST.md) P0·P1을 기존 화면을 재사용해 연결한다.
+
+**구현 내용**
+- `services/api.ts`: `/ingest/*`를 dataset 범위로 전환(무저장 `/classifications/file`만 범위 밖), profile/classified-mapping/mapping-suggestions/transform-preview/transformations 메서드 추가. `types/ingestion.ts` 신규.
+- `DataUploadScreen.tsx`·`ClassificationPanel.tsx`: 분류·분석·등록이 원본 파일 하나를 공유. 파일 선택만으로는 업로드하지 않고 **"이 파일 등록"** 클릭에서 기존 uploadBatch 호출. 선택한 열은 column_overrides로 전달.
+- `IngestAssistPanel.tsx` 신규: 컬럼 구조, Top-3 후보(target_field/method/evidence), HOLD, 사용자 열 선택과 재확인. 점수·확률을 만들지 않는다.
+- `SalesTransformPanel.tsx` 신규: 7개 열 policy.columns, 고정 정책 확인, 미리보기(건수·수량 대조·반품 별도·오류 code·지문), 명시적 이력 저장 후 반환 배치를 기존 승인 화면에 연결, 변환 이력 목록·상세.
+- 변환 연결 배치는 열 설정 변경을 막고 배치 지문을 표시. Entity 7종(capacity, routing)과 승인 자료 조회 확장.
+
+**검증 결과**
+- 2026-11-23 보조 PC. type-check, Vite build 통과.
+- 사용자(정마나미) 결정으로 이 PC의 로컬 PostgreSQL 16(127.0.0.1:55433, `.pgdata`, 0009 적용)에서 실제 백엔드로 Playwright(Edge) 확인. 김대영 개발 PC의 DB가 아니며 AGENTS.md의 보조 PC DB 금지 규칙과 다르게 진행한 점을 기록한다.
+- 확인 내용: 파일 선택 후 POST /batches 0건, 제품 9·자재 9·CAPA 자원 6 승인, 비표준 헤더 수요 파일 HOLD→열 선택→재확인 MAPPED, 판매 원장 5파일 86,214행→정상 83,984/취소 887/반품 1,343→498행(정상 수량 1,812,610), 확인 전 POLICY_REVIEW_REQUIRED와 저장 버튼 비활성, 이력 저장 201→배치 READY_FOR_APPROVAL→승인 498건, 이력 상세의 배치 상태 APPROVED, `/ingest/` 요청 22건 모두 dataset_id 포함.
+- 미실행: `tests/e2e/browser` 전체, 200 재사용·RESULT_CHANGED·HAS_ERRORS 변환 경로, BOM·재고·Routing·수량한도·시간예산 등록, 좁은 화면.
+
+**기술적 결정**
+- 월별 수요 단계에 "표준 파일 등록 / 판매 원장 변환" 전환을 두고 둘 중 하나만 승인하도록 안내한다.
+- 변환 연결 배치 여부는 `/ingest/transformations` 목록의 batch_id로 판단한다.
+
+**남은 문제**
+- **김대영:** `tests/e2e/browser`가 파일 선택 즉시 업로드와 5단계 목록을 가정한다면 갱신이 필요하다(프런트 담당이 수정하지 않음).
+- XLSX 표 범위 선택(`/ingest/xlsx-layout`, `table_selection`)과 계획 v0.4 화면은 미연결.
+- 변환 연결 배치 판단은 최근 200건 이력만 조회한다.
+
+**관련 자료**
+- [API 인계](INGESTION_UI_API_HANDOFF.md), [화면 변경 요청](INGESTION_UI_CHANGE_REQUEST.md)
+
