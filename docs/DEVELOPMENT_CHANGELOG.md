@@ -1107,3 +1107,29 @@
 
 **관련 자료**
 - [쓰기 E2E와 저장 근거](XLSX_SELECTION_PERSISTENCE_VERIFICATION.md#2026-11-23-실제-브라우저-쓰기-e2e).
+
+### 2026-11-23 — 제조업 컬럼 의미 검색 모델 CPU 비교 (research)
+
+**Git**
+- 시작 Commit [`82fa99f`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/82fa99fd2018dee5e73072924e9c7280f7353cda).
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='eval: benchmark local manufacturing column embeddings'`로 확인한다.
+- 브랜치 `main`.
+
+**작업 목적**
+- 한국어 제조업 컬럼 추천에서 임베딩과 주변 문맥이 수요·반품·생산·발주 오추천에 주는 영향을 측정한다.
+
+**구현 내용**
+- 신규 합성 홀드아웃 70건을 고정하고 로컬 CPU 평가기와 기존 48건 재현을 실행했다. 합성 질의·후보 내보내기 및 입력 SHA에 결합한 외부 점수 재채점 형식을 추가했다.
+
+**검증 결과**
+- 기존 48건 RapidFuzz Top-3 `26/32`·오추천 `3/48`, 기존 BGE dense `32/32`·`7/48` 재현. 신규 70건 Qwen 전체 문맥 `29/37`·`8/70`, BGE 전체 문맥 `29/37`·`10/70`, E5 자료형·값 `7/37`·`1/70`, RapidFuzz `6/37`·`7/70`.
+- 비DB **1,220 passed / 0 failed / 67 skipped / 0 deselected**. 외부용 내보내기의 정답 제외, 동점 파일의 HOLD 계산, 입력 SHA 불일치 거부를 별도 확인했다.
+
+**기술적 결정**
+- 운영 RapidFuzz를 유지한다. Qwen에 주변 열·문서 종류를 더하면 반품·생산 혼동이 줄었지만 발주·금액 오추천이 남았다. 검토 단계의 Reranker는 HOLD 후보까지 비교할 수 있는 방식으로 후속 평가한다.
+
+**남은 문제**
+- 별도 Upstage 비교와 독립 검증이 필요하다. 정해진 70건의 점수로 임계값을 조정하지 않았다. 실제 Reranker 실행은 미검증이다.
+
+**관련 자료**
+- [모델 근거·측정·재현](MAPPING_LOCAL_EMBEDDING_EVALUATION_20261123.md), [합성 평가셋](../contracts/examples/mapping_semantic_holdout_v1.json), [평가기](../scripts/evaluate_mapping_embeddings.py).

@@ -1,6 +1,8 @@
 # 충파모 프로젝트 진행상황
 
-최종 확인 **2026-11-23 (KST), 기존 개발 PC**. 김대영이 [`1fee108`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/1fee1084385ebcbaccc2ce13f416649dd8279004)에서 별도 승인된 Edge→React→FastAPI→PostgreSQL 선택형 XLSX 쓰기 E2E **1회 실행 통과**를 확인했다. 제품·자재 승인 후 새 변환 `201`, 동일 입력 `200`, 이력·배치 재조회, 재검증·승인 버전 `1→2→3`, 신규 월수요 `0→1`과 화면 새로고침 후 유지까지 확인했다. 승인된 21개 테이블을 정리했고 개발 DB 지문은 모두 일치했다. HOLD→변환의 파일·범위 이관은 정마나미 후속이다. [쓰기 E2E 보고서](XLSX_SELECTION_PERSISTENCE_VERIFICATION.md#2026-11-23-실제-브라우저-쓰기-e2e)
+최종 확인 **2026-11-23 (KST), 기존 개발 PC**. 김대영이 [`82fa99f`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/82fa99fd2018dee5e73072924e9c7280f7353cda)에서 로컬 CPU 컬럼 비교를 실행했다. 기존 48건 RapidFuzz·BGE를 재현하고 신규 합성 70건에 Qwen3-0.6B·BGE-M3·multilingual-E5-small의 문맥 효과를 측정했다. Qwen 전체 문맥은 Top-3 29/37·오추천 8/70, RapidFuzz는 6/37·7/70이다. 운영 추천은 RapidFuzz를 유지한다. Upstage 후속 비교용 입력 내보내기와 점수 채점 경로를 마련했다. 전체 비DB **1,220 passed / 0 failed / 67 skipped**. [CPU 비교 및 재현](MAPPING_LOCAL_EMBEDDING_EVALUATION_20261123.md)
+
+직전 김대영이 [`1fee108`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/1fee1084385ebcbaccc2ce13f416649dd8279004)에서 별도 승인된 Edge→React→FastAPI→PostgreSQL 선택형 XLSX 쓰기 E2E **1회 실행 통과**를 확인했다. 제품·자재 승인 후 새 변환 `201`, 동일 입력 `200`, 이력·배치 재조회, 재검증·승인 버전 `1→2→3`, 신규 월수요 `0→1`과 화면 새로고침 후 유지까지 확인했다. 승인된 21개 테이블을 정리했고 개발 DB 지문은 모두 일치했다. HOLD→변환의 파일·범위 이관은 정마나미 후속이다. [쓰기 E2E 보고서](XLSX_SELECTION_PERSISTENCE_VERIFICATION.md#2026-11-23-실제-브라우저-쓰기-e2e)
 
 직전 읽기 전용 브라우저 검증은 [`741b6dc`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/741b6dc4a7f80acd633b70ca01e2a0c0f3b3adff)와 계획 엔진 변경 반영 후 [`2adab58`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/2adab58debdce885f34cc0e93010f0f82b0359a2)에서 **시나리오 5개 통과**, TypeScript 통과였다. XLSX 유형 추천·HOLD, 범위·수동 열·미리보기 오류, 저장 요청 구성과 기존 승인 수요 498행을 확인했다. [읽기 전용 단계별 결과·담당 인계](XLSX_SELECTION_PERSISTENCE_VERIFICATION.md#2026-11-23-실제-브라우저-읽기-전용-검증)
 
