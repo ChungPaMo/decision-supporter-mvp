@@ -118,3 +118,26 @@ try {
 원본·좌표·매핑·결과 지문 변조도 기존 `409` 또는 `422`로 거부됐다. 종료 시 승인된 21개 테이블만 `TRUNCATE … RESTRICT`로 정리한 뒤 회귀 DB 업무 데이터 0행, sentinel과 Alembic `0009`를 읽기 전용으로 재확인했다. 개발 DB `chungpamo`의 **60개 테이블·735개 스키마 객체·660개 열 및 인덱스 정의 지문**과 주요 데이터 건수가 사전 기록과 모두 일치했다. SQL 범위에서 추가 결함은 발견되지 않았다. 브라우저 E2E는 미실행이다.
 
 재현 코드와 실행 근거는 Git에서 제외한 로컬 `.artifacts/xlsx-concurrency-recheck-20261123/`에 보관한다. JUnit SHA-256은 `5e089963dbb2b078cbf5c8b116b208f2acf4c8dc7d66b456251ff27fd9c8ecc7`이다.
+
+## 2026-11-23 실제 브라우저 읽기 전용 검증
+
+시작 `main`은 [`741b6dc`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/741b6dc4a7f80acd633b70ca01e2a0c0f3b3adff)이며, 계획 엔진 팀원 변경을 fast-forward한 [`2adab58`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/2adab58debdce885f34cc0e93010f0f82b0359a2)에서 같은 결과를 확인했다. Edge `158.0.4370.33`·Playwright, Vite·React, 실제 FastAPI·PostgreSQL 16.6/Alembic `0009`로 읽기 전용 시나리오 **5개 통과, 실패 0개**였다. TypeScript 타입 검사도 통과했다. API를 `127.0.0.1:8091`, UI를 `127.0.0.1:5191`에서 임시 실행했다. 개발 DB 연결에는 `default_transaction_read_only=on`을 강제했고 검사 서버의 HTTP 가드가 저장·재검증·승인 경로를 차단했다. 실API 응답은 Playwright에서 대체하지 않았다. `#scenario/2`는 별도 합성 화면으로 표시됐고 API 호출은 0건이었다.
+
+| 단계 | 상태 | 확인 근거 |
+| --- | --- | --- |
+| 1. XLSX 파일 업로드 | 정상 연동 | 실제 브라우저에서 합성 XLSX를 선택하고 분류·구조·미리보기 API에 multipart로 전송했다. 영구 등록은 6단계에서 판정한다. |
+| 2. 유형 추천·HOLD | 정상 연동 | `/classifications/file` `200`. 표준 제품 파일은 `product` 추천. 제목이 있는 판매 원장은 범위 선택 전 `UNKNOWN`, 선택 후 `NEEDS_TRANSFORM`을 화면에 보였다. |
+| 3. 시트·헤더·범위 | 부분 연동 | `/ingest/xlsx-layout` `200`, 숨김 시트 선택 차단, `January` 헤더 4행·`C6:I8` 적용 및 분류 요청 반영을 확인했다. HOLD에서 판매 원장 변환으로 이동하면 대상 화면의 파일 입력은 비어 있어 파일과 범위를 다시 선택해야 했다. |
+| 4. 컬럼 후보와 수동 수정 | 부분 연동 | 표준 등록의 `/ingest/profile`·`/ingest/classified-mapping`·`/ingest/mapping-suggestions`는 모두 `200`. 수동 선택 `product_id ← product_id`가 재확인 요청에 들어갔다. 판매 원장은 `/ingest/profile` 헤더 목록과 수동 입력을 제공한다. **판매 원장의 정책 열 후보 또는 기존 후보 이관은 미연동**이다. |
+| 5. 변환 미리보기와 오류 | 정상 연동 | 기본 수량 열 이름 불일치는 `422 TRANSFORM_MAPPING_HOLD`; 수량을 원본 `E` 열에 수동 지정하고 10행까지 포함하면 `200 HAS_ERRORS`로 `E10`을 표시하고 저장을 비활성화했다. 8행까지로 다시 선택하면 `200 TRANSFORMED_PREVIEW`, 정상 월수요 1행·수량 14, `persisted=false`였다. |
+| 6. 선택형 변환 이력 저장 | 부분 연동 | 클릭 시 실제 `POST /ingest/transformations` 요청에서 데이터셋·선택 좌표와 SHA·수동 매핑·미리보기 지문을 확인했다. 검증 가드 `403 UI_CHECK_READ_ONLY`를 화면에 표시했다. `201`/`200` 저장 성공과 재조회는 미실행이다. |
+| 7. 저장 배치 재조회·재검증 | 부분 연동 | 기존 배치의 목록·상세와 변환 이력 목록을 실제 API `200`으로 확인했다. 개발 DB에 변환 이력은 0건이었다. 신규 이력 상세·연결 배치의 `revalidate` 실행은 미검증이다. |
+| 8. 별도 승인 | 부분 연동 | `BatchPanel`의 명시적 승인과 배치 지문 전달을 코드에서 확인했다. 실제 승인 전 배치에 대한 버튼 동작·서버 응답은 미실행이다. |
+| 9. DB 월수요 반영 | 부분 연동 | 기존 승인 수요 `/demand/monthly` `200`, 총 498행과 화면의 상위 100행 조회를 확인했다. 새 XLSX의 승인 전후 행 수는 미검증이다. |
+
+### 담당별 후속 작업
+
+- **정마나미** — HOLD에서 판매 원장 변환으로 이동할 때 같은 `File`과 선택 범위를 전달한다. 판매 원장의 정책 열과 표준 월수요의 컬럼 후보를 구분하고, 헤더 목록과 수동 입력밖에 없는 현재 경로의 안내를 명확히 한다. 필요하다면 계약을 합의해 판매 원장 정책 열 후보를 연결한다.
+- **김대영** — 이번 읽기 범위에서 백엔드 결함은 발견되지 않았다. 기존 `run_postgres_e2e.py`에는 두 차례 스키마 재생성과 별도 등록·예측 시나리오가 있으므로, 이번 XLSX 흐름에는 단일 전용 실행기로 범위를 좁힌다. 합성 제품·자재 승인 후 XLSX 변환 `201`/재시도 `200`, 이력·배치 상세, `revalidate` 버전 증가, 별도 승인, 수요 `0→1`과 화면 재조회·새로고침을 검증한다. `revalidate`는 버전을, 승인 요청은 배치 상세의 `result_digest`를 사용한다.
+
+회귀 DB는 읽기 전용 사전검사에서 `127.0.0.1:55433/chungpamo_regression`, `chungpamo_regression_runner`, sentinel, `0009`, 예상 두 스키마, 다른 연결 0개, 초기 기준 데이터 외 0행이었다. 정식 E2E는 이 상태를 다시 확인하고 **스키마 재생성 없이**, `CHUNGPAMO-2027`의 합성 제품·자재 및 XLSX 저장·재검증·승인, 종료 시 사전 확인한 의존 테이블 21개 정리만 별도 승인받아 실행할 수 있다. 이번 실행에서는 개발 DB 60개 테이블·735개 객체·660개 정의 지문과 회귀 DB 상태가 전후 일치했다. 테스트 코드·API 관찰·비교 자료는 Git에서 제외한 `.artifacts/xlsx-browser-readonly-20261123/`에 보관한다. [화면 인계](XLSX_SELECTION_PERSISTENCE_HANDOFF.md)

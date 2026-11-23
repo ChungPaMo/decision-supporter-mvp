@@ -1056,3 +1056,29 @@
 **관련 자료**
 - [변환 규칙 §11](../modules/planning_engine/PLANNING_RULES.md#11-팀-계약-변환-희원-결정-2026-11-23), [변환부](../modules/planning_engine/engine/adapter.py), [시험](../modules/planning_engine/tests/test_adapter.py), [대영 계약 인계](PLANNING_CONTRACT_V04_HANDOFF.md).
 
+### 2026-11-23 — 선택형 XLSX 실제 브라우저 읽기 전용 검증 (integration)
+
+**Git**
+- 시작 Commit [`741b6dc`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/741b6dc4a7f80acd633b70ca01e2a0c0f3b3adff). 팀 변경 [`2adab58`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/2adab58debdce885f34cc0e93010f0f82b0359a2)을 fast-forward한 뒤 브라우저 검증을 재확인했다.
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='docs: record read-only XLSX browser integration verification'`로 확인한다.
+- 브랜치 `main`.
+
+**작업 목적**
+- 나미님의 XLSX 화면을 실제 FastAPI 및 PostgreSQL의 읽기 경로로 대조하고 신규 저장·승인 E2E의 실행 범위를 확정한다.
+
+**구현 내용**
+- 로컬 Edge 검증으로 추천/HOLD, 범위 선택, 컬럼 후보·사용자 수정, 미리보기 오류·정상 집계, 저장 요청 구성과 기존 승인 수요를 관찰했다.
+
+**검증 결과**
+- 읽기 전용 실제 브라우저 시나리오 **5개 통과**, TypeScript 통과. 오류 범위는 `E10`을 표시하고 저장을 막았다. 정상 범위는 월수요 1행·수량 14였다. 기존 수요 498행, 예시 시나리오의 서버 요청 0건을 확인했다.
+- 개발 DB 60개 테이블·735개 객체·660개 정의 지문과 회귀 DB 상태가 전후 일치했다. 새 배치 저장·재검증·승인은 미실행이다.
+
+**기술적 결정**
+- PostgreSQL 읽기 전용과 임시 FastAPI 변경 요청 가드를 함께 사용했다. 실제 요청은 관찰하면서 저장 가드 응답과 제품 API 응답을 구분했다.
+
+**남은 문제**
+- 정마나미는 HOLD에서 변환 화면으로 이동할 때 파일·범위 이관을 연결한다. 김대영은 별도 승인 후 전용 회귀 DB에서 신규 저장·조회·재검증·승인과 월수요 반영을 검증한다.
+
+**관련 자료**
+- [읽기 전용 브라우저 결과](XLSX_SELECTION_PERSISTENCE_VERIFICATION.md#2026-11-23-실제-브라우저-읽기-전용-검증).
+
