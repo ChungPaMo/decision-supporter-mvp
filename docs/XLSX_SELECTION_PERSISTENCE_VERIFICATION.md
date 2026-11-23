@@ -101,3 +101,20 @@ try {
 기존 개발 PC의 읽기 전용 사전검사에서 두 인덱스의 정의, `127.0.0.1:55433/chungpamo_regression`, `chungpamo_regression_runner`, sentinel, Alembic `0009`, 대상 스키마, 업무 데이터 0행과 다른 세션 0개를 확인했다. 개발 DB의 테이블 60개·객체 735개·열 및 인덱스 정의 660개 지문은 직전 기록과 같았다. 코드 수정 후 실제 PostgreSQL 쓰기·동시성 테스트는 미실행이다.
 
 새 1회 승인 범위는 회귀 DB의 `public`·`CHUNGPAMO-2027` 재생성, Alembic `0009`, 기존 동시성 테스트에 필요한 합성 INSERT·COMMIT, 같은 데이터셋의 사전 확인된 21개 테이블 정리다. 동일 입력은 `201`/`200`으로 이력·배치를 한 쌍만 남기고, 서로 다른 범위의 동일 정규 CSV 경합은 `201`/`409 DUPLICATE_UPLOAD`로 끝나야 한다. 변조 거부, 중간 오류 롤백, 고아 데이터 0행, 정리 후 업무 데이터 0행, 개발 DB의 사전·사후 지문 일치도 확인한다.
+
+## 2026-11-23 수정 후 PostgreSQL 동시성 재검증
+
+별도 승인으로 [`872492b`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/872492bdd6fdb4f1005e4f1533716f58444be68a)의 PostgreSQL 회귀를 한 번 실행했다. 직전에 `127.0.0.1:55433/chungpamo_regression`, `chungpamo_regression_runner`, sentinel, `public`·`CHUNGPAMO-2027` 스키마, 다른 세션 0개와 업무 데이터 0행을 확인했다. 두 스키마를 한 번 재생성하고 Alembic `0009`를 적용했다. FastAPI `TestClient`와 PostgreSQL 16.6의 `test_xlsx_selection_concurrency_and_integrity`는 **1 passed / 0 failed / 0 skipped / 0 deselected**, 5.67초였다.
+
+| 검증 항목 | 실측 결과 |
+| --- | --- |
+| 동일 XLSX·동일 범위 경쟁 | `201`과 `200` 각 1건. 두 연결 사이 advisory lock 대기를 관측했고, 배치·이력 ID와 두 응답 본문이 같았다. |
+| 서로 다른 선택이 생성한 동일 정규 CSV 경쟁 | `201`과 `409 DUPLICATE_UPLOAD` 각 1건. `transactionid` 대기 후 PostgreSQL이 `import_batch_entity_source_sha256_idx`에서 `23505`를 반환했다. |
+| 먼저 커밋된 동일 CSV 재등록 | `409 DUPLICATE_UPLOAD`. 후발 배치와 이력은 생성되지 않았다. |
+| 관련 없는 고유 제약과 일반 SQL 오류 | 원본 이력 기본 키의 `23505`와 나눗셈 오류 `22012` 모두 `500 PERSISTENCE_ERROR`. 두 오류는 실제 INSERT가 발생한 뒤 주입했다. |
+| 롤백과 고아 데이터 | 두 오류 전후 배치 3행, 배치 원본 3행, 변환 이력 2행, XLSX 원본 2행, 월수요 0행이었다. 5개 테이블의 내용 지문이 일치했고 연결이 끊긴 배치·배치 원본·이력·XLSX 원본은 각각 0행이었다. 배치 수에는 합성 제품 마스터 1행이 포함된다. |
+| 지문과 선택 보존 | `January` 헤더 4행, 데이터 범위 `C6:I6`·`C6:I8`, 수량 열 `E` 및 원본 바이트와 SHA-256이 일치했다. 세 범위(`C6:I9` 포함)의 입력 지문은 서로 달랐다. 두 저장 이력의 입력·결과·manifest·정규 CSV 지문이 API와 SQL에서 일치했다. |
+
+원본·좌표·매핑·결과 지문 변조도 기존 `409` 또는 `422`로 거부됐다. 종료 시 승인된 21개 테이블만 `TRUNCATE … RESTRICT`로 정리한 뒤 회귀 DB 업무 데이터 0행, sentinel과 Alembic `0009`를 읽기 전용으로 재확인했다. 개발 DB `chungpamo`의 **60개 테이블·735개 스키마 객체·660개 열 및 인덱스 정의 지문**과 주요 데이터 건수가 사전 기록과 모두 일치했다. SQL 범위에서 추가 결함은 발견되지 않았다. 브라우저 E2E는 미실행이다.
+
+재현 코드와 실행 근거는 Git에서 제외한 로컬 `.artifacts/xlsx-concurrency-recheck-20261123/`에 보관한다. JUnit SHA-256은 `5e089963dbb2b078cbf5c8b116b208f2acf4c8dc7d66b456251ff27fd9c8ecc7`이다.

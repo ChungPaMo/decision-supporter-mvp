@@ -990,3 +990,29 @@
 **관련 자료**
 - [오류 매핑과 재검증 범위](XLSX_SELECTION_PERSISTENCE_VERIFICATION.md#2026-11-23-중복-오류-매핑-수정과-재검증-범위).
 
+### 2026-11-23 — 활성 배치 중복 경합 수정 후 PostgreSQL 재검증 (backend)
+
+**Git**
+- 시작 Commit [`872492b`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/872492bdd6fdb4f1005e4f1533716f58444be68a).
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='docs: record fixed PostgreSQL batch concurrency verification'`로 확인한다.
+- 브랜치 `main`.
+
+**작업 목적**
+- 실DB에서 동일 정규 CSV 경합이 `409 DUPLICATE_UPLOAD`를 반환하고 전후 데이터 무결성을 유지하는지 확인한다.
+
+**구현 내용**
+- 기존 재현 테스트를 사용해 두 요청의 잠금과 드라이버 진단을 확인했다. 별개 고유 제약 위반과 일반 SQL 오류를 실제 INSERT 후 발생시키고 SQL로 고아 데이터 0행을 확인했다. 실행 코드와 근거를 로컬에 보관했다.
+
+**검증 결과**
+- 별도 승인 범위에서 PostgreSQL 16.6·Alembic `0009`, 동시성 pytest **1 passed / 0 failed / 0 skipped / 0 deselected**. 동일 입력 `201`/`200`, 동일 CSV 경합 `201`/`409`, 저장 후 재등록 `409`, 무관한 고유 제약과 일반 SQL 오류 `500`을 확인했다.
+- 회귀 DB `CHUNGPAMO-2027`의 21개 테이블 정리 후 업무 데이터 0행. 개발 DB 읽기 전용 전후 비교에서 60개 테이블·735개 객체·660개 열 및 인덱스 정의 지문과 주요 건수 일치.
+
+**기술적 결정**
+- 실제 PG advisory lock과 트랜잭션 대기를 확인한 후 결과를 판정했다. 회귀 DB 정리는 명시된 테이블만 `TRUNCATE … RESTRICT`로 수행했다.
+
+**남은 문제**
+- 승인 범위에서 추가 결함은 발견되지 않았다. 브라우저 E2E는 미실행이다.
+
+**관련 자료**
+- [수정 후 실DB 재검증](XLSX_SELECTION_PERSISTENCE_VERIFICATION.md#2026-11-23-수정-후-postgresql-동시성-재검증).
+
