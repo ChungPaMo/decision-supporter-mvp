@@ -2,7 +2,7 @@ import { BatchDetail, BatchSummary, Entity, Page, ValidationResult } from '../ty
 import { ForecastExecution, ForecastExecutionSummary, ForecastRunParameters, ForecastRunReply } from '../types/engine';
 import { ClassificationResult, DatasetDetail, PlanCandidate, PlanDecisionEvent, PlanDecisionRequest, PlanExecutionCommand, PlanExecutionDetail, PlanExecutionReply, PlanExecutionSummary, PlanningReply } from '../types/modules';
 import { useProductionStore } from '../store/productionStore';
-import { ClassifiedMappingReply, MappingReply, ProfileReply, SalesTransformPolicy, TransformationDetail, TransformationSummary, TransformReply } from '../types/ingestion';
+import { ClassifiedMappingReply, MappingReply, ProfileReply, SalesTransformPolicy, TransformationDetail, TransformationSummary, TransformReply, XlsxLayoutReply, XlsxTableSelection } from '../types/ingestion';
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 
@@ -19,51 +19,63 @@ class ApiClient {
   }
 
   // ── 데이터 입력 보조 (저장하지 않음). 분류·후보·미리보기 성공은 등록·승인 성공이 아니다. ──
-  private assistForm(file: File, useApprovedMaster: boolean) {
+  private assistForm(file: File, useApprovedMaster: boolean, selection?: XlsxTableSelection | null) {
     const form = new FormData();
     form.append('file', file);
     form.append('use_approved_master', String(useApprovedMaster));
+    // 범위를 지정하지 않으면 필드를 보내지 않는다(기존 파싱). 빈 값은 서버가 거부한다.
+    if (selection) form.append('table_selection', JSON.stringify(selection));
     return form;
   }
 
-  async profileFile(file: File, useApprovedMaster: boolean): Promise<ProfileReply> {
-    const form = this.assistForm(file, useApprovedMaster);
+  // XLSX 시트 목록과 셀 미리보기 창. sheet 를 생략하면 목록만 받는다.
+  async xlsxLayout(file: File, view?: { sheet: string; row_start: number; row_limit: number; col_start: number; col_limit: number }): Promise<XlsxLayoutReply> {
+    const form = new FormData();
+    form.append('file', file);
+    const query = view ? `?${new URLSearchParams(Object.entries(view).map(([key, value]) => [key, String(value)]))}` : '';
+    return this.request('POST', `/ingest/xlsx-layout${query}`, { formData: form });
+  }
+
+  async profileFile(file: File, useApprovedMaster: boolean, selection?: XlsxTableSelection | null): Promise<ProfileReply> {
+    const form = this.assistForm(file, useApprovedMaster, selection);
     form.append('include_samples', 'false');
     return this.request('POST', '/ingest/profile', { formData: form });
   }
 
-  async classifiedMapping(file: File, entity: Entity | null, overrides: Record<string, string>, useApprovedMaster: boolean): Promise<ClassifiedMappingReply> {
-    const form = this.assistForm(file, useApprovedMaster);
+  async classifiedMapping(file: File, entity: Entity | null, overrides: Record<string, string>, useApprovedMaster: boolean, selection?: XlsxTableSelection | null): Promise<ClassifiedMappingReply> {
+    const form = this.assistForm(file, useApprovedMaster, selection);
     if (entity) form.append('entity', entity);
     form.append('column_overrides', JSON.stringify(overrides));
     form.append('sample_row_limit', '0');
     return this.request('POST', '/ingest/classified-mapping', { formData: form });
   }
 
-  async mappingSuggestions(file: File, entity: Entity, overrides: Record<string, string>, useApprovedMaster: boolean): Promise<MappingReply> {
-    const form = this.assistForm(file, useApprovedMaster);
+  async mappingSuggestions(file: File, entity: Entity, overrides: Record<string, string>, useApprovedMaster: boolean, selection?: XlsxTableSelection | null): Promise<MappingReply> {
+    const form = this.assistForm(file, useApprovedMaster, selection);
     form.append('entity', entity);
     form.append('column_overrides', JSON.stringify(overrides));
     return this.request('POST', '/ingest/mapping-suggestions', { formData: form });
   }
 
-  private transformForm(files: File[], policy: SalesTransformPolicy, useApprovedMaster: boolean) {
+  private transformForm(files: File[], policy: SalesTransformPolicy, useApprovedMaster: boolean, selections: Record<string, XlsxTableSelection> = {}) {
     const form = new FormData();
     // 파일 순서가 지문에 포함되므로 미리보기와 저장에서 같은 순서를 유지한다.
     files.forEach((file) => form.append('files', file));
     form.append('policy', JSON.stringify(policy));
     form.append('use_approved_master', String(useApprovedMaster));
+    // 파일 순번(0부터)을 키로 한 범위. 범위가 없는 파일은 기존 파싱을 쓴다.
+    if (Object.keys(selections).length) form.append('table_selections', JSON.stringify(selections));
     return form;
   }
 
-  async transformPreview(files: File[], policy: SalesTransformPolicy, useApprovedMaster: boolean): Promise<TransformReply> {
-    return this.request('POST', '/ingest/transform-preview?offset=0&limit=500', { formData: this.transformForm(files, policy, useApprovedMaster) });
+  async transformPreview(files: File[], policy: SalesTransformPolicy, useApprovedMaster: boolean, selections: Record<string, XlsxTableSelection> = {}): Promise<TransformReply> {
+    return this.request('POST', '/ingest/transform-preview?offset=0&limit=500', { formData: this.transformForm(files, policy, useApprovedMaster, selections) });
   }
 
   // 변환 이력 저장 + 승인 전 배치 생성. 201 신규 / 200 재사용. 승인은 별도의 배치 승인으로만 일어난다.
   async createTransformation(files: File[], policy: SalesTransformPolicy, useApprovedMaster: boolean,
-    expectedResultDigest: string, createdBy: string, sourceNote: string): Promise<{ detail: TransformationDetail; reused: boolean }> {
-    const form = this.transformForm(files, policy, useApprovedMaster);
+    expectedResultDigest: string, createdBy: string, sourceNote: string, selections: Record<string, XlsxTableSelection> = {}): Promise<{ detail: TransformationDetail; reused: boolean }> {
+    const form = this.transformForm(files, policy, useApprovedMaster, selections);
     form.append('expected_result_digest', expectedResultDigest);
     form.append('created_by', createdBy);
     form.append('source_note', sourceNote);
@@ -153,9 +165,10 @@ class ApiClient {
   }
 
   // 건강 체크
-  async classifyFile(file: File, includeSamples: boolean): Promise<ClassificationResult> {
+  async classifyFile(file: File, includeSamples: boolean, selection?: XlsxTableSelection | null): Promise<ClassificationResult> {
     const formData = new FormData();
     formData.append('file', file); formData.append('sample_row_limit', includeSamples ? '5' : '0');
+    if (selection) formData.append('table_selection', JSON.stringify(selection));
     return this.request('POST', '/classifications/file', { formData });
   }
 

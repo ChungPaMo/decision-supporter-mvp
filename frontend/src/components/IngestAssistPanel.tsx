@@ -1,7 +1,8 @@
 import { useRef, useState } from 'react';
 import { apiClient } from '../services/api';
 import { Entity } from '../types/api';
-import { ClassifiedMappingReply, MappingReply, ProfileReply } from '../types/ingestion';
+import { ClassifiedMappingReply, MappingReply, ProfileReply, XlsxTableSelection } from '../types/ingestion';
+import { columnLetter, describeSelection, rangeFailure } from './XlsxRangePicker';
 import { ENTITY_LABEL, Notice, errorMessage } from './ui';
 
 const SHEET_STATUS: Record<string, string> = { MAPPED: '매핑됨', HOLD: 'HOLD — 열 확인 필요', IGNORED: '사용 안 함' };
@@ -15,11 +16,13 @@ const failure = (error: unknown) => {
 interface Props {
   file: File; entity: Entity; overrides: Record<string, string>;
   onOverrides: (next: Record<string, string>) => void; useApprovedMaster: boolean; disabled: boolean;
+  // 사용자가 고른 XLSX 표 범위. 없으면 파일 전체를 읽는다.
+  selection: XlsxTableSelection | null;
 }
 
 // 등록 전 확인 단계: 컬럼 구조 분석과 매핑 후보(Top-3). 저장하지 않으며, 후보를 자동 적용하지 않는다.
 // 부모가 key 에 파일·유형·데이터셋을 넣어, 그중 하나가 바뀌면 이전 결과를 버린다.
-export default function IngestAssistPanel({ file, entity, overrides, onOverrides, useApprovedMaster, disabled }: Props) {
+export default function IngestAssistPanel({ file, entity, overrides, onOverrides, useApprovedMaster, disabled, selection: range }: Props) {
   const [profile, setProfile] = useState<ProfileReply | null>(null);
   const [mapping, setMapping] = useState<MappingReply | null>(null);
   const [selection, setSelection] = useState<Pick<ClassifiedMappingReply, 'selection_method' | 'source_sha256'> | null>(null);
@@ -34,17 +37,17 @@ export default function IngestAssistPanel({ file, entity, overrides, onOverrides
     const ticket = ++seq.current;
     setBusy(true); setError('');
     try { await job(); }
-    catch (problem) { if (ticket === seq.current && (problem as { detail?: { code?: string } })?.detail?.code !== 'DATASET_CHANGED') setError(failure(problem)); }
+    catch (problem) { if (ticket === seq.current && (problem as { detail?: { code?: string } })?.detail?.code !== 'DATASET_CHANGED') setError(/^XLSX_|ANALYSIS_LIMIT|FILE_TOO_LARGE|UNSUPPORTED_TYPE/.test((problem as { detail?: { code?: string } })?.detail?.code ?? '') ? rangeFailure(problem) : failure(problem)); }
     finally { if (ticket === seq.current) setBusy(false); }
   }
-  const analyze = () => run(async () => { const ticket = seq.current; const reply = await apiClient.profileFile(file, useApprovedMaster); if (ticket === seq.current) setProfile(reply); });
+  const analyze = () => run(async () => { const ticket = seq.current; const reply = await apiClient.profileFile(file, useApprovedMaster, range); if (ticket === seq.current) setProfile(reply); });
   const suggest = () => run(async () => {
     const ticket = seq.current;
     if (mapping) {
-      const reply = await apiClient.mappingSuggestions(file, entity, overrides, useApprovedMaster);
+      const reply = await apiClient.mappingSuggestions(file, entity, overrides, useApprovedMaster, range);
       if (ticket === seq.current) { setMapping(reply); setCheckedWith(overrideKey); }
     } else {
-      const reply = await apiClient.classifiedMapping(file, entity, overrides, useApprovedMaster);
+      const reply = await apiClient.classifiedMapping(file, entity, overrides, useApprovedMaster, range);
       if (ticket === seq.current) { setMapping(reply.mapping); setSelection(reply); setCheckedWith(overrideKey); }
     }
   });
@@ -65,6 +68,7 @@ export default function IngestAssistPanel({ file, entity, overrides, onOverrides
       <button type="button" className="button" disabled={disabled || busy} onClick={() => void suggest()}>{mapping ? '선택한 열로 다시 확인' : '컬럼 후보 보기'}</button>
       {busy && <span className="muted">서버에 요청 중…</span>}
     </div>
+    {range && <Notice tone="info">선택한 범위만 분석합니다: {describeSelection(range)}. 열 번호는 원본 기준입니다.</Notice>}
     {!useApprovedMaster && <Notice tone="muted">제품·자재가 아직 승인되지 않아 참조 검증 없이 분석합니다 (참조 검증 미완료).</Notice>}
     {error && <Notice tone="bad">{error} 이전 결과나 예시로 대체하지 않습니다.</Notice>}
 
@@ -72,7 +76,7 @@ export default function IngestAssistPanel({ file, entity, overrides, onOverrides
       <caption>컬럼 구조{sheet.sheet ? ` · ${sheet.sheet}` : ''} · {sheet.row_count.toLocaleString()}행 (예시 값 미포함)</caption>
       <thead><tr><th>열</th><th>열 이름</th><th>형식 후보</th><th>빈값 비율</th><th>확인 필요</th></tr></thead>
       <tbody>{sheet.columns.map((column) => <tr key={column.col}>
-        <td>{column.col}</td><td>{column.column}</td><td>{column.type_candidates.join(', ') || '-'}</td><td>{pct(column.empty_ratio)}</td>
+        <td>{range ? `${columnLetter(column.col)} (${column.col})` : column.col}</td><td>{column.column}</td><td>{column.type_candidates.join(', ') || '-'}</td><td>{pct(column.empty_ratio)}</td>
         <td>{[...column.uncertainty_reasons, ...column.anomalies].join(' · ') || '-'}</td></tr>)}</tbody>
     </table></div>)}
 
@@ -85,7 +89,7 @@ export default function IngestAssistPanel({ file, entity, overrides, onOverrides
         <caption>매핑 후보 (최대 3순위) — 순서는 확률이 아니며 검토가 필요합니다</caption>
         <thead><tr><th>원본 열</th><th>후보 표준 필드 · 방식</th><th>근거</th><th>이 열을 사용할 표준 필드</th></tr></thead>
         <tbody>{sheet.suggestions.map((item) => <tr key={item.col}>
-          <td>{item.col}. {item.source_column}</td>
+          <td>{range ? `${columnLetter(item.col)}열` : `${item.col}.`} {item.source_column}</td>
           <td>{item.suggestions.map((candidate, i) => <div key={candidate.target_field}>{i + 1}. {candidate.target_field} · {candidate.method}</div>)}
             {!item.suggestions.length && <span className="muted">후보 없음 {item.unresolved_reasons.join(' · ')}</span>}</td>
           <td>{item.suggestions.map((candidate) => <div key={candidate.target_field} className="muted">{candidate.evidence.join(', ')}</div>)}</td>

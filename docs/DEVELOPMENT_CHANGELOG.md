@@ -821,3 +821,37 @@
 **관련 자료**
 - [API 인계](INGESTION_UI_API_HANDOFF.md), [화면 변경 요청](INGESTION_UI_CHANGE_REQUEST.md)
 
+### 2026-11-23 — XLSX 시트·표 범위 선택과 HOLD 안내 화면 연결 (frontend)
+
+**Git**
+- 시작 Commit `a009951`.
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='feat(frontend): xlsx sheet and table range selection with hold guidance'`로 확인한다.
+- 브랜치 `main`.
+
+**작업 목적**
+- [표 범위 선택 인계](XLSX_TABLE_SELECTION_HANDOFF.md)와 [저장·승인 인계](XLSX_SELECTION_PERSISTENCE_HANDOFF.md)를 화면에 연결한다.
+
+**구현 내용**
+- `XlsxRangePicker.tsx` 신규: 시트 목록(숨김 시트는 선택 불가), 20행×16열 셀 미리보기와 이동, 헤더 행·데이터 시작/끝 행·첫/끝 열 입력, 선택 범위 강조, 범위 오류 코드별 안내.
+- `services/api.ts`: `xlsxLayout`, 분류·profile·mapping·classified-mapping의 `table_selection`, 변환 미리보기·저장의 `table_selections`. 범위가 없으면 필드를 보내지 않는다.
+- `DataUploadScreen.tsx`: 범위 변경 시 열 선택·분류·분석·후보 결과 폐기. 표준 `/batches` 등록은 범위를 보내지 않으므로 범위 적용 중에는 "이 파일 등록"을 막고 이유를 표시.
+- `ClassificationPanel.tsx`: `hold_kind` 4종 안내, `registration_hint`의 CAPA·Routing 등록 이동, NEEDS_TRANSFORM의 판매 원장 변환 이동.
+- `SalesTransformPanel.tsx`: 파일별 범위 선택, 사용한 범위 표시, 오류 위치를 원본 셀 좌표로 표시, 저장 조건에 issues_total=0·total>0 추가.
+
+**검증 결과**
+- 2026-11-23 보조 PC. type-check, Vite build 통과.
+- 이 PC의 로컬 PostgreSQL 16(127.0.0.1:55433, 0009)에서 실제 백엔드로 Playwright(Edge) 확인. 김대영 개발 PC의 DB가 아니다.
+- 확인 내용: CAPA 파일 HOLD(OTHER_ROUTE)와 등록 이동, 판매 원장 HOLD(NEEDS_TRANSFORM), 제목 행이 있는 XLSX가 범위 없이는 HOLD(UNKNOWN)이고 3행 C~F 범위 적용 후 월 수요 추천·MAPPED, 숨김 시트 선택 불가, 범위 값 변경 시 적용 해제와 결과 초기화, 범위 없는 변환의 TRANSFORM_MAPPING_HOLD 안내, B~P 범위 변환 400행→9행, 저장 201→배치 READY_FOR_APPROVAL. 그 배치의 승인(9건)은 화면이 아니라 API로 확인했다.
+- 미실행: `tests/e2e/browser`, 병합 셀·수식 헤더·XLSX_SOURCE_CHANGED 오류 경로, 여러 파일에 서로 다른 범위, 큰 시트의 창 이동, 좁은 화면.
+
+**기술적 결정**
+- 요청 메시지는 선택형 변환의 저장 버튼 비활성화를 요구했으나, main의 더 최신 저장·승인 인계 문서와 구현(45c2351)에 따라 문서의 조건에서 저장을 활성화했다(정마나미 결정). 김대영 확인이 필요하다.
+- 열 범위는 번호로 입력하고 열 문자를 함께 표시한다.
+
+**남은 문제**
+- **김대영:** 선택형 변환 저장을 화면에서 막아야 한다면 알려주면 비활성화한다. `tests/e2e/browser` 갱신 필요.
+- 셀을 눌러 범위를 고르는 조작은 없다(숫자 입력).
+
+**관련 자료**
+- [표 범위 선택 인계](XLSX_TABLE_SELECTION_HANDOFF.md), [저장·승인 인계](XLSX_SELECTION_PERSISTENCE_HANDOFF.md)
+

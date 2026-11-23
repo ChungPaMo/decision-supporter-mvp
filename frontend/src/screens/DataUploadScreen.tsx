@@ -6,6 +6,8 @@ import { BatchBadge, ENTITY_LABEL, errorMessage, Notice, qty, ROLE_CODE, ScreenH
 import ClassificationPanel from '../components/ClassificationPanel';
 import IngestAssistPanel from '../components/IngestAssistPanel';
 import SalesTransformPanel from '../components/SalesTransformPanel';
+import XlsxRangePicker, { isXlsx } from '../components/XlsxRangePicker';
+import { XlsxTableSelection } from '../types/ingestion';
 
 const HIDDEN_COLUMNS = new Set(['location', 'review_required', 'batch_id', 'source_type', 'lines']);
 const SELECTION_KEY = 'chungpamo.batch-selection.v1';
@@ -151,6 +153,8 @@ export default function DataUploadScreen({ view = 'upload' }: { view?: 'upload' 
   const [sourceFile, setSourceFile] = useState<File | null>(null);
   // 등록 전 확인에서 사용자가 고른 열 (표준 필드 → 원본 헤더). 파일이나 유형이 바뀌면 버린다.
   const [overrides, setOverrides] = useState<Record<string, string>>({});
+  // 사용자가 고른 XLSX 표 범위. 분류·분석·후보에만 쓰이며 표준 등록(/batches)에는 보내지 않는다.
+  const [range, setRange] = useState<XlsxTableSelection | null>(null);
   const [demandMode, setDemandMode] = useState<'standard' | 'sales'>('standard');
   const [linkedBatches, setLinkedBatches] = useState<Set<string>>(new Set());
   const datasetId = useProductionStore((state) => state.datasetId);
@@ -209,7 +213,9 @@ export default function DataUploadScreen({ view = 'upload' }: { view?: 'upload' 
     } finally { working.current = false; if (alive.current) setBusy(false); }
   };
 
-  const pickFile = (file: File | null) => { setSourceFile(file); setOverrides({}); };
+  const pickFile = (file: File | null) => { setSourceFile(file); setOverrides({}); setRange(null); };
+  // 범위가 바뀌면 그 범위를 기준으로 고른 열 선택도 버린다.
+  const pickRange = (next: XlsxTableSelection | null) => { setRange(next); setOverrides({}); };
   const pickEntity = (entity: Entity) => { if (entity !== activeEntity) setOverrides({}); setActiveEntity(entity); };
   const noteMissing = source !== 'CLIENT_UPLOAD' && !sourceNote.trim();
   // 명시적 등록: 버튼을 눌렀을 때만 서버에 올린다. 등록은 승인이 아니다.
@@ -219,7 +225,7 @@ export default function DataUploadScreen({ view = 'upload' }: { view?: 'upload' 
     const chosen = Object.keys(overrides).length ? overrides : undefined;
     void act(async () => {
       const created = await apiClient.uploadBatch(file, activeEntity, { source_type: source, source_note: sourceNote, column_overrides: chosen });
-      if (alive.current) { setSourceFile(null); setOverrides({}); }
+      if (alive.current) { setSourceFile(null); setOverrides({}); setRange(null); }
       return created;
     });
   };
@@ -278,14 +284,15 @@ export default function DataUploadScreen({ view = 'upload' }: { view?: 'upload' 
             onChange={(e) => { pickFile(e.target.files?.[0] ?? null); e.target.value = ''; }} disabled={noteMissing} /></label>
           <div className="suggested-file">
             <p><b>선택한 원본</b><span>{sourceFile ? sourceFile.name : '아직 선택한 파일이 없습니다'}</span></p>
-            <button type="button" className="button primary" disabled={!sourceFile || noteMissing} onClick={register}>이 파일 등록</button>
+            <button type="button" className="button primary" disabled={!sourceFile || noteMissing || !!range} onClick={register}>이 파일 등록</button>
             {sourceFile && <button type="button" className="button" onClick={() => pickFile(null)}>선택 취소</button>}
-            <small>{noteMissing ? '합성·공개 데이터는 출처 설명을 먼저 입력해야 등록할 수 있습니다.' : '파일을 고르는 것만으로는 서버에 저장되지 않습니다. "이 파일 등록"을 눌러야 등록되며, 등록은 승인이 아닙니다.'}</small>
+            <small>{range ? '표준 등록은 표 범위를 지원하지 않아, 범위를 적용한 상태에서는 등록할 수 없습니다. 범위를 해제하면 파일 전체로 등록합니다. 범위를 쓰는 저장은 판매 원장 변환에서만 지원합니다.' : noteMissing ? '합성·공개 데이터는 출처 설명을 먼저 입력해야 등록할 수 있습니다.' : '파일을 고르는 것만으로는 서버에 저장되지 않습니다. "이 파일 등록"을 눌러야 등록되며, 등록은 승인이 아닙니다.'}</small>
           </div>
+          {sourceFile && isXlsx(sourceFile) && <div className="range-slot"><XlsxRangePicker key={`${sourceFile.name}-${sourceFile.size}-${sourceFile.lastModified}`} file={sourceFile} value={range} onChange={pickRange} disabled={busy || !synced} /></div>}
         </fieldset>
       </section>}
-      {!verify && !salesMode && sourceFile && supportsAssist && <IngestAssistPanel key={`${datasetId}-${activeEntity}-${sourceFile.name}-${sourceFile.size}-${sourceFile.lastModified}`}
-        file={sourceFile} entity={activeEntity} overrides={overrides} onOverrides={setOverrides} useApprovedMaster={useApprovedMaster} disabled={busy || !synced} />}
+      {!verify && !salesMode && sourceFile && supportsAssist && <IngestAssistPanel key={`${datasetId}-${activeEntity}-${sourceFile.name}-${sourceFile.size}-${sourceFile.lastModified}-${JSON.stringify(range)}`}
+        selection={range} file={sourceFile} entity={activeEntity} overrides={overrides} onOverrides={setOverrides} useApprovedMaster={useApprovedMaster} disabled={busy || !synced} />}
       {!verify && !salesMode && sourceFile && !supportsAssist && <Notice tone="muted">{ENTITY_LABEL[activeEntity]}는 컬럼 후보 추천을 지원하지 않습니다. 표준 헤더 그대로 등록하고, 등록 후 검증 결과에서 열을 확인하세요.</Notice>}
       <label className="field"><span>배치 이력</span><select aria-label="배치 이력" disabled={busy || !synced} value={batch?.batch_id ?? ''} onChange={(e) => void selectBatch(e.target.value)}>
         <option value="">등록된 배치 선택</option>{history.filter((item) => item.entity === activeEntity).map((item) =>
@@ -293,7 +300,8 @@ export default function DataUploadScreen({ view = 'upload' }: { view?: 'upload' 
       </select></label>
       {verify && !batch && !busy && <Notice tone="muted">이 데이터 종류에는 등록된 배치가 없습니다. 데이터 업로드에서 파일을 먼저 등록하세요.</Notice>}
       {batch && <BatchPanel key={`${batch.batch_id}-${batch.version}`} batch={batch} disabled={busy || !synced} act={act} linked={linkedBatches.has(batch.batch_id)} />}
-    </div>{!verify && <ClassificationPanel file={sourceFile} onFile={pickFile} onChoose={pickEntity} disabled={busy} />}</div></div>
+    </div>{!verify && <ClassificationPanel file={sourceFile} onFile={pickFile} onChoose={pickEntity} selection={range} disabled={busy}
+      onTransform={() => { pickEntity('monthly_demand'); setDemandMode('sales'); }} />}</div></div>
     <Notice tone="info">승인된 월별 수요는 실제 예측에 사용됩니다. 계획·진단은 별도 예시입니다.</Notice>
   </div>;
 }

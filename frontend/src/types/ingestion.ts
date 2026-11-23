@@ -44,7 +44,7 @@ export interface SourceLocation { source_index: number; sheet: string; row: numb
 export interface TransformReply {
   dataset_id: string; status: 'POLICY_REVIEW_REQUIRED' | 'HAS_ERRORS' | 'TRANSFORMED_PREVIEW';
   policy: SalesTransformPolicy; policy_digest: string; input_digest: string; result_digest: string;
-  sources: Array<{ source_index: number; filename: string; sha256: string; row_count: number }>;
+  sources: Array<{ source_index: number; filename: string; sha256: string; row_count: number; table_selection?: XlsxTableSelection; resolved_columns?: Record<string, number> }>;
   operations: Array<{ operation: string; parameters: Record<string, unknown> }>;
   master_scope: string | null; master_digest: string | null;
   counts: Record<string, number>; quantity_reconciliation: Record<string, string | boolean>;
@@ -62,3 +62,17 @@ export interface TransformationSummary {
   persisted: true;
 }
 export interface TransformationDetail extends TransformationSummary { preview: TransformReply }
+
+// contracts/interfaces/xlsx.py — 좌표는 원본 통합문서 기준 1부터 시작하며 끝을 포함한다.
+export interface XlsxTableSelection {
+  source_sha256: string; sheet: string; header_row: number; data_start_row: number; data_end_row: number; first_col: number; last_col: number;
+}
+export interface XlsxLayoutReply {
+  source_sha256: string; filename: string;
+  sheets: Array<{ name: string; visibility: 'visible' | 'hidden' | 'veryHidden'; max_row: number; max_col: number }>;
+  window: null | {
+    sheet: string; first_row: number; last_row: number; first_col: number; last_col: number;
+    hidden_columns: number[]; merged_ranges: string[]; merges_truncated: boolean;
+    cells: Array<{ row: number; col: number; kind: 'text' | 'number' | 'date' | 'bool' | 'formula' | 'error' | 'merged' | 'empty'; value: string | null }>;
+  };
+}

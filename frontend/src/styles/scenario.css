@@ -616,3 +616,12 @@
 .sales-columns { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px 14px; }
 .sc-main-real .policy-list { display: grid; gap: 4px; padding-left: 20px; list-style: disc; font-size: 14px; }
 .sc-main-real .panel h4 { font-size: 15px; font-weight: 700; }
+
+/* XLSX 시트·표 범위 선택 */
+.range-slot { grid-column: 1 / -1; padding: 12px 14px; border: 1px solid var(--sc-line); border-radius: 10px; }
+.range-inputs { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 10px 12px; }
+.sc-main-real .range-grid th, .sc-main-real .range-grid td { padding: 5px 8px; font-size: 12.5px; white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis; border-right: 1px solid var(--sc-line); }
+.sc-main-real .range-grid tbody th { position: sticky; left: 0; background: #f3f5f8; text-align: right; font-variant-numeric: tabular-nums; }
+.sc-main-real .range-grid .range-header { background: var(--sc-blue-soft); box-shadow: inset 0 -2px 0 var(--sc-blue); font-weight: 700; }
+.sc-main-real .range-grid .range-body { background: #f7f9fd; }
+.sc-main-real .range-grid .hidden-col { color: var(--sc-ink-2); font-weight: 500; }

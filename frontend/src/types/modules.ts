@@ -4,7 +4,8 @@ export type ClassificationResult = {
   candidates: Array<{ entity: import('./api').CoreEntity; score: number; reasons: string[] }>;
   hold: boolean; reasons: string[]; module_version: string;
   // rules-0.4.0: 보류 종류와 CAPA·Routing 등록 안내. 없을 수 있다.
-  hold_kind?: string | null; registration_hint?: { entity?: string; sections?: string[] } | null;
+  hold_kind?: 'NEEDS_TRANSFORM' | 'OTHER_ROUTE' | 'AMBIGUOUS' | 'UNKNOWN' | null;
+  registration_hint?: { entity: 'capacity' | 'routing'; sections: Array<'resources' | 'quantity_limits' | 'hours_budgets' | 'routing_steps'> } | null;
 };
 // contracts/interfaces/dataset.py — schema_name 은 서버 내부 값이라 응답에 없다.
 export type DatasetDetail = {

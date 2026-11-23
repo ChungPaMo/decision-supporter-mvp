@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { apiClient } from '../services/api';
 import { useProductionStore } from '../store/productionStore';
-import { SalesColumnKey, SalesColumns, SalesTransformPolicy, TransformationDetail, TransformationSummary, TransformReply } from '../types/ingestion';
+import { SalesColumnKey, SalesColumns, SalesTransformPolicy, TransformationDetail, TransformationSummary, TransformReply, XlsxTableSelection } from '../types/ingestion';
+import XlsxRangePicker, { columnLetter, describeSelection, isXlsx, rangeFailure } from './XlsxRangePicker';
 import { Notice, ROLE_CODE, errorMessage, qty } from './ui';
 
 const COLUMN_FIELDS: Array<{ key: SalesColumnKey; label: string; hint: string }> = [
@@ -27,8 +28,12 @@ const short = (digest: string) => `${digest.slice(0, 16)}…`;
 const failure = (error: unknown) => {
   const detail = (error as { detail?: { code?: string; message?: string } })?.detail;
   if (detail?.code === 'PERSISTENCE_DISABLED') return `서버 저장 기능이 꺼져 있어 저장·이력 조회를 할 수 없습니다. 저장된 것으로 표시하지 않습니다. (${detail.code})`;
+  if (detail?.code === 'TRANSFORM_MAPPING_HOLD') return `필수 열을 찾지 못했습니다. 열 지정을 확인하세요. 범위를 지정했다면 그 범위의 헤더 이름이나 열 문자(예: C)를 입력합니다. (${detail.code})`;
+  if (/^XLSX_|ANALYSIS_LIMIT|FILE_TOO_LARGE|UNSUPPORTED_TYPE/.test(detail?.code ?? '')) return rangeFailure(error);
   return detail?.code ? `${detail.message ?? '요청이 거부되었습니다.'} (${detail.code})` : errorMessage(error);
 };
+// 원본 셀 좌표 (예: E6). 열 번호가 없으면 행만 표시한다.
+const cellRef = (row: number, col?: number | null) => (col ? `${columnLetter(col)}${row}` : `${row}행`);
 
 function Review({ preview }: { preview: TransformReply }) {
   const status = STATUS[preview.status];
@@ -38,8 +43,10 @@ function Review({ preview }: { preview: TransformReply }) {
     <div className="table-scroll"><table><caption>수량 대조</caption><thead><tr><th>항목</th><th>값</th></tr></thead>
       <tbody>{Object.entries(preview.quantity_reconciliation).map(([key, value]) => <tr key={key}><td>{key}</td><td>{typeof value === 'boolean' ? (value ? '일치' : '불일치') : qty(value)}</td></tr>)}</tbody></table></div>
     {preview.issues_total > 0 && <div className="table-scroll"><table><caption>오류 {preview.issues.length} / 전체 {qty(preview.issues_total)}건 — 유효한 일부만으로 저장하지 않습니다</caption>
-      <thead><tr><th>코드</th><th>파일 순번</th><th>시트</th><th>행</th><th>열</th><th>항목</th></tr></thead>
-      <tbody>{preview.issues.map((issue, i) => <tr key={i}><td>{issue.code}</td><td>{issue.location.source_index + 1}</td><td>{issue.location.sheet}</td><td>{issue.location.row}</td><td>{issue.location.col ?? '-'}</td><td>{issue.field ?? '-'}</td></tr>)}</tbody></table></div>}
+      <thead><tr><th>코드</th><th>파일</th><th>시트</th><th>원본 셀</th><th>항목</th></tr></thead>
+      <tbody>{preview.issues.map((issue, i) => { const source = preview.sources.find((item) => item.source_index === issue.location.source_index);
+        const col = issue.location.col ?? (issue.field ? source?.resolved_columns?.[issue.field] : undefined);
+        return <tr key={i}><td>{issue.code}</td><td>{source?.filename ?? issue.location.source_index + 1}</td><td>{issue.location.sheet || '-'}</td><td>{cellRef(issue.location.row, col)}</td><td>{issue.field ?? '-'}</td></tr>; })}</tbody></table></div>}
     {preview.warnings.length > 0 && <div><h4>경고</h4><ul>{preview.warnings.map((warning) => <li key={warning}>{warning}</li>)}</ul></div>}
     <div className="table-scroll"><table><caption>변환된 월별 수요 {preview.records.length} / 전체 {qty(preview.total)}행 (일부 표시)</caption>
       <thead><tr><th>제품</th><th>월</th><th>수요 수량</th><th>단위</th><th>원본 행 수</th></tr></thead>
@@ -48,8 +55,8 @@ function Review({ preview }: { preview: TransformReply }) {
       <thead><tr><th>제품</th><th>월</th><th>반품 수량</th><th>단위</th></tr></thead>
       <tbody>{preview.returns.slice(0, 12).map((row) => <tr key={`${row.product_id}-${row.period}`}><td>{row.product_id}</td><td>{row.period}</td><td>{qty(row.return_qty)}</td><td>{row.unit}</td></tr>)}</tbody></table></div>}
     <details><summary>원본 파일·연산·지문</summary>
-      <div className="table-scroll"><table><caption>원본 파일</caption><thead><tr><th>순번</th><th>파일</th><th>행 수</th><th>SHA-256</th></tr></thead>
-        <tbody>{preview.sources.map((source) => <tr key={source.source_index}><td>{source.source_index + 1}</td><td>{source.filename}</td><td>{qty(source.row_count)}</td><td className="code">{short(source.sha256)}</td></tr>)}</tbody></table></div>
+      <div className="table-scroll"><table><caption>원본 파일</caption><thead><tr><th>순번</th><th>파일</th><th>행 수</th><th>사용한 범위</th><th>SHA-256</th></tr></thead>
+        <tbody>{preview.sources.map((source) => <tr key={source.source_index}><td>{source.source_index + 1}</td><td>{source.filename}</td><td>{qty(source.row_count)}</td><td>{source.table_selection ? describeSelection(source.table_selection) : '파일 전체'}</td><td className="code">{short(source.sha256)}</td></tr>)}</tbody></table></div>
       <ul>{preview.operations.map((operation, i) => <li key={i}>{operation.operation} <span className="code">{JSON.stringify(operation.parameters)}</span></li>)}</ul>
       <p className="muted">정책 지문 <span className="code">{short(preview.policy_digest)}</span> · 입력 지문 <span className="code">{short(preview.input_digest)}</span> · 변환 결과 지문 <span className="code">{short(preview.result_digest)}</span></p>
       <p className="muted">변환 결과 지문은 배치 승인에 쓰는 배치 지문과 다릅니다.</p>
@@ -63,6 +70,8 @@ export default function SalesTransformPanel({ canUseMaster, disabled, onBatch }:
   const alive = useRef(true);
   const seq = useRef(0);
   const [files, setFiles] = useState<File[]>([]);
+  // 파일 순번(0부터) → 사용자가 고른 XLSX 표 범위
+  const [ranges, setRanges] = useState<Record<string, XlsxTableSelection>>({});
   const [columns, setColumns] = useState<SalesColumns>(DEFAULT_COLUMNS);
   const [headerOptions, setHeaderOptions] = useState<string[]>([]);
   const [confirmed, setConfirmed] = useState(false);
@@ -97,17 +106,17 @@ export default function SalesTransformPanel({ canUseMaster, disabled, onBatch }:
     catch (problem) { if (alive.current && (problem as { detail?: { code?: string } })?.detail?.code !== 'DATASET_CHANGED') { setHistory(null); setHistoryError(failure(problem)); } }
   }
   const readHeaders = () => guarded(async (ticket) => {
-    const reply = await apiClient.profileFile(files[0], false);
+    const reply = await apiClient.profileFile(files[0], false, ranges['0']);
     if (alive.current && ticket === seq.current) setHeaderOptions(reply.sheets.flatMap((sheet) => sheet.columns.map((column) => column.column)));
   });
   const runPreview = () => guarded(async (ticket) => {
     setPreview(null); setSaved(null);
-    const reply = await apiClient.transformPreview(files, policy(), useMaster);
+    const reply = await apiClient.transformPreview(files, policy(), useMaster, ranges);
     if (alive.current && ticket === seq.current) setPreview(reply);
   });
   const save = () => guarded(async (ticket) => {
     if (!preview) return;
-    const result = await apiClient.createTransformation(files, policy(), useMaster, preview.result_digest, createdBy, sourceNote);
+    const result = await apiClient.createTransformation(files, policy(), useMaster, preview.result_digest, createdBy, sourceNote, ranges);
     if (!alive.current || ticket !== seq.current) return;
     setSaved(result);
     await loadHistory();
@@ -115,7 +124,7 @@ export default function SalesTransformPanel({ canUseMaster, disabled, onBatch }:
   });
   const openDetail = (id: string) => guarded(async (ticket) => { setDetail(null); const reply = await apiClient.getTransformation(id); if (alive.current && ticket === seq.current) setDetail(reply); });
 
-  const canSave = !!preview && preview.status === 'TRANSFORMED_PREVIEW' && preview.policy.user_confirmed && ROLE_CODE.test(createdBy) && !!sourceNote.trim() && !saved;
+  const canSave = !!preview && preview.status === 'TRANSFORMED_PREVIEW' && preview.issues_total === 0 && preview.total > 0 && preview.policy.user_confirmed && ROLE_CODE.test(createdBy) && !!sourceNote.trim() && !saved;
   return <section className="panel stack" aria-label="판매 원장 변환">
     <div className="panel-heading"><div><h3>판매 원장 → 월별 수요 변환</h3>
       <p className="muted">합성 판매 원장 전용 정책(CHUNGPAMO_SYNTHETIC_SALES v1.0, SYNTHETIC_ONLY)입니다. 다른 기업의 원장에 자동으로 적용하지 않습니다.</p></div>
@@ -124,9 +133,14 @@ export default function SalesTransformPanel({ canUseMaster, disabled, onBatch }:
 
     <fieldset className="stack" disabled={disabled || busy}><legend>1. 원본 파일 (1~8개, 선택한 순서대로 전송)</legend>
       <label className="field file-field"><span>판매 원장 파일 (CSV/XLSX)</span><input type="file" accept=".csv,.xlsx" multiple
-        onChange={(event) => { setFiles(Array.from(event.target.files ?? []).sort((a, b) => a.name.localeCompare(b.name))); setHeaderOptions([]); invalidate(); }} /></label>
+        onChange={(event) => { setFiles(Array.from(event.target.files ?? []).sort((a, b) => a.name.localeCompare(b.name))); setRanges({}); setHeaderOptions([]); invalidate(); }} /></label>
       {files.length > 0 && <p className="muted">선택한 파일 {files.length}개: {files.map((file) => file.name).join(', ')}</p>}
       {files.length > 8 && <Notice tone="bad">파일은 최대 8개입니다.</Notice>}
+      {files.slice(0, 8).map((file, index) => isXlsx(file) && <details key={`${file.name}-${file.size}-${file.lastModified}`} className="range-slot" open={!!ranges[String(index)]}>
+        <summary>{index + 1}번 파일 {file.name} — {ranges[String(index)] ? '범위 적용됨' : '표 범위 선택 (선택 사항)'}</summary>
+        <XlsxRangePicker file={file} value={ranges[String(index)] ?? null} disabled={disabled || busy} label={`${index + 1}번 파일 표 범위 선택`}
+          onChange={(next) => { const copy = { ...ranges }; if (next) copy[String(index)] = next; else delete copy[String(index)]; setRanges(copy); setHeaderOptions([]); invalidate(); }} />
+      </details>)}
     </fieldset>
 
     <fieldset className="stack" disabled={disabled || busy || !files.length}><legend>2. 원장의 열 지정 (policy.columns)</legend>
@@ -156,7 +170,7 @@ export default function SalesTransformPanel({ canUseMaster, disabled, onBatch }:
       <div className="sales-columns"><label className="field"><span>작성자 역할 코드</span><input value={createdBy} onChange={(event) => setCreatedBy(event.target.value)} aria-invalid={!ROLE_CODE.test(createdBy)} /></label>
         <label className="field"><span>출처 설명</span><input value={sourceNote} maxLength={1000} onChange={(event) => setSourceNote(event.target.value)} /></label></div>
       <button type="button" className="button primary" disabled={!canSave} onClick={() => void save()}>변환 이력 저장 · 배치 생성</button>
-      {preview.status !== 'TRANSFORMED_PREVIEW' && <p className="muted">상태가 "변환 미리보기 완료"일 때만 저장할 수 있습니다.</p>}
+      {(preview.status !== 'TRANSFORMED_PREVIEW' || preview.issues_total > 0 || preview.total === 0) && <p className="muted">상태가 "변환 미리보기 완료"이고 오류가 0건이며 월별 수요가 1행 이상일 때만 저장할 수 있습니다.</p>}
     </fieldset>}
     {saved && <Notice tone="ok">변환 이력 저장 완료 ({saved.reused ? '같은 이력 재사용 · 200' : '신규 · 201'}). 배치 {saved.detail.batch_id} · 상태 {saved.detail.batch_status}. 아직 승인되지 않았습니다. 아래 배치에서 검증 결과를 확인하고 승인하세요.</Notice>}
 
