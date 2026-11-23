@@ -66,3 +66,30 @@ try {
 | `TISSUE-LEGACY` | 7 | 24 | 1 | 0 / 0 |
 
 사전·사후 비교와 JUnit 증거는 Git에서 제외된 로컬 `.artifacts/`에 보관한다. 다음 실DB 검증 범위는 동일 입력을 두 연결에서 동시에 저장하는 경우, 같은 시트의 범위 변경과 정규 CSV 충돌, 원본·선택 변조 반례다. 브라우저 E2E와 전체 SQL 회귀는 이번 실행 범위 밖이다. [화면 인계](XLSX_SELECTION_PERSISTENCE_HANDOFF.md)
+
+## 2026-11-23 PostgreSQL 동시성·무결성 검증
+
+기준 `main`은 [`c136793`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/c136793c8b974f8b9cd321bbbd9df98b99ba3597)이다. 별도 1회 승인 후 `127.0.0.1:55433/chungpamo_regression`을 새로 검사했다. `chungpamo_regression_runner` 역할·DB 소유권, sentinel, 승인된 두 스키마, 기준 데이터 외 0행과 다른 세션 0개가 모두 일치했다. `public`과 `CHUNGPAMO-2027`만 재생성하고 Alembic `0009`를 적용했다. 실제 FastAPI `TestClient`와 PostgreSQL 16.6에서 실행한 pytest는 **0 passed / 1 failed / 0 skipped / 0 deselected**, 5.18초다. 단일 테스트가 여섯 항목을 검사했으며 마지막 응답 코드 단언에서 실패했다.
+
+| 검증 항목 | 결과 | 실측 |
+| --- | --- | --- |
+| 동일 파일·동일 선택 동시 저장 | 성공 | 독립 PostgreSQL 세션 두 개에서 `201` 한 건, `200` 한 건. 이력·배치 ID와 응답 본문이 같았다. |
+| 같은 시트의 선택 범위별 입력 지문 | 성공 | `January`의 `C6:I6`, `C6:I8`, `C6:I9`가 각각 다른 `input_digest`를 받았다. 최초 두 범위의 이력과 좌표를 재조회했다. |
+| 서로 다른 입력의 동일 정규 CSV 등록 | DB 차단 성공, 동시 HTTP 계약 실패 | `C6:I8`과 `C6:I9`의 정규 CSV 바이트가 같았다. 앞 요청 `201` 후 재시도는 `409 DUPLICATE_UPLOAD`. 두 요청이 경합했을 때 앞 요청은 `201`, 뒤 요청은 기대 `409` 대신 `500 PERSISTENCE_ERROR`. |
+| 원본 SHA·선택·매핑·변환 지문 변조 | 성공 | SHA 변경은 `409 XLSX_SOURCE_CHANGED`. 선택 범위 또는 유효한 매핑을 바꾸거나 제출 지문을 바꾸면 각각 `409 RESULT_CHANGED`. 존재하지 않는 매핑은 `422 TRANSFORM_MAPPING_HOLD`. 각 요청 뒤 5개 테이블의 행 수와 내용 지문이 같았다. |
+| PostgreSQL 잠금·고유 제약 | 성공 | 실제 `pg_locks`와 `pg_blocking_pids()`에서 동일 입력은 `advisory`, 동일 CSV는 `transactionid` 대기를 관측했다. CSV 충돌은 `23505`와 `import_batch_entity_source_sha256_idx`로 확인했다. |
+| 중간 SQL 오류·고아 데이터 방지 | 성공 | 배치·배치 파일·이력·XLSX 원본 INSERT를 확인한 뒤 원본 행을 중복 삽입했다. `23505` 기본 키 위반이 `500 PERSISTENCE_ERROR`로 반환됐고, 5개 테이블의 행 수와 내용 지문이 유지됐다. |
+
+| 시점 | 배치 | 배치 원본 | 변환 이력 | 변환 원본 | 월수요 |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 동일 입력 동시 저장 후 | 2 | 2 | 1 | 1 | 0 |
+| 다른 범위 저장·CSV 충돌 후 및 변조·실패 후 | 3 | 3 | 2 | 2 | 0 |
+| 승인된 정리 후 | 0 | 0 | 0 | 0 | 0 |
+
+배치와 배치 원본에는 합성 제품 마스터 검증용 1건이 포함된다. 각 성공 이력에서 API와 SQL의 입력·결과·manifest·정규 CSV 지문이 모두 일치했다. `January` 헤더 4행, 수량 열 E 및 XLSX 원본 바이트와 SHA-256 `24c4001aba464e91e31a0a15770ac38418023f3b7303a763d0c2d56a3ff4e8da`도 확인했다. 실측 `input_digest`는 `C6:I6`이 `7e5948fe1a3644b9ca2d9d70ac3110320a0c053c8645f141cc334f597a5bfcbc`, `C6:I8`이 `b40d6163ead245f535cd003efec0db78699eb42951e08de10bd9effc957b244d`, 중복 차단된 `C6:I9`가 `43c1a279d69902bbd08418fa9019bb3053b5b9856163b0e1cc8f16be66e9ff58`이다. `C6:I8`과 `C6:I9`의 정규 CSV SHA-256은 `5b91a773e461c87a625bbcd82c2baf2e889ecaf16ad742342f92e7afa3b648a5`였다.
+
+오류의 원인은 `SqlBatchRepository.transaction()`이 `uq_batch_live_entity_sha`만 중복으로 분류하는 데 있다. 데이터셋의 `LIKE … INCLUDING ALL` 경로에서는 같은 인덱스가 `import_batch_entity_source_sha256_idx`로 생성된다. 이 이름의 `23505`는 일반 저장 오류가 된다. 후속 변경은 두 인덱스의 중복만 `409 DUPLICATE_UPLOAD`로 매핑하고, 다른 고유 제약과 저장 오류의 처리를 보존해야 한다. [SQL 저장소](../backend/app/batches/sql_repository.py) · [데이터셋 스키마 생성](../backend/app/dataset_schema_v1.py)
+
+정리는 `CHUNGPAMO-2027`의 승인된 21개 테이블을 명시한 `TRUNCATE … RESTRICT`로 완료했다. 회귀 DB의 두 스키마, sentinel, revision `0009`, 초기 기준 행과 업무 데이터 0행을 다시 확인했다. 개발 DB `chungpamo`는 사전·사후 **60개 테이블, 735개 스키마 객체, 660개 열·인덱스 정의 지문** 및 승인 배치·월수요·예측·변환 건수가 일치했다.
+
+실행 근거와 재현 코드는 Git에서 제외된 로컬 `.artifacts/xlsx-concurrency-20261123/`에 보관한다. JUnit의 SHA-256은 `5cf03b092fc58944c741d0833b1a25b92f18a55783b2fa6f8e38a6eb8f9480c0`이다. API 오류 수정·승인된 새 SQL 검증과 브라우저 E2E는 후속이다.

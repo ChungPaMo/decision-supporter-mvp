@@ -938,3 +938,29 @@
 **관련 자료**
 - [실DB 검증 결과](XLSX_SELECTION_PERSISTENCE_VERIFICATION.md#2026-11-23-기존-개발-pc의-postgresql-검증-결과), [화면 인계](XLSX_SELECTION_PERSISTENCE_HANDOFF.md).
 
+### 2026-11-23 — XLSX 범위 저장 PostgreSQL 동시성·무결성 검증 (backend)
+
+**Git**
+- 시작 Commit [`c136793`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/c136793c8b974f8b9cd321bbbd9df98b99ba3597).
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='docs: record PostgreSQL xlsx concurrency verification'`로 확인한다.
+- 브랜치 `main`.
+
+**작업 목적**
+- 동일 XLSX 선택의 실제 두 연결 재사용, 서로 다른 범위의 동일 출력 충돌, 잘못된 요청·SQL 오류의 롤백을 검증한다.
+
+**구현 내용**
+- 별도 실행 승인으로 범위 선택 FastAPI·PostgreSQL 검증을 한 번 수행했다. `pg_locks`와 `pg_blocking_pids()`로 두 요청의 잠금 대기를 실제로 관측했다. 검증·재현 자료는 로컬 `.artifacts`에 보관했다.
+
+**검증 결과**
+- PostgreSQL 16.6, Alembic `0009`. **0 passed / 1 failed / 0 skipped / 0 deselected**. 동일 입력은 `201`/`200`, 변조는 `409` 또는 `422`, 이미 커밋된 동일 CSV의 중복은 `409`였다. 고유 제약 경합의 SQLSTATE `23505`는 중복을 막았으나 API가 기대 `409` 대신 `500`을 반환했다.
+- SQL 오류 뒤 고아 데이터가 없었으며 회귀 DB의 승인된 21개 테이블 정리 후 업무 데이터 0행이었다. 개발 DB 60개 테이블·735개 객체·660개 정의 지문과 주요 데이터 건수가 일치했다.
+
+**기술적 결정**
+- 동시 충돌과 순차 중복을 구분했다. `public`과 데이터셋의 고유 인덱스 이름 차이가 API 상태 불일치의 원인이다. 실패를 재시도하지 않고 관측 결과와 결함을 문서화했다.
+
+**남은 문제**
+- 김대영이 SQL 저장소의 중복 오류 매핑을 수정하고 별도 승인으로 두 연결 회귀를 다시 검증해야 한다. 브라우저 E2E는 미실행이다.
+
+**관련 자료**
+- [동시성·무결성 검증 결과](XLSX_SELECTION_PERSISTENCE_VERIFICATION.md#2026-11-23-postgresql-동시성무결성-검증).
+
