@@ -1,5 +1,5 @@
 from app.errors import ApiError, ErrorCode
-from contracts.interfaces.modules import ClassificationInput, ClassificationOutput, HoldKind, RegistrationHint
+from contracts.interfaces.modules import ClassificationInput, ClassificationOutput, RegistrationHint
 
 
 def descriptor(parsed, sample_row_limit=0):
@@ -41,24 +41,6 @@ def registration_route(request: ClassificationInput) -> tuple[RegistrationHint |
     return RegistrationHint(entity=entity, sections=sorted(sections)), False
 
 
-def legacy_hold_kind(result: ClassificationOutput) -> HoldKind:
-    # rules-0.3.0 predates typed reasons. Keep this compatibility translation
-    # pinned to the version and prefer the owner-supplied code when available.
-    if result.module_version != 'rules-0.3.0':
-        return 'UNKNOWN'
-    reasons = [reason.partition('] ')[2] if reason.startswith('[') and '] ' in reason else reason
-               for reason in result.reasons]
-    if any(reason.startswith(('한 파일에 서로 다른 유형', '일부 시트만 유형', '품목 코드·이름만 있어'))
-           for reason in reasons) or len(result.candidates) > 1:
-        return 'AMBIGUOUS'
-    if all(reason.startswith(('월이 가로로 펼쳐진 표입니다.', '주문·출고 건별 내역으로 보입니다.'))
-           for reason in reasons):
-        return 'NEEDS_TRANSFORM'
-    if all('등록에서 유형을 직접 선택해 주세요.' in reason for reason in reasons):
-        return 'OTHER_ROUTE'
-    return 'UNKNOWN'
-
-
 def classify(request: ClassificationInput) -> ClassificationOutput:
     try:
         import file_classifier
@@ -78,8 +60,6 @@ def classify(request: ClassificationInput) -> ClassificationOutput:
                 registration_hint=hint, reasons=[*result.reasons,
                     '정확한 양식 헤더를 찾았습니다. 기존 등록 화면에서 유형을 직접 선택해 검증하세요.' if hint else
                     '등록 양식과 다른 시트가 함께 있습니다. 유형별로 파일을 분리해 확인하세요.'])
-        if result.hold and result.hold_kind is None:
-            return result.model_copy(update={'hold_kind': legacy_hold_kind(result)})
         return result
     except NotImplementedError:
         raise ApiError(501, ErrorCode.MODULE_NOT_IMPLEMENTED,
