@@ -33,13 +33,15 @@ class Balance:
     quantity_binding: list[set[str]]
 
 
-def balance(target: dict[str, list[int]], h: Hours, cap: list[dict[str, Fraction | None]],
+def balance(target: dict[str, list[int]], h: Hours | list[Hours], cap: list[dict[str, Fraction | None]],
             limit: list[dict[str, int | None]]) -> Balance:
     """§3.2 뒤에서부터 넘친 양을 앞 달로, §3.3 1월에도 남으면 앞에서부터 남은 시간에 보충.
 
+    h는 전 기간 공통 하나 또는 월별 목록(§6 월별 라우팅 버전). 앞 달로 옮긴 양은 그 달의 h로 계산한다.
     h에 없는 제품(라우팅 없음)은 설비 계산 없이 수량 한도만 적용된다(§7). cap 값 None = 한도 모름.
     """
     months = len(cap)
+    hm = h if isinstance(h, list) else [h] * months
     products = list(target)
     production = {p: [0] * months for p in products}
     factor: list[dict[str, Fraction]] = [{} for _ in range(months)]
@@ -49,7 +51,7 @@ def balance(target: dict[str, list[int]], h: Hours, cap: list[dict[str, Fraction
     carry = {p: 0 for p in products}
     for m in reversed(range(months)):
         want = {p: target[p][m] + carry[p] for p in products}
-        res = scale_month(want, cap[m], limit[m], h)
+        res = scale_month(want, cap[m], limit[m], hm[m])
         for p in products:
             production[p][m] = res.production[p]
         carry = res.overflow
@@ -63,9 +65,9 @@ def balance(target: dict[str, list[int]], h: Hours, cap: list[dict[str, Fraction
         if not any(unmade.values()):
             break
         current = {p: production[p][m] for p in products}
-        cap_left = {r: (None if cap[m][r] is None else cap[m][r] - used_hours(current, h, r)) for r in cap[m]}
+        cap_left = {r: (None if cap[m][r] is None else cap[m][r] - used_hours(current, hm[m], r)) for r in cap[m]}
         lim_left = {p: (None if limit[m].get(p) is None else limit[m][p] - current[p]) for p in products}
-        res = scale_month(unmade, cap_left, lim_left, h)
+        res = scale_month(unmade, cap_left, lim_left, hm[m])
         for p in products:
             production[p][m] += res.production[p]
         unmade = res.overflow

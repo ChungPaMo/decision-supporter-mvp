@@ -107,6 +107,7 @@ def test_decimal_str(value, text):
     assert decimal_str(value) == text
 
 
-def test_engine_stays_unavailable_until_contract_is_confirmed():
+def test_engine_stays_unavailable_until_team_examples_are_regenerated():
+    """변환부는 구현됐다(tests/test_adapter.py). 켜면 백엔드 생성 예시 2개가 바뀌므로 김대영 예시 갱신과 같은 커밋에서 켠다."""
     from engine import planning
     assert planning.AVAILABLE is False

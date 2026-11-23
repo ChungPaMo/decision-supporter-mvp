@@ -22,6 +22,7 @@ python -X utf8 modules/planning_engine/synthetic/generate.py
 | bottleneck_check.py | 예측 P50/P80/P90별 설비 부하·자재 여유·수량 한도 어림 점검 (`data/forecast/bottleneck_check.md`). 계획 엔진 정답 아님 |
 | forecast_request.py | upload/05_monthly_demand.csv → 예측 엔진 입력 JSON (`data/forecast/request.json`, 기준일 2026-12-31, 3개월) |
 | plan_input.py | upload·입고 예정·`data/forecast/forecast.json` → 계획 계산 코어 입력 `tests/chungpamo/plan_input.json`(고정, 커밋). 순서: generate.py → forecast_request.py → `python -m engine.forecast --input … --output data/forecast/forecast.json` → plan_input.py (generate.py는 data/forecast도 지운다) |
+| planning_input_dto.py | 같은 원본으로 팀 계약 `PlanningInput` 모양의 시험 입력 `tests/chungpamo/planning_input.json`(고정, 커밋) 생성. UUID는 고정 가짜 값. 변환부가 독립 정답과 같은 답을 내는지 `tests/test_adapter.py`가 확인 |
 | plan_report.py | 고정 입력으로 세 계획안을 계산해 `tests/chungpamo/RESULT.md` 요약 생성. 정답 비교는 `tests/test_chungpamo_plan.py` |
 
 ## 1. 가상 회사

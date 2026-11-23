@@ -1,7 +1,7 @@
 # 계획 엔진 계산 규칙서 v0.4 (초안, 2026-11-22)
 
 계획 엔진(`engine.planning.run`)과 손계산 정답이 **똑같이** 따르는 계산 규칙이다. 손계산 정답은 이 문서만 보고 엔진 코드와 따로 만든다.
-기준: [엔진 계약 v0.2 §6](../../docs/engine_forecast_plan_contract.md)과 출력 계약 `contracts/interfaces/planning.py`(PlanningOutput). 바꾼 점은 §9에 모았다.
+기준: [엔진 계약 v0.2 §6](../../docs/engine_forecast_plan_contract.md)과 출력 계약 `contracts/interfaces/planning.py`(PlanningOutput). 바꾼 점은 §9에 모았다. 팀 계약 PlanningInput을 계산 입력으로 옮기는 규칙은 §11(2026-11-23)이다.
 이 문서는 **희원의 계산 제안**이다. 공통 계약(기간·입고 예정·What-if 키·정책 버전)은 김대영 검토 후 확정된다([계약 요청](CONTRACT_REQUESTS.md)).
 
 ## 0. 한눈에 보기
@@ -193,6 +193,7 @@ SOFT 위반(안전재고 미달)은 판정을 바꾸지 않고 표시만 한다.
 | What-if | 배수·재고·입고 | 배수·잔업·재고·입고 | **배수·잔업(월별)·입고, 세 안 모두 재계산** | C03 |
 | DEM dimension | `DUE_DATE` | `OTHER` | 같음 | |
 | KPI | 안별 kpis[] | 범위 제외 | 같음 | C09 |
+| 기간 길이·월별 버전 (2026-11-23 추가) | – | 3개월 | **연속 1~12개월**, BOM·라우팅은 달마다 그달 전체 유효 버전(§11) | 대영 계약 반영 |
 
 ## 10. 작은 예시
 
@@ -217,3 +218,24 @@ SOFT 위반(안전재고 미달)은 판정을 바꾸지 않고 표시만 한다.
 | 가용 AVL | 150 | 20 | 20 + 400 = 420 |
 | 발주 필요량 NET | 80 | 210 | 0 |
 | 월말 재고 POH | 20 | 20 | 210 |
+
+## 11. 팀 계약 변환 (희원 결정 2026-11-23)
+
+`engine.planning.run(PlanningInput) → PlanningOutput`은 아래 규칙으로 계약 값을 계산 입력으로 옮긴 뒤 §1~§8을 그대로 적용한다([변환부](engine/adapter.py)). 계산 규칙 자체는 바뀌지 않는다.
+
+| 항목 | 규칙 | 문제일 때 |
+|---|---|---|
+| 기간 | `command.months` = `target_month`부터 연속 `horizon_months`(1~12)개월 | 예측 제품×월 누락 → `FORECAST_MISSING`(INPUT_INVALID) |
+| BOM·라우팅 버전 | 달마다 **그달 1일~말일 전체에 유효한** APPROVED·활성 버전 1개를 그달에 쓴다. 앞 달로 미리 만든 양은 만든 달의 버전으로 계산한다 | 달 중간 시작·종료 → `BOM_/ROUTING_VERSION_MIDMONTH`(UNSUPPORTED), 전체 유효 2개 이상 → `*_VERSION_AMBIGUOUS`(INPUT_INVALID), 0개 → 그달 `BOM_MISSING`/`ROUTING_MISSING`(§7). 기간 안에 버전이 바뀌면 evidence `*_VERSION_SELECTED`(제품, 월, ID, 버전) |
+| 라우팅 시간 | `routing_snapshot.routing_steps`만 읽는다. 단계와 동시 소요(`resource_requirements`)를 자원별로 합쳐 h(p,r) = Σ run_time ÷ reference_qty(min ÷ 60) | ELAPSED → `TIME_BASIS_UNSUPPORTED`. 한 버전 안에서 단계마다 유효기간이 다르면 `ROUTING_STEP_VALIDITY_MIXED`(UNSUPPORTED) |
+| 자원 | 두 스냅샷의 자원 중 **선택 제품의 선택 라우팅이 쓰는 자원만** 계산·판정한다 | 안 쓰는 자원의 시간 기준·예산 누락은 계산에 영향 없음(백엔드 missing_inputs는 그대로 전달) |
+| 재고 | 기준일 이하 가장 최근 기준일 1행, 가용 = 현재고 − 할당 | 같은 날 2행 이상 → `INVENTORY_AMBIGUOUS`, 할당 > 현재고 → `INVALID_QUANTITY`(둘 다 INPUT_INVALID) |
+| 시간 예산 | `capacity_snapshot.hours_budgets`만 읽는다. 자원·월 1행. 정규·잔업 한도를 h로 환산(min ÷ 60) | 2행 이상 → `CAPACITY_AMBIGUOUS`(INPUT_INVALID), GROSS → UNSUPPORTED(§7) |
+| 수량 한도 | `capacity_snapshot.quantity_limits`만 읽는다. FINISHED_OUTPUT만. 같은 제품·월이 여러 행이면 가장 작은 값 | OPERATION_OUTPUT → `QUANTITY_LIMIT_POINT_UNSUPPORTED`, 단위 다름 → UNIT_MISMATCH |
+| 입고 예정 | `scheduled_receipts` 목록을 §5.1대로. `[]` = 확인된 공급, 해당 발주 없음 | **null(공급 미연결) → 입고 0으로 계산 + 출력 unverified `RECEIPT_SOURCE_UNAVAILABLE`**. 입고 없이도 충분한 자재는 SATISFIED, 부족한 자재는 §6대로 UNVERIFIED |
+| missing_inputs | 백엔드가 보낸 코드를 **출력 unverified에 그대로** 담는다 | 하나라도 있으면 어떤 안도 FEASIBLE이 아니다 |
+| What-if | `scenario=WHAT_IF`면 `command.overrides`를 §8대로 적용해 세 안을 다시 계산한다. 기준과의 비교는 백엔드가 저장된 부모 결과로 한다 | 잘못된 키 → `WHATIF_INVALID`(INPUT_INVALID), 모두 나열 |
+| 출력 수량 | 10진 문자열(소수 4자리 반올림), 시간 단위 h. 안전재고 판정의 used(월말 재고)가 음수면 0(계약 수량은 비음수, 결품은 DEM `STOCKOUT`이 보여 줌) | – |
+| ID 길이 | 판정 ID `CAP-{자원}-{YYYY-MM}` 등이 계약 Code 40자를 넘지 않도록 제품·자원·자재 ID는 28자 이하 | 넘으면 `ID_TOO_LONG`(INPUT_INVALID) |
+| 상태 | 변환 단계 문제는 계산 전에 모두 모아 INPUT_INVALID > UNSUPPORTED 순으로 돌려준다 | 계획안 없음, errors에 전부 |
+

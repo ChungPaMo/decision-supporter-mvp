@@ -1,0 +1,2117 @@
+{
+ "_note": "㈜충파모제지(SYNTHETIC) 계약 PlanningInput 시험 입력. synthetic/planning_input_dto.py로 생성. UUID는 고정 가짜 값이며 DB 기록이 아니다. 손으로 고치지 말 것",
+ "payload": {
+  "dataset_id": "CHUNGPAMO-2027",
+  "command": {
+   "dataset_id": "CHUNGPAMO-2027",
+   "forecast_execution_id": "39fd4ad5-99fa-5e4e-884c-468eb2142095",
+   "product_ids": [
+    "CP-N3-3030",
+    "CP-N3-2730",
+    "CP-N3-2524",
+    "CP-N2-3030",
+    "CP-R2-3030",
+    "CP-P4-2524",
+    "CP-GIFT-12",
+    "CP-ON3-3030",
+    "CP-B2-JUMBO"
+   ],
+   "target_month": "2027-01",
+   "horizon_months": 3,
+   "as_of_date": "2026-12-31",
+   "scenario": "BASE"
+  },
+  "forecast_input_digest": "sha256:13783a05f513652044cc9f0bf39fc44745054799101f1ca610df3855caf33083",
+  "forecast_model_version": "lgbm-q/engine-0.1.0/demand-v1",
+  "forecast_rows": [
+   {
+    "product_id": "CP-B2-JUMBO",
+    "target_month": "2027-01",
+    "p50": "1006.6667",
+    "p80": "1093.4593",
+    "p90": "1108.1425",
+    "unit": "EA"
+   },
+   {
+    "product_id": "CP-B2-JUMBO",
+    "target_month": "2027-02",
+    "p50": "1006.6667",
+    "p80": "1056.7758",
+    "p90": "1102.7893",
+    "unit": "EA"
+   },
+   {
+    "product_id": "CP-B2-JUMBO",
+    "target_month": "2027-03",
+    "p50": "1006.6667",
+    "p80": "1027.5399",
+    "p90": "1185.8493",
+    "unit": "EA"
+   },
+   {
+    "product_id": "CP-GIFT-12",
+    "target_month": "2027-01",
+    "p50": "494.1667",
+    "p80": "494.1667",
+    "p90": "494.1667",
+    "unit": "EA"
+   },
+   {
+    "product_id": "CP-GIFT-12",
+    "target_month": "2027-02",
+    "p50": "494.1667",
+    "p80": "1961.022",
+    "p90": "2047.2056",
+    "unit": "EA"
+   },
+   {
+    "product_id": "CP-GIFT-12",
+    "target_month": "2027-03",
+    "p50": "494.1667",
+    "p80": "494.1667",
+    "p90": "494.1667",
+    "unit": "EA"
+   },
+   {
+    "product_id": "CP-N2-3030",
+    "target_month": "2027-01",
+    "p50": "3285",
+    "p80": "3673.9401",
+    "p90": "3673.9401",
+    "unit": "EA"
+   },
+   {
+    "product_id": "CP-N2-3030",
+    "target_month": "2027-02",
+    "p50": "3285",
+    "p80": "3617.4917",
+    "p90": "3617.4917",
+    "unit": "EA"
+   },
+   {
+    "product_id": "CP-N2-3030",
+    "target_month": "2027-03",
+    "p50": "3285",
+    "p80": "3563.4636",
+    "p90": "3563.4636",
+    "unit": "EA"
+   },
+   {
+    "product_id": "CP-N3-2524",
+    "target_month": "2027-01",
+    "p50": "3231.6667",
+    "p80": "3697.329",
+    "p90": "3697.329",
+    "unit": "EA"
+   },
+   {
+    "product_id": "CP-N3-2524",
+    "target_month": "2027-02",
+    "p50": "3231.6667",
+    "p80": "3658.3409",
+    "p90": "3658.3409",
+    "unit": "EA"
+   },
+   {
+    "product_id": "CP-N3-2524",
+    "target_month": "2027-03",
+    "p50": "3231.6667",
+    "p80": "3597.4148",
+    "p90": "3597.4148",
+    "unit": "EA"
+   },
+   {
+    "product_id": "CP-N3-2730",
+    "target_month": "2027-01",
+    "p50": "6519.1667",
+    "p80": "7168.8702",
+    "p90": "7334.7444",
+    "unit": "EA"
+   },
+   {
+    "product_id": "CP-N3-2730",
+    "target_month": "2027-02",
+    "p50": "6519.1667",
+    "p80": "7055.2568",
+    "p90": "7255.2419",
+    "unit": "EA"
+   },
+   {
+    "product_id": "CP-N3-2730",
+    "target_month": "2027-03",
+    "p50": "6519.1667",
+    "p80": "7079.2264",
+    "p90": "7272.2135",
+    "unit": "EA"
+   },
+   {
+    "product_id": "CP-N3-3030",
+    "target_month": "2027-01",
+    "p50": "10050.8333",
+    "p80": "10479.3001",
+    "p90": "11539.2451",
+    "unit": "EA"
+   },
+   {
+    "product_id": "CP-N3-3030",
+    "target_month": "2027-02",
+    "p50": "10050.8333",
+    "p80": "10364.9308",
+    "p90": "11393.5203",
+    "unit": "EA"
+   },
+   {
+    "product_id": "CP-N3-3030",
+    "target_month": "2027-03",
+    "p50": "10050.8333",
+    "p80": "10265.3828",
+    "p90": "11433.4367",
+    "unit": "EA"
+   },
+   {
+    "product_id": "CP-ON3-3030",
+    "target_month": "2027-01",
+    "p50": "2352.5",
+    "p80": "2526.0345",
+    "p90": "2678.8532",
+    "unit": "EA"
+   },
+   {
+    "product_id": "CP-ON3-3030",
+    "target_month": "2027-02",
+    "p50": "2352.5",
+    "p80": "2488.899",
+    "p90": "2654.7647",
+    "unit": "EA"
+   },
+   {
+    "product_id": "CP-ON3-3030",
+    "target_month": "2027-03",
+    "p50": "2352.5",
+    "p80": "2508.5121",
+    "p90": "2651.4644",
+    "unit": "EA"
+   },
+   {
+    "product_id": "CP-P4-2524",
+    "target_month": "2027-01",
+    "p50": "2325.8333",
+    "p80": "2587.7162",
+    "p90": "2676.8984",
+    "unit": "EA"
+   },
+   {
+    "product_id": "CP-P4-2524",
+    "target_month": "2027-02",
+    "p50": "2325.8333",
+    "p80": "2614.2663",
+    "p90": "2729.5712",
+    "unit": "EA"
+   },
+   {
+    "product_id": "CP-P4-2524",
+    "target_month": "2027-03",
+    "p50": "2325.8333",
+    "p80": "2545.8612",
+    "p90": "2694.2147",
+    "unit": "EA"
+   },
+   {
+    "product_id": "CP-R2-3030",
+    "target_month": "2027-01",
+    "p50": "3527.5",
+    "p80": "3966.8657",
+    "p90": "3976.4236",
+    "unit": "EA"
+   },
+   {
+    "product_id": "CP-R2-3030",
+    "target_month": "2027-02",
+    "p50": "3527.5",
+    "p80": "3891.8562",
+    "p90": "3899.3836",
+    "unit": "EA"
+   },
+   {
+    "product_id": "CP-R2-3030",
+    "target_month": "2027-03",
+    "p50": "3527.5",
+    "p80": "3899.6817",
+    "p90": "3966.264",
+    "unit": "EA"
+   }
+  ],
+  "approved_inputs": {
+   "products": [
+    {
+     "product_id": "CP-N3-3030",
+     "product_name": "천연펄프 3겹 30m 30롤",
+     "base_unit": "EA",
+     "product_type": "완제품",
+     "safety_stock_qty": "1010",
+     "source_type": "SYNTHETIC",
+     "batch_id": "e7115e01-b374-562d-80b7-84af2ccdb2a1"
+    },
+    {
+     "product_id": "CP-N3-2730",
+     "product_name": "천연펄프 3겹 27m 30롤",
+     "base_unit": "EA",
+     "product_type": "완제품",
+     "safety_stock_qty": "650",
+     "source_type": "SYNTHETIC",
+     "batch_id": "e7115e01-b374-562d-80b7-84af2ccdb2a1"
+    },
+    {
+     "product_id": "CP-N3-2524",
+     "product_name": "천연펄프 3겹 25m 24롤",
+     "base_unit": "EA",
+     "product_type": "완제품",
+     "safety_stock_qty": "320",
+     "source_type": "SYNTHETIC",
+     "batch_id": "e7115e01-b374-562d-80b7-84af2ccdb2a1"
+    },
+    {
+     "product_id": "CP-N2-3030",
+     "product_name": "천연펄프 2겹 30m 30롤",
+     "base_unit": "EA",
+     "product_type": "완제품",
+     "safety_stock_qty": "330",
+     "source_type": "SYNTHETIC",
+     "batch_id": "e7115e01-b374-562d-80b7-84af2ccdb2a1"
+    },
+    {
+     "product_id": "CP-R2-3030",
+     "product_name": "재생펄프 2겹 30m 30롤",
+     "base_unit": "EA",
+     "product_type": "완제품",
+     "safety_stock_qty": "350",
+     "source_type": "SYNTHETIC",
+     "batch_id": "e7115e01-b374-562d-80b7-84af2ccdb2a1"
+    },
+    {
+     "product_id": "CP-P4-2524",
+     "product_name": "프리미엄 4겹 25m 24롤",
+     "base_unit": "EA",
+     "product_type": "완제품",
+     "safety_stock_qty": "230",
+     "source_type": "SYNTHETIC",
+     "batch_id": "e7115e01-b374-562d-80b7-84af2ccdb2a1"
+    },
+    {
+     "product_id": "CP-GIFT-12",
+     "product_name": "명절 선물용 3겹 30m 12롤 세트",
+     "base_unit": "EA",
+     "product_type": "완제품",
+     "safety_stock_qty": "50",
+     "source_type": "SYNTHETIC",
+     "batch_id": "e7115e01-b374-562d-80b7-84af2ccdb2a1"
+    },
+    {
+     "product_id": "CP-ON3-3030",
+     "product_name": "온라인 전용 3겹 30m 30롤",
+     "base_unit": "EA",
+     "product_type": "완제품",
+     "safety_stock_qty": "240",
+     "source_type": "SYNTHETIC",
+     "batch_id": "e7115e01-b374-562d-80b7-84af2ccdb2a1"
+    },
+    {
+     "product_id": "CP-B2-JUMBO",
+     "product_name": "업소용 점보롤 2겹 300m 16롤",
+     "base_unit": "EA",
+     "product_type": "완제품",
+     "safety_stock_qty": "100",
+     "source_type": "SYNTHETIC",
+     "batch_id": "e7115e01-b374-562d-80b7-84af2ccdb2a1"
+    }
+   ],
+   "materials": [
+    {
+     "material_id": "MR-N3",
+     "material_name": "천연펄프 3겹 원단 점보롤",
+     "base_unit": "kg",
+     "safety_stock_qty": "3000",
+     "source_type": "SYNTHETIC",
+     "batch_id": "fcbf5a11-be30-5acc-a78e-3c11f25d6866"
+    },
+    {
+     "material_id": "MR-N2",
+     "material_name": "천연펄프 2겹 원단 점보롤",
+     "base_unit": "kg",
+     "safety_stock_qty": "2000",
+     "source_type": "SYNTHETIC",
+     "batch_id": "fcbf5a11-be30-5acc-a78e-3c11f25d6866"
+    },
+    {
+     "material_id": "MR-N4",
+     "material_name": "천연펄프 4겹 원단 점보롤",
+     "base_unit": "kg",
+     "safety_stock_qty": "500",
+     "source_type": "SYNTHETIC",
+     "batch_id": "fcbf5a11-be30-5acc-a78e-3c11f25d6866"
+    },
+    {
+     "material_id": "MR-R2",
+     "material_name": "재생펄프 2겹 원단 점보롤",
+     "base_unit": "kg",
+     "safety_stock_qty": "1500",
+     "source_type": "SYNTHETIC",
+     "batch_id": "fcbf5a11-be30-5acc-a78e-3c11f25d6866"
+    },
+    {
+     "material_id": "MC-CORE",
+     "material_name": "지관(심지)",
+     "base_unit": "EA",
+     "safety_stock_qty": "50000",
+     "source_type": "SYNTHETIC",
+     "batch_id": "fcbf5a11-be30-5acc-a78e-3c11f25d6866"
+    },
+    {
+     "material_id": "MP-FILM30",
+     "material_name": "포장필름 30롤용",
+     "base_unit": "EA",
+     "safety_stock_qty": "3000",
+     "source_type": "SYNTHETIC",
+     "batch_id": "fcbf5a11-be30-5acc-a78e-3c11f25d6866"
+    },
+    {
+     "material_id": "MP-FILM24",
+     "material_name": "포장필름 24롤용",
+     "base_unit": "EA",
+     "safety_stock_qty": "1000",
+     "source_type": "SYNTHETIC",
+     "batch_id": "fcbf5a11-be30-5acc-a78e-3c11f25d6866"
+    },
+    {
+     "material_id": "MP-GIFTBOX",
+     "material_name": "선물세트 박스",
+     "base_unit": "EA",
+     "safety_stock_qty": "300",
+     "source_type": "SYNTHETIC",
+     "batch_id": "fcbf5a11-be30-5acc-a78e-3c11f25d6866"
+    },
+    {
+     "material_id": "MP-JUMBOBOX",
+     "material_name": "업소용 외박스",
+     "base_unit": "EA",
+     "safety_stock_qty": "200",
+     "source_type": "SYNTHETIC",
+     "batch_id": "fcbf5a11-be30-5acc-a78e-3c11f25d6866"
+    }
+   ],
+   "boms": [
+    {
+     "header": {
+      "bom_id": "BOM-CP-N3-3030",
+      "product_id": "CP-N3-3030",
+      "bom_version": "V1",
+      "status": "APPROVED",
+      "is_active": true,
+      "valid_from": "2022-01-01",
+      "valid_to": null,
+      "base_qty": "1"
+     },
+     "lines": [
+      {
+       "bom_id": "BOM-CP-N3-3030",
+       "line_no": 1,
+       "component_type": "MATERIAL",
+       "component_id": "MR-N3",
+       "qty_per": "4.05",
+       "unit": "kg",
+       "scrap_rate": "0.03"
+      },
+      {
+       "bom_id": "BOM-CP-N3-3030",
+       "line_no": 2,
+       "component_type": "MATERIAL",
+       "component_id": "MC-CORE",
+       "qty_per": "30",
+       "unit": "EA",
+       "scrap_rate": "0"
+      },
+      {
+       "bom_id": "BOM-CP-N3-3030",
+       "line_no": 3,
+       "component_type": "MATERIAL",
+       "component_id": "MP-FILM30",
+       "qty_per": "1",
+       "unit": "EA",
+       "scrap_rate": "0"
+      }
+     ],
+     "source_type": "SYNTHETIC",
+     "batch_id": "df3f88f1-6e12-54e5-b5d8-37c58783b839"
+    },
+    {
+     "header": {
+      "bom_id": "BOM-CP-N3-2730",
+      "product_id": "CP-N3-2730",
+      "bom_version": "V1",
+      "status": "APPROVED",
+      "is_active": true,
+      "valid_from": "2022-01-01",
+      "valid_to": null,
+      "base_qty": "1"
+     },
+     "lines": [
+      {
+       "bom_id": "BOM-CP-N3-2730",
+       "line_no": 1,
+       "component_type": "MATERIAL",
+       "component_id": "MR-N3",
+       "qty_per": "3.645",
+       "unit": "kg",
+       "scrap_rate": "0.03"
+      },
+      {
+       "bom_id": "BOM-CP-N3-2730",
+       "line_no": 2,
+       "component_type": "MATERIAL",
+       "component_id": "MC-CORE",
+       "qty_per": "30",
+       "unit": "EA",
+       "scrap_rate": "0"
+      },
+      {
+       "bom_id": "BOM-CP-N3-2730",
+       "line_no": 3,
+       "component_type": "MATERIAL",
+       "component_id": "MP-FILM30",
+       "qty_per": "1",
+       "unit": "EA",
+       "scrap_rate": "0"
+      }
+     ],
+     "source_type": "SYNTHETIC",
+     "batch_id": "df3f88f1-6e12-54e5-b5d8-37c58783b839"
+    },
+    {
+     "header": {
+      "bom_id": "BOM-CP-N3-2524",
+      "product_id": "CP-N3-2524",
+      "bom_version": "V1",
+      "status": "APPROVED",
+      "is_active": true,
+      "valid_from": "2022-01-01",
+      "valid_to": null,
+      "base_qty": "1"
+     },
+     "lines": [
+      {
+       "bom_id": "BOM-CP-N3-2524",
+       "line_no": 1,
+       "component_type": "MATERIAL",
+       "component_id": "MR-N3",
+       "qty_per": "2.7",
+       "unit": "kg",
+       "scrap_rate": "0.03"
+      },
+      {
+       "bom_id": "BOM-CP-N3-2524",
+       "line_no": 2,
+       "component_type": "MATERIAL",
+       "component_id": "MC-CORE",
+       "qty_per": "24",
+       "unit": "EA",
+       "scrap_rate": "0"
+      },
+      {
+       "bom_id": "BOM-CP-N3-2524",
+       "line_no": 3,
+       "component_type": "MATERIAL",
+       "component_id": "MP-FILM24",
+       "qty_per": "1",
+       "unit": "EA",
+       "scrap_rate": "0"
+      }
+     ],
+     "source_type": "SYNTHETIC",
+     "batch_id": "df3f88f1-6e12-54e5-b5d8-37c58783b839"
+    },
+    {
+     "header": {
+      "bom_id": "BOM-CP-N2-3030",
+      "product_id": "CP-N2-3030",
+      "bom_version": "V1",
+      "status": "APPROVED",
+      "is_active": true,
+      "valid_from": "2022-01-01",
+      "valid_to": null,
+      "base_qty": "1"
+     },
+     "lines": [
+      {
+       "bom_id": "BOM-CP-N2-3030",
+       "line_no": 1,
+       "component_type": "MATERIAL",
+       "component_id": "MR-N2",
+       "qty_per": "2.7",
+       "unit": "kg",
+       "scrap_rate": "0.03"
+      },
+      {
+       "bom_id": "BOM-CP-N2-3030",
+       "line_no": 2,
+       "component_type": "MATERIAL",
+       "component_id": "MC-CORE",
+       "qty_per": "30",
+       "unit": "EA",
+       "scrap_rate": "0"
+      },
+      {
+       "bom_id": "BOM-CP-N2-3030",
+       "line_no": 3,
+       "component_type": "MATERIAL",
+       "component_id": "MP-FILM30",
+       "qty_per": "1",
+       "unit": "EA",
+       "scrap_rate": "0"
+      }
+     ],
+     "source_type": "SYNTHETIC",
+     "batch_id": "df3f88f1-6e12-54e5-b5d8-37c58783b839"
+    },
+    {
+     "header": {
+      "bom_id": "BOM-CP-R2-3030",
+      "product_id": "CP-R2-3030",
+      "bom_version": "V1",
+      "status": "APPROVED",
+      "is_active": true,
+      "valid_from": "2022-01-01",
+      "valid_to": null,
+      "base_qty": "1"
+     },
+     "lines": [
+      {
+       "bom_id": "BOM-CP-R2-3030",
+       "line_no": 1,
+       "component_type": "MATERIAL",
+       "component_id": "MR-R2",
+       "qty_per": "2.7",
+       "unit": "kg",
+       "scrap_rate": "0.04"
+      },
+      {
+       "bom_id": "BOM-CP-R2-3030",
+       "line_no": 2,
+       "component_type": "MATERIAL",
+       "component_id": "MC-CORE",
+       "qty_per": "30",
+       "unit": "EA",
+       "scrap_rate": "0"
+      },
+      {
+       "bom_id": "BOM-CP-R2-3030",
+       "line_no": 3,
+       "component_type": "MATERIAL",
+       "component_id": "MP-FILM30",
+       "qty_per": "1",
+       "unit": "EA",
+       "scrap_rate": "0"
+      }
+     ],
+     "source_type": "SYNTHETIC",
+     "batch_id": "df3f88f1-6e12-54e5-b5d8-37c58783b839"
+    },
+    {
+     "header": {
+      "bom_id": "BOM-CP-P4-2524",
+      "product_id": "CP-P4-2524",
+      "bom_version": "V1",
+      "status": "APPROVED",
+      "is_active": true,
+      "valid_from": "2022-01-01",
+      "valid_to": null,
+      "base_qty": "1"
+     },
+     "lines": [
+      {
+       "bom_id": "BOM-CP-P4-2524",
+       "line_no": 1,
+       "component_type": "MATERIAL",
+       "component_id": "MR-N4",
+       "qty_per": "3.36",
+       "unit": "kg",
+       "scrap_rate": "0.03"
+      },
+      {
+       "bom_id": "BOM-CP-P4-2524",
+       "line_no": 2,
+       "component_type": "MATERIAL",
+       "component_id": "MC-CORE",
+       "qty_per": "24",
+       "unit": "EA",
+       "scrap_rate": "0"
+      },
+      {
+       "bom_id": "BOM-CP-P4-2524",
+       "line_no": 3,
+       "component_type": "MATERIAL",
+       "component_id": "MP-FILM24",
+       "qty_per": "1",
+       "unit": "EA",
+       "scrap_rate": "0"
+      }
+     ],
+     "source_type": "SYNTHETIC",
+     "batch_id": "df3f88f1-6e12-54e5-b5d8-37c58783b839"
+    },
+    {
+     "header": {
+      "bom_id": "BOM-CP-GIFT-12",
+      "product_id": "CP-GIFT-12",
+      "bom_version": "V1",
+      "status": "APPROVED",
+      "is_active": true,
+      "valid_from": "2022-01-01",
+      "valid_to": null,
+      "base_qty": "1"
+     },
+     "lines": [
+      {
+       "bom_id": "BOM-CP-GIFT-12",
+       "line_no": 1,
+       "component_type": "MATERIAL",
+       "component_id": "MR-N3",
+       "qty_per": "1.62",
+       "unit": "kg",
+       "scrap_rate": "0.03"
+      },
+      {
+       "bom_id": "BOM-CP-GIFT-12",
+       "line_no": 2,
+       "component_type": "MATERIAL",
+       "component_id": "MC-CORE",
+       "qty_per": "12",
+       "unit": "EA",
+       "scrap_rate": "0"
+      },
+      {
+       "bom_id": "BOM-CP-GIFT-12",
+       "line_no": 3,
+       "component_type": "MATERIAL",
+       "component_id": "MP-GIFTBOX",
+       "qty_per": "1",
+       "unit": "EA",
+       "scrap_rate": "0"
+      }
+     ],
+     "source_type": "SYNTHETIC",
+     "batch_id": "df3f88f1-6e12-54e5-b5d8-37c58783b839"
+    },
+    {
+     "header": {
+      "bom_id": "BOM-CP-ON3-3030",
+      "product_id": "CP-ON3-3030",
+      "bom_version": "V1",
+      "status": "APPROVED",
+      "is_active": true,
+      "valid_from": "2022-01-01",
+      "valid_to": null,
+      "base_qty": "1"
+     },
+     "lines": [
+      {
+       "bom_id": "BOM-CP-ON3-3030",
+       "line_no": 1,
+       "component_type": "MATERIAL",
+       "component_id": "MR-N3",
+       "qty_per": "4.05",
+       "unit": "kg",
+       "scrap_rate": "0.03"
+      },
+      {
+       "bom_id": "BOM-CP-ON3-3030",
+       "line_no": 2,
+       "component_type": "MATERIAL",
+       "component_id": "MC-CORE",
+       "qty_per": "30",
+       "unit": "EA",
+       "scrap_rate": "0"
+      },
+      {
+       "bom_id": "BOM-CP-ON3-3030",
+       "line_no": 3,
+       "component_type": "MATERIAL",
+       "component_id": "MP-FILM30",
+       "qty_per": "1",
+       "unit": "EA",
+       "scrap_rate": "0"
+      }
+     ],
+     "source_type": "SYNTHETIC",
+     "batch_id": "df3f88f1-6e12-54e5-b5d8-37c58783b839"
+    },
+    {
+     "header": {
+      "bom_id": "BOM-CP-B2-JUMBO",
+      "product_id": "CP-B2-JUMBO",
+      "bom_version": "V1",
+      "status": "APPROVED",
+      "is_active": true,
+      "valid_from": "2022-01-01",
+      "valid_to": null,
+      "base_qty": "1"
+     },
+     "lines": [
+      {
+       "bom_id": "BOM-CP-B2-JUMBO",
+       "line_no": 1,
+       "component_type": "MATERIAL",
+       "component_id": "MR-N2",
+       "qty_per": "14.4",
+       "unit": "kg",
+       "scrap_rate": "0.03"
+      },
+      {
+       "bom_id": "BOM-CP-B2-JUMBO",
+       "line_no": 2,
+       "component_type": "MATERIAL",
+       "component_id": "MC-CORE",
+       "qty_per": "16",
+       "unit": "EA",
+       "scrap_rate": "0"
+      },
+      {
+       "bom_id": "BOM-CP-B2-JUMBO",
+       "line_no": 3,
+       "component_type": "MATERIAL",
+       "component_id": "MP-JUMBOBOX",
+       "qty_per": "1",
+       "unit": "EA",
+       "scrap_rate": "0"
+      }
+     ],
+     "source_type": "SYNTHETIC",
+     "batch_id": "df3f88f1-6e12-54e5-b5d8-37c58783b839"
+    }
+   ],
+   "inventory": [
+    {
+     "item_type": "PRODUCT",
+     "item_id": "CP-N3-3030",
+     "as_of_date": "2026-12-31",
+     "on_hand_qty": "2510",
+     "allocated_qty": "0",
+     "unit": "EA",
+     "source_type": "SYNTHETIC",
+     "batch_id": "81a5858d-8823-50b4-8d20-4f47b8452546"
+    },
+    {
+     "item_type": "PRODUCT",
+     "item_id": "CP-N3-2730",
+     "as_of_date": "2026-12-31",
+     "on_hand_qty": "1630",
+     "allocated_qty": "0",
+     "unit": "EA",
+     "source_type": "SYNTHETIC",
+     "batch_id": "81a5858d-8823-50b4-8d20-4f47b8452546"
+    },
+    {
+     "item_type": "PRODUCT",
+     "item_id": "CP-N3-2524",
+     "as_of_date": "2026-12-31",
+     "on_hand_qty": "810",
+     "allocated_qty": "0",
+     "unit": "EA",
+     "source_type": "SYNTHETIC",
+     "batch_id": "81a5858d-8823-50b4-8d20-4f47b8452546"
+    },
+    {
+     "item_type": "PRODUCT",
+     "item_id": "CP-N2-3030",
+     "as_of_date": "2026-12-31",
+     "on_hand_qty": "820",
+     "allocated_qty": "0",
+     "unit": "EA",
+     "source_type": "SYNTHETIC",
+     "batch_id": "81a5858d-8823-50b4-8d20-4f47b8452546"
+    },
+    {
+     "item_type": "PRODUCT",
+     "item_id": "CP-R2-3030",
+     "as_of_date": "2026-12-31",
+     "on_hand_qty": "880",
+     "allocated_qty": "0",
+     "unit": "EA",
+     "source_type": "SYNTHETIC",
+     "batch_id": "81a5858d-8823-50b4-8d20-4f47b8452546"
+    },
+    {
+     "item_type": "PRODUCT",
+     "item_id": "CP-P4-2524",
+     "as_of_date": "2026-12-31",
+     "on_hand_qty": "580",
+     "allocated_qty": "0",
+     "unit": "EA",
+     "source_type": "SYNTHETIC",
+     "batch_id": "81a5858d-8823-50b4-8d20-4f47b8452546"
+    },
+    {
+     "item_type": "PRODUCT",
+     "item_id": "CP-GIFT-12",
+     "as_of_date": "2026-12-31",
+     "on_hand_qty": "120",
+     "allocated_qty": "0",
+     "unit": "EA",
+     "source_type": "SYNTHETIC",
+     "batch_id": "81a5858d-8823-50b4-8d20-4f47b8452546"
+    },
+    {
+     "item_type": "PRODUCT",
+     "item_id": "CP-ON3-3030",
+     "as_of_date": "2026-12-31",
+     "on_hand_qty": "590",
+     "allocated_qty": "0",
+     "unit": "EA",
+     "source_type": "SYNTHETIC",
+     "batch_id": "81a5858d-8823-50b4-8d20-4f47b8452546"
+    },
+    {
+     "item_type": "PRODUCT",
+     "item_id": "CP-B2-JUMBO",
+     "as_of_date": "2026-12-31",
+     "on_hand_qty": "250",
+     "allocated_qty": "0",
+     "unit": "EA",
+     "source_type": "SYNTHETIC",
+     "batch_id": "81a5858d-8823-50b4-8d20-4f47b8452546"
+    },
+    {
+     "item_type": "MATERIAL",
+     "item_id": "MR-N3",
+     "as_of_date": "2026-12-31",
+     "on_hand_qty": "82100",
+     "allocated_qty": "0",
+     "unit": "kg",
+     "source_type": "SYNTHETIC",
+     "batch_id": "81a5858d-8823-50b4-8d20-4f47b8452546"
+    },
+    {
+     "item_type": "MATERIAL",
+     "item_id": "MR-N2",
+     "as_of_date": "2026-12-31",
+     "on_hand_qty": "38900",
+     "allocated_qty": "0",
+     "unit": "kg",
+     "source_type": "SYNTHETIC",
+     "batch_id": "81a5858d-8823-50b4-8d20-4f47b8452546"
+    },
+    {
+     "item_type": "MATERIAL",
+     "item_id": "MR-N4",
+     "as_of_date": "2026-12-31",
+     "on_hand_qty": "12900",
+     "allocated_qty": "0",
+     "unit": "kg",
+     "source_type": "SYNTHETIC",
+     "batch_id": "81a5858d-8823-50b4-8d20-4f47b8452546"
+    },
+    {
+     "item_type": "MATERIAL",
+     "item_id": "MR-R2",
+     "as_of_date": "2026-12-31",
+     "on_hand_qty": "16700",
+     "allocated_qty": "0",
+     "unit": "kg",
+     "source_type": "SYNTHETIC",
+     "batch_id": "81a5858d-8823-50b4-8d20-4f47b8452546"
+    },
+    {
+     "item_type": "MATERIAL",
+     "item_id": "MC-CORE",
+     "as_of_date": "2026-12-31",
+     "on_hand_qty": "1469600",
+     "allocated_qty": "0",
+     "unit": "EA",
+     "source_type": "SYNTHETIC",
+     "batch_id": "81a5858d-8823-50b4-8d20-4f47b8452546"
+    },
+    {
+     "item_type": "MATERIAL",
+     "item_id": "MP-FILM30",
+     "as_of_date": "2026-12-31",
+     "on_hand_qty": "42400",
+     "allocated_qty": "0",
+     "unit": "EA",
+     "source_type": "SYNTHETIC",
+     "batch_id": "81a5858d-8823-50b4-8d20-4f47b8452546"
+    },
+    {
+     "item_type": "MATERIAL",
+     "item_id": "MP-FILM24",
+     "as_of_date": "2026-12-31",
+     "on_hand_qty": "9500",
+     "allocated_qty": "0",
+     "unit": "EA",
+     "source_type": "SYNTHETIC",
+     "batch_id": "81a5858d-8823-50b4-8d20-4f47b8452546"
+    },
+    {
+     "item_type": "MATERIAL",
+     "item_id": "MP-GIFTBOX",
+     "as_of_date": "2026-12-31",
+     "on_hand_qty": "1100",
+     "allocated_qty": "0",
+     "unit": "EA",
+     "source_type": "SYNTHETIC",
+     "batch_id": "81a5858d-8823-50b4-8d20-4f47b8452546"
+    },
+    {
+     "item_type": "MATERIAL",
+     "item_id": "MP-JUMBOBOX",
+     "as_of_date": "2026-12-31",
+     "on_hand_qty": "1800",
+     "allocated_qty": "0",
+     "unit": "EA",
+     "source_type": "SYNTHETIC",
+     "batch_id": "81a5858d-8823-50b4-8d20-4f47b8452546"
+    }
+   ],
+   "sources": [
+    {
+     "batch_id": "e7115e01-b374-562d-80b7-84af2ccdb2a1",
+     "batch_version": 1,
+     "entity": "product",
+     "source_sha256": "41214dbc5b0a4656a702cf9cc19fc5c1f56c04163437b26465022f57b8fb736f",
+     "result_digest": "fbd0477f74057e20480ca42d8b8064be7d575dcb2c55adf84161fe356c9caadc",
+     "approved_at": "2026-12-31T00:00:00Z"
+    },
+    {
+     "batch_id": "fcbf5a11-be30-5acc-a78e-3c11f25d6866",
+     "batch_version": 1,
+     "entity": "material",
+     "source_sha256": "bc1da829b0d69526294dd4683b2784e95a6215f4f090dc42abaadaa0a1bafff1",
+     "result_digest": "9d4fc75727488d85f76287f86db6f63769e3bd684f6ec2c66538d7f3db6246dc",
+     "approved_at": "2026-12-31T00:00:00Z"
+    },
+    {
+     "batch_id": "df3f88f1-6e12-54e5-b5d8-37c58783b839",
+     "batch_version": 1,
+     "entity": "bom",
+     "source_sha256": "5ac622fc6b61130acbb54e9a2e16da410a398b8ab358b906910eb5c154a5f05a",
+     "result_digest": "ff3ce11ad48e1115d419bb07f032303fa72795336ecdb8e88a8836556e385b5c",
+     "approved_at": "2026-12-31T00:00:00Z"
+    },
+    {
+     "batch_id": "81a5858d-8823-50b4-8d20-4f47b8452546",
+     "batch_version": 1,
+     "entity": "inventory",
+     "source_sha256": "025eceecbb7a2c901e9f4e11429ed39db873b9bbd9dfa3a61223fa932e995845",
+     "result_digest": "524090ba1fc0cba6c1043b7af74c08c1e34f5ce7b8584fa3bfa58f69a75e5400",
+     "approved_at": "2026-12-31T00:00:00Z"
+    },
+    {
+     "batch_id": "ba813785-f4e9-5f2f-bfb9-caa773796be7",
+     "batch_version": 1,
+     "entity": "monthly_demand",
+     "source_sha256": "8e43184b4ee8cea60b50b8358dd21c414fa99afdbf52c6bfaecd9c2c1b251b29",
+     "result_digest": "76f153aa270242a6df7e1ae59b1000b1ff4acd1e80619f9d566634c716b3538b",
+     "approved_at": "2026-12-31T00:00:00Z"
+    },
+    {
+     "batch_id": "9ce0ce1e-d284-5f6c-b730-c9d23e417efa",
+     "batch_version": 1,
+     "entity": "capacity",
+     "source_sha256": "d6903ba6a1d82386392953dffd39b01e301bcf8f01d49c2eb99cd65052532b5a",
+     "result_digest": "aeb9e64392c856c5ecd4a4f6b7e87e8d058fdbab9113c587d1737e11a83a0393",
+     "approved_at": "2026-12-31T00:00:00Z"
+    },
+    {
+     "batch_id": "ce8de8a5-abd5-5a32-814f-ab985fdef92c",
+     "batch_version": 1,
+     "entity": "capacity",
+     "source_sha256": "0b006a728cb16c98cfe25cdf2b869ceba031918fbfc0684900db674927dd3c7f",
+     "result_digest": "dc9a8a8ac2f920bbfa48a65ccccc5c6f8db170372dde7459fe604c85976d4a1f",
+     "approved_at": "2026-12-31T00:00:00Z"
+    },
+    {
+     "batch_id": "2911ee30-9c70-5c1e-8320-4ed2f6dd898a",
+     "batch_version": 1,
+     "entity": "capacity",
+     "source_sha256": "e7b78f9546bdb64e92c6295599ed3ec5d39b042314e101254a64e62873c12648",
+     "result_digest": "4928b5cb8de0ca6535bd12845d348ada2882a59a7b5d9c9677dc248a5702b1c0",
+     "approved_at": "2026-12-31T00:00:00Z"
+    },
+    {
+     "batch_id": "0e3cac18-d547-5a34-ba9c-e8feb3593858",
+     "batch_version": 1,
+     "entity": "routing",
+     "source_sha256": "da84aec2d914250807cf89a6a58e5b6360feba77644726bd2bef362f868eac03",
+     "result_digest": "f34c86acf2896751c0b97cb103e6195c80be11dcae57d9ec8a32ebea945e47eb",
+     "approved_at": "2026-12-31T00:00:00Z"
+    },
+    {
+     "batch_id": "e102b76c-06dc-5355-9493-cc17667e018f",
+     "batch_version": 1,
+     "entity": "scheduled_receipt",
+     "source_sha256": "836a6df6443d972e91d278790d1b3540c77dbea488743a952248769525cfb136",
+     "result_digest": "b9de4fe3fac031ae54691c7c8f936c8fb6b5aefee498ec4de5ca512839b2db8e",
+     "approved_at": "2026-12-31T00:00:00Z"
+    }
+   ]
+  },
+  "scheduled_receipts": [
+   {
+    "po_id": "PO-2701-001",
+    "material_id": "MR-N3",
+    "open_qty": "10000",
+    "unit": "kg",
+    "expected_date": "2027-01-20",
+    "supplier_id": "SUP-PULP-A",
+    "batch_id": "e102b76c-06dc-5355-9493-cc17667e018f"
+   }
+  ],
+  "capacity_snapshot": {
+   "resources": [
+    {
+     "resource_id": "RW1",
+     "resource_name": "되감기·엠보기 1호 (3겹·4겹)",
+     "kind": "EQUIPMENT",
+     "time_basis": "MACHINE_HOUR",
+     "parallel_units": 1
+    },
+    {
+     "resource_id": "RW2",
+     "resource_name": "되감기·엠보기 2호 (2겹·업소용)",
+     "kind": "EQUIPMENT",
+     "time_basis": "MACHINE_HOUR",
+     "parallel_units": 1
+    },
+    {
+     "resource_id": "SAW1",
+     "resource_name": "롤 절단기 (전 제품 공용)",
+     "kind": "EQUIPMENT",
+     "time_basis": "MACHINE_HOUR",
+     "parallel_units": 1
+    },
+    {
+     "resource_id": "PK1",
+     "resource_name": "포장기 1호 (30롤)",
+     "kind": "EQUIPMENT",
+     "time_basis": "MACHINE_HOUR",
+     "parallel_units": 1
+    },
+    {
+     "resource_id": "PK2",
+     "resource_name": "포장기 2호 (24롤·선물·업소용)",
+     "kind": "EQUIPMENT",
+     "time_basis": "MACHINE_HOUR",
+     "parallel_units": 1
+    },
+    {
+     "resource_id": "LB1",
+     "resource_name": "포장 작업자 풀",
+     "kind": "LABOR_POOL",
+     "time_basis": "PERSON_HOUR",
+     "parallel_units": 6
+    }
+   ],
+   "unresolved_policy_refs": [],
+   "quantity_limits": [
+    {
+     "capacity_id": "Q-GIFT",
+     "product_id": "CP-GIFT-12",
+     "period": "2027-01",
+     "limit_qty": "2500",
+     "unit": "EA",
+     "accounting_point": "FINISHED_OUTPUT",
+     "operation_id": null
+    },
+    {
+     "capacity_id": "Q-GIFT",
+     "product_id": "CP-GIFT-12",
+     "period": "2027-02",
+     "limit_qty": "2500",
+     "unit": "EA",
+     "accounting_point": "FINISHED_OUTPUT",
+     "operation_id": null
+    },
+    {
+     "capacity_id": "Q-GIFT",
+     "product_id": "CP-GIFT-12",
+     "period": "2027-03",
+     "limit_qty": "2500",
+     "unit": "EA",
+     "accounting_point": "FINISHED_OUTPUT",
+     "operation_id": null
+    }
+   ],
+   "hours_budgets": [
+    {
+     "capacity_id": "H-RW1",
+     "resource_id": "RW1",
+     "period": "2027-01",
+     "regular_hours": "400",
+     "overtime_hours_limit": "40",
+     "unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "availability_basis": "NET",
+     "calendar_ref": null
+    },
+    {
+     "capacity_id": "H-RW1",
+     "resource_id": "RW1",
+     "period": "2027-02",
+     "regular_hours": "340",
+     "overtime_hours_limit": "40",
+     "unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "availability_basis": "NET",
+     "calendar_ref": null
+    },
+    {
+     "capacity_id": "H-RW1",
+     "resource_id": "RW1",
+     "period": "2027-03",
+     "regular_hours": "400",
+     "overtime_hours_limit": "40",
+     "unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "availability_basis": "NET",
+     "calendar_ref": null
+    },
+    {
+     "capacity_id": "H-RW2",
+     "resource_id": "RW2",
+     "period": "2027-01",
+     "regular_hours": "140",
+     "overtime_hours_limit": "20",
+     "unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "availability_basis": "NET",
+     "calendar_ref": null
+    },
+    {
+     "capacity_id": "H-RW2",
+     "resource_id": "RW2",
+     "period": "2027-02",
+     "regular_hours": "120",
+     "overtime_hours_limit": "20",
+     "unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "availability_basis": "NET",
+     "calendar_ref": null
+    },
+    {
+     "capacity_id": "H-RW2",
+     "resource_id": "RW2",
+     "period": "2027-03",
+     "regular_hours": "140",
+     "overtime_hours_limit": "20",
+     "unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "availability_basis": "NET",
+     "calendar_ref": null
+    },
+    {
+     "capacity_id": "H-SAW1",
+     "resource_id": "SAW1",
+     "period": "2027-01",
+     "regular_hours": "500",
+     "overtime_hours_limit": "40",
+     "unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "availability_basis": "NET",
+     "calendar_ref": null
+    },
+    {
+     "capacity_id": "H-SAW1",
+     "resource_id": "SAW1",
+     "period": "2027-02",
+     "regular_hours": "430",
+     "overtime_hours_limit": "40",
+     "unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "availability_basis": "NET",
+     "calendar_ref": null
+    },
+    {
+     "capacity_id": "H-SAW1",
+     "resource_id": "SAW1",
+     "period": "2027-03",
+     "regular_hours": "500",
+     "overtime_hours_limit": "40",
+     "unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "availability_basis": "NET",
+     "calendar_ref": null
+    },
+    {
+     "capacity_id": "H-PK1",
+     "resource_id": "PK1",
+     "period": "2027-01",
+     "regular_hours": "370",
+     "overtime_hours_limit": "40",
+     "unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "availability_basis": "NET",
+     "calendar_ref": null
+    },
+    {
+     "capacity_id": "H-PK1",
+     "resource_id": "PK1",
+     "period": "2027-02",
+     "regular_hours": "310",
+     "overtime_hours_limit": "40",
+     "unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "availability_basis": "NET",
+     "calendar_ref": null
+    },
+    {
+     "capacity_id": "H-PK1",
+     "resource_id": "PK1",
+     "period": "2027-03",
+     "regular_hours": "370",
+     "overtime_hours_limit": "40",
+     "unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "availability_basis": "NET",
+     "calendar_ref": null
+    },
+    {
+     "capacity_id": "H-PK2",
+     "resource_id": "PK2",
+     "period": "2027-01",
+     "regular_hours": "110",
+     "overtime_hours_limit": "20",
+     "unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "availability_basis": "NET",
+     "calendar_ref": null
+    },
+    {
+     "capacity_id": "H-PK2",
+     "resource_id": "PK2",
+     "period": "2027-02",
+     "regular_hours": "90",
+     "overtime_hours_limit": "20",
+     "unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "availability_basis": "NET",
+     "calendar_ref": null
+    },
+    {
+     "capacity_id": "H-PK2",
+     "resource_id": "PK2",
+     "period": "2027-03",
+     "regular_hours": "110",
+     "overtime_hours_limit": "20",
+     "unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "availability_basis": "NET",
+     "calendar_ref": null
+    },
+    {
+     "capacity_id": "H-LB1",
+     "resource_id": "LB1",
+     "period": "2027-01",
+     "regular_hours": "690",
+     "overtime_hours_limit": "60",
+     "unit": "h",
+     "time_basis": "PERSON_HOUR",
+     "availability_basis": "NET",
+     "calendar_ref": null
+    },
+    {
+     "capacity_id": "H-LB1",
+     "resource_id": "LB1",
+     "period": "2027-02",
+     "regular_hours": "590",
+     "overtime_hours_limit": "60",
+     "unit": "h",
+     "time_basis": "PERSON_HOUR",
+     "availability_basis": "NET",
+     "calendar_ref": null
+    },
+    {
+     "capacity_id": "H-LB1",
+     "resource_id": "LB1",
+     "period": "2027-03",
+     "regular_hours": "690",
+     "overtime_hours_limit": "60",
+     "unit": "h",
+     "time_basis": "PERSON_HOUR",
+     "availability_basis": "NET",
+     "calendar_ref": null
+    }
+   ],
+   "routing_steps": []
+  },
+  "routing_snapshot": {
+   "resources": [
+    {
+     "resource_id": "RW1",
+     "resource_name": "되감기·엠보기 1호 (3겹·4겹)",
+     "kind": "EQUIPMENT",
+     "time_basis": "MACHINE_HOUR",
+     "parallel_units": 1
+    },
+    {
+     "resource_id": "RW2",
+     "resource_name": "되감기·엠보기 2호 (2겹·업소용)",
+     "kind": "EQUIPMENT",
+     "time_basis": "MACHINE_HOUR",
+     "parallel_units": 1
+    },
+    {
+     "resource_id": "SAW1",
+     "resource_name": "롤 절단기 (전 제품 공용)",
+     "kind": "EQUIPMENT",
+     "time_basis": "MACHINE_HOUR",
+     "parallel_units": 1
+    },
+    {
+     "resource_id": "PK1",
+     "resource_name": "포장기 1호 (30롤)",
+     "kind": "EQUIPMENT",
+     "time_basis": "MACHINE_HOUR",
+     "parallel_units": 1
+    },
+    {
+     "resource_id": "PK2",
+     "resource_name": "포장기 2호 (24롤·선물·업소용)",
+     "kind": "EQUIPMENT",
+     "time_basis": "MACHINE_HOUR",
+     "parallel_units": 1
+    },
+    {
+     "resource_id": "LB1",
+     "resource_name": "포장 작업자 풀",
+     "kind": "LABOR_POOL",
+     "time_basis": "PERSON_HOUR",
+     "parallel_units": 6
+    }
+   ],
+   "unresolved_policy_refs": [],
+   "quantity_limits": [],
+   "hours_budgets": [],
+   "routing_steps": [
+    {
+     "resource_id": "RW1",
+     "reference_qty": "70",
+     "quantity_unit": "EA",
+     "run_time": "1",
+     "time_unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "concurrent_units": null,
+     "setup_time": null,
+     "setup_policy_ref": null,
+     "alternative_group_ref": null,
+     "routing_id": "RT-CP-N3-3030",
+     "routing_version": "V1",
+     "step_id": "REWIND",
+     "product_id": "CP-N3-3030",
+     "operation_id": "REWIND",
+     "predecessor_step_ids": [],
+     "valid_from": "2022-01-01",
+     "valid_to": null,
+     "resource_requirements": []
+    },
+    {
+     "resource_id": "SAW1",
+     "reference_qty": "60",
+     "quantity_unit": "EA",
+     "run_time": "1",
+     "time_unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "concurrent_units": null,
+     "setup_time": null,
+     "setup_policy_ref": null,
+     "alternative_group_ref": null,
+     "routing_id": "RT-CP-N3-3030",
+     "routing_version": "V1",
+     "step_id": "CUT",
+     "product_id": "CP-N3-3030",
+     "operation_id": "CUT",
+     "predecessor_step_ids": [
+      "REWIND"
+     ],
+     "valid_from": "2022-01-01",
+     "valid_to": null,
+     "resource_requirements": []
+    },
+    {
+     "resource_id": "PK1",
+     "reference_qty": "80",
+     "quantity_unit": "EA",
+     "run_time": "1",
+     "time_unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "concurrent_units": null,
+     "setup_time": null,
+     "setup_policy_ref": null,
+     "alternative_group_ref": null,
+     "routing_id": "RT-CP-N3-3030",
+     "routing_version": "V1",
+     "step_id": "PACK",
+     "product_id": "CP-N3-3030",
+     "operation_id": "PACK",
+     "predecessor_step_ids": [
+      "CUT"
+     ],
+     "valid_from": "2022-01-01",
+     "valid_to": null,
+     "resource_requirements": [
+      {
+       "resource_id": "LB1",
+       "reference_qty": "1000",
+       "quantity_unit": "EA",
+       "run_time": "20",
+       "time_unit": "h",
+       "time_basis": "PERSON_HOUR",
+       "concurrent_units": null,
+       "setup_time": null,
+       "setup_policy_ref": null,
+       "alternative_group_ref": null
+      }
+     ]
+    },
+    {
+     "resource_id": "RW1",
+     "reference_qty": "70",
+     "quantity_unit": "EA",
+     "run_time": "1",
+     "time_unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "concurrent_units": null,
+     "setup_time": null,
+     "setup_policy_ref": null,
+     "alternative_group_ref": null,
+     "routing_id": "RT-CP-N3-2730",
+     "routing_version": "V1",
+     "step_id": "REWIND",
+     "product_id": "CP-N3-2730",
+     "operation_id": "REWIND",
+     "predecessor_step_ids": [],
+     "valid_from": "2022-01-01",
+     "valid_to": null,
+     "resource_requirements": []
+    },
+    {
+     "resource_id": "SAW1",
+     "reference_qty": "60",
+     "quantity_unit": "EA",
+     "run_time": "1",
+     "time_unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "concurrent_units": null,
+     "setup_time": null,
+     "setup_policy_ref": null,
+     "alternative_group_ref": null,
+     "routing_id": "RT-CP-N3-2730",
+     "routing_version": "V1",
+     "step_id": "CUT",
+     "product_id": "CP-N3-2730",
+     "operation_id": "CUT",
+     "predecessor_step_ids": [
+      "REWIND"
+     ],
+     "valid_from": "2022-01-01",
+     "valid_to": null,
+     "resource_requirements": []
+    },
+    {
+     "resource_id": "PK1",
+     "reference_qty": "80",
+     "quantity_unit": "EA",
+     "run_time": "1",
+     "time_unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "concurrent_units": null,
+     "setup_time": null,
+     "setup_policy_ref": null,
+     "alternative_group_ref": null,
+     "routing_id": "RT-CP-N3-2730",
+     "routing_version": "V1",
+     "step_id": "PACK",
+     "product_id": "CP-N3-2730",
+     "operation_id": "PACK",
+     "predecessor_step_ids": [
+      "CUT"
+     ],
+     "valid_from": "2022-01-01",
+     "valid_to": null,
+     "resource_requirements": [
+      {
+       "resource_id": "LB1",
+       "reference_qty": "1000",
+       "quantity_unit": "EA",
+       "run_time": "20",
+       "time_unit": "h",
+       "time_basis": "PERSON_HOUR",
+       "concurrent_units": null,
+       "setup_time": null,
+       "setup_policy_ref": null,
+       "alternative_group_ref": null
+      }
+     ]
+    },
+    {
+     "resource_id": "RW1",
+     "reference_qty": "70",
+     "quantity_unit": "EA",
+     "run_time": "1",
+     "time_unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "concurrent_units": null,
+     "setup_time": null,
+     "setup_policy_ref": null,
+     "alternative_group_ref": null,
+     "routing_id": "RT-CP-ON3-3030",
+     "routing_version": "V1",
+     "step_id": "REWIND",
+     "product_id": "CP-ON3-3030",
+     "operation_id": "REWIND",
+     "predecessor_step_ids": [],
+     "valid_from": "2022-01-01",
+     "valid_to": null,
+     "resource_requirements": []
+    },
+    {
+     "resource_id": "SAW1",
+     "reference_qty": "60",
+     "quantity_unit": "EA",
+     "run_time": "1",
+     "time_unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "concurrent_units": null,
+     "setup_time": null,
+     "setup_policy_ref": null,
+     "alternative_group_ref": null,
+     "routing_id": "RT-CP-ON3-3030",
+     "routing_version": "V1",
+     "step_id": "CUT",
+     "product_id": "CP-ON3-3030",
+     "operation_id": "CUT",
+     "predecessor_step_ids": [
+      "REWIND"
+     ],
+     "valid_from": "2022-01-01",
+     "valid_to": null,
+     "resource_requirements": []
+    },
+    {
+     "resource_id": "PK1",
+     "reference_qty": "80",
+     "quantity_unit": "EA",
+     "run_time": "1",
+     "time_unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "concurrent_units": null,
+     "setup_time": null,
+     "setup_policy_ref": null,
+     "alternative_group_ref": null,
+     "routing_id": "RT-CP-ON3-3030",
+     "routing_version": "V1",
+     "step_id": "PACK",
+     "product_id": "CP-ON3-3030",
+     "operation_id": "PACK",
+     "predecessor_step_ids": [
+      "CUT"
+     ],
+     "valid_from": "2022-01-01",
+     "valid_to": null,
+     "resource_requirements": [
+      {
+       "resource_id": "LB1",
+       "reference_qty": "1000",
+       "quantity_unit": "EA",
+       "run_time": "20",
+       "time_unit": "h",
+       "time_basis": "PERSON_HOUR",
+       "concurrent_units": null,
+       "setup_time": null,
+       "setup_policy_ref": null,
+       "alternative_group_ref": null
+      }
+     ]
+    },
+    {
+     "resource_id": "RW2",
+     "reference_qty": "80",
+     "quantity_unit": "EA",
+     "run_time": "1",
+     "time_unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "concurrent_units": null,
+     "setup_time": null,
+     "setup_policy_ref": null,
+     "alternative_group_ref": null,
+     "routing_id": "RT-CP-N2-3030",
+     "routing_version": "V1",
+     "step_id": "REWIND",
+     "product_id": "CP-N2-3030",
+     "operation_id": "REWIND",
+     "predecessor_step_ids": [],
+     "valid_from": "2022-01-01",
+     "valid_to": null,
+     "resource_requirements": []
+    },
+    {
+     "resource_id": "SAW1",
+     "reference_qty": "60",
+     "quantity_unit": "EA",
+     "run_time": "1",
+     "time_unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "concurrent_units": null,
+     "setup_time": null,
+     "setup_policy_ref": null,
+     "alternative_group_ref": null,
+     "routing_id": "RT-CP-N2-3030",
+     "routing_version": "V1",
+     "step_id": "CUT",
+     "product_id": "CP-N2-3030",
+     "operation_id": "CUT",
+     "predecessor_step_ids": [
+      "REWIND"
+     ],
+     "valid_from": "2022-01-01",
+     "valid_to": null,
+     "resource_requirements": []
+    },
+    {
+     "resource_id": "PK1",
+     "reference_qty": "80",
+     "quantity_unit": "EA",
+     "run_time": "1",
+     "time_unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "concurrent_units": null,
+     "setup_time": null,
+     "setup_policy_ref": null,
+     "alternative_group_ref": null,
+     "routing_id": "RT-CP-N2-3030",
+     "routing_version": "V1",
+     "step_id": "PACK",
+     "product_id": "CP-N2-3030",
+     "operation_id": "PACK",
+     "predecessor_step_ids": [
+      "CUT"
+     ],
+     "valid_from": "2022-01-01",
+     "valid_to": null,
+     "resource_requirements": [
+      {
+       "resource_id": "LB1",
+       "reference_qty": "1000",
+       "quantity_unit": "EA",
+       "run_time": "20",
+       "time_unit": "h",
+       "time_basis": "PERSON_HOUR",
+       "concurrent_units": null,
+       "setup_time": null,
+       "setup_policy_ref": null,
+       "alternative_group_ref": null
+      }
+     ]
+    },
+    {
+     "resource_id": "RW2",
+     "reference_qty": "80",
+     "quantity_unit": "EA",
+     "run_time": "1",
+     "time_unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "concurrent_units": null,
+     "setup_time": null,
+     "setup_policy_ref": null,
+     "alternative_group_ref": null,
+     "routing_id": "RT-CP-R2-3030",
+     "routing_version": "V1",
+     "step_id": "REWIND",
+     "product_id": "CP-R2-3030",
+     "operation_id": "REWIND",
+     "predecessor_step_ids": [],
+     "valid_from": "2022-01-01",
+     "valid_to": null,
+     "resource_requirements": []
+    },
+    {
+     "resource_id": "SAW1",
+     "reference_qty": "60",
+     "quantity_unit": "EA",
+     "run_time": "1",
+     "time_unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "concurrent_units": null,
+     "setup_time": null,
+     "setup_policy_ref": null,
+     "alternative_group_ref": null,
+     "routing_id": "RT-CP-R2-3030",
+     "routing_version": "V1",
+     "step_id": "CUT",
+     "product_id": "CP-R2-3030",
+     "operation_id": "CUT",
+     "predecessor_step_ids": [
+      "REWIND"
+     ],
+     "valid_from": "2022-01-01",
+     "valid_to": null,
+     "resource_requirements": []
+    },
+    {
+     "resource_id": "PK1",
+     "reference_qty": "80",
+     "quantity_unit": "EA",
+     "run_time": "1",
+     "time_unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "concurrent_units": null,
+     "setup_time": null,
+     "setup_policy_ref": null,
+     "alternative_group_ref": null,
+     "routing_id": "RT-CP-R2-3030",
+     "routing_version": "V1",
+     "step_id": "PACK",
+     "product_id": "CP-R2-3030",
+     "operation_id": "PACK",
+     "predecessor_step_ids": [
+      "CUT"
+     ],
+     "valid_from": "2022-01-01",
+     "valid_to": null,
+     "resource_requirements": [
+      {
+       "resource_id": "LB1",
+       "reference_qty": "1000",
+       "quantity_unit": "EA",
+       "run_time": "20",
+       "time_unit": "h",
+       "time_basis": "PERSON_HOUR",
+       "concurrent_units": null,
+       "setup_time": null,
+       "setup_policy_ref": null,
+       "alternative_group_ref": null
+      }
+     ]
+    },
+    {
+     "resource_id": "RW1",
+     "reference_qty": "85",
+     "quantity_unit": "EA",
+     "run_time": "1",
+     "time_unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "concurrent_units": null,
+     "setup_time": null,
+     "setup_policy_ref": null,
+     "alternative_group_ref": null,
+     "routing_id": "RT-CP-N3-2524",
+     "routing_version": "V1",
+     "step_id": "REWIND",
+     "product_id": "CP-N3-2524",
+     "operation_id": "REWIND",
+     "predecessor_step_ids": [],
+     "valid_from": "2022-01-01",
+     "valid_to": null,
+     "resource_requirements": []
+    },
+    {
+     "resource_id": "SAW1",
+     "reference_qty": "75",
+     "quantity_unit": "EA",
+     "run_time": "1",
+     "time_unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "concurrent_units": null,
+     "setup_time": null,
+     "setup_policy_ref": null,
+     "alternative_group_ref": null,
+     "routing_id": "RT-CP-N3-2524",
+     "routing_version": "V1",
+     "step_id": "CUT",
+     "product_id": "CP-N3-2524",
+     "operation_id": "CUT",
+     "predecessor_step_ids": [
+      "REWIND"
+     ],
+     "valid_from": "2022-01-01",
+     "valid_to": null,
+     "resource_requirements": []
+    },
+    {
+     "resource_id": "PK2",
+     "reference_qty": "90",
+     "quantity_unit": "EA",
+     "run_time": "1",
+     "time_unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "concurrent_units": null,
+     "setup_time": null,
+     "setup_policy_ref": null,
+     "alternative_group_ref": null,
+     "routing_id": "RT-CP-N3-2524",
+     "routing_version": "V1",
+     "step_id": "PACK",
+     "product_id": "CP-N3-2524",
+     "operation_id": "PACK",
+     "predecessor_step_ids": [
+      "CUT"
+     ],
+     "valid_from": "2022-01-01",
+     "valid_to": null,
+     "resource_requirements": [
+      {
+       "resource_id": "LB1",
+       "reference_qty": "1000",
+       "quantity_unit": "EA",
+       "run_time": "24",
+       "time_unit": "h",
+       "time_basis": "PERSON_HOUR",
+       "concurrent_units": null,
+       "setup_time": null,
+       "setup_policy_ref": null,
+       "alternative_group_ref": null
+      }
+     ]
+    },
+    {
+     "resource_id": "RW1",
+     "reference_qty": "70",
+     "quantity_unit": "EA",
+     "run_time": "1",
+     "time_unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "concurrent_units": null,
+     "setup_time": null,
+     "setup_policy_ref": null,
+     "alternative_group_ref": null,
+     "routing_id": "RT-CP-P4-2524",
+     "routing_version": "V1",
+     "step_id": "REWIND",
+     "product_id": "CP-P4-2524",
+     "operation_id": "REWIND",
+     "predecessor_step_ids": [],
+     "valid_from": "2022-01-01",
+     "valid_to": null,
+     "resource_requirements": []
+    },
+    {
+     "resource_id": "SAW1",
+     "reference_qty": "75",
+     "quantity_unit": "EA",
+     "run_time": "1",
+     "time_unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "concurrent_units": null,
+     "setup_time": null,
+     "setup_policy_ref": null,
+     "alternative_group_ref": null,
+     "routing_id": "RT-CP-P4-2524",
+     "routing_version": "V1",
+     "step_id": "CUT",
+     "product_id": "CP-P4-2524",
+     "operation_id": "CUT",
+     "predecessor_step_ids": [
+      "REWIND"
+     ],
+     "valid_from": "2022-01-01",
+     "valid_to": null,
+     "resource_requirements": []
+    },
+    {
+     "resource_id": "PK2",
+     "reference_qty": "90",
+     "quantity_unit": "EA",
+     "run_time": "1",
+     "time_unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "concurrent_units": null,
+     "setup_time": null,
+     "setup_policy_ref": null,
+     "alternative_group_ref": null,
+     "routing_id": "RT-CP-P4-2524",
+     "routing_version": "V1",
+     "step_id": "PACK",
+     "product_id": "CP-P4-2524",
+     "operation_id": "PACK",
+     "predecessor_step_ids": [
+      "CUT"
+     ],
+     "valid_from": "2022-01-01",
+     "valid_to": null,
+     "resource_requirements": [
+      {
+       "resource_id": "LB1",
+       "reference_qty": "1000",
+       "quantity_unit": "EA",
+       "run_time": "24",
+       "time_unit": "h",
+       "time_basis": "PERSON_HOUR",
+       "concurrent_units": null,
+       "setup_time": null,
+       "setup_policy_ref": null,
+       "alternative_group_ref": null
+      }
+     ]
+    },
+    {
+     "resource_id": "RW1",
+     "reference_qty": "170",
+     "quantity_unit": "EA",
+     "run_time": "1",
+     "time_unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "concurrent_units": null,
+     "setup_time": null,
+     "setup_policy_ref": null,
+     "alternative_group_ref": null,
+     "routing_id": "RT-CP-GIFT-12",
+     "routing_version": "V1",
+     "step_id": "REWIND",
+     "product_id": "CP-GIFT-12",
+     "operation_id": "REWIND",
+     "predecessor_step_ids": [],
+     "valid_from": "2022-01-01",
+     "valid_to": null,
+     "resource_requirements": []
+    },
+    {
+     "resource_id": "SAW1",
+     "reference_qty": "150",
+     "quantity_unit": "EA",
+     "run_time": "1",
+     "time_unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "concurrent_units": null,
+     "setup_time": null,
+     "setup_policy_ref": null,
+     "alternative_group_ref": null,
+     "routing_id": "RT-CP-GIFT-12",
+     "routing_version": "V1",
+     "step_id": "CUT",
+     "product_id": "CP-GIFT-12",
+     "operation_id": "CUT",
+     "predecessor_step_ids": [
+      "REWIND"
+     ],
+     "valid_from": "2022-01-01",
+     "valid_to": null,
+     "resource_requirements": []
+    },
+    {
+     "resource_id": "PK2",
+     "reference_qty": "60",
+     "quantity_unit": "EA",
+     "run_time": "1",
+     "time_unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "concurrent_units": null,
+     "setup_time": null,
+     "setup_policy_ref": null,
+     "alternative_group_ref": null,
+     "routing_id": "RT-CP-GIFT-12",
+     "routing_version": "V1",
+     "step_id": "PACK",
+     "product_id": "CP-GIFT-12",
+     "operation_id": "PACK",
+     "predecessor_step_ids": [
+      "CUT"
+     ],
+     "valid_from": "2022-01-01",
+     "valid_to": null,
+     "resource_requirements": [
+      {
+       "resource_id": "LB1",
+       "reference_qty": "1000",
+       "quantity_unit": "EA",
+       "run_time": "24",
+       "time_unit": "h",
+       "time_basis": "PERSON_HOUR",
+       "concurrent_units": null,
+       "setup_time": null,
+       "setup_policy_ref": null,
+       "alternative_group_ref": null
+      }
+     ]
+    },
+    {
+     "resource_id": "RW2",
+     "reference_qty": "30",
+     "quantity_unit": "EA",
+     "run_time": "1",
+     "time_unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "concurrent_units": null,
+     "setup_time": null,
+     "setup_policy_ref": null,
+     "alternative_group_ref": null,
+     "routing_id": "RT-CP-B2-JUMBO",
+     "routing_version": "V1",
+     "step_id": "REWIND",
+     "product_id": "CP-B2-JUMBO",
+     "operation_id": "REWIND",
+     "predecessor_step_ids": [],
+     "valid_from": "2022-01-01",
+     "valid_to": null,
+     "resource_requirements": []
+    },
+    {
+     "resource_id": "SAW1",
+     "reference_qty": "40",
+     "quantity_unit": "EA",
+     "run_time": "1",
+     "time_unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "concurrent_units": null,
+     "setup_time": null,
+     "setup_policy_ref": null,
+     "alternative_group_ref": null,
+     "routing_id": "RT-CP-B2-JUMBO",
+     "routing_version": "V1",
+     "step_id": "CUT",
+     "product_id": "CP-B2-JUMBO",
+     "operation_id": "CUT",
+     "predecessor_step_ids": [
+      "REWIND"
+     ],
+     "valid_from": "2022-01-01",
+     "valid_to": null,
+     "resource_requirements": []
+    },
+    {
+     "resource_id": "PK2",
+     "reference_qty": "50",
+     "quantity_unit": "EA",
+     "run_time": "1",
+     "time_unit": "h",
+     "time_basis": "MACHINE_HOUR",
+     "concurrent_units": null,
+     "setup_time": null,
+     "setup_policy_ref": null,
+     "alternative_group_ref": null,
+     "routing_id": "RT-CP-B2-JUMBO",
+     "routing_version": "V1",
+     "step_id": "PACK",
+     "product_id": "CP-B2-JUMBO",
+     "operation_id": "PACK",
+     "predecessor_step_ids": [
+      "CUT"
+     ],
+     "valid_from": "2022-01-01",
+     "valid_to": null,
+     "resource_requirements": [
+      {
+       "resource_id": "LB1",
+       "reference_qty": "1000",
+       "quantity_unit": "EA",
+       "run_time": "24",
+       "time_unit": "h",
+       "time_basis": "PERSON_HOUR",
+       "concurrent_units": null,
+       "setup_time": null,
+       "setup_policy_ref": null,
+       "alternative_group_ref": null
+      }
+     ]
+    }
+   ]
+  },
+  "missing_inputs": []
+ }
+}

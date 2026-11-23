@@ -134,6 +134,25 @@ def _positive(value: Any) -> bool:
         return False
 
 
+def _monthly(data: dict, key: str, n: int) -> list:
+    """월별 표(§6 월별 BOM·라우팅 버전). `<key>_by_month`가 있으면 그것을, 없으면 `<key>` 하나를 모든 달에 쓴다."""
+    by_month = data.get(f'{key}_by_month')
+    if by_month is not None:
+        if len(by_month) != n:
+            raise ValueError(f'{key}_by_month must have one entry per month')
+        return list(by_month)
+    return [data.get(key, {})] * n
+
+
+def _distinct(maps: list) -> list:
+    """같은 객체가 여러 달에 반복될 때 한 번만 검사·계산하도록 고유 객체만 순서대로 돌려준다."""
+    return list({id(x): x for x in maps}.values())
+
+
+def _dedupe(issues: list[Issue]) -> list[Issue]:
+    return list(dict.fromkeys(issues))
+
+
 def _check_input(data: dict, n: int) -> tuple[list[Issue], list[Issue]]:
     """§7 입력 검사. 첫 문제에서 멈추지 않고 (INPUT_INVALID 대상, UNSUPPORTED 대상)을 모두 모은다."""
     invalid, unsupported = [], []
@@ -154,24 +173,26 @@ def _check_input(data: dict, n: int) -> tuple[list[Issue], list[Issue]]:
     for k in materials.values():
         if k.get('inventory_unit', k['unit']) != k['unit']:
             invalid.append(Issue('UNIT_MISMATCH', (k['id'],)))
-    for p, steps in data['routing'].items():
-        for r, step in steps.items():
-            if not _positive(step['reference_qty']):
-                invalid.append(Issue('INVALID_QUANTITY', (p, r, 'reference_qty')))
-            if step.get('time_unit', 'h') not in _TIME_UNITS:
-                invalid.append(Issue('UNIT_MISMATCH', (p, r)))
+    for routing in _distinct(_monthly(data, 'routing', n)):
+        for p, steps in routing.items():
+            for r, step in steps.items():
+                if not _positive(step['reference_qty']):
+                    invalid.append(Issue('INVALID_QUANTITY', (p, r, 'reference_qty')))
+                if step.get('time_unit', 'h') not in _TIME_UNITS:
+                    invalid.append(Issue('UNIT_MISMATCH', (p, r)))
     bom_materials = set()
-    for p, lines in data.get('bom', {}).items():
-        for line in lines:
-            k = line['material']
-            if k in product_ids or line.get('component_type') == 'PRODUCT':
-                unsupported.append(Issue('BOM_MULTILEVEL_UNSUPPORTED', (p, k)))
-                continue
-            bom_materials.add(k)
-            if not _positive(line['base_qty']):
-                invalid.append(Issue('INVALID_QUANTITY', (p, k, 'base_qty')))
-            if k not in materials:
-                invalid.append(Issue('MATERIAL_MISSING', (p, k)))
+    for bom in _distinct(_monthly(data, 'bom', n)):
+        for p, lines in bom.items():
+            for line in lines:
+                k = line['material']
+                if k in product_ids or line.get('component_type') == 'PRODUCT':
+                    unsupported.append(Issue('BOM_MULTILEVEL_UNSUPPORTED', (p, k)))
+                    continue
+                bom_materials.add(k)
+                if not _positive(line['base_qty']):
+                    invalid.append(Issue('INVALID_QUANTITY', (p, k, 'base_qty')))
+                if k not in materials:
+                    invalid.append(Issue('MATERIAL_MISSING', (p, k)))
     for r in data.get('receipts', []):
         mat = materials.get(r['material'])
         if r['material'] in bom_materials and mat is not None and r['unit'] != mat['unit']:
@@ -181,14 +202,14 @@ def _check_input(data: dict, n: int) -> tuple[list[Issue], list[Issue]]:
             unsupported.append(Issue('TIME_BASIS_UNSUPPORTED', (r['id'],)))
         if r.get('availability_basis') == 'GROSS':
             unsupported.append(Issue('AVAILABILITY_BASIS_UNSUPPORTED', (r['id'],)))
-    return invalid, unsupported
+    return _dedupe(invalid), _dedupe(unsupported)
 
 
-def _routing_hours(data: dict) -> tuple[Hours, list[Issue]]:
+def _routing_hours(routing: dict) -> tuple[Hours, list[Issue]]:
     """§1 h(p,r) = run_time ÷ reference_qty (min은 ÷60). 셋업·대체 설비는 반영하지 않고 unverified."""
     h: Hours = {}
     ignored: list[Issue] = []
-    for p, steps in data['routing'].items():
+    for p, steps in routing.items():
         h[p] = {}
         for r, step in steps.items():
             hours = _frac(step['run_time']) / _frac(step['reference_qty']) * _TIME_UNITS[step.get('time_unit', 'h')]
@@ -232,19 +253,27 @@ def calculate(data: dict) -> PlanResult:
         result.planned_demand[pid] = planned_demand([_frac(q) for q in data['demand'][pid][:n]], mult)
         result.target[pid] = targets(result.planned_demand[pid], int(_frac(p['safety_stock'])), start_inv[pid])
 
-    # ② 쓸 수 있는 시간 (§3, §7 가용시간·잔업 한도 없음)
-    h, ignored = _routing_hours(data)
-    result.unverified.extend(ignored)
-    routed = [p for p in products if p in h]
-    unrouted = [p for p in products if p not in h]
-    for p in unrouted:
-        result.unverified.append(Issue('ROUTING_MISSING', (p,)))
+    # ② 쓸 수 있는 시간 (§3, §7 가용시간·잔업 한도 없음). 라우팅은 달마다 다를 수 있다(§6 월별 버전)
+    routing_list = _monthly(data, 'routing', n)
+    hours_of: dict[int, Hours] = {}
+    for routing in _distinct(routing_list):
+        hours_of[id(routing)], ignored = _routing_hours(routing)
+        result.unverified.extend(i for i in ignored if i not in result.unverified)
+    h_list = [hours_of[id(x)] for x in routing_list]
+    unrouted = [[p for p in products if p not in h_list[m]] for m in range(n)]
+    for p in products:
+        missing_months = [months[m] for m in range(n) if p in unrouted[m]]
+        if len(missing_months) == n:
+            result.unverified.append(Issue('ROUTING_MISSING', (p,)))
+        else:
+            result.unverified.extend(Issue('ROUTING_MISSING', (p, month)) for month in missing_months)
     ot_allowed = bool(data['ot_allowed'])
     resources = {r['id']: r for r in data['resources']}
-    for p in routed:  # 공정표에는 있는데 자원 목록에 없는 자원 → 한도 모름
-        for rid in h[p]:
-            if rid not in resources:
-                resources[rid] = {'id': rid, 'time_basis': None, 'regular': [], 'overtime': []}
+    for h in _distinct(h_list):  # 공정표에는 있는데 자원 목록에 없는 자원 → 한도 모름
+        for steps in h.values():
+            for rid in steps:
+                if rid not in resources:
+                    resources[rid] = {'id': rid, 'time_basis': None, 'regular': [], 'overtime': []}
     cap: list[dict[str, Fraction | None]] = [{} for _ in range(n)]
     regular: dict[str, list[Fraction | None]] = {}
     for rid, r in resources.items():
@@ -269,7 +298,7 @@ def calculate(data: dict) -> PlanResult:
              for m in range(n)]
 
     # ② 한도 맞추기 (라우팅 없는 제품은 설비 없이 수량 한도만)
-    bal = balance(result.target, h, cap, limit)
+    bal = balance(result.target, h_list, cap, limit)
     result.production = bal.production
     result.unmade_after_prebuild = bal.unmade_after_prebuild
     result.unmade_final = bal.unmade_final
@@ -279,7 +308,8 @@ def calculate(data: dict) -> PlanResult:
     for p in products:
         result.end_inventory[p] = track_inventory(start_inv[p], result.production[p], result.planned_demand[p])
     for rid in resources:
-        result.used_hours[rid] = [used_hours({p: result.production[p][m] for p in routed}, h, rid) for m in range(n)]
+        result.used_hours[rid] = [used_hours({p: result.production[p][m] for p in products}, h_list[m], rid)
+                                  for m in range(n)]
         result.overtime_hours[rid] = [None if regular[rid][m] is None
                                       else max(Fraction(0), result.used_hours[rid][m] - regular[rid][m])
                                       for m in range(n)]
@@ -290,8 +320,8 @@ def calculate(data: dict) -> PlanResult:
         for m in range(n):
             ev = Evaluation(f'CAP-{rid}-{months[m]}', _CAP_DIMENSION.get(basis, 'OTHER'), months[m], 'SATISFIED',
                             'HARD', limit_value=cap[m][rid], unit=basis, resource_id=rid, time_basis=basis)
-            if unrouted:
-                ev.status, ev.application_state, ev.input_refs = 'UNVERIFIED', 'MISSING_INPUT', list(unrouted)
+            if unrouted[m]:
+                ev.status, ev.application_state, ev.input_refs = 'UNVERIFIED', 'MISSING_INPUT', list(unrouted[m])
             elif cap[m][rid] is None:
                 ev.status, ev.application_state, ev.used_value = 'UNVERIFIED', 'MISSING_INPUT', result.used_hours[rid][m]
             else:
@@ -336,20 +366,29 @@ def calculate(data: dict) -> PlanResult:
 
 def _materials(data: dict, result: PlanResult, products: list[str], months: list[str]) -> None:
     """§5 자재 MRP. BOM에 쓰이는 자재만 계산한다(안 쓰는 자재는 표·판정·재고 누락 검사에서 제외)."""
-    if 'bom' not in data and not data.get('materials'):
+    if 'bom' not in data and 'bom_by_month' not in data and not data.get('materials'):
         return
     n = len(months)
-    bom = data.get('bom', {})
-    for p, lines in bom.items():
-        for line in lines:
-            key = (p, line['material'])
-            result.per_unit[key] = result.per_unit.get(key, Fraction(0)) + per_unit(
-                _frac(line['qty']), _frac(line['base_qty']), _frac(line.get('scrap_rate', '0')))
-    no_bom = [p for p in products if p not in bom]
-    for p in no_bom:  # 그 제품이 쓰는 자재를 모름 → 모든 MAT UNVERIFIED (라우팅 누락과 같은 방식)
-        result.warnings.append(Issue('BOM_MISSING', (p,)))
-        result.unverified.append(Issue('BOM_MISSING', (p,)))
-    used = {k for (_, k) in result.per_unit}
+    bom_list = _monthly(data, 'bom', n)
+    units_of: dict[int, dict[tuple[str, str], Fraction]] = {}
+    for bom in _distinct(bom_list):
+        pu: dict[tuple[str, str], Fraction] = {}
+        for p, lines in bom.items():
+            for line in lines:
+                key = (p, line['material'])
+                pu[key] = pu.get(key, Fraction(0)) + per_unit(
+                    _frac(line['qty']), _frac(line['base_qty']), _frac(line.get('scrap_rate', '0')))
+        units_of[id(bom)] = pu
+    pu_list = [units_of[id(x)] for x in bom_list]
+    result.per_unit = dict(pu_list[0])  # 월별 버전이 다르면 첫 달 값 (§6)
+    no_bom = [[p for p in products if p not in bom_list[m]] for m in range(n)]
+    for p in products:  # 그 제품이 쓰는 자재를 모름 → 그달 모든 MAT UNVERIFIED (라우팅 누락과 같은 방식)
+        missing_months = [months[m] for m in range(n) if p in no_bom[m]]
+        refs = [(p,)] if len(missing_months) == n else [(p, month) for month in missing_months]
+        for ref in refs:
+            result.warnings.append(Issue('BOM_MISSING', ref))
+            result.unverified.append(Issue('BOM_MISSING', ref))
+    used = {k for pu in pu_list for (_, k) in pu}
     receipts = [Receipt(r['po_id'], r['material'], _frac(r['open_qty']), r['unit'], r['expected_date'])
                 for r in data.get('receipts', [])]
     if receipts and 'as_of' not in data:
@@ -369,7 +408,7 @@ def _materials(data: dict, result: PlanResult, products: list[str], months: list
         else:
             start = _frac(mat['on_hand']) - _frac(mat.get('allocated', '0'))
         ss = _frac(mat.get('safety_stock', '0'))
-        gross = [sum((Fraction(result.production[p][m]) * result.per_unit.get((p, kid), 0) for p in products),
+        gross = [sum((Fraction(result.production[p][m]) * pu_list[m].get((p, kid), 0) for p in products),
                      Fraction(0)) for m in range(n)]
         rows = mrp_table(gross, start, ss, plan.by_month[kid])
         result.materials[kid] = MaterialResult(kid, mat['unit'], [r.required for r in rows],
@@ -381,9 +420,9 @@ def _materials(data: dict, result: PlanResult, products: list[str], months: list
             ev = Evaluation(f'MAT-{kid}-{months[m]}', 'MATERIAL', months[m], 'UNVERIFIED' if reasons else 'SATISFIED',
                             'HARD', limit_value=row.available, used_value=row.required + ss, unit=mat['unit'],
                             reason_codes=reasons, input_refs=list(plan.overdue.get(kid, [])) if m == 0 else [])
-            if no_bom:
+            if no_bom[m]:
                 ev.status, ev.application_state = 'UNVERIFIED', 'MISSING_INPUT'
-                ev.input_refs = ev.input_refs + no_bom
+                ev.input_refs = ev.input_refs + no_bom[m]
             result.evaluations.append(ev)
 
 

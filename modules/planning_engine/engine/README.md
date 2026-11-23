@@ -7,7 +7,7 @@ FastAPI의 정식 `POST /forecasts`는 승인 DB 수요를 JSON으로 구성해 
 | 모듈 | 상태 |
 |---|---|
 | `engine.forecast` 월별 수요예측 P50/P80/P90 | 구현 (계약 §3, §6.1) |
-| `engine.plan` 3개 계획안 | 미구현 (계약 §4, §6.2~) |
+| `engine.planning` 3개 계획안 | 구현: `run(PlanningInput) -> PlanningOutput` = 변환부 `adapter.py` + 계산 코어 `planning_core.py`([규칙서 v0.4](../PLANNING_RULES.md) §11). `AVAILABLE` 전환은 팀 예시 갱신과 함께 |
 
 ## 설치 (백엔드와 별도 가상환경)
 

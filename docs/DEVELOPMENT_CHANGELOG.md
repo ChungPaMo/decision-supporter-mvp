@@ -1016,3 +1016,43 @@
 **관련 자료**
 - [수정 후 실DB 재검증](XLSX_SELECTION_PERSISTENCE_VERIFICATION.md#2026-11-23-수정-후-postgresql-동시성-재검증).
 
+### 2026-11-23 — 계획 엔진 팀 계약 변환부 (planning_engine)
+
+**Git**
+- 시작 Commit [`c136793`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/c136793c8b974f8b9cd321bbbd9df98b99ba3597). Push 전 김대영 backend 커밋 3개(`741b6dc`까지) 위로 rebase, CHANGELOG 끝 추가 충돌만 양쪽 보존으로 해결.
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='feat: connect planning engine to PlanningInput/PlanningOutput contract'`로 확인한다.
+- 브랜치 `main`.
+
+**작업 목적**
+- 김대영의 C01~C06 백엔드 계약(`5552b56`, `6e7056a`, [인계](PLANNING_CONTRACT_V04_HANDOFF.md))에 맞춰 기존 계산 코어를 `engine.planning.run(PlanningInput) -> PlanningOutput`으로 연결한다.
+
+**구현 내용**
+- `modules/planning_engine/engine/adapter.py`: PlanningInput → 내부 형식(기간 1~12개월, 예측 P50/P80, 재고 최신 1행, 시간 예산 h 환산, 수량 한도 최솟값, 라우팅 단계·동시 소요 자원별 합산, 월별 BOM·라우팅 버전 선택, 입고 예정, missing_inputs) → `calculate_plans` / WHAT_IF는 `apply_overrides` 후 재계산 → PlanningOutput(세 안, 판정, 자재 MRP, evidence·warnings·unverified).
+- 계산 코어: `routing_by_month`·`bom_by_month`(월별 버전) 지원, `mps.balance`가 월별 시간표를 받음. 기존 결과는 변하지 않음(RESULT.md 재생성 동일).
+- `engine/planning.py`: `run`이 변환부를 호출. `AVAILABLE=False` 유지.
+- 시험 입력 `synthetic/planning_input_dto.py` → `tests/chungpamo/planning_input.json`(공식 CSV로 조립한 계약 DTO, 고정 가짜 UUID), `tests/test_adapter.py` 26개.
+- 규칙서 `PLANNING_RULES.md` §11 변환 규칙, README 3곳 갱신.
+
+**검증 결과**
+- 2026-11-23 보조 PC, 비DB. `pytest modules/planning_engine` **112 passed**. 전체 `pytest --no-db` **1,208 passed / 0 failed / 67 skipped**(기존 경고 1건). 이 PC `.venv`에 없던 팀 requirements의 `RapidFuzz==3.14.6`을 설치한 뒤 실행.
+- 공식 합성 3개월 계약 입력 → PlanningOutput이 독립 정답 `expected.json`과 판정 306개(상태·사유·한도·사용값), 생산량, 자재 required/available/shortage까지 일치. 백엔드 `validate_pair`와 `run_snapshot`(입고 있음·null+missing_inputs·What-if) 통과.
+- 1·3·6·12개월(2027-07~2028-06 연도 경계) 손계산 시험, 월별 BOM·라우팅 버전 변경·달 중간 변경·중복 버전, min 단위, 동시 소요 합산, 수량 한도 최솟값, 재고 기준일 선택, 잘못된 What-if.
+- `AVAILABLE=True`로 바꿔 전체 실행 시 3건 실패: 엔진 자체 테스트 1건(꺼짐 확인)과 김대영 생성 예시 2건(`41_plan_engine_unavailable.json` 501→500, 진단 예시 `engine_available`). 500은 예시가 DB 없는 `PlanService(None)`로 입력 조회까지 가기 때문이며 엔진 출력 문제가 아니다.
+- 별도 검토 에이전트 지적 반영: 할당>현재고 음수 가용 → INPUT_INVALID, 긴 ID로 판정 ID 40자 초과 → ID_TOO_LONG, 안 쓰는 자원 제외, 단계별 유효기간이 섞인 라우팅 버전 → UNSUPPORTED.
+- 미실행: PostgreSQL 실제 계획 계산·저장, 브라우저.
+
+**기술적 결정**
+- 월별 버전은 그달 1일~말일 전체에 유효한 버전 1개를 쓴다. 달 중간 변경은 UNSUPPORTED, 전체 유효 2개 이상은 INPUT_INVALID. 앞 달로 미리 만든 양은 만든 달의 버전으로 계산한다.
+- 입고 예정 null은 입고 0으로 계산하고 unverified `RECEIPT_SOURCE_UNAVAILABLE`(입고는 재고를 늘리기만 하므로 충분한 자재는 SATISFIED 유지). missing_inputs는 모두 unverified로 전달해 FEASIBLE을 막는다.
+- 안전재고 판정 used(월말 재고)가 음수면 0으로 낸다(계약 수량 비음수). 결품은 DEM `STOCKOUT`이 보여 준다.
+- 공식 데이터 검증은 DB 대신 같은 원본 CSV로 계약 DTO를 조립한 고정 입력을 쓴다. 실제 SQL 조립 경로는 기존 개발 PC 확인이 필요하다.
+- `AVAILABLE` 전환은 김대영 예시 갱신과 같은 커밋에서 하기로 했다(main 테스트가 깨진 상태로 남지 않게).
+
+**남은 문제**
+- 김대영: `AVAILABLE=True` + 예시 2개 재생성을 한 커밋으로, 실DB에서 공식 3개월 Preview·저장 확인. 입고 예정 원장·reader 연결 전에는 실DB가 항상 `RECEIPT_SOURCE_UNAVAILABLE`이라 FEASIBLE이 나오지 않는다. 백엔드 `input_coverage`가 찾는 누락이 `missing_inputs`에 빠지면 엔진이 FEASIBLE을 내도 `validate_pair`가 거절(500)하므로 두 목록을 맞춰 둘 필요가 있다. 엔진이 월별 버전을 지원하므로 `*_VERSION_POLICY_REQUIRED` 처리 재검토 가능.
+- 정마나미: 결과 화면에 unverified 사유·발주 필요량·What-if 비교 표시.
+- 6·12개월 실제 예측은 공식 데이터에 없어 작은 시험 입력으로만 확인.
+
+**관련 자료**
+- [변환 규칙 §11](../modules/planning_engine/PLANNING_RULES.md#11-팀-계약-변환-희원-결정-2026-11-23), [변환부](../modules/planning_engine/engine/adapter.py), [시험](../modules/planning_engine/tests/test_adapter.py), [대영 계약 인계](PLANNING_CONTRACT_V04_HANDOFF.md).
+
