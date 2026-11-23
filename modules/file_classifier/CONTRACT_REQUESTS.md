@@ -18,6 +18,24 @@
 - `registration_hint`는 모듈이 채우지 않는다. 등록 양식의 필수·허용 헤더를 아는 쪽이 백엔드이므로 지금처럼 백엔드가 붙이는 것이 맞다.
 - 시험: `tests/test_hold_kind.py`.
 
+## 0-1. 2026-11-23 제안: 표 범위를 자동으로 찾아 준다 (`tables-0.1.0`)
+
+김대영 님의 [표 범위 선택 API](../../docs/XLSX_TABLE_SELECTION_HANDOFF.md)는 사용자가 머리글 행과 데이터 범위를 직접 지정한다. 그 범위를 미리 채워 줄 수 있는 함수를 모듈에 만들었다. 백엔드와 화면은 고치지 않았다.
+
+```python
+from file_classifier.tables import find_tables_in_xlsx
+
+for t in find_tables_in_xlsx(xlsx_bytes):      # 보이는 시트의 표를 위에서부터 모두
+    t.sheet, t.header_row, t.data_start_row, t.data_end_row, t.first_col, t.last_col, t.total_row
+```
+
+- 좌표는 원본 시트 기준 1부터 시작하고 끝을 포함한다. `XlsxTableSelection`과 같은 뜻이라 `source_sha256`만 더하면 그대로 넣을 수 있다.
+- 합계 행은 데이터 범위에서 빼고 `total_row`로 따로 알려 준다. 가로로 병합된 칸이 있는 행은 머리글로 고르지 않는다.
+- 확인한 것: 더미 200개에서 찾은 첫 표의 범위를 `POST /classifications/file`의 `table_selection`에 넣었더니 200개 모두 받아들여졌다(병합·머리글 오류 0건). 재현: `tools/eval_tables_api.py`.
+- 정확도: 더미 200개의 표 422개를 모두 맞게 찾았다. 다만 규칙을 이 200개를 보면서 만들었고, 실제 기업 파일로는 재지 않았다. 자세한 내용은 README의 "표 위치 찾기".
+- **제안.** `/ingest/xlsx-layout` 응답에 "추천 범위" 목록을 선택 필드로 넣으면, 화면이 범위를 미리 채워 두고 사용자는 확인만 하면 된다. 추천은 제안일 뿐이고 사용자가 고칠 수 있어야 한다. 넣을지와 필드 이름은 김대영 님이 정해 달라.
+- 참고: 범위를 넣어도 더미 200개 중 192개는 여전히 보류(`UNKNOWN`)다. 대부분 보고서라서 등록 대상 5종이 아니기 때문이며, 표를 못 읽어서가 아니다.
+
 ## 1. 지금 연결된 것
 
 | 연결 | 상태 | 근거 |

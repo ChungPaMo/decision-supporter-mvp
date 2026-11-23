@@ -125,3 +125,15 @@ def test_semantic_minimum_score_means_two_linked_terms():
     from file_classifier import doctype_embed as de
     assert de.MIN_SCORE == 2 * de.TAU
 
+
+def test_value_like_terms_are_not_sent_to_the_model():
+    """품목 코드, 전화번호, 날짜는 뜻을 담고 있지 않으므로 모델에 넣는 낱말에서 뺀다. 열 이름은 남긴다."""
+    from file_classifier.doctype_embed import is_value_like, workbook_terms
+    for value in ('CP-R4-2730', '1320-01', '010-1234-5678', 'MP-OUTBOX', '2026-12-10 00:00:00', 'RW1', '1월'):
+        assert is_value_like(value), value
+    for name in ('불량수량', 'Planned Order Receipts', 'LOSS율(%)', 'Work center', '천연펄프4겹', '2.7m 폭', 'MRP'):
+        assert not is_value_like(name), name
+    grid = [['품목코드', '품목명', '불량수량'], ['CP-R4-2730', '화장지', 3], ['MP-OUTBOX', '외박스', 1]]
+    terms = workbook_terms([('S', grid)])
+    assert '품목코드' in terms and '불량수량' in terms and 'CP-R4-2730' not in terms and 'MP-OUTBOX' not in terms
+

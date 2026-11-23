@@ -1,0 +1,225 @@
+{
+ "torch": "2.6.0+cu124",
+ "cpu_threads": 8,
+ "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+ "bge": "BAAI/bge-m3",
+ "small": "intfloat/multilingual-e5-small",
+ "runs": [
+  {
+   "label": "BGE-M3, 값 낱말 넣음",
+   "device": "cuda",
+   "tau": 0.65,
+   "value_filter": false,
+   "terms_per_file": 48.2,
+   "load_s": 17.86,
+   "concepts_s": 0.51,
+   "ms_median": 41.0,
+   "ms_p95": 85.3,
+   "memory_mib": 1517.0,
+   "memory_before_mib": 422.3,
+   "test": {
+    "n": 109,
+    "ok": 103,
+    "review": 5,
+    "missed": 1,
+    "wrong": 0
+   },
+   "all": {
+    "n": 200,
+    "ok": 200,
+    "review": 0,
+    "missed": 0,
+    "wrong": 0
+   }
+  },
+  {
+   "label": "BGE-M3, 값 낱말 뺌",
+   "device": "cuda",
+   "tau": 0.65,
+   "value_filter": true,
+   "terms_per_file": 24.4,
+   "load_s": 7.77,
+   "concepts_s": 0.29,
+   "ms_median": 37.7,
+   "ms_p95": 51.6,
+   "memory_mib": 1572.5,
+   "memory_before_mib": 1266.3,
+   "test": {
+    "n": 109,
+    "ok": 103,
+    "review": 5,
+    "missed": 1,
+    "wrong": 0
+   },
+   "all": {
+    "n": 200,
+    "ok": 200,
+    "review": 0,
+    "missed": 0,
+    "wrong": 0
+   }
+  },
+  {
+   "label": "BGE-M3, 값 낱말 넣음",
+   "device": "cpu",
+   "tau": 0.65,
+   "value_filter": false,
+   "terms_per_file": 48.2,
+   "load_s": 5.72,
+   "concepts_s": 4.05,
+   "ms_median": 1204.8,
+   "ms_p95": 2640.4,
+   "memory_mib": 2870.8,
+   "memory_before_mib": 1314.8,
+   "test": {
+    "n": 109,
+    "ok": 103,
+    "review": 5,
+    "missed": 1,
+    "wrong": 0
+   },
+   "all": {
+    "n": 200,
+    "ok": 200,
+    "review": 0,
+    "missed": 0,
+    "wrong": 0
+   }
+  },
+  {
+   "label": "BGE-M3, 값 낱말 뺌",
+   "device": "cpu",
+   "tau": 0.65,
+   "value_filter": true,
+   "terms_per_file": 24.4,
+   "load_s": 4.98,
+   "concepts_s": 3.73,
+   "ms_median": 683.0,
+   "ms_p95": 1433.0,
+   "memory_mib": 2879.4,
+   "memory_before_mib": 1477.2,
+   "test": {
+    "n": 109,
+    "ok": 103,
+    "review": 5,
+    "missed": 1,
+    "wrong": 0
+   },
+   "all": {
+    "n": 200,
+    "ok": 200,
+    "review": 0,
+    "missed": 0,
+    "wrong": 0
+   }
+  },
+  {
+   "label": "multilingual-e5-small",
+   "device": "cpu",
+   "tau": 0.86,
+   "value_filter": true,
+   "terms_per_file": 24.4,
+   "load_s": 40.08,
+   "concepts_s": 0.5,
+   "ms_median": 84.3,
+   "ms_p95": 167.6,
+   "memory_mib": 2206.1,
+   "memory_before_mib": 1521.2,
+   "test": {
+    "n": 109,
+    "ok": 88,
+    "review": 13,
+    "missed": 2,
+    "wrong": 6
+   },
+   "all": {
+    "n": 200,
+    "ok": 188,
+    "review": 12,
+    "missed": 0,
+    "wrong": 0
+   }
+  },
+  {
+   "label": "multilingual-e5-small",
+   "device": "cpu",
+   "tau": 0.88,
+   "value_filter": true,
+   "terms_per_file": 24.4,
+   "load_s": 5.78,
+   "concepts_s": 0.48,
+   "ms_median": 81.2,
+   "ms_p95": 167.3,
+   "memory_mib": 2215.8,
+   "memory_before_mib": 1540.0,
+   "test": {
+    "n": 109,
+    "ok": 85,
+    "review": 8,
+    "missed": 11,
+    "wrong": 5
+   },
+   "all": {
+    "n": 200,
+    "ok": 194,
+    "review": 6,
+    "missed": 0,
+    "wrong": 0
+   }
+  },
+  {
+   "label": "multilingual-e5-small",
+   "device": "cpu",
+   "tau": 0.9,
+   "value_filter": true,
+   "terms_per_file": 24.4,
+   "load_s": 5.55,
+   "concepts_s": 0.48,
+   "ms_median": 81.0,
+   "ms_p95": 167.6,
+   "memory_mib": 2215.2,
+   "memory_before_mib": 1547.4,
+   "test": {
+    "n": 109,
+    "ok": 84,
+    "review": 9,
+    "missed": 11,
+    "wrong": 5
+   },
+   "all": {
+    "n": 200,
+    "ok": 192,
+    "review": 8,
+    "missed": 0,
+    "wrong": 0
+   }
+  },
+  {
+   "label": "multilingual-e5-small",
+   "device": "cpu",
+   "tau": 0.92,
+   "value_filter": true,
+   "terms_per_file": 24.4,
+   "load_s": 5.94,
+   "concepts_s": 0.54,
+   "ms_median": 80.8,
+   "ms_p95": 170.9,
+   "memory_mib": 2215.3,
+   "memory_before_mib": 1551.6,
+   "test": {
+    "n": 109,
+    "ok": 90,
+    "review": 3,
+    "missed": 11,
+    "wrong": 5
+   },
+   "all": {
+    "n": 200,
+    "ok": 200,
+    "review": 0,
+    "missed": 0,
+    "wrong": 0
+   }
+  }
+ ]
+}

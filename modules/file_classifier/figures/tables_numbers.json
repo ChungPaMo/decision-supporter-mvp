@@ -1,0 +1,189 @@
+{
+ "version": "tables-0.1.0",
+ "stored": {
+  "version": "tables-0.1.0",
+  "files": 200,
+  "methods": {
+   "찾기": {
+    "gold": 422,
+    "header": 422,
+    "exact": 422,
+    "extra": 0,
+    "file_ok": 200,
+    "first_header_ok": 200,
+    "files": 200
+   },
+   "기준선": {
+    "gold": 422,
+    "header": 49,
+    "exact": 42,
+    "extra": 151,
+    "file_ok": 42,
+    "first_header_ok": 49,
+    "files": 200
+   }
+  },
+  "by_kind": {
+   "표 한 개": {
+    "files": 122,
+    "ok": 122,
+    "base_ok": 42
+   },
+   "표 여러 개": {
+    "files": 47,
+    "ok": 47,
+    "base_ok": 0
+   },
+   "합계 행": {
+    "files": 20,
+    "ok": 20,
+    "base_ok": 0
+   },
+   "묶음 머리글": {
+    "files": 11,
+    "ok": 11,
+    "base_ok": 0
+   }
+  }
+ },
+ "fresh": {
+  "7": {
+   "version": "tables-0.1.0",
+   "files": 200,
+   "methods": {
+    "찾기": {
+     "gold": 422,
+     "header": 422,
+     "exact": 422,
+     "extra": 0,
+     "file_ok": 200,
+     "first_header_ok": 200,
+     "files": 200
+    },
+    "기준선": {
+     "gold": 422,
+     "header": 52,
+     "exact": 45,
+     "extra": 148,
+     "file_ok": 45,
+     "first_header_ok": 52,
+     "files": 200
+    }
+   },
+   "by_kind": {
+    "묶음 머리글": {
+     "files": 11,
+     "ok": 11,
+     "base_ok": 0
+    },
+    "표 여러 개": {
+     "files": 47,
+     "ok": 47,
+     "base_ok": 0
+    },
+    "표 한 개": {
+     "files": 119,
+     "ok": 119,
+     "base_ok": 45
+    },
+    "합계 행": {
+     "files": 23,
+     "ok": 23,
+     "base_ok": 0
+    }
+   }
+  },
+  "20270101": {
+   "version": "tables-0.1.0",
+   "files": 200,
+   "methods": {
+    "찾기": {
+     "gold": 417,
+     "header": 417,
+     "exact": 417,
+     "extra": 0,
+     "file_ok": 200,
+     "first_header_ok": 200,
+     "files": 200
+    },
+    "기준선": {
+     "gold": 417,
+     "header": 50,
+     "exact": 43,
+     "extra": 150,
+     "file_ok": 43,
+     "first_header_ok": 50,
+     "files": 200
+    }
+   },
+   "by_kind": {
+    "표 여러 개": {
+     "files": 47,
+     "ok": 47,
+     "base_ok": 0
+    },
+    "표 한 개": {
+     "files": 120,
+     "ok": 120,
+     "base_ok": 43
+    },
+    "묶음 머리글": {
+     "files": 11,
+     "ok": 11,
+     "base_ok": 0
+    },
+    "합계 행": {
+     "files": 22,
+     "ok": 22,
+     "base_ok": 0
+    }
+   }
+  },
+  "424242": {
+   "version": "tables-0.1.0",
+   "files": 200,
+   "methods": {
+    "찾기": {
+     "gold": 430,
+     "header": 430,
+     "exact": 430,
+     "extra": 0,
+     "file_ok": 200,
+     "first_header_ok": 200,
+     "files": 200
+    },
+    "기준선": {
+     "gold": 430,
+     "header": 50,
+     "exact": 43,
+     "extra": 150,
+     "file_ok": 43,
+     "first_header_ok": 50,
+     "files": 200
+    }
+   },
+   "by_kind": {
+    "묶음 머리글": {
+     "files": 11,
+     "ok": 11,
+     "base_ok": 0
+    },
+    "표 여러 개": {
+     "files": 47,
+     "ok": 47,
+     "base_ok": 0
+    },
+    "표 한 개": {
+     "files": 122,
+     "ok": 122,
+     "base_ok": 43
+    },
+    "합계 행": {
+     "files": 20,
+     "ok": 20,
+     "base_ok": 0
+    }
+   }
+  }
+ }
+}

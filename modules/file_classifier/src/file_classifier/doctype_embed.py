@@ -16,12 +16,13 @@ torch 와 transformers 가 필요하다(이 모듈을 import 하지 않으면 �
 """
 from __future__ import annotations
 
+import re
 from dataclasses import dataclass, field
 
 from .doctype import UNKNOWN, Verdict, _collect
 
 MODEL = "BAAI/bge-m3"
-VERSION = "doctype-embed-0.3.0"
+VERSION = "doctype-embed-0.3.1"
 MAX_TERMS = 90          # 파일 하나에서 보는 낱말 수 상한
 TAU = 0.65              # 낱말과 기준 용어의 유사도가 이 이상일 때만 단서로 센다
 MIN_SCORE = 1.3         # 범주 점수(연결된 기준 용어들의 유사도 합)가 이 이상이어야 한다. 1.3 = TAU × 2: 서로 다른 기준 용어 2개에 연결되면 통과
@@ -67,6 +68,19 @@ class SemanticResult:
     matches: list[str] = field(default_factory=list)    # "파일 낱말 ≈ 기준 용어" 근거
 
 
+# 품목 코드, 전화번호, 날짜처럼 값으로 보이는 글자. 뜻을 담고 있지 않아 모델에 넣지 않는다.
+# 넣어도 기준(0.65)을 넘는 일이 없어 결과는 같았고, 모델에 넣는 낱말만 파일당 48개에서 24개로 줄었다 (더미 200개 기준).
+_CODE = re.compile(r"^(?=.*\d)\S{1,20}$")                 # 공백 없이 숫자가 든 짧은 글자: CP-R4-2730, 1320-01, 010-1234-5678
+_UPPER_CODE = re.compile(r"^[A-Z]{1,4}[-_][A-Z0-9\-_]+$")   # MP-OUTBOX 같은 대문자 코드
+_DATE = re.compile(r"^\d{4}[-./]\d{1,2}[-./]\d{1,2}")      # 2026-12-10 00:00:00
+
+
+def is_value_like(term: str) -> bool:
+    if _DATE.match(term) or _UPPER_CODE.match(term):
+        return True
+    return bool(_CODE.match(term)) and sum("가" <= ch <= "힣" for ch in term) < 3      # '천연펄프4겹', '설비가동률2' 같은 낱말은 남긴다
+
+
 def workbook_terms(sheets: list[tuple[str | None, list[list]]]) -> list[str]:
     """파일에서 뜻을 담은 낱말만 뽑는다 (제목, 열 이름, 항목 이름. 중복 제거, 순서 유지)."""
     seen, items = set(), []
@@ -74,7 +88,7 @@ def workbook_terms(sheets: list[tuple[str | None, list[list]]]) -> list[str]:
         texts, _ = _collect(rows)
         for t in texts:
             t = str(t).strip()
-            if t and not t.startswith("__") and t not in seen and len(t) <= 60:
+            if t and not t.startswith("__") and t not in seen and len(t) <= 60 and not is_value_like(t):
                 seen.add(t)
                 items.append(t)
     return items[:MAX_TERMS]

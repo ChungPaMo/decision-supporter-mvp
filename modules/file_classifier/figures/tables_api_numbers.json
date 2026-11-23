@@ -1,0 +1,65 @@
+{
+ "version": "tables-0.1.0",
+ "files": 200,
+ "plain": {
+  "보류 UNKNOWN": 200
+ },
+ "selected": {
+  "보류 UNKNOWN": 192,
+  "보류 OTHER_ROUTE": 5,
+  "추천 inventory": 3
+ },
+ "accepted": 200,
+ "by_category": [
+  {
+   "category": "BOM",
+   "outcome": "보류 UNKNOWN",
+   "files": 25
+  },
+  {
+   "category": "CRP",
+   "outcome": "보류 UNKNOWN",
+   "files": 25
+  },
+  {
+   "category": "ERP",
+   "outcome": "보류 UNKNOWN",
+   "files": 22
+  },
+  {
+   "category": "ERP",
+   "outcome": "추천 inventory",
+   "files": 3
+  },
+  {
+   "category": "MES",
+   "outcome": "보류 OTHER_ROUTE",
+   "files": 5
+  },
+  {
+   "category": "MES",
+   "outcome": "보류 UNKNOWN",
+   "files": 20
+  },
+  {
+   "category": "MPS",
+   "outcome": "보류 UNKNOWN",
+   "files": 25
+  },
+  {
+   "category": "MRP",
+   "outcome": "보류 UNKNOWN",
+   "files": 25
+  },
+  {
+   "category": "RCCP",
+   "outcome": "보류 UNKNOWN",
+   "files": 25
+  },
+  {
+   "category": "미분류",
+   "outcome": "보류 UNKNOWN",
+   "files": 25
+  }
+ ]
+}
