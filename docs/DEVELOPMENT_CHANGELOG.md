@@ -1082,3 +1082,28 @@
 **관련 자료**
 - [읽기 전용 브라우저 결과](XLSX_SELECTION_PERSISTENCE_VERIFICATION.md#2026-11-23-실제-브라우저-읽기-전용-검증).
 
+### 2026-11-23 — 선택형 XLSX 실제 브라우저 쓰기 E2E (integration)
+
+**Git**
+- 시작 Commit [`1fee108`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/1fee1084385ebcbaccc2ce13f416649dd8279004).
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='docs: record XLSX browser write E2E verification'`로 확인한다.
+- 브랜치 `main`.
+
+**작업 목적**
+- 선택형 XLSX의 변환·이력 보관·명시적 승인·월수요 반영을 실제 브라우저와 전용 PostgreSQL에서 검증한다.
+
+**구현 내용**
+- 초기화 기능이 없는 로컬 전용 실행기로 쓰기 시나리오를 1회 실행했다. Edge 사용자 조작, 실제 API 상태, 정리 전 SQL 저장 행과 지문을 기록했다.
+
+**검증 결과**
+- 쓰기 E2E **1회 통과**, 브라우저 오류 0건. 제품·자재 등록 `201` 및 승인 `200`, XLSX 신규 저장 `201` 및 같은 입력 `200`, 검토·재검증·승인 `200`. 배치 버전 `1→2→3`, 승인 전후 수요 `0→1`, 새로고침 후 같은 승인 배치·이력·14 EA 수요 확인.
+- 회귀 DB의 21개 테이블을 정리해 업무 데이터 0행, Alembic `0009` 및 sentinel 일치를 확인했다. 개발 DB의 60개 테이블·735개 객체·660개 열 및 인덱스 정의 지문이 전후 일치했다.
+
+**기술적 결정**
+- 기존 `0009`를 그대로 사용하고, 정리는 명시된 테이블만 `TRUNCATE … RESTRICT`로 수행했다. 승인 전 월수요는 실제 API, 최종 저장 행과 지문은 독립 SQL로 대조했다.
+
+**남은 문제**
+- 정마나미의 HOLD→변환 파일·범위 이관이 남아 있다. 이번 백엔드 범위에서 새 결함은 발견되지 않았다.
+
+**관련 자료**
+- [쓰기 E2E와 저장 근거](XLSX_SELECTION_PERSISTENCE_VERIFICATION.md#2026-11-23-실제-브라우저-쓰기-e2e).
