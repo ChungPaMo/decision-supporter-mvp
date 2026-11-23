@@ -3,11 +3,13 @@
 --no-db skips these without attempting a connection. In-memory tests are not their substitute.
 """
 from contextlib import contextmanager
+from fastapi.testclient import TestClient
 from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError
 import pytest
 
 from app.batches.service import BatchService
+from app.api.ingest_history import get_history_service
 from app.batches.repository import RepositoryError
 from app.batches.sql_repository import SqlBatchRepository
 from app.dataset_schema_v2 import schema_for
@@ -15,9 +17,11 @@ from app.errors import ApiError
 from app.ingest.history import TransformationService
 from app.ingest.history_repository import SqlTransformationRepository, SqlTransformationTx
 from app.ingest.transformation import transform
+from app.main import app
+from contracts.interfaces.ingestion_history import TransformationDetail
 from contracts.interfaces.xlsx import XlsxTableSelection
 from tests.test_ingestion_history import sales, policy
-from tests.test_xlsx_transformation_history import bounds, selected_workbook
+from tests.test_xlsx_transformation_history import bounds, post, prepare, selected_workbook
 
 
 class RollbackEngine:
@@ -105,13 +109,28 @@ def test_postgres_selected_xlsx_history_replay_approval_and_rollback(conn, monke
         preview = transform(files, recipe, selections=selections)
         return history.create(files, recipe, preview.result_digest, 'Selected XLSX probe', 'TEST-REVIEWER', selections=selections)
 
-    first, reused = stage('January', 8)
-    assert not reused and first.batch_status == 'READY_FOR_APPROVAL'
+    # Bind the real SQL service to this rollback-only test connection for the HTTP assertions.
+    path = '/ingest/transformations'
+    with monkeypatch.context() as patch, TestClient(app) as client:
+        patch.setitem(app.dependency_overrides, get_history_service, lambda: history)
+        preview, form = prepare(client, files, bounds(files, data_end_row=8))
+        created = post(client, path, files, form)
+        assert created.status_code == 201, created.text
+        first = TransformationDetail.model_validate(created.json())
+        assert first.batch_status == 'READY_FOR_APPROVAL'
+        assert first.input_digest == preview['input_digest']
+        assert first.result_digest == preview['result_digest']
+        assert first.preview.model_dump(mode='json') == preview
+        repeated = post(client, path, files, form)
+        assert repeated.status_code == 200, repeated.text
+        assert repeated.json() == created.json()
+        detail = client.get(f'{path}/{first.transformation_id}', params={'dataset_id': engine.dataset_id})
+        assert detail.status_code == 200 and detail.json() == created.json()
     conn.exec_driver_sql('SET CONSTRAINTS ALL IMMEDIATE')
     conn.exec_driver_sql('SET CONSTRAINTS ALL DEFERRED')
-    assert stage('January', 8)[0].transformation_id == first.transformation_id
     view = history.get(first.transformation_id)
-    assert view.preview.sources[0].table_selection.sheet == 'January'
+    assert view.preview.sources[0].table_selection.model_dump() == bounds(files, data_end_row=8)
+    assert view.preview.sources[0].sha256 == bounds(files)['source_sha256']
     assert view.preview.sources[0].resolved_columns['quantity'] == 5
     assert [item.row for item in view.preview.records[0].source_locations] == [6, 8]
     assert batches.list_approved_demand(None, None, None, 10, 0)[1] == 0

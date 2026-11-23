@@ -26,7 +26,7 @@ TestClient와 기존 트랜잭션 메모리 대역으로 선택형 미리보기 
 
 변경 파일의 저장소 보안 검사 발견 0건, `pip check` 의존성 오류 0건이다. 전체 트리 검사에는 기존 합성 XLSX 200개와 생성기의 전화 형식 문자열 1건이 남아 있다.
 
-## Docker가 있는 기존 개발 PC 확인 목록
+## 기존 개발 PC의 PostgreSQL 검증 절차
 
 다음 명령은 이 보조 PC에서 실행하지 않았다. 기존 개발 PC에서도 **별도 승인된 폐기 가능한 회귀 DB**에서만 실행한다. `.env.regression.local`의 명시적 대상, 전용 컨테이너/포트, 제한된 역할, sentinel, 예상 스키마·합성 자료를 기존 검증기로 확인한다. 이 실행기는 fixture 시작 시 그 회귀 DB의 제한된 스키마를 재생성한다. 데이터 보존이 필요한 DB에는 사용하지 않는다. [기존 승인·대상 식별 규칙](DEVELOPMENT_WORKFLOW.md)
 
@@ -43,3 +43,26 @@ try {
 기대 결과는 관련 SQL pytest **3개 통과, 건너뜀 0개**다. 새 `test_postgres_selected_xlsx_history_replay_approval_and_rollback`은 0009 지연 제약을 강제로 확인하고, 기존 PostgreSQL 저장소에서 원본/절대 좌표 재조회, 재시도 ID 일치, 다른 시트의 별도 지문, 이력 UUID 격리, 승인 전 0행과 승인 후 1행, SQL insert 후 의도적 실패의 롤백을 검증한다. 데이터 변경은 fixture의 외부 트랜잭션이 롤백한다.
 
 배포 전에는 기존 개발 DB와 대상 데이터셋이 revision `0009` 상태인지 읽기 전용으로 확인한다. 기존 이력 상세와 승인 배치·월수요의 건수 및 지문이 유지되는지 대조한다. 경쟁 요청의 두 세션 실행은 승인된 회귀 환경에서 동일 요청 201/200과 한 쌍의 이력·배치, 동일 출력 충돌의 무고아 상태를 추가 확인한다. 이번 보조 PC 결과는 PostgreSQL 트리거·잠금·실환경 검증을 포함하지 않는다.
+
+## 2026-11-23 기존 개발 PC의 PostgreSQL 검증 결과
+
+기준 `main`은 [`5507c0a`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/5507c0ab98d95db0a6780b56fff7c8a1f327283f)이다. 승인 범위인 회귀 DB `127.0.0.1:55433/chungpamo_regression`에서 `backend/tests/test_db_ingestion_history.py`만 한 번 실행했다. Docker `chungpamo-monorepo-db`의 PostgreSQL 16.6을 사용했다. 직전에 `chungpamo_regression_runner` 접속과 DB 소유권, 제한된 역할, 회귀 sentinel, 허용 스키마, 다른 접속 0개 및 보존 대상 업무 데이터 0건을 확인했다. fixture는 `public`과 `CHUNGPAMO-2027` 물리 스키마를 재생성하고 Alembic `0009`를 적용했다. 종료 후에도 두 스키마와 sentinel, `0009`를 확인했다. 회귀 DB에 업무 데이터나 임시 데이터셋은 남지 않았다.
+
+| SQL 테스트 | 결과 | 확인한 동작 |
+| --- | --- | --- |
+| `test_postgres_history_sources_replay_approval_and_cross_dataset_isolation` | 통과 | 이력 재사용, 다른 데이터셋 접근 차단, 승인 전 월수요 0행 → 승인 후 2행, 이력·원본 불변 트리거와 지연 제약 |
+| `test_postgres_new_dataset_provisions_history_tables_and_local_foreign_keys` | 통과 | 새 데이터셋에 이력 테이블 2개 생성, 외래 키가 로컬 테이블 또는 `public.dataset`을 참조, 검증용 데이터셋 롤백 |
+| `test_postgres_selected_xlsx_history_replay_approval_and_rollback` | 통과 | 실제 FastAPI 응답, 선택 좌표·SHA·지문 보존, 승인 전 월수요 0행 → 승인 후 1행, 저장 실패 롤백 |
+
+**3 passed / 0 failed / 0 skipped / 0 deselected**, 약 6.18초. 기존 Starlette/httpx 경고 1건. 선택형 XLSX 테스트에서 FastAPI `TestClient`의 의존성을 트랜잭션이 격리된 실제 SQL 저장소에 연결했다. `POST /ingest/transformations` 신규 저장은 `201`, 동일 요청 재시도는 `200`, `GET /ingest/transformations/{id}`는 `200`이었다. 세 응답의 이력·배치 ID와 본문이 같았고, 미리보기와 저장 응답의 `input_digest`·`result_digest`도 일치했다.
+
+재조회에서 `January` 시트, 헤더 4행, 데이터 행 6~8·열 C~I, 수량 열 E, 원본 행 근거 6·8과 원본 SHA-256을 확인했다. 같은 원본의 `February` 시트는 원본 SHA-256을 공유하면서 다른 `input_digest`를 받았다. 명시적 배치 재검증·승인 뒤에만 선택 범위의 월수요 1행이 반영됐다. 실제 이력·원본 INSERT 뒤 오류를 주입했을 때 배치·원본·이력·이력 원본·월수요 5개 테이블의 건수와 기존 manifest 지문이 유지됐다.
+
+개발 DB `chungpamo`는 읽기 전용으로 비교했다. 사전검사와 테스트 후의 **60개 테이블 데이터 지문, 735개 스키마 객체 지문, 660개 열·인덱스 정의 지문**이 모두 일치했다. Alembic은 전후 `0009`였다.
+
+| 개발 데이터셋 | 승인 배치 | 월수요 | 예측 이력 | 변환 이력 / 변환 원본 |
+| --- | ---: | ---: | ---: | ---: |
+| `CHUNGPAMO-2027` | 9 | 498 | 1 | 0 / 0 |
+| `TISSUE-LEGACY` | 7 | 24 | 1 | 0 / 0 |
+
+사전·사후 비교와 JUnit 증거는 Git에서 제외된 로컬 `.artifacts/`에 보관한다. 다음 실DB 검증 범위는 동일 입력을 두 연결에서 동시에 저장하는 경우, 같은 시트의 범위 변경과 정규 CSV 충돌, 원본·선택 변조 반례다. 브라우저 E2E와 전체 SQL 회귀는 이번 실행 범위 밖이다. [화면 인계](XLSX_SELECTION_PERSISTENCE_HANDOFF.md)

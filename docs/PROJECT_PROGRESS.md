@@ -1,6 +1,8 @@
 # 충파모 프로젝트 진행상황
 
-최종 확인 **2026-11-23 (KST), 보조 PC**. 시작 `main`은 [`423c456`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/423c456cf11d090866293c0812c78d6cd7bb81e2)이다. 사용자 선택 XLSX를 기존 변환 이력과 승인 전 배치에 저장하고 같은 원본·정책·선택을 재현하도록 구현했다. TestClient·메모리에서 201 저장/200 재시도, 상세 조회, 재검증·명시적 승인, 데이터셋 격리와 중간 오류 롤백을 확인했다. 새 마이그레이션은 없다. 전체 비DB **1,164 passed / 0 failed / 67 skipped**. 신규 경로의 실제 PostgreSQL과 화면 연계는 후속이다. [검증 및 Docker PC 체크리스트](XLSX_SELECTION_PERSISTENCE_VERIFICATION.md) · [나미님 인계](XLSX_SELECTION_PERSISTENCE_HANDOFF.md)
+최종 확인 **2026-11-23 (KST), 기존 개발 PC**. 기준 `main`은 [`5507c0a`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/5507c0ab98d95db0a6780b56fff7c8a1f327283f)이다. 김대영이 별도 회귀 DB에서 Alembic `0009`와 XLSX 선택 이력 SQL 테스트 **3 passed / 0 failed / 0 skipped / 0 deselected**를 확인했다. 실제 FastAPI·SQL에서 신규 저장 `201`, 재시도 `200`, 재조회 `200`, 선택 좌표·원본 SHA·지문 보존, 명시적 승인 전후 월수요 0→1행과 오류 시 롤백을 검증했다. 개발 DB의 60개 테이블·735개 객체 지문 및 기존 승인·예측 건수는 일치했다. 두 연결의 동시 저장과 브라우저 E2E는 후속이다. 완료 커밋 제목은 `test: verify selected xlsx history on PostgreSQL`이다. [실DB 검증 결과](XLSX_SELECTION_PERSISTENCE_VERIFICATION.md#2026-11-23-기존-개발-pc의-postgresql-검증-결과) · [나미님 인계](XLSX_SELECTION_PERSISTENCE_HANDOFF.md)
+
+직전 보조 PC의 시작 `main`은 [`423c456`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/423c456cf11d090866293c0812c78d6cd7bb81e2)이다. 사용자 선택 XLSX를 기존 변환 이력과 승인 전 배치에 저장하고 같은 원본·정책·선택을 재현하도록 구현했다. TestClient·메모리에서 201 저장/200 재시도, 상세 조회, 재검증·명시적 승인, 데이터셋 격리와 중간 오류 롤백을 확인했다. 새 마이그레이션은 없다. 당시 전체 비DB **1,164 passed / 0 failed / 67 skipped**. [보조 PC 검증 결과](XLSX_SELECTION_PERSISTENCE_VERIFICATION.md#보조-pc에서-확인한-동작)
 
 직전 11/23 범위 선택 작업에서 원본 SHA에 연결된 시트·헤더·데이터 범위를 구조 미리보기·분류·추천·프로파일·변환 미리보기에 적용했다. 기본 헤더 포착 18/200, 지정 헤더 200/200, 평면 BOM Top-3 0/27→9/27 및 전체 HOLD를 확인했다. 당시 비DB **1,128 passed / 0 failed / 66 skipped / 6 deselected**. 이번 저장 연동에서 200개 구조와 평면 BOM의 기존 결과를 재현했다. [범위 선택 검증](XLSX_TABLE_SELECTION_VERIFICATION_20261123.md)
 
@@ -60,7 +62,7 @@
 
 | 기능 | 실제 구현·검증 수준 | 담당 | 남은 문제·근거 |
 | --- | --- | --- | --- |
-| 데이터 입력·파싱 | CSV/XLSX·7종 배치·수동 매핑·재검증·승인/반려 유지. 공식8마스터+원장 변환9번째 배치를 실제 PostgreSQL로 검증 | 김대영 | 화면 전체 E2E는 별도. [실DB 검증](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md) |
+| 데이터 입력·파싱 | CSV/XLSX·7종 배치·수동 매핑·재검증·승인/반려 유지. 공식8마스터+원장 변환9번째 배치와 선택 XLSX 변환 이력을 실제 PostgreSQL로 검증 | 김대영 | 동시 저장 및 화면 전체 E2E는 별도. [공식 자료 검증](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md) · [선택 XLSX 실DB 검증](XLSX_SELECTION_PERSISTENCE_VERIFICATION.md#2026-11-23-기존-개발-pc의-postgresql-검증-결과) |
 | 파일 자동 분류 | 업로드용 `rules-0.4.0`이 구조화 HOLD를 제공하고 백엔드는 CAPA·Routing 등록 힌트를 반환한다. 사용자 선택 범위로 재분류 가능 | 이훤(알고리즘), 김대영(API) | 화면 안내와 범위 선택 연계는 후속. [모듈 갱신](https://github.com/ChungPaMo/decision-supporter-mvp/commit/66880a5) · [표 선택](XLSX_TABLE_SELECTION_HANDOFF.md) |
 | 컬럼 매핑·AI 후보 추천 | 정확 일치·별칭·수동 override와 RapidFuzz Top-3 유지. 11/22 48건의 오추천 6→3, Top-3 26/32 및 승인 전 SQL 저장 검증. 11/23 숫자 열의 단위 후보 반증 추가 | 김대영 | 11/22 BGE-M3 보완은 Top-3 32/32이나 오추천 7/48로 운영 적용 보류. 평면 BOM 원본의 헤더 위치와 식별자 부족은 수동 확인 필요. [기존 평가](MAPPING_BGE_EVALUATION_20261122.md) · [현실형 XLSX](CLASSIFIER_XLSX_MAPPING_VERIFICATION_20261123.md) |
 | 정제·변환 | 원본5파일86,214→498, SQL 이력·원본bytes/SHA·승인 전 batch 연결·재조회·동시201/200·실제DB 실패 rollback 검증 완료 | 김대영 | 회귀/개발DB0009 적용 확인. 개발DB는 기존공식자료 중복등록 없이 새이력0건 유지. SYNTHETIC_ONLY를 일반 기업에 자동 적용하지 않음. [이력 계약](INGESTION_INTEGRATION_HISTORY.md), [실DB 근거](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md) |

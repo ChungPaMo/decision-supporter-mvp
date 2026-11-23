@@ -911,3 +911,30 @@
 **관련 자료**
 - 이전 항목: 같은 날짜의 frontend 3개 항목.
 
+### 2026-11-23 — XLSX 선택 이력 PostgreSQL 회귀 검증 (backend)
+
+**Git**
+- 시작 Commit [`5507c0a`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/5507c0ab98d95db0a6780b56fff7c8a1f327283f).
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='test: verify selected xlsx history on PostgreSQL'`로 확인한다.
+- 브랜치 `main`.
+
+**작업 목적**
+- XLSX 시트·헤더·표 범위 선택을 포함한 변환 이력의 저장, 재검증·승인, 실패 롤백을 기존 개발 PC의 PostgreSQL에서 검증한다.
+
+**구현 내용**
+- 기존 `backend/tests/test_db_ingestion_history.py`의 선택형 XLSX SQL 테스트에 실제 FastAPI 신규 저장 `201`, 동일 요청 `200`, 상세 조회 `200`, 전체 응답·지문·좌표 대조를 추가했다.
+
+**검증 결과**
+- PostgreSQL 16.6, 전용 회귀 DB, Alembic `0009`. 승인된 SQL 테스트만 한 번 실행해 **3 passed / 0 failed / 0 skipped / 0 deselected**였다. 명시적 승인 전후 수요 0→1행과 오류 주입 롤백을 확인했다.
+- 개발 DB를 읽기 전용으로 대조했다. 테이블 60개, 스키마 객체 735개, 열·인덱스 정의 660개 및 데이터셋별 승인·월수요·예측·변환 건수가 사전검사와 같았다. 회귀 DB 종료 후 업무 데이터 0건을 확인했다.
+- `git diff --check`와 관련 문서 링크를 확인했다. 보안 검사에서 변경 파일 발견 0건, 기존 파일 분류 모듈 발견 203건이었다(XLSX 200개, 전화번호 형식 3건).
+
+**기술적 결정**
+- TestClient에 롤백 전용 연결의 실제 SQL 저장소를 연결해 API 응답과 DB 제약을 같은 테스트에서 검증했다. 기존 fixture가 허용된 스키마만 재생성하는지 실행 전에 대상·역할·sentinel·현재 스키마·세션을 대조했다.
+
+**남은 문제**
+- 동시 저장의 별도 연결 경쟁, 정규 CSV 중복 및 원본·선택 변조의 추가 실DB 반례, 브라우저 E2E는 미실행이다.
+
+**관련 자료**
+- [실DB 검증 결과](XLSX_SELECTION_PERSISTENCE_VERIFICATION.md#2026-11-23-기존-개발-pc의-postgresql-검증-결과), [화면 인계](XLSX_SELECTION_PERSISTENCE_HANDOFF.md).
+
