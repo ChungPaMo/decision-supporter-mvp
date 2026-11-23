@@ -93,3 +93,11 @@ try {
 정리는 `CHUNGPAMO-2027`의 승인된 21개 테이블을 명시한 `TRUNCATE … RESTRICT`로 완료했다. 회귀 DB의 두 스키마, sentinel, revision `0009`, 초기 기준 행과 업무 데이터 0행을 다시 확인했다. 개발 DB `chungpamo`는 사전·사후 **60개 테이블, 735개 스키마 객체, 660개 열·인덱스 정의 지문** 및 승인 배치·월수요·예측·변환 건수가 일치했다.
 
 실행 근거와 재현 코드는 Git에서 제외된 로컬 `.artifacts/xlsx-concurrency-20261123/`에 보관한다. JUnit의 SHA-256은 `5cf03b092fc58944c741d0833b1a25b92f18a55783b2fa6f8e38a6eb8f9480c0`이다. API 오류 수정·승인된 새 SQL 검증과 브라우저 E2E는 후속이다.
+
+## 2026-11-23 중복 오류 매핑 수정과 재검증 범위
+
+기준 `main`은 [`b9bf235`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/b9bf2357fd9f6c273ca0088b2307a4fa5709925c)이다. SQL 저장소는 드라이버의 SQLSTATE `23505`, 현재 데이터셋의 물리 스키마, 테이블 `import_batch`, 그 스키마의 활성 배치 고유 인덱스 이름이 모두 일치할 때 기존 `409 DUPLICATE_UPLOAD`를 반환한다. `public`의 `uq_batch_live_entity_sha`와 데이터셋 스키마의 `import_batch_entity_source_sha256_idx`는 `(entity, source_sha256)`에 걸린 같은 조건부 고유 인덱스다. 다른 고유 제약·FK·CHECK·트리거 오류 및 연결 장애의 기존 처리를 유지한다. 마이그레이션과 OpenAPI 변경은 없다. [SQL 저장소](../backend/app/batches/sql_repository.py) · [비DB 회귀 테스트](../backend/tests/test_sql_batch_error_mapping.py)
+
+기존 개발 PC의 읽기 전용 사전검사에서 두 인덱스의 정의, `127.0.0.1:55433/chungpamo_regression`, `chungpamo_regression_runner`, sentinel, Alembic `0009`, 대상 스키마, 업무 데이터 0행과 다른 세션 0개를 확인했다. 개발 DB의 테이블 60개·객체 735개·열 및 인덱스 정의 660개 지문은 직전 기록과 같았다. 코드 수정 후 실제 PostgreSQL 쓰기·동시성 테스트는 미실행이다.
+
+새 1회 승인 범위는 회귀 DB의 `public`·`CHUNGPAMO-2027` 재생성, Alembic `0009`, 기존 동시성 테스트에 필요한 합성 INSERT·COMMIT, 같은 데이터셋의 사전 확인된 21개 테이블 정리다. 동일 입력은 `201`/`200`으로 이력·배치를 한 쌍만 남기고, 서로 다른 범위의 동일 정규 CSV 경합은 `201`/`409 DUPLICATE_UPLOAD`로 끝나야 한다. 변조 거부, 중간 오류 롤백, 고아 데이터 0행, 정리 후 업무 데이터 0행, 개발 DB의 사전·사후 지문 일치도 확인한다.

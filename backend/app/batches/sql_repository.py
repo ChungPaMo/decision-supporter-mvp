@@ -18,6 +18,7 @@ from app.batches.repository import (
     ApprovedBom, ApprovedDemand, ApprovedInventory, ApprovedMaterial, ApprovedProduct, BatchRecord, BomHeaderInsert, BomLineInsert, DemandRow,
     DuplicateBatchError, InventoryInsert, MaterialInsert, ProductInsert, RepositoryError, RepositoryUnavailable, ValidationUpdate,
 )
+from app.dataset_schema_v1 import schema_for
 from app.ingest.validation import KnownBom, KnownMaterial, KnownProduct
 
 _COLS = """dataset_id, batch_id, entity, status, source_type, source_name, source_note, source_sha256, created_by, uploaded_at AS created_at,
@@ -244,9 +245,15 @@ class SqlBatchRepository:
             with self.engine.begin() as conn:
                 yield SqlBatchTx(conn)
         except IntegrityError as exc:
-            if "uq_batch_live_entity_sha" in str(exc.orig):
-                raise DuplicateBatchError() from exc
-            raise RepositoryError(type(exc.orig).__name__) from exc
+            original = exc.orig
+            diagnostics = getattr(original, "diag", None)
+            if getattr(original, "sqlstate", None) == "23505" and diagnostics is not None:
+                schema = schema_for(self.dataset_id)
+                # LIKE INCLUDING INDEXES generates a different name for the cloned partial index.
+                index = "uq_batch_live_entity_sha" if schema == "public" else "import_batch_entity_source_sha256_idx"
+                if (diagnostics.schema_name, diagnostics.table_name, diagnostics.constraint_name) == (schema, "import_batch", index):
+                    raise DuplicateBatchError() from exc
+            raise RepositoryError(type(original).__name__) from exc
         except (OperationalError, InterfaceError) as exc:
             raise RepositoryUnavailable() from exc
         except DBAPIError as exc:

@@ -964,3 +964,29 @@
 **관련 자료**
 - [동시성·무결성 검증 결과](XLSX_SELECTION_PERSISTENCE_VERIFICATION.md#2026-11-23-postgresql-동시성무결성-검증).
 
+### 2026-11-23 — 활성 배치 중복 경합 오류 매핑 수정 (backend)
+
+**Git**
+- 시작 Commit [`b9bf235`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/b9bf2357fd9f6c273ca0088b2307a4fa5709925c).
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='fix: map concurrent batch hash collisions to duplicate upload'`로 확인한다.
+- 브랜치 `main`.
+
+**작업 목적**
+- 서로 다른 변환 입력이 같은 정규 CSV로 경합할 때 고유 제약이 차단한 후발 요청을 기존 `409 DUPLICATE_UPLOAD`로 처리한다.
+
+**구현 내용**
+- `SqlBatchRepository`가 SQLSTATE `23505`와 진단의 스키마·테이블·인덱스 이름을 함께 검사한다. `public`과 복제 데이터셋의 활성 배치 인덱스 두 종류를 지원한다. 동일 입력 지문, 재사용, 기존 트랜잭션 경계, 오류 응답 스키마는 유지한다.
+
+**검증 결과**
+- 새 오류 분류 사례 12개를 포함한 집중 비DB **109 passed / 0 failed / 0 skipped**. 전체 `pytest --no-db` **1,194 passed / 0 failed / 67 skipped / 0 deselected**. 기존 Starlette/httpx 경고 1건. OpenAPI 스냅샷·생성 Schema·XLSX 미리보기/저장 `201`/재사용 `200`·재검증·승인 회귀 통과.
+- 읽기 전용 사전검사에서 두 인덱스의 정의, 회귀 DB·역할·sentinel·`0009`·업무 데이터 및 다른 접속 0건을 확인했다. 개발 DB의 60개 테이블·735개 객체·660개 정의 지문이 직전 기록과 일치했다. 수정 후 실제 PostgreSQL 경합·쓰기 검증은 미실행이다.
+
+**기술적 결정**
+- PostgreSQL 구조화 진단 필드를 사용한다. 다른 고유 제약·FK·CHECK·트리거 오류는 기존 저장 오류 처리, 연결 장애는 `503` 처리를 유지한다. 마이그레이션과 OpenAPI 갱신은 필요하지 않았다.
+
+**남은 문제**
+- 별도 1회 승인 후 전용 회귀 DB에서 실제 동시 요청 `201`/`409`, 동일 입력 `201`/`200`, 롤백과 무고아를 재검증한다. 브라우저 E2E는 이번 범위 밖이다.
+
+**관련 자료**
+- [오류 매핑과 재검증 범위](XLSX_SELECTION_PERSISTENCE_VERIFICATION.md#2026-11-23-중복-오류-매핑-수정과-재검증-범위).
+
