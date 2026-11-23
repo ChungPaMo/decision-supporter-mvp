@@ -8,6 +8,7 @@ import IngestAssistPanel from '../components/IngestAssistPanel';
 import SalesTransformPanel from '../components/SalesTransformPanel';
 import XlsxRangePicker, { isXlsx } from '../components/XlsxRangePicker';
 import { XlsxTableSelection } from '../types/ingestion';
+import DocumentSortPanel from '../components/DocumentSortPanel';
 
 const HIDDEN_COLUMNS = new Set(['location', 'review_required', 'batch_id', 'source_type', 'lines']);
 const SELECTION_KEY = 'chungpamo.batch-selection.v1';
@@ -267,6 +268,7 @@ export default function DataUploadScreen({ view = 'upload' }: { view?: 'upload' 
     <div className="actions sync-row"><button className="button" disabled={busy} onClick={() => void refresh()}>서버 상태 다시 조회</button>
       <span role="status">{busy ? '서버 처리 중…' : synced ? '서버 상태 조회 완료' : '서버 상태 확인 필요'}</span></div>
     {message && <div role="alert"><Notice tone="bad">{message}</Notice></div>}
+    {!verify && <DocumentSortPanel />}
     {!synced && !busy && <Notice tone="warn">서버 연결을 확인한 후 다시 조회하세요. 확인 전에는 등록·승인을 할 수 없습니다.</Notice>}
     <section className="next-step" aria-label="다음 할 일">
       <p><b>다음 할 일</b>{next.text}<small>승인 {approvedCount} / {ENTITY_ORDER.length}</small></p>

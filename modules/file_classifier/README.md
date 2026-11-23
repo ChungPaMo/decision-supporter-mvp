@@ -219,7 +219,7 @@ print(result["category"], result["confidence"], result["reason"])
 고친 뒤에는 반드시 다시 잰다.
 
 ```powershell
-# 기존에 맞히던 답이 그대로인지 확인 (시험 342개)
+# 기존에 맞히던 답이 그대로인지 확인 (시험 345개)
 ./.venv/Scripts/python.exe -m pytest modules/file_classifier -q
 
 # 처음 보는 양식 109개의 수치가 나빠지지 않았는지 확인 (GPU 권장)
@@ -431,7 +431,7 @@ for t in find_tables_in_xlsx(open("자료.xlsx", "rb").read()):
 | `tools/make_figures.py`, `make_principle_figures.py`, `make_flow_figures.py`, `make_readme_figures.py`, `make_research_figures.py` | 이 문서의 그림 만들기 |
 | `samples/make_samples.py`, `samples/labels.json`, `samples/inbox/` | 더미 엑셀 200개 생성기, 정답, 파일 |
 | `figures/` | 이 문서의 그림과 그림에 쓴 숫자(`numbers.json`, `principle_numbers.json`, `readme_numbers.json`, `tables_numbers.json`, `tables_api_numbers.json`, `speed_numbers.json`) |
-| `tests/` | 시험 342개 |
+| `tests/` | 시험 345개 |
 | [PROGRESS.md](PROGRESS.md) | 이 모듈의 진행 기록 (지금 상태, 남은 일, 날짜별 기록) |
 
 그림 중 `s1_dropzone.png`, `s2_sorted.png`는 화면을 찍은 것이라 스크립트로 다시 만들지 않는다.

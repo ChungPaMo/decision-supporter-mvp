@@ -165,6 +165,13 @@ class ApiClient {
   }
 
   // 건강 체크
+  // 여러 엑셀의 문서 종류(BOM/MPS/...) 일괄 분류. 저장하지 않으며 데이터셋과 무관하다.
+  async classifyDocuments(files: File[]): Promise<DocumentSortReply> {
+    const formData = new FormData();
+    for (const file of files) formData.append('files', file, file.name);
+    return this.request('POST', '/classifications/documents', { formData });
+  }
+
   async classifyFile(file: File, includeSamples: boolean, selection?: XlsxTableSelection | null): Promise<ClassificationResult> {
     const formData = new FormData();
     formData.append('file', file); formData.append('sample_row_limit', includeSamples ? '5' : '0');
@@ -369,5 +376,10 @@ class ApiClient {
     return filename;
   }
 }
+
+export interface DocumentVerdict {
+  file: string; category: string; confidence: string; score: number; runner_up: string | null; reason: string; evidence: string[]; readable: boolean;
+}
+export interface DocumentSortReply { module_version: string; categories: string[]; results: DocumentVerdict[] }
 
 export const apiClient = new ApiClient();

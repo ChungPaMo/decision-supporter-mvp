@@ -43,7 +43,7 @@ for t in find_tables_in_xlsx(xlsx_bytes):      # 보이는 시트의 표를 위�
 | 분류기 → 백엔드 API (`/classifications`, `/classifications/file`) | 연결됨 | `backend/app/integrations/modules.py` |
 | 분류기 → 컬럼 매핑 추천 (`/ingest/classified-mapping`) | 연결됨 | `backend/app/api/ingest_assistance.py` |
 | 분류기 → 화면 "파일 유형 추천" 패널 | 연결됨 | `frontend/src/components/ClassificationPanel.tsx` |
-| 문서 종류 분류(BOM/MPS/MRP/RCCP/CRP/MES/ERP) → API·화면 | 연결 안 됨 | `tools/sort_folder.py`로만 실행 가능 |
+| 문서 종류 분류(BOM/MPS/MRP/RCCP/CRP/MES/ERP) → API·화면 | 연결됨 (2026-11-24, 사전만) | `backend/app/api/document_sort.py`, `frontend/src/components/DocumentSortPanel.tsx`. 이훤이 직접 추가했다. 위치와 문구는 담당자가 바꿔도 된다 |
 
 ## 2. 공식 합성 자료(CHUNGPAMO-2027)로 확인한 결과
 

@@ -20,6 +20,7 @@ from app.ingest.limits import AssistanceBodyLimit
 from app.api.plan_executions import router as plan_executions_router
 
 from app.api.datasets import router as datasets_router
+from app.api.document_sort import router as document_sort_router
 
 app = FastAPI(title="충파모 과제 7 MVP", version=get_settings().app_version)
 app.include_router(health_router)
@@ -33,6 +34,7 @@ app.include_router(plan_executions_router)
 app.include_router(exports_router)
 app.include_router(forecasts_router)
 app.include_router(forecast_history_router)
+app.include_router(document_sort_router)
 
 
 def configure_cors(target: FastAPI, settings: Settings) -> None:

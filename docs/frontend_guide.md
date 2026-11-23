@@ -235,3 +235,5 @@ CORS_ALLOW_ORIGINS=http://localhost:5173
 ## Final handoff draft additions
 
 `/classifications/file` builds the bounded classification DTO from an uploaded file without saving. sample_row_limit=0 by default; maximum 20. `/plans` and `/plans/what-if` preserve their paths. Read-only successful replies explicitly set persisted=false and approval_available=false. MODULE_NOT_IMPLEMENTED remains 501 until a module is delivered; PLAN_INPUT_UNAVAILABLE is 409; PLAN_HISTORY_NOT_IMPLEMENTED is 501 until saved base plans exist. Failure statuses are 422/500, never successful plan approvals. See TEAM_HANDOFF.md.
+
+`POST /classifications/documents`는 여러 엑셀(.xlsx, .xlsm, .csv)을 multipart `files`로 받아 파일별 문서 종류(BOM/MPS/MRP/RCCP/CRP/MES/ERP/미분류/확인 필요), 확신도, 근거를 돌려준다. 요청당 50개·파일당 10MB까지이며 화면은 25개씩 나눠 보낸다. 저장하지 않고 DB를 쓰지 않으며, 업로드용 유형 추천(`/classifications/file`)이나 등록·승인과 무관한 추천 전용이다. 읽지 못한 파일은 오류 대신 `확인 필요`와 이유로 돌아온다. 화면은 `DocumentSortPanel`(데이터 업로드).
