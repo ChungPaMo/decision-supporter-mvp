@@ -1,6 +1,12 @@
 # 충파모 프로젝트 진행상황
 
-최종 확인 **2026-11-22 (KST), 기존 개발 PC**. 컬럼 추천 비교 시작 `main`은 [`6e7056a`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/6e7056aeb09166b2bc82d994faaae47f5af15db9)이다. 완료 커밋은 `eval: compare local BGE-M3 and harden mapping suggestions`로 식별한다.
+최종 확인 **2026-11-23 (KST), 보조 PC**. 시작 `main`은 [`b2b3ecd`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/b2b3ecd7941b2e6b3cc706d95614d09a584f0115)이며 이번 커밋은 `feat: expose structured file classification routes and audit xlsx mapping`으로 식별한다.
+
+현실형 합성 XLSX 200개를 읽어 실제 첫 표 헤더를 포착한 18개, 제목·병합·숨김·수식 동작을 확인했다. 문서 종류 분류 라벨은 200개 모두 일치했다. 평면 BOM 9개의 원본 매핑은 모두 HOLD였다. 표만 복사했을 때 27열 중 9열을 찾았고 숫자 열의 잘못된 단위 하위 후보 9건을 차단했다. 기존 승인 게이트 앞에 구조화 HOLD와 CAPA·Routing 등록 안내를 추가했다. [XLSX 검증과 인계](CLASSIFIER_XLSX_MAPPING_VERIFICATION_20261123.md)
+
+11/23 전체 비DB pytest **1,115 passed / 0 failed / 66 skipped / 6 deselected**. OpenAPI/Schema 동기화와 승인 게이트 시험 통과. 보안 검사에서 이번 변경 파일 발견 0건, 기존 분류기 합성 샘플 관련 발견 201건이다.
+
+11/22 기존 개발 PC의 컬럼 추천 비교 시작 `main`은 [`6e7056a`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/6e7056aeb09166b2bc82d994faaae47f5af15db9)이다. 완료 커밋은 `eval: compare local BGE-M3 and harden mapping suggestions`로 식별한다.
 
 같은 합성 헤더 48건에서 로컬 BGE-M3를 새로 실행했다. RapidFuzz 보완 방식의 Top-3는 26/32→32/32, 오추천은 3/48→7/48이었다. 운영 API는 RapidFuzz를 유지하며 금액·출고·기준/가용 혼용의 수량 오추천을 차단한다. 전체 비DB pytest **1,114 passed / 0 failed / 66 skipped / 0 deselected**. 격리 PostgreSQL 승인 전 저장은 실제 SQL로 확인하고 롤백했다. 개발 DB는 강제 읽기 전용으로 보존했다. [새 비교와 검증](MAPPING_BGE_EVALUATION_20261122.md)
 
@@ -51,8 +57,8 @@
 | 기능 | 실제 구현·검증 수준 | 담당 | 남은 문제·근거 |
 | --- | --- | --- | --- |
 | 데이터 입력·파싱 | CSV/XLSX·7종 배치·수동 매핑·재검증·승인/반려 유지. 공식8마스터+원장 변환9번째 배치를 실제 PostgreSQL로 검증 | 김대영 | 화면 전체 E2E는 별도. [실DB 검증](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md) |
-| 파일 자동 분류 | 업로드용 규칙 분류 `AVAILABLE=True`, `rules-0.2.0`; JSON/파일 API 통합. 표준 5종 추천, CAPA/Routing·판매 원장 HOLD. 실제 API 회귀 검증 | 이훤(알고리즘), 김대영(API) | HOLD는 직접 유형 확인/변환 안내. 별도 문서·임베딩 연구는 업로드 API와 별개. [통합 검증](INGESTION_INTEGRATION_VERIFICATION_20261116.md) |
-| 컬럼 매핑·AI 후보 추천 | 정확 일치·별칭·수동 override와 RapidFuzz Top-3 유지. 의미 반증 보강 후 같은 48건의 오추천 6→3, Top-3 26/32. 선택→미리보기→승인 전 SQL 저장 검증 | 김대영 | 로컬 BGE-M3는 Top-3 32/32이나 오추천 7/48로 운영 적용 보류. 문맥 모호성·신규 표현은 사용자 확인 필요. [새 평가](MAPPING_BGE_EVALUATION_20261122.md) |
+| 파일 자동 분류 | 업로드용 `rules-0.3.0`과 백엔드에서 표준 5종 및 구조화 HOLD 제공. 정확 CAPA·Routing 양식은 등록 경로 힌트를 별도 제공. 공식 자료와 기존 XLSX 양식의 비DB API 회귀 검증 | 이훤(알고리즘), 김대영(API) | 모듈의 구조화 코드 제공과 화면 안내 연계, 범용 XLSX 제목·표 범위 처리는 후속. [실측·새 계약](CLASSIFIER_XLSX_MAPPING_VERIFICATION_20261123.md) |
+| 컬럼 매핑·AI 후보 추천 | 정확 일치·별칭·수동 override와 RapidFuzz Top-3 유지. 11/22 48건의 오추천 6→3, Top-3 26/32 및 승인 전 SQL 저장 검증. 11/23 숫자 열의 단위 후보 반증 추가 | 김대영 | 11/22 BGE-M3 보완은 Top-3 32/32이나 오추천 7/48로 운영 적용 보류. 평면 BOM 원본의 헤더 위치와 식별자 부족은 수동 확인 필요. [기존 평가](MAPPING_BGE_EVALUATION_20261122.md) · [현실형 XLSX](CLASSIFIER_XLSX_MAPPING_VERIFICATION_20261123.md) |
 | 정제·변환 | 원본5파일86,214→498, SQL 이력·원본bytes/SHA·승인 전 batch 연결·재조회·동시201/200·실제DB 실패 rollback 검증 완료 | 김대영 | 회귀/개발DB0009 적용 확인. 개발DB는 기존공식자료 중복등록 없이 새이력0건 유지. SYNTHETIC_ONLY를 일반 기업에 자동 적용하지 않음. [이력 계약](INGESTION_INTEGRATION_HISTORY.md), [실DB 근거](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md) |
 | PostgreSQL·데이터셋 격리 | 신규v2의 로컬FK·UUID격리·불변/지연트리거 실제 검증. 보관dataset 포함3스키마·기존81테이블 보존 probe 후 rollback. 개발0009도 별도승인·백업확인 후 적용 | 김대영 | 개발/회귀 현재0009. 기존자료와 연결된 볼륨은 보존, downgrade2개 미실행. dataset_id는 인증권한 아님. [최신 근거](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md) |
 | 수요예측 | 단일 엔진/계약 유지. 실제 승인된 변환 수요498행→예측OK/27행 저장·재조회·P50≤P80≤P90, 미승인 probe 제외 확인 | 이희원(엔진), 김대영(API), 정마나미(화면) | 합성 회귀 결과를 실제 기업 적합성으로 일반화하지 않음. [이번 실DB 검증](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md) |
@@ -81,11 +87,11 @@
 
 ## 개발 환경 제한
 
-**이번 11/22 작업은 기존 개발 PC의 전용 Docker 상태 확인과 PostgreSQL 읽기 전용 검증을 수행했다.** 보조 PC에서 Docker·PostgreSQL을 사용하지 않는 기존 제한을 유지한다. 11/17의 별도 승인된 0009 적용은 과거 작업이며, 다음 DB 변경에는 해당 작업의 승인이 필요하다.
+**11/23 작업은 Docker·PostgreSQL이 없는 보조 PC에서 수행했다.** DB 접속·마이그레이션·DB 테스트는 미실행이다. 11/22의 기존 개발 PC 검증과 11/17의 별도 승인된 0009 적용은 해당 날짜의 기록이다.
 
 - 기존 DB 데이터를 보존한다. 개발 DB/기존 `chungpamo_test` 초기화 금지, 독립 회귀 DB의 파괴적 작업도 [개발 절차](DEVELOPMENT_WORKFLOW.md)의 식별·보존 확인·별도 실행 승인이 필요하다.
 - `frontend/`, `modules/file_classifier/`, `modules/planning_engine/` 담당 폴더 제한과 신규 migration 추가 금지를 유지한다. 추천 점수 기반 자동 등록·승인, 원본 기업 데이터 외부 API 전송을 하지 않는다.
-- 이번 작업은 백엔드 진단/검증과 계약·테스트·문서를 변경했다. 신규 진단 API는 TestClient와 SQL 대역으로 검증했다. 66개 DB 테스트와 Alembic 명령 호출 검사 6개는 미실행이다.
+- 분류·컬럼 추천 변경은 TestClient와 비DB 회귀로 검증했다. 66개 DB 테스트와 Alembic 명령 호출 검사 6개는 미실행이다.
 
 ## 작업 재개와 팀 공유
 

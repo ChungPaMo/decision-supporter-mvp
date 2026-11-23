@@ -53,6 +53,7 @@ def verify_official_journey():
         name, content = sales[0]
         classified = client.post('/classifications/file', files={'file': (name, content)}).json()
         assert classified['hold'] and classified['recommended_entity'] is None and classified['module_version']
+        assert classified['hold_kind'] == 'NEEDS_TRANSFORM' and classified['registration_hint'] is None
         assert any('monthly_demand' in reason for reason in classified['reasons'])
         response = client.post('/ingest/profile', params=PARAMS, files={'file': (name, content)}, data={'use_approved_master': 'true'})
         assert response.status_code == 200, response.text
@@ -139,8 +140,16 @@ def test_official_upload_classification_has_no_persistence_side_effect(sources, 
         assert body['module_version'] and body['reasons']
         if entity in ('capacity', 'routing'):
             assert body['hold'] and body['recommended_entity'] is None
+            assert body['hold_kind'] == 'OTHER_ROUTE' and body['registration_hint']['entity'] == entity
+            mapped = client.post('/ingest/classified-mapping', files={'file': (filename, sources['upload/' + filename])})
+            assert mapped.status_code == 200, mapped.text
+            reply = mapped.json()
+            assert reply['classification']['registration_hint'] == body['registration_hint']
+            assert reply['mapping'] is None and reply['selected_entity'] is None
+            assert reply['approval_required'] is True and reply['persisted'] is False and reply['auto_approve'] is False
         else:
             assert body['recommended_entity'] == entity and not body['hold']
+            assert body['hold_kind'] is None and body['registration_hint'] is None
         assert not repositories[DATASET].state.batches
 
 
@@ -160,8 +169,10 @@ def test_manual_mapping_recovery_is_explicit_and_bad_choice_is_validation_error(
     with memory_api() as (client, repositories):
         seed_masters(client, sources)
         suggested = client.post('/ingest/mapping-suggestions', params=PARAMS, files={'file': ('negative-ambiguous.csv', data)}).json()
-        assert suggested['sheets'][0]['status'] == 'HOLD'
-        assert any(len(c['suggestions']) > 1 for c in suggested['sheets'][0]['suggestions'])
+        sheet = suggested['sheets'][0]
+        assert sheet['status'] == 'HOLD' and 'AMBIGUOUS_COLUMNS:demand_qty' in sheet['holds']
+        assert [c['col'] for c in sheet['suggestions'] if c['suggestions']
+                and c['suggestions'][0]['target_field'] == 'demand_qty'] == [3, 4]
         batch = upload(client, 'negative-ambiguous.csv', data, 'monthly_demand').json()
         assert batch['status'] == 'MAPPING_HOLD' and approve(client, batch).status_code == 409
         path = '/batches/' + batch['batch_id'] + '/revalidate'

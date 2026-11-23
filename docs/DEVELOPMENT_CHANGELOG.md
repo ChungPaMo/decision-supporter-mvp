@@ -702,3 +702,32 @@
 
 **관련 자료**
 - [2026-11-22 새 평가와 검증](MAPPING_BGE_EVALUATION_20261122.md), [이전 RapidFuzz 평가](MAPPING_RECOMMENDATION_MVP_20261116.md), [통합 설계](AI_MAPPING_INTEGRATION_DESIGN.md).
+
+### 2026-11-23 — 현실형 XLSX 검증과 분류 등록 경로 계약
+
+**Git**
+- 시작 Commit `b2b3ecd7941b2e6b3cc706d95614d09a584f0115`.
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='feat: expose structured file classification routes and audit xlsx mapping'`으로 확인한다.
+- 브랜치 `main`.
+
+**작업 목적**
+- 실제 합성 XLSX 레이아웃의 업로드 제약과 추천 오류를 확인하고, CAPA·Routing 등록 경로와 HOLD 사유를 API 계약에 반영한다.
+
+**구현 내용**
+- `backend/app/integrations/modules.py`와 `contracts/interfaces/modules.py`에 `hold_kind`와 `registration_hint`를 연결했다. 정확한 양식 확인에 기존 CAPA/Routing 등록 DTO를 재사용했다.
+- `backend/app/ingest/recommendation.py`에서 숫자만 있는 열에 단위 후보를 차단했다. API 회귀, Schema·OpenAPI 및 화면 가이드를 갱신했다.
+- `scripts/evaluate_classifier_xlsx.py`와 검증 보고서로 200개 시트 구조 및 원본과 표 추출본의 매핑 차이를 재현할 수 있게 했다.
+
+**검증 결과**
+- 문서 분류 200/200과 업로드 분류 HOLD/UNKNOWN 200개를 별도로 기록했다. 실제 첫 표 헤더 포착 18/200. 평면 BOM 9개의 원본 Top-1/Top-3 0/27, 표만 복사한 입력 9/27. 모두 파일 HOLD. 잘못된 단위 하위 후보 9건 제거.
+- 최종 비DB **1,115 passed / 0 failed / 66 skipped / 6 deselected**. OpenAPI·Schema 동기화 통과. 보안 검사 변경 파일 0건, 기존 합성 샘플 관련 201건. 실DB·Alembic·외부 모델 실행은 없었다.
+
+**기술적 결정**
+- 다섯 `recommended_entity`는 유지한다. CAPA·Routing은 사용자가 별도 검증 경로로 이동하도록 안내한다. 추천·등록·승인 단계는 각각 유지한다.
+- 파서 레이아웃 문제와 랭킹 문제를 각각 측정한다. 기존 BGE-M3 결과를 참고하고 RapidFuzz 운영 경로를 유지한다.
+
+**남은 문제**
+- 이훤의 모듈에서 구조화 HOLD를 직접 제공하고 나미님 화면에서 상태·등록 경로를 연결한다. 사용자 확인 기반 헤더 영역·반복 블록 처리와 누락 필수 필드의 데이터 계약은 후속이다.
+
+**관련 자료**
+- [시작 Commit b2b3ecd](https://github.com/ChungPaMo/decision-supporter-mvp/commit/b2b3ecd7941b2e6b3cc706d95614d09a584f0115), [XLSX 검증·계약 인계](CLASSIFIER_XLSX_MAPPING_VERIFICATION_20261123.md), [11/22 BGE-M3 비교](MAPPING_BGE_EVALUATION_20261122.md).

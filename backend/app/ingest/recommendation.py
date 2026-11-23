@@ -30,6 +30,9 @@ def compatible(field, header, column):
         return False, 'MATERIAL_IS_NOT_PRODUCT'
     if field == 'material_id' and any(word in label for word in ('제품', '상품', 'product')):
         return False, 'PRODUCT_IS_NOT_MATERIAL'
+    if (field in {'unit', 'base_unit'} and column.total_rows > column.empty_count
+            and column.format_match_rates['DECIMAL'] == 1):
+        return False, 'NUMERIC_VALUES_ARE_NOT_UNITS'
     if field in QUANTITIES:
         money_terms = ('금액', '金額', '단가', 'amount', 'price', 'cost', 'onhandvalue', 'stockvalue', 'inventoryvalue')
         if any(word in label for word in money_terms):

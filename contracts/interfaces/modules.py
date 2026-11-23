@@ -4,6 +4,24 @@ from pydantic import Field, model_validator
 from .base import StrictModel, Code, DecimalValue
 
 Entity = Literal['product', 'material', 'bom', 'inventory', 'monthly_demand']
+HoldKind = Literal['NEEDS_TRANSFORM', 'OTHER_ROUTE', 'AMBIGUOUS', 'UNKNOWN']
+RegistrationSection = Literal['resources', 'quantity_limits', 'hours_budgets', 'routing_steps']
+
+
+class RegistrationHint(StrictModel):
+    entity: Literal['capacity', 'routing']
+    sections: list[RegistrationSection] = Field(min_length=1, max_length=3)
+
+    @model_validator(mode='after')
+    def section_matches_entity(self):
+        sections = set(self.sections)
+        if len(sections) != len(self.sections) or (self.entity == 'routing') != (sections == {'routing_steps'}):
+            raise ValueError('Registration sections must match one upload entity')
+        if self.entity == 'capacity' and 'routing_steps' in sections:
+            raise ValueError('Capacity cannot include routing steps')
+        return self
+
+
 class SheetSample(StrictModel):
     name: Annotated[str, Field(min_length=1, max_length=200)] | None
     columns: Annotated[list[Annotated[str, Field(max_length=200)]], Field(max_length=100)]
@@ -37,6 +55,8 @@ class ClassificationOutput(StrictModel):
     hold: bool
     reasons: list[str]
     module_version: str = Field(min_length=1, max_length=80)
+    hold_kind: HoldKind | None = None
+    registration_hint: RegistrationHint | None = None
 
     @model_validator(mode='after')
     def recommendation_is_candidate(self):
@@ -47,6 +67,10 @@ class ClassificationOutput(StrictModel):
             raise ValueError('Missing recommendation requires HOLD')
         if self.hold and not self.reasons:
             raise ValueError('HOLD requires reasons')
+        if not self.hold and self.hold_kind is not None:
+            raise ValueError('hold_kind requires HOLD')
+        if self.registration_hint is not None and (self.hold_kind != 'OTHER_ROUTE' or self.recommended_entity is not None):
+            raise ValueError('Registration hint requires OTHER_ROUTE without a standard mapping recommendation')
         return self
 
 

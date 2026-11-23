@@ -59,6 +59,24 @@
               "title": "Hold",
               "type": "boolean"
             },
+            "hold_kind": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "NEEDS_TRANSFORM",
+                    "OTHER_ROUTE",
+                    "AMBIGUOUS",
+                    "UNKNOWN"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Hold Kind"
+            },
             "module_version": {
               "maxLength": 80,
               "minLength": 1,
@@ -89,6 +107,17 @@
                 }
               ],
               "title": "Recommended Entity"
+            },
+            "registration_hint": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/RegistrationHint"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
             }
           },
           "required": [
@@ -310,6 +339,40 @@
             "holds"
           ],
           "title": "MappingSheetReply",
+          "type": "object"
+        },
+        "RegistrationHint": {
+          "additionalProperties": false,
+          "properties": {
+            "entity": {
+              "enum": [
+                "capacity",
+                "routing"
+              ],
+              "title": "Entity",
+              "type": "string"
+            },
+            "sections": {
+              "items": {
+                "enum": [
+                  "resources",
+                  "quantity_limits",
+                  "hours_budgets",
+                  "routing_steps"
+                ],
+                "type": "string"
+              },
+              "maxItems": 3,
+              "minItems": 1,
+              "title": "Sections",
+              "type": "array"
+            }
+          },
+          "required": [
+            "entity",
+            "sections"
+          ],
+          "title": "RegistrationHint",
           "type": "object"
         }
       },
