@@ -17,6 +17,13 @@ function lastId() {
     return /^[0-9a-f-]{36}$/i.test(value) ? value : undefined;
   } catch { return undefined; }
 }
+const whole = (value: string | number) => qty(Math.round(Number(value)));
+function shortTime(iso: string) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
+}
 function defaultDate() {
   const now = new Date();
   return new Date(Date.UTC(now.getFullYear(), now.getMonth(), 0)).toISOString().slice(0, 10);
@@ -90,9 +97,12 @@ export default function ForecastScreen() {
     } finally { working.current = false; if (alive.current) setBusy(false); }
   }
 
+  const months = [...new Set(result?.forecasts.map((row) => row.target_month) ?? [])].sort();
+  const productCount = new Set(result?.forecasts.map((row) => row.product_id) ?? []).size;
+  const usable = execution?.status === 'OK' || execution?.status === 'PARTIAL';
   const choices = execution && !history.some((item) => item.execution_id === execution.execution_id) ? [execution, ...history] : history;
   return <div className="screen">
-    <ScreenHeader title="승인 수요 예측" description="승인된 월별 수요만 기준일까지 조회해 예측하고, 입력 지문·모델 버전·결과를 서버에 저장합니다." />
+    <ScreenHeader title="승인 수요 예측" description="승인된 월별 수요로 앞으로의 수요를 예측합니다. 결과는 서버에 저장되며, 같은 조건으로 다시 실행하면 저장된 결과를 그대로 보여줍니다." />
     <form className="panel stack" onSubmit={(event) => void start(event)}>
       <fieldset className="stack" disabled={busy}><legend>예측 실행 조건</legend>
         <label className="field"><span>학습 기준일 (월말)</span><input type="date" required value={parameters.trained_until}
@@ -100,6 +110,8 @@ export default function ForecastScreen() {
         <label className="field"><span>예측 기간 (개월)</span><select aria-label="예측 기간 (개월)" value={parameters.horizon_months}
           onChange={(event) => setParameters({ ...parameters, horizon_months: Number(event.target.value) })}>
           {Array.from({ length: 12 }, (_, i) => <option key={i + 1} value={i + 1}>{i + 1}개월</option>)}</select></label>
+        <button type="submit" className="button primary">예측 실행</button>
+        <details className="advanced"><summary>고급 설정 (계산 방식 · 최소 이력 · 재현 시드)</summary><div className="advanced-fields">
         <label className="field"><span>P50 방식</span><select aria-label="P50 방식" value={parameters.p50_method}
           onChange={(event) => setParameters({ ...parameters, p50_method: event.target.value as 'MA12' | 'LGBM_L1' })}>
           <option value="MA12">MA12 — 최근 12개월 평균</option><option value="LGBM_L1">LGBM_L1 — LightGBM 점예측</option></select></label>
@@ -107,24 +119,13 @@ export default function ForecastScreen() {
           onChange={(event) => setParameters({ ...parameters, min_history_months: Number(event.target.value) })} /></label>
         <label className="field"><span>재현 시드</span><input type="number" required min={0} max={2147483647} value={parameters.random_seed ?? 42}
           onChange={(event) => setParameters({ ...parameters, random_seed: Number(event.target.value) })} /></label>
-        <button type="submit" className="button primary">예측 실행</button>
+        </div></details>
       </fieldset>
-      <p className="muted">4~12개월 예측은 검증 범위 밖 경고가 붙습니다. 동일 입력·설정·엔진 버전의 완료 결과는 재사용하며 실패 실행은 재시도합니다.</p>
+      <p className="muted">1~3개월 예측이 검증된 범위입니다. 4~12개월은 검증 범위 밖이라는 경고가 함께 표시됩니다.</p>
     </form>
     {busy && <div role="status"><Notice>서버에서 실행 또는 조회 중입니다…</Notice></div>}
     {error && <div role="alert"><Notice tone="bad">{error}</Notice></div>}
     {reused && <Notice>동일 입력의 저장된 실행 결과를 재사용했습니다.</Notice>}
-    <section className="panel stack"><h3>예측 실행 이력</h3>
-      <button className="button" disabled={busy} onClick={() => void refresh(offset, execution?.execution_id)}>실행 이력 새로고침</button>
-      <label className="field"><span>저장된 실행</span><select aria-label="저장된 실행" disabled={busy || !choices.length} value={execution?.execution_id ?? ''}
-        onChange={(event) => void refresh(offset, event.target.value)}>
-        <option value="">실행 선택</option>{choices.map((item) => <option key={item.execution_id} value={item.execution_id}>
-          {item.created_at} · {LABEL[item.status]} · {item.parameters.p50_method} · {item.execution_id}
-        </option>)}</select></label>
-      {!total && !busy && <p>저장된 실행 이력이 없습니다.</p>}
-      <div className="actions"><button className="button" disabled={busy || offset === 0} onClick={() => void refresh(Math.max(0, offset - 20))}>이전 실행 20개</button>
-        <span>전체 {total}개</span><button className="button" disabled={busy || offset + 20 >= total} onClick={() => void refresh(offset + 20)}>다음 실행 20개</button></div>
-    </section>
     {execution && <section className="panel stack" aria-label="저장된 예측 결과">
       <h3>{LABEL[execution.status]}</h3>
       {execution.status === 'PARTIAL' && <Notice tone="warn">일부 제품이 제외됐습니다. 예측된 제품과 제외 사유를 함께 확인하세요.</Notice>}
@@ -132,37 +133,54 @@ export default function ForecastScreen() {
       {execution.status === 'INPUT_INVALID' && <Notice tone="bad">입력 조건이 유효하지 않아 예측을 만들지 않았습니다.</Notice>}
       {execution.status === 'FAILED' && <Notice tone="bad">{execution.failure?.message} ({execution.failure?.code}) 예측 결과가 저장되지 않았습니다.</Notice>}
       <dl className="meta-grid">
-        <div><dt>실행 ID</dt><dd>{execution.execution_id}</dd></div>
         <div><dt>학습 기준일</dt><dd>{execution.parameters.trained_until}</dd></div>
-        <div><dt>예측 기간</dt><dd>{execution.parameters.horizon_months}개월</dd></div>
-        <div><dt>P50 방식</dt><dd>{execution.parameters.p50_method}</dd></div>
-        <div><dt>입력 행 수</dt><dd>{execution.input_row_count}</dd></div>
-        <div><dt>예측 행 수</dt><dd>{execution.forecast_count}</dd></div>
-        <div><dt>P80·P90 모델</dt><dd>{execution.quantile_model_version ?? '예측 미생성'}</dd></div>
-        <div><dt>데이터 구분</dt><dd>{run?.data_classification ?? '없음'}</dd></div>
+        <div><dt>예측 기간</dt><dd>{execution.parameters.horizon_months}개월{months.length > 0 ? ` (${months[0]} ~ ${months[months.length - 1]})` : ''}</dd></div>
+        <div><dt>예측한 제품</dt><dd>{productCount}개</dd></div>
+        <div><dt>사용한 수요 기록</dt><dd>{qty(execution.input_row_count)}행</dd></div>
+        <div><dt>실행 시각</dt><dd>{shortTime(execution.created_at)}</dd></div>
       </dl>
-      <p>입력 digest: <span className="code">{execution.input_digest}</span></p>
       {result && result.forecasts.length > 0 && <ForecastChart rows={result.forecasts} />}
       {result && result.forecasts.length > 0 && <div className="table-scroll"><table>
-        <caption>제품별 월 예측 수요 (P50/P80/P90)</caption>
-        <thead><tr><th>제품코드</th><th>대상월</th><th>P50</th><th>P80</th><th>P90</th></tr></thead>
+        <caption>제품별 월 예측 수요 (P50/P80/P90) — 정수로 반올림해 표시, 정확한 값은 칸에 마우스를 올리면 보입니다</caption>
+        <thead><tr><th>제품코드</th><th>대상월</th><th title="가장 가능성이 높은 값(중앙값)">P50 (기준)</th><th title="실제 수요가 이 값 이하일 확률 80%">P80 (여유)</th><th title="실제 수요가 이 값 이하일 확률 90%">P90 (상한)</th></tr></thead>
         <tbody>{result.forecasts.map((row) => <tr key={`${row.product_id}-${row.target_month}`}>
-          <td>{row.product_id}</td><td>{row.target_month}</td><td>{qty(row.p50)}</td><td>{qty(row.p80)}</td><td>{qty(row.p90)}</td>
+          <td>{row.product_id}</td><td>{row.target_month}</td><td title={String(row.p50)}>{whole(row.p50)}</td><td title={String(row.p80)}>{whole(row.p80)}</td><td title={String(row.p90)}>{whole(row.p90)}</td>
         </tr>)}</tbody>
       </table></div>}
       {result && <>
         {result.skipped.length > 0 && <div><h4>제외 제품</h4><ul>{result.skipped.map((item) => <li key={item.product_id}>{item.product_id} · {item.reason_code} · {item.detail}</li>)}</ul></div>}
         {result.warnings.length > 0 && <div><h4>경고</h4><ul>{result.warnings.map((item, i) => <li key={i}>{item.code} · {item.detail}</li>)}</ul></div>}
-        {result.adjustments.length > 0 && <div><h4>분위수 보정</h4><ul>{result.adjustments.map((item, i) => <li key={i}>{item.product_id} {item.target_month} · {item.code}</li>)}</ul></div>}
+        {result.adjustments.length > 0 && <details><summary>예측값 순서를 바로잡은 항목 {result.adjustments.length}건</summary>
+          <p className="muted">P50 ≤ P80 ≤ P90 순서가 어긋난 값을 엔진이 바로잡은 항목입니다. 표의 값은 바로잡은 뒤의 값입니다.</p>
+          <ul>{result.adjustments.map((item, i) => <li key={i}>{item.product_id} {item.target_month} · {item.code}</li>)}</ul></details>}
         {result.errors.length > 0 && <div><h4>실행 오류</h4><ul>{result.errors.map((item, i) => <li key={i}>{item.code} · {item.loc} · {item.detail}</li>)}</ul></div>}
       </>}
-      <details><summary>입력 배치·버전 및 엔진 재현 정보</summary>
+      <details><summary>실행 ID·입력 지문·엔진 정보 (재현용)</summary>
+        <dl className="meta-grid">
+          <div><dt>실행 ID</dt><dd>{execution.execution_id}</dd></div>
+          <div><dt>P50 방식</dt><dd>{execution.parameters.p50_method}</dd></div>
+          <div><dt>P80·P90 모델</dt><dd>{execution.quantile_model_version ?? '예측 미생성'}</dd></div>
+          <div><dt>데이터 구분</dt><dd>{run?.data_classification ?? '없음'}</dd></div>
+          <div><dt>예측 행 수</dt><dd>{execution.forecast_count}</dd></div>
+        </dl>
+        <p>입력 digest: <span className="code">{execution.input_digest}</span></p>
         <ul>{execution.input_batches.map((batch) => <li key={batch.batch_id}>{batch.batch_id} · v{batch.batch_version} · {batch.source_sha256}</li>)}</ul>
         <pre style={{ overflowX: 'auto' }}>{JSON.stringify(execution.runtime_identity, null, 2)}</pre>
       </details>
     </section>}
+    <section className="panel stack"><h3>이전 예측 불러오기</h3>
+      <button className="button" disabled={busy} onClick={() => void refresh(offset, execution?.execution_id)}>실행 이력 새로고침</button>
+      <label className="field"><span>저장된 실행</span><select aria-label="저장된 실행" disabled={busy || !choices.length} value={execution?.execution_id ?? ''}
+        onChange={(event) => void refresh(offset, event.target.value)}>
+        <option value="">실행 선택</option>{choices.map((item) => <option key={item.execution_id} value={item.execution_id}>
+          {shortTime(item.created_at)} · {LABEL[item.status]} · 기준일 {item.parameters.trained_until} · {item.parameters.horizon_months}개월 · {item.execution_id.slice(0, 8)}
+        </option>)}</select></label>
+      {!total && !busy && <p>저장된 실행 이력이 없습니다.</p>}
+      <div className="actions"><button className="button" disabled={busy || offset === 0} onClick={() => void refresh(Math.max(0, offset - 20))}>이전 실행 20개</button>
+        <span>전체 {total}개</span><button className="button" disabled={busy || offset + 20 >= total} onClick={() => void refresh(offset + 20)}>다음 실행 20개</button></div>
+    </section>
     <Notice tone="info">계획 비교·진단·계획 승인은 별도의 예시입니다. 위 실제 예측 결과와 연결되지 않았습니다.</Notice>
     <div className="actions"><button className="button" onClick={() => setStep('data')}>데이터 등록으로</button>
-      <button className="button" onClick={() => setStep('plans')}>별도 계획 예시 보기</button></div>
+      <button className={`button${usable ? ' primary' : ''}`} onClick={() => setStep('plans')}>생산계획 검토로 이동</button></div>
   </div>;
 }

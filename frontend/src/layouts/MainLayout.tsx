@@ -7,7 +7,7 @@ import Shell, { NAV_ITEMS, NavItem } from './Shell';
 const NAV: NavItem[] = NAV_ITEMS.map((item) => (item.id === 'plan' ? { ...item, name: '생산계획 비교' } : item));
 const FIRST_STEP: Record<string, Step> = { dashboard: 'dashboard', upload: 'data', verify: 'verify', forecast: 'forecast', plan: 'plans', whatif: 'whatif' };
 const STEP_META: Record<Step, { nav: string; crumb: string[] }> = {
-  dashboard: { nav: 'dashboard', crumb: ['대시보드', '데이터셋 현황'] },
+  dashboard: { nav: 'dashboard', crumb: ['대시보드', '오늘 할 일'] },
   data: { nav: 'upload', crumb: ['데이터 업로드', '파일 등록·승인'] },
   verify: { nav: 'verify', crumb: ['데이터 검증', '검증·승인·등록'] },
   forecast: { nav: 'forecast', crumb: ['수요예측', '승인 수요 예측'] },

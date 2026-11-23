@@ -27,11 +27,22 @@ function remember(entity: Entity, id: string) {
   try { localStorage.setItem(selectionKey(), JSON.stringify({ ...selections(), [entity]: id })); } catch { /* 저장소가 막혀도 서버 재조회 가능 */ }
 }
 
+// 표 머리글은 담당자가 읽는 말로 보여주고, 원래 필드 이름은 마우스를 올리면 보인다.
+const COLUMN_LABEL: Record<string, string> = {
+  product_id: '제품 코드', product_name: '제품명', base_unit: '기준 단위', product_type: '제품 유형', safety_stock_qty: '안전재고',
+  material_id: '자재 코드', material_name: '자재명', period: '월', demand_qty: '수요 수량', unit: '단위',
+  item_type: '구분', item_id: '품목 코드', as_of_date: '기준일', on_hand_qty: '보유 수량', allocated_qty: '할당 수량', available_qty: '가용 수량',
+  bom_id: 'BOM 코드', bom_version: 'BOM 버전', status: '상태', is_active: '사용 여부', valid_from: '적용 시작', valid_to: '적용 종료',
+  line_no: '행', qty_per: '소요량', scrap_rate: '손실률', section: '구분', resource_id: '자원 코드', resource_name: '자원명', resource_type: '자원 유형',
+  capacity_id: '능력 코드', step_id: '공정 코드', step_no: '공정 순서', routing_id: 'Routing 코드',
+};
+const STATUS_LABEL: Record<string, string> = { MAPPING_HOLD: '열 지정 필요', HAS_ERRORS: '오류 있음', READY_FOR_APPROVAL: '승인 대기', APPROVED: '승인됨', REJECTED: '반려됨' };
+
 function RowsTable({ rows, caption }: { rows: Array<Record<string, unknown>>; caption: string }) {
   const columns = Object.keys(rows[0] ?? {}).filter((key) => !HIDDEN_COLUMNS.has(key));
   if (!rows.length) return <p className="muted">조회된 데이터가 없습니다.</p>;
   return <div className="table-scroll"><table><caption>{caption}</caption>
-    <thead><tr>{columns.map((key) => <th key={key}>{key}</th>)}</tr></thead>
+    <thead><tr>{columns.map((key) => <th key={key} title={key}>{COLUMN_LABEL[key] ?? key}</th>)}</tr></thead>
     <tbody>{rows.map((row, i) => <tr key={i}>{columns.map((key) => <td key={key}>{row[key] == null ? '-' : String(row[key])}</td>)}</tr>)}</tbody>
   </table></div>;
 }
@@ -111,7 +122,7 @@ function BatchPanel({ batch, disabled, act, linked }: { batch: BatchDetail; disa
     {batch.validation ? <ValidationView validation={batch.validation} /> : <Notice tone="warn">검증 요약이 없습니다. 서버 상태를 다시 조회하세요.</Notice>}
     {batch.status === 'APPROVED' && <>
       <Notice tone="ok">{batch.approved_by} 승인 완료 · {qty(batch.approved_record_count)}건 반영</Notice>
-      {readError ? <Notice tone="bad">{readError}</Notice> : <RowsTable rows={rows} caption="서버 승인 데이터 조회 (최대 100개 항목 중 선택 배치)" />}
+      {readError ? <Notice tone="bad">{readError}</Notice> : <details><summary>서버에 반영된 승인 데이터 보기</summary><RowsTable rows={rows} caption="서버 승인 데이터 조회 (최대 100개 항목 중 선택 배치)" /></details>}
     </>}
     {batch.status === 'REJECTED' && <Notice tone="muted">{batch.rejected_by} 반려 · 사유: {batch.reject_reason}</Notice>}
     {!finished && <fieldset className="stack review-fields" disabled={disabled}>
@@ -300,7 +311,7 @@ export default function DataUploadScreen({ view = 'upload' }: { view?: 'upload' 
       {!verify && !salesMode && sourceFile && !supportsAssist && <Notice tone="muted">{ENTITY_LABEL[activeEntity]}는 컬럼 후보 추천을 지원하지 않습니다. 표준 헤더 그대로 등록하고, 등록 후 검증 결과에서 열을 확인하세요.</Notice>}
       <label className="field"><span>배치 이력</span><select aria-label="배치 이력" disabled={busy || !synced} value={batch?.batch_id ?? ''} onChange={(e) => void selectBatch(e.target.value)}>
         <option value="">등록된 배치 선택</option>{history.filter((item) => item.entity === activeEntity).map((item) =>
-          <option key={item.batch_id} value={item.batch_id}>{item.file.name} · {item.status} · v{item.version} · {item.batch_id.slice(0, 8)}</option>)}
+          <option key={item.batch_id} value={item.batch_id}>{item.file.name} · {STATUS_LABEL[item.status] ?? item.status} · v{item.version} · {item.batch_id.slice(0, 8)}</option>)}
       </select></label>
       {verify && !batch && !busy && <Notice tone="muted">이 데이터 종류에는 등록된 배치가 없습니다. 데이터 업로드에서 파일을 먼저 등록하세요.</Notice>}
       {batch && <BatchPanel key={`${batch.batch_id}-${batch.version}`} batch={batch} disabled={busy || !synced} act={act} linked={linkedBatches.has(batch.batch_id)} />}

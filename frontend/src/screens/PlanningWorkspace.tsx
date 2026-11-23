@@ -15,6 +15,7 @@ const PLANS = DEMO_PLANS;
 
 export default function PlanningWorkspace({ stage }: { stage: Stage }) {
   const setStep = useProductionStore(s => s.setStep);
+  const datasetId = useProductionStore(s => s.datasetId);
   const { demoPlanIndex: selected, setDemoPlanIndex: setSelected, planningView, setPlanningView } = useProductionStore();
   const opener = useRef<HTMLButtonElement | null>(null);
   const [quantity, setQuantity] = useState(8000);
@@ -26,6 +27,7 @@ export default function PlanningWorkspace({ stage }: { stage: Stage }) {
     <ScreenHeader title={STAGES.find(([id]) => id === stage)![1]} description={planningView === 'DEMO' ? '가상 휴지 제조기업 · TP-10R · 10롤 1팩 · 2027년 1월 · PPT 설명용 합성 사례' : '저장된 예측 실행을 선택해 서버 계산 모듈을 호출합니다. 읽기 전용 결과이며 저장·승인되지 않습니다.'} />
     <div className="workflow-tabs" aria-label="계획 데이터 모드"><button aria-pressed={planningView === 'DEMO'} onClick={() => setPlanningView('DEMO')}>합성 설명 사례</button><button aria-pressed={planningView === 'LIVE'} onClick={() => setPlanningView('LIVE')}>실제 모듈 연결</button></div>
     {planningView === 'DEMO' && <Notice tone="warn">DEMO / UNVERIFIED — 고정 합성 설명값입니다. 실제 예측·계산·승인 기록과 연결되지 않았습니다. 화면의 비율은 이 설명값을 시각화합니다.</Notice>}
+    {planningView === 'DEMO' && <p className="muted">아래 수치는 화면 구성을 보여주기 위한 예시이며, 지금 선택한 데이터셋({datasetId})의 자료가 아닙니다. 이 데이터셋의 예측으로 계산을 요청하려면 "실제 모듈 연결"을 선택하세요.</p>}
     <nav className="workflow-tabs" aria-label="계획 상세 단계">{STAGES.map(([id, label]) => <button key={id} className={stage === id ? 'active' : ''} aria-current={stage === id ? 'page' : undefined} onClick={() => setStep(id as Step)}>{label}</button>)}</nav>
     {error && <div role="alert"><Notice tone="bad">{error}</Notice></div>}
     {planningView === 'LIVE' ? <><LivePlanningPanel stage={stage} /><PlanExecutionPanel /></> : <>
