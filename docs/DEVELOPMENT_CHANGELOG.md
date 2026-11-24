@@ -1395,3 +1395,27 @@
 
 **관련 자료**
 - [Phase 9 계획·기준선·연구 출처](MAPPING_SOLAR_ADVANCED_OPTIMIZATION_20261124.md).
+
+### 2026-11-24 — 생산계획 개발 PostgreSQL 읽기 전용 검증과 C02 설계
+
+**Git**
+- 시작 Commit [`91927a0`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/91927a0d568962526c896de518e4d3a01cd7b0ec), 브랜치 `main`.
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='verify: validate production planning on read-only PostgreSQL'`로 확인한다.
+
+**작업 목적**
+- 공식 3개월 실DB Preview를 검증하고 실제 계획 저장·부모 What-if와 승인 입고 reader의 후속 범위를 구체화한다.
+
+**구현 내용**
+- 읽기 전용 검증 실행기의 함수 이름 충돌을 해결했다. 연결 대상과 계획 이력 불변을 검사하고, 증거에 입력·계산 지문과 전체 결과를 보존한다.
+- 전용 회귀 DB 단일 테스트에 SAW1 80시간, BASE/WHAT_IF 지문·재사용·재조회, 타 데이터셋 부모와 승인 차단, SQL 오류 후 원자적 롤백 검증을 추가했다.
+
+**검증 결과**
+- PostgreSQL 16.6, `chungpamo` revision `0009`에서 진단과 Preview 200, 계산 `OK`, `persisted=false`. 읽기 전용 검사 7개를 통과했다. 개발 DB 60개 테이블·735개 객체·660개 정의 지문 및 계획 이력 0건 일치.
+- 생산 합계는 기준형 93,481, 안정형 96,583, 비용절감형 88,225 EA로 공식 기준과 일치했다. 승인 입고 미연결로 각 후보의 신규 발주 필요 건수는 18→19였다. SQL 입력의 분리 What-if 계산으로 안정형 결품 3,612→1,437 EA를 확인했다.
+- 비DB pytest 1,359 통과·68 건너뜀. 회귀 DB는 sentinel·revision·격리와 비어 있는 업무 테이블을 읽기 전용으로 확인했다. 실제 쓰기, 회귀 초기화, C02 migration 생성·적용과 Upstage 호출은 미실행이다.
+
+**기술적 결정 및 남은 문제**
+- P1은 신규 실행 승인을 받은 뒤 지정 테스트 한 건으로 검증한다. C02는 기존 승인 게이트와 데이터셋 격리를 재사용하고 `null` 공급 미연결과 확인된 빈 공급을 구분한다. migration 작성·적용 및 합성 입고 쓰기의 승인 범위를 별도로 관리한다.
+
+**관련 자료**
+- [실제 개발 DB 결과, 회귀 정리 범위와 C02 설계](PLANNING_POSTGRESQL_INTEGRATION_VERIFICATION_20261124.md).

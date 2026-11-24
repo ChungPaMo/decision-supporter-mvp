@@ -3,6 +3,7 @@ All data comes from committed synthetic fixtures or a fresh temporary generator 
 """
 from concurrent.futures import ThreadPoolExecutor
 from contextlib import contextmanager
+from decimal import Decimal
 from pathlib import Path
 import json
 import runpy
@@ -18,11 +19,11 @@ from app.batches.sql_repository import SqlBatchRepository
 from app.datasets import get_dataset_engine
 from app.dataset_schema_v1 import schema_for
 from app.integrations.planning import SqlPlanningSourceProvider
-from app.plans.repository import PlanRepository
+from app.plans.repository import PlanRepository,digest
 from app.plans.service import what_if_snapshot
 from app.plans.exports import formal_export
 from app.errors import ApiError
-from contracts.interfaces.planning import PlanCommand,PlanningOutput
+from contracts.interfaces.planning import PlanCommand,PlanningInput,PlanningOutput
 from scripts.verify_synthetic_contracts import FILES
 from scripts.verify_test_db import assert_destructive_engine,DATABASE,ROLE
 
@@ -83,7 +84,7 @@ def test_actual_dataset_api_forecast_and_input(api,dataset,products,resources,de
     assert client.get('/forecasts/'+execution['execution_id'],params={'dataset_id':other}).status_code==404
 
 
-def test_actual_plan_preview_and_storage_on_regression_db(api):
+def test_actual_plan_preview_and_storage_on_regression_db(api,monkeypatch,record_property):
     client,_=api
     dataset='CHUNGPAMO-2027'
     params={'dataset_id':dataset}
@@ -93,32 +94,99 @@ def test_actual_plan_preview_and_storage_on_regression_db(api):
              'product_ids':[row['product_id'] for row in client.get('/products',params=params).json()['items']],
              'target_month':'2027-01','horizon_months':3,'as_of_date':'2026-12-31'}
     history=client.get('/plan-executions',params=params).json()['total']
+    inputs=client.post('/planning-inputs/preview',params=params,json=command)
+    assert inputs.status_code==200 and inputs.json()['engine_available'],inputs.json()
+    assert inputs.json()['missing_inputs']==['RECEIPT_SOURCE_UNAVAILABLE']
     preview=client.post('/plans',params=params,json=command)
     assert preview.status_code==200 and preview.json()['persisted'] is False,preview.json()
+    assert preview.json()['input_digest']==inputs.json()['input_digest']
     assert client.get('/plan-executions',params=params).json()['total']==history
     created=client.post('/plan-executions',params=params,json=command)
     assert created.status_code==201,created.json()
     parent=created.json()['execution']
     assert parent['data_origin']=='REAL_ENGINE' and parent['input_digest']==preview.json()['input_digest']
     assert parent['result_snapshot']==preview.json()['result']
-    assert len(parent['result_snapshot']['plans'])==3
+    assert parent['result_digest']==digest(preview.json()['result'])
+    assert parent['input_snapshot']['scheduled_receipts'] is None
+    plan_types={'BASELINE','STABLE','COST_SAVING'}
+    assert {p['plan_type'] for p in parent['result_snapshot']['plans']}==plan_types
     retry=client.post('/plan-executions',params=params,json=command)
     assert retry.status_code==200 and retry.json()=={'execution':parent,'reused':True}
     child_command={**command,'scenario':'WHAT_IF','base_plan_execution_id':parent['execution_id'],
-                   'overrides':{'demand_multiplier':'1.1'}}
+                   'overrides':{'overtime_hours_limit.SAW1.2027-02':'80'}}
     what_if=client.post('/plans/what-if',params=params,json=child_command)
     assert what_if.status_code==200 and what_if.json()['persisted'] is False,what_if.json()
+    assert client.get('/plan-executions',params=params).json()['total']==history+1
     child=client.post('/plan-executions',params=params,json=child_command)
     assert child.status_code==201,child.json()
     detail=child.json()['execution']
     assert detail['base_plan_execution_id']==parent['execution_id']
+    assert detail['input_digest']==what_if.json()['input_digest']
+    assert detail['input_snapshot']['base_plan_snapshot']['input_digest']==parent['input_digest']
     assert detail['input_snapshot']['base_plan_snapshot']['result_digest']==parent['result_digest']
     assert detail['result_snapshot']==what_if.json()['result']
+    assert detail['result_digest']==digest(what_if.json()['result'])
+    assert {p['plan_type'] for p in detail['result_snapshot']['plans']}==plan_types
+    for key in ('forecast_rows','approved_inputs','capacity_snapshot','routing_snapshot','scheduled_receipts'):
+        assert detail['input_snapshot'][key]==parent['input_snapshot'][key]
     child_retry=client.post('/plan-executions',params=params,json=child_command)
     assert child_retry.status_code==200 and child_retry.json()=={'execution':detail,'reused':True}
     path='/plan-executions/'+parent['execution_id']
     assert client.get(path,params=params).json()==parent
+    assert client.get('/plan-executions/'+detail['execution_id'],params=params).json()==detail
     assert client.get(path,params={'dataset_id':'TISSUE-LEGACY'}).status_code==404
+    foreign_params={'dataset_id':'TISSUE-LEGACY'}
+    foreign={**child_command,**foreign_params}
+    for target in ('/plans/what-if','/plan-executions'):
+        blocked=client.post(target,params=foreign_params,json=foreign)
+        assert blocked.status_code==404 and blocked.json()['detail']['code']=='PLAN_NOT_FOUND'
+
+    # Inspect the same stored input with the real core. The public DTO carries stockout
+    # reasons, but uses a nonnegative value for the affected safety-stock evaluation.
+    from engine.adapter import to_internal
+    from engine.planning_core import calculate_plans
+    from what_if.core import apply_overrides
+    sql_input=to_internal(PlanningInput.model_validate(parent['input_snapshot']))
+    assert not sql_input.invalid and not sql_input.unsupported
+    changed,errors=apply_overrides(sql_input.data,child_command['overrides'])
+    assert not errors
+    stable_base=calculate_plans(sql_input.data)['STABLE']
+    stable_child=calculate_plans(changed)['STABLE']
+    stockout=lambda result: sum(sum(values) for values in result.stockout.values())
+    for stored,computed in ((parent,stable_base),(detail,stable_child)):
+        rows=next(p['production'] for p in stored['result_snapshot']['plans'] if p['plan_type']=='STABLE')
+        assert {(r['product_id'],r['period']):Decimal(r['production_qty']) for r in rows}=={
+            (p,month):q for p,values in computed.production.items()
+            for month,q in zip(computed.months,values,strict=True)}
+    assert stockout(stable_child)<stockout(stable_base)
+    record_property('stable_stockout_ea',f'{stockout(stable_base)} -> {stockout(stable_child)}')
+    production=lambda result: sum(sum(values) for values in result.production.values())
+    record_property('stable_production_ea',f'{production(stable_base)} -> {production(stable_child)}')
+
+    approve=client.post(path+'/decisions',params=params,json={
+        'plan_id':parent['result_snapshot']['plans'][0]['plan_id'],'action':'APPROVE',
+        'actor_id':'TEST-REVIEWER','reason':'Approval remains disabled',
+        'expected_version':parent['version'],'expected_input_digest':parent['input_digest']})
+    assert approve.status_code==501 and approve.json()['detail']['code']=='PLAN_APPROVAL_DISABLED'
+
+    tables=('plan_execution','plan_candidate','plan_constraint_evaluation','plan_material_requirement',
+            'plan_execution_input','plan_review','plan_decision')
+    def counts():
+        with get_dataset_engine(dataset).connect() as connection:
+            return {table:connection.execute(text(f'SELECT count(*) FROM {table}')).scalar_one() for table in tables}
+    before_failure=counts()
+    original_save=PlanRepository.save
+    def fail_after_insert(connection,*args,**kwargs):
+        original_save(connection,*args,**kwargs)
+        connection.execute(text('SELECT 1 / 0'))
+    with monkeypatch.context() as patch:
+        patch.setattr(PlanRepository,'save',staticmethod(fail_after_insert))
+        failed=client.post('/plan-executions',params=params,json={
+            **child_command,'overrides':{'overtime_hours_limit.SAW1.2027-02':'79'}})
+    assert failed.status_code==500 and failed.json()['detail']['code']=='PERSISTENCE_ERROR'
+    assert counts()==before_failure
+    assert client.get('/plan-executions',params=params).json()['total']==history+2
+    assert client.get(path,params=params).json()==parent
 
 
 def test_actual_cross_refs_rollback_unknown_and_archived(api):

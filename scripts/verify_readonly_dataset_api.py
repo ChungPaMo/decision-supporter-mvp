@@ -1,6 +1,7 @@
 """Development DB verification using PostgreSQL-enforced READ ONLY connections only.
 Never calls upload, approve, forecast creation or migration/reset functions.
 """
+from argparse import ArgumentParser
 from pathlib import Path
 from unittest.mock import patch
 import hashlib
@@ -28,8 +29,13 @@ def fingerprint(engine):
 
 
 def main():
+    parser = ArgumentParser(description=__doc__)
+    parser.add_argument('--output', type=Path, default=ROOT/'.artifacts/readonly_dataset_api.json')
+    output = parser.parse_args().output.resolve()
+    if not output.is_relative_to(ROOT/'.artifacts'):
+        parser.error('Private verification evidence must remain under .artifacts')
     from scripts.postgresql_preservation import compare, development_url, snapshot as development_snapshot
-    from sqlalchemy import create_engine
+    from sqlalchemy import create_engine, text
     from fastapi.testclient import TestClient
     from app.api import batches, forecasts, plan_executions
     from app.config import Settings
@@ -39,6 +45,7 @@ def main():
     from app.integrations.planning import SqlPlanningSourceProvider
     from app.batches.sql_repository import SqlBatchTx
     from app.batches.capacity import preview
+    from app.plans.repository import digest as result_digest
     from app.ingest.pipeline import run_preview
     from app.ingest.validation import MasterData
     from app.errors import ApiError
@@ -46,6 +53,9 @@ def main():
     before=development_snapshot()
     assert before['revision']=='0009'
     readonly=create_engine(development_url(),connect_args={'connect_timeout':3,'options':'-c default_transaction_read_only=on'},pool_pre_ping=True)
+    with readonly.connect() as c:
+        identity = tuple(c.execute(text('SELECT current_database(), current_user, current_setting(\'transaction_read_only\')')).one())
+        assert identity == ('chungpamo', 'chungpamo_app', 'on')
     settings=Settings(_env_file=None,persistence='postgres',database_url=development_url().render_as_string(hide_password=False))
     checks=[];plans={};client=TestClient(app)
     def ok(name):checks.append(name)
@@ -81,6 +91,8 @@ def main():
             horizon=3 if dataset=='CHUNGPAMO-2027' else 1
             command=PlanCommand(dataset_id=dataset,forecast_execution_id=UUID(execution['execution_id']),product_ids=sorted(r['product_id'] for r in client.get('/products',params={'dataset_id':dataset}).json()['items']),target_month='2027-01',horizon_months=horizon,as_of_date='2026-12-31')
             body = command.model_dump(mode='json')
+            history = client.get('/plan-executions', params={'dataset_id':dataset})
+            assert history.status_code == 200
             report = client.post('/planning-inputs/preview', params={'dataset_id':dataset}, json=body)
             diagnostics = report.json()
             if report.status_code == 409 and diagnostics['detail']['code'] == 'PLAN_INPUT_UNAVAILABLE':
@@ -92,18 +104,25 @@ def main():
                 assert {s.batch_id for s in snapshot.approved_inputs.sources}<={UUID(b['batch_id']) for b in batch_rows}
                 assert all(r.product_id in command.product_ids for r in snapshot.forecast_rows)
                 assert planning.snapshot_digest(snapshot) == diagnostics['input_digest']
-                preview = client.post('/plans', params={'dataset_id':dataset}, json=body)
-                outcome = preview.json().get('result')
-                assert preview.status_code in (200, 422) and outcome is not None, preview.status_code
-                assert preview.json()['persisted'] is False and preview.json()['input_digest'] == diagnostics['input_digest']
+                reply = client.post('/plans', params={'dataset_id':dataset}, json=body)
+                response = reply.json()
+                outcome = response.get('result')
+                assert reply.status_code in (200, 422) and outcome is not None, reply.status_code
+                assert diagnostics['persisted'] is False and response['persisted'] is False
+                assert response['approval_available'] is False and response['input_digest'] == diagnostics['input_digest']
                 plans[dataset] = {'inputs':diagnostics['inputs'], 'missing_inputs':diagnostics['missing_inputs'],
                     'diagnostic_warnings':diagnostics['warning_codes'], 'input_digest':diagnostics['input_digest'],
+                    'diagnostic_http':report.status_code, 'preview_http':reply.status_code,
+                    'persisted':response['persisted'], 'result_digest':result_digest(outcome),
+                    'input_snapshot':snapshot.model_dump(mode='json'), 'result':outcome,
                     'horizon_months':horizon, 'status':outcome['status'], 'errors':outcome['errors'],
                     'warnings':outcome['warnings'], 'unverified':outcome['unverified'],
                     'constraint_findings':[row for row in outcome['constraint_evaluations'] if row['status']!='SATISFIED'],
                     'version_evidence':[issue for issue in outcome['evidence'] if issue['code'].endswith('VERSION_SELECTED')],
                     'candidates':[{k:row[k] for k in ('plan_type','feasibility','unverified')} for row in outcome['plans']]}
-            assert client.get('/plan-executions',params={'dataset_id':dataset}).status_code==200
+            after_history = client.get('/plan-executions',params={'dataset_id':dataset})
+            assert after_history.status_code == 200 and after_history.json() == history.json()
+            plans[dataset]['plan_history_count'] = history.json()['total']
             unknown='00000000-0000-0000-0000-000000000000'
             assert client.get('/plan-executions/'+unknown,params={'dataset_id':dataset}).status_code==404
             assert client.get('/plan-executions/not-a-uuid',params={'dataset_id':dataset}).status_code==422
@@ -126,8 +145,9 @@ def main():
             assert preview(SqlBatchTx(c),'cross.csv',data,'routing',{},None).status=='HAS_ERRORS'
         ok('real scoped master validators reject legacy product in CP BOM and CP resource in legacy routing; no staging writes')
     after=development_snapshot();compare(before,after);assert before['objects']==after['objects']
-    artifact=ROOT/'.artifacts/readonly_dataset_api.json';artifact.parent.mkdir(exist_ok=True)
-    artifact.write_text(json.dumps({'passed':len(checks),'failed':0,'checks':checks,'planning':plans,'before':before,'after':after},indent=2,default=str),encoding='utf-8')
+    output.parent.mkdir(parents=True, exist_ok=True)
+    output.write_text(json.dumps({'passed':len(checks),'failed':0,'checks':checks,'planning':plans,
+                                  'connection':identity,'before':before,'after':after},indent=2,default=str),encoding='utf-8')
     readonly.dispose()
     print(json.dumps({'passed':len(checks),'failed':0,'checks':checks,'development_data_unchanged':True},indent=2))
 
