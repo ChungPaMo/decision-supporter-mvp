@@ -1443,3 +1443,25 @@
 
 **관련 자료**
 - [실제 P1 시험과 다음 C02 승인 범위](PLANNING_POSTGRESQL_INTEGRATION_VERIFICATION_20261124.md).
+
+### 2026-11-24 — 승인 입고 회귀 0010 검증과 CSV 승인 오류 수정
+
+**Git**
+- 시작 Commit [`8ccff79`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/8ccff7928e4b03466c254c6bf4ba548c62dc6b05), 브랜치 `main`.
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='fix: preserve CSV receipt source provenance on approval'`로 확인한다.
+
+**작업 목적과 구현**
+- 승인된 1회 범위에서 회귀 PostgreSQL의 C02 migration과 기존 배치 승인 경로를 검증했다.
+- CSV 파서의 빈 시트명이 원장 INSERT로 전달되는 오류를 확인했다. 원장에는 `CSV` 출처 표시를 쓰고 원본 위치·행 지문과 XLSX 시트명은 유지한다. 비DB 회귀와 지정 실DB 노드에 출처, 기간, What-if 및 무결성 검사를 보강했다.
+
+**검증 결과**
+- `0009→0010` 성공. 두 스키마의 허용 DDL 변경과 기존 행·정의 보존을 확인했다. 지정 실DB 1회는 공식 입고 등록 201, 재검증 200, 승인 전 빈 공급까지 통과한 뒤 승인 500에서 실패했다. 테스트 0통과·1실패·0건너뜀.
+- 승인된 CHUNGPAMO-2027 29개 테이블 정리 후 회귀 업무 행 0·시드 보존. 개발 `0009`의 60개 테이블·735개 객체·660개 추가 정의와 주요 이력이 일치했다. AI 매핑 Phase 9-A는 보류 상태이며 비용 원장은 일치했다.
+- 수정 후 전체 비DB 1,373통과·0실패·69건너뜀. 입고와 OpenAPI/Schema 집중 검사 33통과·0실패·1건너뜀.
+- 변경 파일 보안 검사 신규 탐지 0건. 저장소 전체 검사에는 기존 XLSX 200건과 전화번호 형식 3건의 휴리스틱 탐지가 남아 있다.
+
+**남은 문제**
+- 김대영이 동일 회귀 DB `0010`에서 지정 테스트 1회를 다시 승인받아 실제 입고 승인·92,100 kg 반영·부모 What-if·무결성 후반부를 검증한다. 개발 DB 적용·합성 PO 등록은 이후 별도 승인이다.
+
+**관련 자료**
+- [P3 실제 결과와 P4 준비](PLANNING_POSTGRESQL_INTEGRATION_VERIFICATION_20261124.md#p3--회귀-postgresql-0010-적용과-c02-승인-결함-확인).

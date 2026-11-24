@@ -1,9 +1,11 @@
 from datetime import date
 from decimal import Decimal
+from io import BytesIO
 from types import SimpleNamespace
 from uuid import UUID
 
 import pytest
+from openpyxl import Workbook
 from sqlalchemy.exc import OperationalError
 
 from app.batches import receipts
@@ -63,6 +65,44 @@ def test_receipt_template_and_source_row_digest():
     assert ReceiptRevisionInput.model_validate(records[0].model_dump(exclude={'location', 'source_row_sha256'})
                                                | {'po_line_id': '02'}).receipt_key == 'PO-2701-001--02'
     assert preview(preview_tx(), receipt().replace(b'ordered_qty', b'amount')).status == 'MAPPING_HOLD'
+
+
+@pytest.mark.parametrize(('filename', 'source_sheet'), [('receipt.csv', 'CSV'), ('receipt.xlsx', 'January')])
+def test_receipt_approval_stores_nonempty_source_sheet_without_rewriting_digest(filename, source_sheet):
+    data = receipt()
+    if filename.endswith('.xlsx'):
+        workbook = Workbook()
+        workbook.active.title = source_sheet
+        for line in data.decode().splitlines():
+            workbook.active.append(line.split(','))
+        with BytesIO() as stream:
+            workbook.save(stream)
+            data = stream.getvalue()
+        workbook.close()
+    staged = receipts.preview(preview_tx(), SCOPE, filename, data, None, None, None)
+    record, = staged.sheets[0].records
+    original_location = record.location.model_dump()
+    original_digest = record.source_row_sha256
+    tx = preview_tx()
+    execute = tx.c.execute
+    inserts, approvals = [], []
+
+    def capture(statement, params):
+        if 'INSERT INTO scheduled_receipt_revision' in str(statement):
+            inserts.append(params)
+        elif 'pg_advisory_xact_lock' not in str(statement):
+            return execute(statement, params)
+
+    tx.c.execute = capture
+    tx.get_batch = lambda _: SimpleNamespace(dataset_id=SCOPE)
+    tx.mark_approved = lambda *args: approvals.append(args)
+    batch_id = UUID(int=1)
+    assert receipts.commit(tx, batch_id, 'TEST-REVIEWER', [record]) == 1
+    assert approvals == [(batch_id, 'TEST-REVIEWER', 1)]
+    inserted, = inserts
+    assert (inserted['source_sheet'], inserted['source_row_no'], inserted['source_row_sha256']) == (
+        source_sheet, original_location['row'], original_digest)
+    assert record.location.model_dump() == original_location and record.source_row_sha256 == original_digest
 
 
 @pytest.mark.parametrize(('data', 'code'), [

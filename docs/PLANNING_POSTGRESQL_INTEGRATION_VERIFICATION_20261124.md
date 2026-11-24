@@ -128,3 +128,34 @@ P2 코드와 동기화 후 전체 비DB pytest는 **1,371 passed, 69 skipped**�
 ```powershell
 .\.venv\Scripts\python.exe scripts/verify_readonly_dataset_api.py --output .artifacts/planning-postgresql-20261124/readonly-dataset-api.json
 ```
+
+## P3 · 회귀 PostgreSQL 0010 적용과 C02 승인 결함 확인
+
+2026-11-24 KST, 메인 Windows PC. 시작 `main`은 [`8ccff79`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/8ccff7928e4b03466c254c6bf4ba548c62dc6b05)이다. PostgreSQL 16.6의 `chungpamo-monorepo-db` 안에서 `127.0.0.1:55433/chungpamo_regression` 및 `chungpamo_regression_runner`를 확인했다. 읽기 전용으로 `0009`, sentinel `DISPOSABLE-SYNTHETIC-REGRESSION-V1`, 다른 세션 0개, 업무 행 0개, 두 등록 데이터셋과 단위 시드, 개발 DB `CONNECT` 권한 부재를 확인했다. 적용 전 각 스키마의 정리 FK 폐쇄 집합은 28개였다.
+
+### migration 및 HTTP 결과
+
+- 회귀 DB에서 `0009→0010` upgrade **1회 성공**. `public`과 CHUNGPAMO-2027 스키마 각각에 `scheduled_receipt_revision` 1개, FK 4개, 인덱스 4개(PK 및 UNIQUE 포함), 등록 검증·불변 트리거 2개를 실제 카탈로그에서 확인했다. 데이터셋 값 제약, `import_batch`의 entity 허용 목록, 기존 승인 행 수 검증 함수에 추가된 입고 분기와 스키마별 검색 경로를 확인했다. 변경 대상으로 지정되지 않은 기존 카탈로그 정의와 기존 행 지문은 동일했다. 두 스키마의 구조를 정규화해 일치 여부를 확인했고, 신규 데이터셋 provision이 동일 DDL 설치 함수를 호출하는 것은 코드로 확인했다. 신규 스키마 provisioning의 실제 DDL 실행은 미검증이다.
+- `test_actual_approved_receipts_and_parent_what_if` **1회 실행, 0 passed / 1 failed / 0 skipped**. Starlette/httpx 사용 중단 예정 경고 1건. 공식 합성 배치 9개의 업로드 201·승인 200, 3개월 예측 저장 201, 공식 입고 `PO-2701-001` 업로드 201·재검증 200(버전 1→2, 결과 digest 동일)을 확인했다.
+- 승인 전 입고 행 0개와 `scheduled_receipts={ready:true,row_count:0}`, Preview 200을 확인했다. 1월 MR-N3 가용량은 세 후보 모두 **82,100 kg**, 신규 발주 필요량은 기준형 **4,028.4006 kg**, 안정형 **7,135.1947 kg**, 비용절감형 **1,827.2391 kg**이었다. 같은 테스트에서 reader 가용성만 대역으로 끈 별도 부모를 실제 SQL·엔진으로 201 저장했고, `scheduled_receipts=null`·`RECEIPT_SOURCE_UNAVAILABLE` 및 해당 부모 입고 조정 422 `PLAN_OVERRIDE_UNSUPPORTED`까지 확인했다. 실제 0009의 읽기 전용 미연결 증거는 P0에 있다.
+- 최초 공식 입고 승인에서 HTTP **500**. 같은 시간대의 PostgreSQL 로그에서 `scheduled_receipt_revision_source_sheet_check` 위반을 확인했다. CSV 공통 파서의 시트 이름은 빈 문자열인데 승인 INSERT가 그대로 전달했다. 기존 제약을 유지하고 원장의 CSV 출처 표기만 `CSV`로 저장하도록 수정했다. 파싱 위치, 원본 행 SHA, XLSX 시트명, 승인 digest의 산출 경로는 보존된다. 비DB 회귀가 CSV/XLSX의 실제 파싱부터 승인 SQL 바인딩 및 승인 행 수 호출까지 확인한다.
+- 입고 승인 성공 및 92,100 kg·발주량 0, 후보별 생산량·판정, 승인 입고 포함 부모 기반 양수·0·복합 What-if, 타 데이터셋·효력일·연체·부분/완전/취소·잘못된 입력·동시 승인·실패 롤백의 테스트 후반부는 **실DB에서 도달하지 못했다**. 위 기대값은 P2 비DB 및 공식 자료 기준이다. 실제 승인 결과처럼 사용하지 않는다.
+
+### 종료 확인과 P3 재검증 범위
+
+fixture가 CHUNGPAMO-2027의 기존 P1 28개 테이블과 `scheduled_receipt_revision`만 명시적인 `TRUNCATE … RESTRICT`로 정리했다. 종료 읽기 전용 스냅샷에서 두 스키마의 업무 행 0개, migration 직후 DDL, 단위·데이터셋·sentinel 시드가 일치했다. 회귀 DB는 `0010`을 유지하고 개발 DB는 `0009`이며, 개발 DB 60개 테이블의 행 수·지문, 735개 스키마 객체·660개 추가 정의, 승인 배치 7+9건·예측 2건·계획 이력이 전후 일치했다. AI 매핑 Phase 9-A는 보류 상태였고 비용 원장 SHA도 일치했다. 실행 및 정리 증거는 Git 제외 `.artifacts/planning-postgresql-20261124/p3/`에 보존했다.
+
+수정 후 전체 비DB pytest는 **1,373 passed / 0 failed / 69 skipped**, 입고·OpenAPI·생성 Schema 집중 검사는 **33 passed / 0 failed / 1 skipped**였다. 지정 실DB 테스트의 실행 결과는 위 실패 1건이고, 비DB 실행의 건너뜀에는 DB 테스트가 포함된다.
+
+P3 재검증에는 현재 `0010`인 같은 회귀 DB·역할·sentinel·스키마의 읽기 전용 재확인과 동일 지정 노드 **1회**에 대한 신규 승인이 필요하다. 범위는 CHUNGPAMO-2027 합성 9배치와 검증용 입고 개정의 업로드·재검증·명시적 승인, 예측/BASE/WHAT_IF 저장, 제약 및 롤백 시험, 동일 29개 테이블의 명시적 종료 정리다. LEGACY는 교차 조회 전용으로 사용한다. 현재 revision이 0010이므로 새 upgrade나 스키마 재생성은 재현에 필요하지 않다.
+
+## P4 · 개발 DB 적용 체크리스트 (P3 수정 재검증 통과 후)
+
+1. `chungpamo` 역할·포트와 `0009`, 등록 대상 스키마 `public` 및 CHUNGPAMO-2027, 승인·예측·계획 이력, 공식 원본 SHA와 기준 지문을 읽기 전용으로 재확인한다. 이전 `0008` 시점 백업과 별도로 현재 `0009`의 비공개 `pg_dump -Fc`를 확보한다. 크기·SHA·`pg_restore --list`를 확인하고 실제 복구 가능성은 승인받은 별도 격리 대상의 복구 리허설로 검증한다.
+2. 별도 승인 후 개발 DB의 `0009→0010`만 1회 적용한다. P3에서 확인한 스키마별 신규 원장·FK 4개·인덱스 4개·트리거 2개, 승인 guard 함수 1개, 기존 entity CHECK와 승인 행 수 함수의 변경만 허용한다. 기존 행은 전수 지문으로, 기존 정의는 허용 목록을 제외하고 적용 직전과 대조한다. 불일치하면 추가 쓰기를 멈추고 백업·복구안을 보고한다.
+3. 별도로 합성 입고 쓰기를 승인받은 뒤 `CHUNGPAMO-2027`에서 `PO-2701-001`의 개정 및 동일 파일 SHA를 먼저 조회한다. 이미 승인된 같은 자료는 기존 승인 이력을 사용하고 값이 다르면 조사를 시작한다. 신규 자료는 `/batches` 등록 → `/revalidate` → 서버 digest를 전달한 명시적 `/approve`로 처리한다. 한 번의 승인만 원장에 남았는지 읽기 전용으로 확인한다.
+4. revision 0010을 명시적으로 확인하는 읽기 전용 실행 경로로 기존 승인 예측의 2027-01~03 진단과 Preview를 다시 실행한다. P0 스크립트는 현재 `0009`를 고정하므로 P4에서는 별도 지원이 필요하다. 1월 MR-N3 가용량·후보별 신규 발주 필요량·생산량·판정·승인 출처의 전후 차이를 비교한다. 저장된 부모를 활용하는 경우 입고 수량 변경·0·SAW1 조합의 Preview 및 부모 지문 보존을 확인한다. 개발 DB의 실제 BASE/WHAT_IF 영구 저장이 필요하면 승인 범위에 명시하고 별도로 기록한다.
+
+이전 `0008` private 백업의 크기와 SHA가 기존 기록과 일치했고 목차 검사 기록도 확인했다. `0009`의 신규 백업과 실제 복구 리허설은 P4 준비 단계에 남아 있다.
+
+**P4 상태** — 변경 후 P3 실DB 승인과 후반 검증을 다시 통과하기 전에는 개발 DB 적용 승인을 요청하거나 실행하지 않는다.

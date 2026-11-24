@@ -170,5 +170,6 @@ def commit(tx, batch_id, actor, records):
             VALUES (:dataset_id, :batch_id, :po_id, :po_line_id, :revision, :material_id, :expected_date, :effective_date,
                     :ordered_qty, :received_qty, :unit, :supplier_id, :status, :source_sheet, :source_row_no, :source_row_sha256)
         '''), {**record.model_dump(exclude={'location'}), 'dataset_id': dataset_id, 'batch_id': batch_id,
-               'source_sheet': record.location.sheet, 'source_row_no': record.location.row})
+               # CSV locations have no worksheet. Store a source label without changing the row digest.
+               'source_sheet': record.location.sheet or 'CSV', 'source_row_no': record.location.row})
     return len(records)
