@@ -31,7 +31,7 @@ MILLION = Decimal(1_000_000)
 PRICE_DATE = '2026-11-24'
 ROOT = Path(__file__).resolve().parents[1]
 SHARED_CACHE = ROOT / '.artifacts/mapping-research/upstage'
-APPROVED_CAP = Decimal('5')
+APPROVED_CAP = Decimal('10')
 VAT = Decimal('1.10')
 
 
@@ -131,7 +131,7 @@ def chat_request(bundle, item, model):
 
 def expected_cost(payload, rates):
     byte_bound = len(canonical(payload)) + 512
-    return (rates[0] * byte_bound + rates[1] * payload.get('max_tokens', 0)) / MILLION
+    return (rates[0] * byte_bound + rates[1] * payload.get('max_tokens', payload.get('max_output_tokens', 0))) / MILLION
 
 
 class RejectRedirect(HTTPRedirectHandler):
@@ -172,7 +172,7 @@ def provider_error_category(error):
 class PaidResearch:
     def __init__(self, cache, cap, approved):
         if not approved or not cap.is_finite() or not 0 < cap <= APPROVED_CAP:
-            raise ValueError('Explicit paid authorization and a limit within the approved USD 5 are required')
+            raise ValueError(f'Explicit paid authorization and a limit within the approved USD {APPROVED_CAP} are required')
         self.key = os.environ.get('UPSTAGE_API_KEY')
         if not self.key:
             raise ValueError('UPSTAGE_API_KEY must be set locally')
@@ -182,6 +182,7 @@ class PaidResearch:
         self.audit = self.cache / 'billing.jsonl'
         self.lock = Lock()
         self.requested = set()
+        self.next_by_model = {}
         if self.audit.exists():
             for line in self.audit.read_text(encoding='utf-8').splitlines():
                 item = json.loads(line)
@@ -200,7 +201,8 @@ class PaidResearch:
     def call(self, endpoint, payload, rates):
         def measured(body):
             usage = body.get('usage') or {}
-            inputs, outputs = usage.get('prompt_tokens'), usage.get('completion_tokens', 0)
+            inputs = usage.get('prompt_tokens', usage.get('input_tokens'))
+            outputs = usage.get('completion_tokens', usage.get('output_tokens', 0))
             if type(inputs) is int and type(outputs) is int and min(inputs, outputs) >= 0:
                 return VAT * (rates[0] * inputs + rates[1] * outputs) / MILLION
             return None
@@ -219,7 +221,7 @@ class PaidResearch:
         return prior['body']
 
     def request(self, endpoint, identity, wire, content_type, reserve, measured):
-        if endpoint not in {'/chat/completions', '/embeddings', '/document-digitization',
+        if endpoint not in {'/chat/completions', '/responses', '/embeddings', '/document-digitization',
                             '/document-classification', '/information-extraction'}:
             raise ValueError('Unsupported Upstage research endpoint')
         key = sha({'endpoint':endpoint, 'payload':identity, 'priced_at':PRICE_DATE})
@@ -237,6 +239,10 @@ class PaidResearch:
             self.record({**meta, 'state':'RESERVED', 'cost_delta_usd':str(reserve)})
             self.spent += reserve
             self.requested.add(key)
+            model = identity['model']
+            send_at = max(perf_counter(), self.next_by_model.get(model, 0))
+            self.next_by_model[model] = send_at + .70
+        sleep(max(0, send_at - perf_counter()))
         request = Request(ENDPOINT + endpoint, data=wire, method='POST',
                           headers={'Content-Type':content_type,'Authorization':'Bearer ' + self.key})
         clock = perf_counter()
@@ -260,8 +266,6 @@ class PaidResearch:
                          'ms':(perf_counter()-clock)*1000})
             self.spent += delta
             write(path, {'request_sha256':key,'body_sha256':sha(body),'body':body})
-        if endpoint == '/embeddings':
-            sleep(.7)
         return body
 
 
@@ -385,8 +389,8 @@ def billing_summary(cache):
         cost=sum((Decimal(row.get('cost_delta_usd','0')) for row in rows),Decimal(0))
         measured=sum((Decimal(row['calculated_cost_usd']) for row in received if row.get('calculated_cost_usd') is not None),Decimal(0))
         grouped.append({'model':model,'mode':mode,'http_requests':statuses['RESERVED'],'responses':statuses['RECEIVED'],
-                        'failed_requests':statuses['FAILED'],'prompt_tokens':sum(u.get('prompt_tokens') or 0 for u in usage),
-                        'completion_tokens':sum(u.get('completion_tokens') or 0 for u in usage),
+                        'failed_requests':statuses['FAILED'],'prompt_tokens':sum(u.get('prompt_tokens',u.get('input_tokens')) or 0 for u in usage),
+                        'completion_tokens':sum(u.get('completion_tokens',u.get('output_tokens')) or 0 for u in usage),
                         'reported_pages':sum(u.get('pages') or 0 for u in usage),
                         'latency':timing([r['ms'] for r in rows if 'ms' in r]) if statuses['RECEIVED']+statuses['FAILED'] else None,
                         'usage_calculated_usd':str(measured),'cost_or_reserve_usd':str(cost)})
@@ -429,7 +433,7 @@ def main():
         write(args.output,plan_remote(bundle,args.model))
     else:
         if not args.approved_paid_api or not args.max_usd.is_finite() or not 0 < args.max_usd <= APPROVED_CAP:
-            parser.error('Paid execution requires explicit authorization and a cap within USD 5')
+            parser.error(f'Paid execution requires explicit authorization and a cap within USD {APPROVED_CAP}')
         if args.cache.resolve() != SHARED_CACHE.resolve():
             parser.error('Paid execution requires the shared research cache and ledger')
         if not load_local_key():

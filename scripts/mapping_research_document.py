@@ -44,7 +44,7 @@ def text(value):
     return '' if value is None else str(value).strip()
 
 
-def workbook_panel():
+def workbook_panel(*, include_complex=False):
     source = SAMPLES.relative_to(ROOT).as_posix()
     tracked = subprocess.check_output(['git','ls-tree','-r','-z',FIXTURE_COMMIT,'--',source], cwd=ROOT)
     pinned = {line.split(b'\t',1)[1].decode():line.split(b' ')[2].split(b'\t')[0].decode()
@@ -119,6 +119,9 @@ def workbook_panel():
                     key=lambda row:(len(row['features']-covered),-row['dimensions'][0]))
         selected.append(match)
         covered |= match['features']
+    if include_complex:
+        for template in ('bom_sap_multilevel','bom_kr_form'):
+            selected.append(next(item for item in candidates if item['label']['template']==template))
     return selected
 
 
@@ -206,7 +209,11 @@ def document_call(client, data, kind, mode, page_limit, schema=None, split=False
 
     def measured(body):
         usage = body.get('usage') or {}
-        count = usage.get('pages',page_limit if kind=='pdf' else None)
+        count = usage.get('pages')
+        if count is None and mode=='ocr':
+            count=(body.get('metadata') or {}).get('pages')
+        if count is None and kind=='pdf':
+            count=page_limit
         if type(count) is not int or count < 0 or count > page_limit:
             return None
         if mode=='auto':
@@ -551,7 +558,7 @@ def main():
     if json.loads(path.read_text(encoding='utf-8')) != {**gold,'sha256':sha(gold)}:
         raise ValueError('Panel sources, rendering or frozen gold differ')
     if not args.approved_paid_api or not args.max_usd.is_finite() or not 0<args.max_usd<=APPROVED_CAP or not load_local_key():
-        parser.error('Paid research requires authorization, shared cap within USD 5 and configured local key')
+        parser.error(f'Paid research requires authorization, shared cap within USD {APPROVED_CAP} and configured local key')
     with lock_paid_cache(SHARED_CACHE):
         document_experiment(args,PaidResearch(SHARED_CACHE,args.max_usd,args.approved_paid_api),panel,extraction)
 

@@ -1,5 +1,7 @@
 # 충파모 프로젝트 진행상황
 
+2026-11-24 (KST), 보조 PC. 매핑 Phase 3에서 승인된 Final 130문서와 Confirmatory 100문서를 실측했다. Final Mini 개념 형식 585정답·26오추천, Confirmatory Exact→RapidFuzz 286정답·0오추천, 같은 입력에 Solar HOLD 부분 채택 448정답·51오추천이었다. 기본 경로는 원본 파서와 별칭을 유지하고 Solar는 선택형 검토 후보로 판단했다. Parse Standard/Auto가 원본 범위 3/24를 연결했고 Extract Enhanced 원본 XLSX는 60초 응답 시간 초과였다. 누적 USD 10 중 계산·예약 USD 9.90682308. 비DB 1,264 통과·68 건너뜀. [최종 아키텍처 평가](MAPPING_FINAL_ARCHITECTURE_EVALUATION_20261124.md)
+
 2026-11-24 (KST), 보조 PC. Phase 2에서 Upstage Solar·Embedding과 문서 분석을 공용 USD 5 원장으로 실측했다. 합성 텍스트 5표에서 Solar Pro 20정답·1오추천, 로컬 독립 100표에서는 정확 일치 280정답·0오추천이었다. 원본 XLSX 4개의 Parse 공통 비교에서 Standard/Auto 10/11표, 합성 PDF 12개의 Classify 10/12, 반복 행 Extract Enhanced 209/210값을 확인했다. BGE/Qwen 전체 문맥과 E5 최종 LayerNorm 학습을 검증했고 원본 셀·운영 매핑·승인 경로를 유지했다. 외부 130문서 전량 평가는 자동 승인 검토에서 보류됐다. [Phase 2](MAPPING_UPSTAGE_AND_FINAL_COMPARISON_20261124.md) · [문서 분석](MAPPING_UPSTAGE_DOCUMENT_INTELLIGENCE_20261124.md)
 
 2026-11-24 (KST), 보조 PC. 시작 `main` [`560de30`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/560de30b20fb365e5e9e12aa229eac53c0dc912b)에서 김대영이 신규 합성 Train 8,539열·Calibration 703열·Final 1,132열(130문서)로 제조업 매핑을 비교했다. 문자열·통계·업무 지식 LightGBM은 474 정답·18 오추천·정밀도 96.34%·최종 Top-3 475/779. 전통 매칭, E5 소거/학습 투영층, BGE·Qwen 헤더, Reranker, 로컬 LLM, 전역 배정·이력을 분리 검증했다. 운영 교체·유료 API 호출·DB 작업은 후속 범위다. [종합 보고서](MAPPING_COMPREHENSIVE_RESEARCH_20261124.md)

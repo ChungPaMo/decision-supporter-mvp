@@ -1212,3 +1212,29 @@
 
 **관련 자료**
 - [Phase 2 모델·비용 비교](MAPPING_UPSTAGE_AND_FINAL_COMPARISON_20261124.md) · [Document Intelligence 검증](MAPPING_UPSTAGE_DOCUMENT_INTELLIGENCE_20261124.md).
+
+### 2026-11-24 — Phase 3 전체 규모 Upstage 실측과 매핑 아키텍처 선정
+
+**Git**
+- 시작 Commit [`24cf70a`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/24cf70a802613ec3be7c7d3fcfbdd484ea582eb8), 브랜치 `main`.
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='research: evaluate full Upstage mapping architecture'`로 확인한다.
+
+**작업 목적**
+- 명시 승인된 두 합성 평가셋에서 원격 모델·HOLD 혼합 방식의 성능을 확인하고 문서 파싱과 원본 값 검증의 경계를 정한다.
+
+**구현 내용**
+- `scripts/mapping_research_phase3.py`에 고정 분리와 보정 정책, 응답 종료·ID·필드 충돌 진단, 안전한 열 단위 결과 채택과 공용 원장 집계를 추가했다.
+- `scripts/mapping_research_phase3_documents.py`에 Git 검증 합성 문서 패널, 원본 XLSX 범위·셀 연결, Parse·Classify·OCR·Extract 비교를 추가했다. 운영 앱·팀원 모듈·DB·승인 경로는 그대로다.
+
+**검증 결과**
+- Final 130문서와 Confirmatory 100문서의 핵심 Solar 방식 모두 평가. 누적 HTTP 2,089회, 정산·예약 USD 9.90682308/10. 실제 원본 Extract Enhanced는 시간 초과로 결과가 미검증이다.
+- 전체 비DB 1,264 통과·68 건너뜀, 기존 OpenAPI·JSON Schema 동기화 및 변경 보안 검사 통과.
+
+**기술적 결정**
+- 원본 파서·Exact/RapidFuzz를 기본으로 유지한다. Solar는 기존 후보를 보전하는 HOLD 검토에 제한하고 Parse는 XLSX 영역 후보에 쓴다. 순수 모델 점수로 저장·승인하지 않는다.
+
+**남은 문제**
+- 독립 기업 문서에서의 검토 정확도, 장문·반복 행 Extract 응답, 페이지 계량과 원본 날짜·코드·값 보존을 확인한다. 신규 기업 자료를 전송하기 전에 별도 승인과 처리 계약을 확인한다.
+
+**관련 자료**
+- [Phase 3 원격·로컬·문서 구조 비교와 공용 비용](MAPPING_FINAL_ARCHITECTURE_EVALUATION_20261124.md).

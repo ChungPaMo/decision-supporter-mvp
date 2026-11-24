@@ -258,7 +258,7 @@ def main():
         chat_experiment(args,None)
         return
     if not args.approved_paid_api or not args.max_usd.is_finite() or not 0 < args.max_usd <= APPROVED_CAP:
-        parser.error('Paid research requires explicit authorization within USD 5')
+        parser.error(f'Paid research requires explicit authorization within USD {APPROVED_CAP}')
     if not load_local_key():
         parser.error('Local key is unavailable')
     with lock_paid_cache(SHARED_CACHE):
