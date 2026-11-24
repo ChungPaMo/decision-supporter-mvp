@@ -1,5 +1,7 @@
 # 충파모 프로젝트 진행상황
 
+2026-11-24 (KST), 보조 PC. Phase 2에서 Upstage Solar·Embedding과 문서 분석을 공용 USD 5 원장으로 실측했다. 합성 텍스트 5표에서 Solar Pro 20정답·1오추천, 로컬 독립 100표에서는 정확 일치 280정답·0오추천이었다. 원본 XLSX 4개의 Parse 공통 비교에서 Standard/Auto 10/11표, 합성 PDF 12개의 Classify 10/12, 반복 행 Extract Enhanced 209/210값을 확인했다. BGE/Qwen 전체 문맥과 E5 최종 LayerNorm 학습을 검증했고 원본 셀·운영 매핑·승인 경로를 유지했다. 외부 130문서 전량 평가는 자동 승인 검토에서 보류됐다. [Phase 2](MAPPING_UPSTAGE_AND_FINAL_COMPARISON_20261124.md) · [문서 분석](MAPPING_UPSTAGE_DOCUMENT_INTELLIGENCE_20261124.md)
+
 2026-11-24 (KST), 보조 PC. 시작 `main` [`560de30`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/560de30b20fb365e5e9e12aa229eac53c0dc912b)에서 김대영이 신규 합성 Train 8,539열·Calibration 703열·Final 1,132열(130문서)로 제조업 매핑을 비교했다. 문자열·통계·업무 지식 LightGBM은 474 정답·18 오추천·정밀도 96.34%·최종 Top-3 475/779. 전통 매칭, E5 소거/학습 투영층, BGE·Qwen 헤더, Reranker, 로컬 LLM, 전역 배정·이력을 분리 검증했다. 운영 교체·유료 API 호출·DB 작업은 후속 범위다. [종합 보고서](MAPPING_COMPREHENSIVE_RESEARCH_20261124.md)
 
 최종 확인 **2026-11-24 (KST), 보조 PC**. 시작 `main` [`ec3a0d3`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/ec3a0d3)에서 김대영이 이희원 어댑터를 실제 BASE·WHAT_IF Preview/저장 서비스에 활성화했다. 공식 합성 2027-01~03의 독립 정답 **제약 306개·생산 81행·자재 81행** 일치. 입력 누락 전달, 월별 BOM·라우팅 선택, 입고 공급 상태, 메모리 저장 `201`·중복 `200`과 부모 지문을 검증했다. 전체 비DB **1,239 passed / 68 skipped**, Playwright 8개 통과. 실DB Preview·개발 DB 지문 비교·PostgreSQL 영구 저장은 이 PC에서 미실행이다. [판정·Docker PC 체크리스트](PLANNING_ENGINE_ACTIVATION_VERIFICATION_20261124.md)

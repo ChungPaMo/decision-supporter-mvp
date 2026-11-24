@@ -142,7 +142,7 @@ def test_cost_gate_does_not_read_key_or_send_without_approval(monkeypatch, tmp_p
     client = PaidResearch(tmp_path,Decimal('.00000001'),True)
     monkeypatch.setattr(client.opener,'open',lambda *args,**kwargs:pytest.fail('No budget means no network'))
     with pytest.raises(ValueError,match='budget'):
-        client.call('/embeddings',{'input':['SYNTHETIC']},(Decimal('1'),Decimal(0)))
+        client.call('/embeddings',{'model':'solar-embedding-2-query','input':['SYNTHETIC']},(Decimal('1'),Decimal(0)))
 
 
 def test_vector_cache_refreshes_on_configuration_and_distinguishes_encoder_failure(tmp_path):

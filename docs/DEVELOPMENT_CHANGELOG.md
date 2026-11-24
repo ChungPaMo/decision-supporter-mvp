@@ -1186,3 +1186,29 @@
 
 **관련 자료**
 - [종합 벤치마크·재현 명령](MAPPING_COMPREHENSIVE_RESEARCH_20261124.md) · [선행 연구](MAPPING_RESEARCH_LITERATURE_20261124.md).
+
+### 2026-11-24 — 제조업 매핑 Phase 2와 Upstage 문서 분석
+
+**Git**
+- 시작 Commit [`61cf597`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/61cf597608839b1f8754f7ccbf9266f43b9a4c44), 브랜치 `main`.
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='research: measure Upstage mapping and document intelligence'`로 확인한다.
+
+**작업 목적**
+- 유료 텍스트·문서 모델이 추천·파싱·반복 행 검증에 미치는 효과를 소규모 실제 요청으로 확인하고 별도 합성 양식에서 로컬 매퍼를 재검증한다.
+
+**구현 내용**
+- `scripts/mapping_research_*.py`에 텍스트·문서 공용 사용량 원장, 외부 합성 패널 고정, 최초·재사용 응답 검증, 원본 좌표 연결, 독립 로컬 품질 검증과 E5 가중치 학습을 추가했다.
+- 확인된 합성 문서만 공급사에 전송했다. 실제 기업 문서, 키 파일, 운영 앱·DB·승인 게이트, 팀원 모듈에 변경은 없었다.
+
+**검증 결과**
+- Upstage HTTP 94회, 응답 수신 92회, HTTP 400 2회. 정가·VAT 적용과 실패 예약을 합쳐 USD 1.12965941. Pro 20정답·1오추천/47열, Classify 10/12, Extract Enhanced 209/210값을 기록했다.
+- 독립 합성 100문서의 정확 일치 280정답·0오추천. BGE/Qwen 전체 문맥·전용 Reranker와 E5 768개 원본 가중치 학습을 검증했다. 기존 48·70건 RapidFuzz 회귀 결과를 재현했다. 전체 비DB 1,259 통과·68 건너뜀, OpenAPI·JSON Schema 동기화 통과.
+
+**기술적 결정**
+- Excel은 원본 범위와 셀 값을 검증하고 문서 모델은 표 위치 후보와 PDF 추출에 제한한다. API 응답과 원본 Excel의 값이 다르면 Excel을 우선한다. 모델 응답만으로 저장이나 승인을 진행하지 않는다.
+
+**남은 문제**
+- 130문서 전체 유료 평가의 외부 전송 범위가 자동 검토에서 보류됐다. 고객 양식, 숨김 행, 날짜·단위 보존, 복합 문서 분할과 누락 필드를 추가 검증한다.
+
+**관련 자료**
+- [Phase 2 모델·비용 비교](MAPPING_UPSTAGE_AND_FINAL_COMPARISON_20261124.md) · [Document Intelligence 검증](MAPPING_UPSTAGE_DOCUMENT_INTELLIGENCE_20261124.md).

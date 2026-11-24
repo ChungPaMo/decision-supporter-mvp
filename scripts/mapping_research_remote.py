@@ -1,17 +1,20 @@
 """Prepare and score Upstage comparisons. Network calls require explicit paid-run arguments."""
 import argparse
+from collections import Counter, defaultdict
 from contextlib import contextmanager
 from decimal import Decimal
 import json
 import os
 from pathlib import Path
+import re
+from threading import Lock
 from time import perf_counter, sleep
 from urllib.error import HTTPError, URLError
 from urllib.request import HTTPRedirectHandler, Request, build_opener
 
 import numpy as np
 
-from evaluate_mapping_research import calibrate, decisions, metrics, write
+from evaluate_mapping_research import calibrate, decisions, metrics, timing, write
 from mapping_research_data import SCOPE, canonical, load_frozen, sha
 from mapping_research_features import CATALOG, Lexicon, prepare, train_prototypes
 from mapping_research_neural import passages, queries
@@ -26,6 +29,27 @@ EMBED = ('solar-embedding-2-query', 'solar-embedding-2-passage')
 ENDPOINT = 'https://api.upstage.ai/v1'
 MILLION = Decimal(1_000_000)
 PRICE_DATE = '2026-11-24'
+ROOT = Path(__file__).resolve().parents[1]
+SHARED_CACHE = ROOT / '.artifacts/mapping-research/upstage'
+APPROVED_CAP = Decimal('5')
+VAT = Decimal('1.10')
+
+
+def load_local_key(root=ROOT):
+    path = root / '.env.upstage.local'
+    if not path.is_file():
+        return False
+    matches = [match.group(1).strip() for line in path.read_text(encoding='utf-8-sig').splitlines()
+               if (match := re.fullmatch(r'\s*(?:export\s+)?UPSTAGE_API_KEY\s*=\s*(.*?)\s*', line))]
+    if len(matches) != 1:
+        return False
+    value = matches[0]
+    if len(value) >= 2 and value[0] == value[-1] and value[0] in "'\"":
+        value = value[1:-1]
+    if not value or any(c.isspace() for c in value):
+        return False
+    os.environ['UPSTAGE_API_KEY'] = value
+    return True
 
 
 @contextmanager
@@ -115,10 +139,40 @@ class RejectRedirect(HTTPRedirectHandler):
         return None
 
 
+class BudgetExceeded(ValueError):
+    pass
+
+
+class ProviderFailure(ValueError):
+    def __init__(self, status, category=None):
+        super().__init__('Upstage request failed. Reservation retained.')
+        self.status = status
+        self.category = category
+
+
+def provider_error_category(error):
+    if not isinstance(error, HTTPError) or error.code not in (400, 422):
+        return None
+    try:
+        data = json.loads(error.read(4096))
+    except (OSError, ValueError):
+        return None
+    reply = data.get('error') if isinstance(data, dict) else None
+    description = (str((reply or data)).lower())
+    for category, needles in {
+        'SCHEMA': ('schema','additionalproperties'), 'LOCATION': ('location_granularity','word_coordinates'),
+        'MEDIA': ('unsupported file','file type','invalid document','image_url','base64'),
+        'MODEL': ('model name','unsupported model','model not found'),
+    }.items():
+        if any(needle in description for needle in needles):
+            return category
+    return 'REQUEST_REJECTED'
+
+
 class PaidResearch:
     def __init__(self, cache, cap, approved):
-        if not approved or not cap.is_finite() or cap <= 0:
-            raise ValueError('Explicit paid authorization and a positive USD limit are required')
+        if not approved or not cap.is_finite() or not 0 < cap <= APPROVED_CAP:
+            raise ValueError('Explicit paid authorization and a limit within the approved USD 5 are required')
         self.key = os.environ.get('UPSTAGE_API_KEY')
         if not self.key:
             raise ValueError('UPSTAGE_API_KEY must be set locally')
@@ -126,10 +180,16 @@ class PaidResearch:
         self.cache.mkdir(parents=True, exist_ok=True)
         self.opener = build_opener(RejectRedirect())
         self.audit = self.cache / 'billing.jsonl'
+        self.lock = Lock()
+        self.requested = set()
         if self.audit.exists():
             for line in self.audit.read_text(encoding='utf-8').splitlines():
                 item = json.loads(line)
                 self.spent += Decimal(item.get('cost_delta_usd', '0'))
+                if item['state'] == 'RESERVED':
+                    self.requested.add(item['request_sha256'])
+        if not self.spent.is_finite() or self.spent < 0:
+            raise ValueError('Invalid shared budget ledger')
 
     def record(self, item):
         with self.audit.open('ab') as stream:
@@ -138,36 +198,70 @@ class PaidResearch:
             os.fsync(stream.fileno())
 
     def call(self, endpoint, payload, rates):
-        key = sha({'endpoint':endpoint, 'payload':payload, 'priced_at':PRICE_DATE})
+        def measured(body):
+            usage = body.get('usage') or {}
+            inputs, outputs = usage.get('prompt_tokens'), usage.get('completion_tokens', 0)
+            if type(inputs) is int and type(outputs) is int and min(inputs, outputs) >= 0:
+                return VAT * (rates[0] * inputs + rates[1] * outputs) / MILLION
+            return None
+
+        return self.request(endpoint, payload, canonical(payload), 'application/json',
+                            VAT * expected_cost(payload, rates), measured)
+
+    def cached_response(self, endpoint, identity):
+        key = sha({'endpoint':endpoint, 'payload':identity, 'priced_at':PRICE_DATE})
         path = self.cache / (key + '.json')
-        if path.exists():
-            prior = json.loads(path.read_text(encoding='utf-8'))
-            if prior['request_sha256'] != key or prior['body_sha256'] != sha(prior['body']):
-                raise ValueError('Cached result digest mismatch')
-            return prior['body']
-        reserve = expected_cost(payload, rates)
-        if self.spent + reserve > self.cap:
-            raise ValueError('Research budget would be exceeded')
-        request = Request(ENDPOINT + endpoint, data=canonical(payload), method='POST',
-                          headers={'Content-Type':'application/json','Authorization':'Bearer ' + self.key})
+        if not path.exists():
+            return None
+        prior = json.loads(path.read_text(encoding='utf-8'))
+        if prior['request_sha256'] != key or prior['body_sha256'] != sha(prior['body']):
+            raise ValueError('Cached result digest mismatch')
+        return prior['body']
+
+    def request(self, endpoint, identity, wire, content_type, reserve, measured):
+        if endpoint not in {'/chat/completions', '/embeddings', '/document-digitization',
+                            '/document-classification', '/information-extraction'}:
+            raise ValueError('Unsupported Upstage research endpoint')
+        key = sha({'endpoint':endpoint, 'payload':identity, 'priced_at':PRICE_DATE})
+        path = self.cache / (key + '.json')
+        meta = {'request_sha256':key, 'endpoint':endpoint, 'model':identity['model'], 'mode':identity.get('mode'),
+                'format':identity.get('format'), 'max_pages':identity.get('max_pages')}
+        with self.lock:
+            prior = self.cached_response(endpoint,identity)
+            if prior is not None:
+                return prior
+            if key in self.requested:
+                raise ProviderFailure(None)
+            if not reserve.is_finite() or reserve < 0 or self.spent + reserve > self.cap:
+                raise BudgetExceeded('Research budget would be exceeded')
+            self.record({**meta, 'state':'RESERVED', 'cost_delta_usd':str(reserve)})
+            self.spent += reserve
+            self.requested.add(key)
+        request = Request(ENDPOINT + endpoint, data=wire, method='POST',
+                          headers={'Content-Type':content_type,'Authorization':'Bearer ' + self.key})
         clock = perf_counter()
-        self.record({'request_sha256':key, 'state':'RESERVED', 'cost_delta_usd':str(reserve)})
-        self.spent += reserve
         try:
-            with self.opener.open(request, timeout=45) as response:
+            with self.opener.open(request, timeout=60) as response:
                 body = json.load(response)
-        except (HTTPError, URLError, TimeoutError, ValueError) as exc:
-            self.record({'request_sha256':key, 'state':'FAILED', 'error':type(exc).__name__,
-                         'status':getattr(exc, 'code', None), 'ms':(perf_counter()-clock)*1000})
-            raise ValueError('Upstage request failed. Reservation retained and no automatic retry sent.') from None
-        usage = body.get('usage', {})
-        inputs, outputs = usage.get('prompt_tokens'), usage.get('completion_tokens', 0)
-        actual = (rates[0] * inputs + rates[1] * outputs) / MILLION if type(inputs) is int and type(outputs) is int and min(inputs,outputs) >= 0 else reserve
-        self.record({'request_sha256':key, 'state':'RECEIVED', 'usage':usage, 'cost_delta_usd':str(actual-reserve),
-                     'reported_cost_available':actual != reserve or type(inputs) is int, 'ms':(perf_counter()-clock)*1000})
-        self.spent += actual - reserve
-        write(path, {'request_sha256':key,'body_sha256':sha(body),'body':body})
-        sleep(.7)  # Solar Embedding 2 documents 100 RPM per model.
+            if not isinstance(body, dict):
+                raise ValueError('Unexpected provider object')
+        except (HTTPError, URLError, OSError, ValueError) as exc:
+            status = getattr(exc, 'code', None)
+            category = provider_error_category(exc)
+            with self.lock:
+                self.record({**meta, 'state':'FAILED', 'error':type(exc).__name__, 'status':status,
+                             'category':category, 'ms':(perf_counter()-clock)*1000})
+            raise ProviderFailure(status,category) from None
+        actual = measured(body)
+        delta = actual - reserve if actual is not None else Decimal(0)
+        with self.lock:
+            self.record({**meta, 'state':'RECEIVED', 'usage':body.get('usage'),
+                         'cost_delta_usd':str(delta), 'calculated_cost_usd':str(actual) if actual is not None else None,
+                         'ms':(perf_counter()-clock)*1000})
+            self.spent += delta
+            write(path, {'request_sha256':key,'body_sha256':sha(body),'body':body})
+        if endpoint == '/embeddings':
+            sleep(.7)
         return body
 
 
@@ -277,9 +371,33 @@ def score_remote(data, result_path, bundle_path, calibration_path, output):
     write(output, {'metrics':stats,'failed_requests':len(result['errors']),'actual_or_reserved_usd':result['cost_used_or_reserved_usd']})
 
 
+def billing_summary(cache):
+    path=cache/'billing.jsonl'
+    entries=[json.loads(line) for line in path.read_text('utf-8').splitlines()] if path.exists() else []
+    groups=defaultdict(list)
+    for row in entries:
+        groups[(row.get('model') or 'legacy',row.get('mode') or 'default')].append(row)
+    grouped=[]
+    for (model,mode),rows in sorted(groups.items()):
+        statuses=Counter(row['state'] for row in rows)
+        received=[row for row in rows if row['state']=='RECEIVED']
+        usage=[row.get('usage') or {} for row in received]
+        cost=sum((Decimal(row.get('cost_delta_usd','0')) for row in rows),Decimal(0))
+        measured=sum((Decimal(row['calculated_cost_usd']) for row in received if row.get('calculated_cost_usd') is not None),Decimal(0))
+        grouped.append({'model':model,'mode':mode,'http_requests':statuses['RESERVED'],'responses':statuses['RECEIVED'],
+                        'failed_requests':statuses['FAILED'],'prompt_tokens':sum(u.get('prompt_tokens') or 0 for u in usage),
+                        'completion_tokens':sum(u.get('completion_tokens') or 0 for u in usage),
+                        'reported_pages':sum(u.get('pages') or 0 for u in usage),
+                        'latency':timing([r['ms'] for r in rows if 'ms' in r]) if statuses['RECEIVED']+statuses['FAILED'] else None,
+                        'usage_calculated_usd':str(measured),'cost_or_reserve_usd':str(cost)})
+    spent=sum((Decimal(row['cost_or_reserve_usd']) for row in grouped),Decimal(0))
+    return {'calls':sum(row['http_requests'] for row in grouped),'models':grouped,'cost_or_reserve_usd':str(spent),
+            'remaining_approved_budget_usd':str(APPROVED_CAP-spent)}
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('action', choices=('export','plan','run','score'))
+    parser.add_argument('action', choices=('export','plan','run','score','audit'))
     parser.add_argument('--data', type=Path, default=Path('.artifacts/mapping-research/data'))
     parser.add_argument('--split', choices=tuple(FIXED_SPLITS), default='calibration')
     parser.add_argument('--mode', choices=('column','table','business','embed'), default='column')
@@ -289,10 +407,13 @@ def main():
     parser.add_argument('--input', type=Path)
     parser.add_argument('--bundle', type=Path)
     parser.add_argument('--calibration', type=Path)
-    parser.add_argument('--cache', type=Path, default=Path('.artifacts/mapping-research/upstage'))
+    parser.add_argument('--cache', type=Path, default=SHARED_CACHE)
     parser.add_argument('--approved-paid-api', action='store_true')
     parser.add_argument('--max-usd', type=Decimal, default=Decimal(0))
     args = parser.parse_args()
+    if args.action == 'audit':
+        write(args.output,billing_summary(args.cache))
+        return
     if args.action == 'score':
         if not args.input or not args.bundle or (args.mode == 'embed' and args.split == 'final' and not args.calibration):
             parser.error('Score requires --input and --bundle, plus --calibration for final embedding')
@@ -307,8 +428,12 @@ def main():
     elif args.action == 'plan':
         write(args.output,plan_remote(bundle,args.model))
     else:
-        if not args.approved_paid_api or not args.max_usd.is_finite() or args.max_usd <= 0:
-            parser.error('Paid execution requires explicit authorization and a positive USD limit')
+        if not args.approved_paid_api or not args.max_usd.is_finite() or not 0 < args.max_usd <= APPROVED_CAP:
+            parser.error('Paid execution requires explicit authorization and a cap within USD 5')
+        if args.cache.resolve() != SHARED_CACHE.resolve():
+            parser.error('Paid execution requires the shared research cache and ledger')
+        if not load_local_key():
+            parser.error('Local key is unavailable')
         with lock_paid_cache(args.cache):
             run_remote(bundle,args.model,PaidResearch(args.cache,args.max_usd,args.approved_paid_api),args.output)
 
