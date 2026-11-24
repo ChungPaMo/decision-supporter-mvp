@@ -30,12 +30,11 @@ from scripts.verify_test_db import assert_destructive_engine,DATABASE,ROLE
 ROOT=Path(__file__).resolve().parents[2]
 
 
-@pytest.fixture(scope='module')
-def api(test_engine,tmp_path_factory):
+@contextmanager
+def seeded_api(test_engine,tmp_path_factory,*,seed_legacy):
     from app import db
     from app.api import batches,forecasts,datasets,plan_executions
     from app.integrations import planning
-    assert_destructive_engine(test_engine)
     target=tmp_path_factory.mktemp('regression-synthetic')/'data'
     module=runpy.run_path(str(ROOT/'modules/planning_engine/synthetic/generate.py'),run_name='db_test_generator')
     module['main'].__globals__['OUT']=target;module['main']()
@@ -50,18 +49,27 @@ def api(test_engine,tmp_path_factory):
             assert r.status_code==201,r.json();b=r.json();assert b['status']=='READY_FOR_APPROVAL',b
             r=client.post('/batches/'+b['batch_id']+'/approve',params={'dataset_id':dataset},json={'approved_by':'TEST-REVIEWER','expected_result_digest':b['result_digest']})
             assert r.status_code==200,r.json()
-        for entity,file in [('product','tissue_products.csv'),('material','tissue_materials.csv'),('bom','tissue_bom.csv'),
-            ('inventory','tissue_inventory.csv'),('monthly_demand','tissue_demand.csv'),
-            ('capacity','tissue_capacity/capacity_upload.xlsx'),('routing','tissue_capacity/routing_upload.xlsx')]:
-            upload('TISSUE-LEGACY',entity,ROOT/'contracts/examples'/file)
+        if seed_legacy:
+            for entity,file in [('product','tissue_products.csv'),('material','tissue_materials.csv'),('bom','tissue_bom.csv'),
+                ('inventory','tissue_inventory.csv'),('monthly_demand','tissue_demand.csv'),
+                ('capacity','tissue_capacity/capacity_upload.xlsx'),('routing','tissue_capacity/routing_upload.xlsx')]:
+                upload('TISSUE-LEGACY',entity,ROOT/'contracts/examples'/file)
         for filename,entity in FILES:upload('CHUNGPAMO-2027',entity,target/'upload'/filename)
-        try:yield client,test_engine
-        finally:
-            assert_destructive_engine(test_engine)
-            with test_engine.begin() as c:
-                assert tuple(c.execute(text('SELECT current_database(),current_user')).one())==(DATABASE,ROLE)
-                for schema in ('public',schema_for('CHUNGPAMO-2027')):
-                    c.execute(text(f'TRUNCATE "{schema}".forecast_run,"{schema}".import_batch CASCADE'))
+        yield client,test_engine
+
+
+@pytest.fixture(scope='module')
+def api(test_engine,tmp_path_factory):
+    assert_destructive_engine(test_engine)
+    try:
+        with seeded_api(test_engine,tmp_path_factory,seed_legacy=True) as connection:
+            yield connection
+    finally:
+        assert_destructive_engine(test_engine)
+        with test_engine.begin() as c:
+            assert tuple(c.execute(text('SELECT current_database(),current_user')).one())==(DATABASE,ROLE)
+            for schema in ('public',schema_for('CHUNGPAMO-2027')):
+                c.execute(text(f'TRUNCATE "{schema}".forecast_run,"{schema}".import_batch CASCADE'))
 
 
 @pytest.mark.parametrize('dataset,products,resources,demand',[('TISSUE-LEGACY',1,2,24),('CHUNGPAMO-2027',9,6,498)])
@@ -85,7 +93,10 @@ def test_actual_dataset_api_forecast_and_input(api,dataset,products,resources,de
 
 
 def test_actual_plan_preview_and_storage_on_regression_db(api,monkeypatch,record_property):
-    client,_=api
+    client,engine=api
+    with engine.connect() as c:
+        revision=c.execute(text('SELECT version_num FROM public.alembic_version')).scalar_one()
+    ledger_connected=revision=='0010'
     dataset='CHUNGPAMO-2027'
     params={'dataset_id':dataset}
     forecast=client.post('/forecasts',params=params,json={'trained_until':'2026-12-31','horizon_months':3})
@@ -96,7 +107,7 @@ def test_actual_plan_preview_and_storage_on_regression_db(api,monkeypatch,record
     history=client.get('/plan-executions',params=params).json()['total']
     inputs=client.post('/planning-inputs/preview',params=params,json=command)
     assert inputs.status_code==200 and inputs.json()['engine_available'],inputs.json()
-    assert inputs.json()['missing_inputs']==['RECEIPT_SOURCE_UNAVAILABLE']
+    assert inputs.json()['missing_inputs']==([] if ledger_connected else ['RECEIPT_SOURCE_UNAVAILABLE'])
     preview=client.post('/plans',params=params,json=command)
     assert preview.status_code==200 and preview.json()['persisted'] is False,preview.json()
     assert preview.json()['input_digest']==inputs.json()['input_digest']
@@ -107,7 +118,7 @@ def test_actual_plan_preview_and_storage_on_regression_db(api,monkeypatch,record
     assert parent['data_origin']=='REAL_ENGINE' and parent['input_digest']==preview.json()['input_digest']
     assert parent['result_snapshot']==preview.json()['result']
     assert parent['result_digest']==digest(preview.json()['result'])
-    assert parent['input_snapshot']['scheduled_receipts'] is None
+    assert parent['input_snapshot']['scheduled_receipts']==([] if ledger_connected else None)
     plan_types={'BASELINE','STABLE','COST_SAVING'}
     assert {p['plan_type'] for p in parent['result_snapshot']['plans']}==plan_types
     retry=client.post('/plan-executions',params=params,json=command)

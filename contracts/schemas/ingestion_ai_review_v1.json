@@ -702,9 +702,9 @@
               "enum": [
                 "product",
                 "material",
-                "monthly_demand",
                 "bom",
-                "inventory"
+                "inventory",
+                "monthly_demand"
               ],
               "title": "Entity",
               "type": "string"

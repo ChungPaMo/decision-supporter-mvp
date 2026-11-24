@@ -47,9 +47,9 @@ def test_gate_objects_are_generated(sql):
 
 
 def test_entity_check_matches_supported_entities(sql):
-    from app.ingest.pipeline import ENTITIES
+    from app.batches.service import BATCH_ENTITIES
     final = re.findall(r"ck_batch_entity CHECK \(entity IN \(([^)]*)\)\)", sql)[-1]
-    assert set(re.findall(r"'([a-z_]+)'", final)) == set(ENTITIES)
+    assert set(re.findall(r"'([a-z_]+)'", final)) == set(BATCH_ENTITIES)
 
 
 def test_migration_chain_is_linear():
@@ -58,4 +58,4 @@ def test_migration_chain_is_linear():
     for f in versions.glob("*.py"):
         t = f.read_text(encoding="utf-8")
         revs[re.search(r'^revision = "(\w+)"', t, re.M).group(1)] = re.search(r'^down_revision = (.+)$', t, re.M).group(1).strip('"')
-    assert revs == {"0001": "None", "0002": "0001", "0003": "0002", "0004": "0003", "0005": "0004", "0006": "0005", "0007": "0006", "0008": "0007", "0009": "0008"}
+    assert revs == {"0001": "None", "0002": "0001", "0003": "0002", "0004": "0003", "0005": "0004", "0006": "0005", "0007": "0006", "0008": "0007", "0009": "0008", "0010": "0009"}

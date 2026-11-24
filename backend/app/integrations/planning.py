@@ -20,7 +20,7 @@ from app.integrations.planning_validation import (
     forecast_scope, horizon_bounds, input_conflict, input_coverage, validate_input, validate_overrides, validate_pair,
     with_input_coverage,
 )
-from app.integrations.planning_receipts import ReceiptLedgerReader, open_receipts
+from app.integrations.planning_receipts import ReceiptLedgerReader, open_receipts, read_approved_receipts
 from contracts.interfaces.modules import PlanCommand, PlanningInput, PlanningOutput, PlanningReply
 from contracts.interfaces.planning import ApprovedSource, PlanningInputDiagnostics
 from contracts.interfaces.dataset import LEGACY_DATASET
@@ -89,13 +89,15 @@ class SqlPlanningSourceProvider:
                     raise input_conflict('FORECAST_PRODUCT_MONTH_COVERAGE')
                 capacity, routing, capacity_ids = planning_snapshot(c, command)
                 ids = {r.batch_id for r in [*products, *materials, *boms, *inventory]} | capacity_ids
-                receipt_rows = self.receipt_reader(c, command.dataset_id) if self.receipt_reader else None
+                from app.datasets import DatasetEngine
+                receipt_rows = self.receipt_reader(c, command.dataset_id) if self.receipt_reader else (
+                    read_approved_receipts(c, command) if isinstance(self.database, DatasetEngine) else None)
                 receipts = None
                 receipt_ids = set()
                 if receipt_rows is not None:
                     receipts = open_receipts(receipt_rows, command, {row.material_id: row.base_unit for row in materials})
                     receipt_ids = {row.batch_id for row in receipt_rows}
-                    ids |= {row.batch_id for row in receipts}
+                    ids |= receipt_ids
                 forecast_ids = {row.batch_id for row in execution.input_batches}
                 if not forecast_ids or len(forecast_ids) != len(execution.input_batches):
                     raise input_conflict('FORECAST_SOURCE_MISMATCH')

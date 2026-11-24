@@ -8255,5 +8255,98 @@
     ],
     "title": "PlanningReply",
     "type": "object"
+  },
+  "ReceiptRevisionInput": {
+    "additionalProperties": false,
+    "properties": {
+      "effective_date": {
+        "format": "date",
+        "title": "Effective Date",
+        "type": "string"
+      },
+      "expected_date": {
+        "format": "date",
+        "title": "Expected Date",
+        "type": "string"
+      },
+      "material_id": {
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+        "title": "Material Id",
+        "type": "string"
+      },
+      "ordered_qty": {
+        "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+        "title": "Ordered Qty",
+        "type": "string"
+      },
+      "po_id": {
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+        "title": "Po Id",
+        "type": "string"
+      },
+      "po_line_id": {
+        "anyOf": [
+          {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Po Line Id"
+      },
+      "received_qty": {
+        "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+        "title": "Received Qty",
+        "type": "string"
+      },
+      "revision": {
+        "maximum": 2147483647,
+        "minimum": 1,
+        "title": "Revision",
+        "type": "integer"
+      },
+      "status": {
+        "enum": [
+          "OPEN",
+          "CANCELLED"
+        ],
+        "title": "Status",
+        "type": "string"
+      },
+      "supplier_id": {
+        "anyOf": [
+          {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Supplier Id"
+      },
+      "unit": {
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+        "title": "Unit",
+        "type": "string"
+      }
+    },
+    "required": [
+      "po_id",
+      "revision",
+      "material_id",
+      "expected_date",
+      "effective_date",
+      "ordered_qty",
+      "received_qty",
+      "unit",
+      "status"
+    ],
+    "title": "ReceiptRevisionInput",
+    "type": "object"
   }
 }

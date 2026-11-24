@@ -18,6 +18,7 @@ import uuid
 from contextlib import contextmanager
 from decimal import Decimal
 
+from app.batches import receipts
 from app.batches.repository import (
     ApprovedBom, ApprovedDemand, ApprovedInventory, ApprovedMaterial, ApprovedProduct, BatchRecord, BatchRepository, BatchTx,
     BomHeaderInsert, BomLineInsert, DemandRow, DuplicateBatchError, InventoryInsert, MaterialInsert, ProductInsert, RepositoryError,
@@ -35,6 +36,7 @@ from app.ingest.validation import MasterData
 ACTOR_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.\-]{1,59}$")      # 역할 코드 (예: REVIEWER-01). 공백·한글(실명) 불가
 MAX_LISTED = 50
 FINAL = {BatchStatus.APPROVED.value, BatchStatus.REJECTED.value}
+BATCH_ENTITIES = (*ENTITIES, receipts.ENTITY)
 
 
 def _check_actor(actor: str | None, what: str) -> str:
@@ -77,8 +79,13 @@ class BatchService:
         except RepositoryError as exc:
             raise ApiError(500, ErrorCode.PERSISTENCE_ERROR, "저장 중 오류가 발생해 모든 변경을 취소했습니다 (상태 변경 없음).") from exc
 
-    @staticmethod
-    def _run(tx: BatchTx, filename, data, entity, default_unit, overrides, sheet) -> PreviewOut:
+    def _run(self, tx: BatchTx, filename, data, entity, default_unit, overrides, sheet) -> PreviewOut:
+        if entity == receipts.ENTITY:
+            try:
+                return receipts.preview(tx, getattr(self.repo, 'dataset_id', 'TISSUE-LEGACY'),
+                                        filename, data, default_unit, overrides, sheet)
+            except FileError as exc:
+                raise ApiError(exc.http_status, ErrorCode(exc.code), exc.message) from exc
         if entity in ('capacity','routing'):
             from app.batches.capacity import preview
             try:
@@ -100,7 +107,9 @@ class BatchService:
 
     @staticmethod
     def _check_overrides(overrides: dict | None, entity: str) -> None:
-        if entity in ('capacity','routing'):
+        if entity == receipts.ENTITY:
+            fields = receipts.FIELDS
+        elif entity in ('capacity','routing'):
             from app.batches.capacity import MODELS
             fields = {k for m in MODELS.values() for k in m.model_fields}
         else:
@@ -113,7 +122,7 @@ class BatchService:
     def create_batch(self, filename: str, data: bytes, *, entity: str = "monthly_demand", default_unit: str | None = None,
                      column_overrides: dict | None = None, sheet: str | None = None, source_type: str = SourceType.CLIENT_UPLOAD.value,
                      source_note: str | None = None, created_by: str | None = None) -> BatchRecord:
-        if entity not in (*ENTITIES, 'capacity', 'routing'):
+        if entity not in BATCH_ENTITIES:
             raise ApiError(422, ErrorCode.UNSUPPORTED_ENTITY, f"지원하는 entity: {list(ENTITIES)}")
         if source_type not in {s.value for s in SourceType}:
             raise ApiError(422, ErrorCode.REQUEST_INVALID, f"source_type 은 {[s.value for s in SourceType]} 중 하나여야 합니다.")
@@ -234,7 +243,8 @@ class BatchService:
             if not records:
                 raise ApiError(409, ErrorCode.EMPTY_BATCH, "승인할 레코드가 없습니다.")
             from app.batches.capacity import commit as commit_capacity
-            commit = {"capacity": commit_capacity, "routing": commit_capacity, "product": self._commit_products, "material": self._commit_materials, "bom": self._commit_bom,
+            commit = {"capacity": commit_capacity, "routing": commit_capacity, receipts.ENTITY: receipts.commit,
+                      "product": self._commit_products, "material": self._commit_materials, "bom": self._commit_bom,
                       "inventory": self._commit_inventory, "monthly_demand": self._commit_demand}[b.entity]
             written = commit(tx, batch_id, actor, records)
             if written != len(records):                   # 방어: 어긋나면 예외 → 전체 롤백

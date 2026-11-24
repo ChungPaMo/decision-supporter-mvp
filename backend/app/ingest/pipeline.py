@@ -9,7 +9,8 @@ import hashlib
 import json
 from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
+from contracts.interfaces.receipts import ReceiptRevisionInput
 
 from app.ingest.mapping import map_sheet
 from app.ingest.parsing import ParsedFile, parse_file
@@ -121,6 +122,11 @@ class CapacityRecordOut(BaseModel):
     review_required: bool = False
 
 
+class ReceiptRevisionRecordOut(ReceiptRevisionInput):
+    location: LocationOut
+    source_row_sha256: str = Field(pattern=r'^[0-9a-f]{64}$')
+
+
 class SheetOut(BaseModel):
     name: str
     status: Literal["MAPPED", "HOLD", "IGNORED"]
@@ -133,7 +139,7 @@ class SheetOut(BaseModel):
     error_rows: int
     valid_records: int
     issues: list[IssueOut]
-    records: list[RecordOut | ProductRecordOut | MaterialRecordOut | BomLineRecordOut | InventoryRecordOut | CapacityRecordOut]      # entity 에 따라 형태가 다르다
+    records: list[RecordOut | ProductRecordOut | MaterialRecordOut | BomLineRecordOut | InventoryRecordOut | CapacityRecordOut | ReceiptRevisionRecordOut]
     issues_total: int | None = None      # 응답이 잘렸을 때 전체 건수 (issues/records 는 앞부분만 담길 수 있음)
     records_total: int | None = None
 

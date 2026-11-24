@@ -48,7 +48,7 @@ Service = Annotated[BatchService, Depends(get_service)]
 async def create_batch(
     svc: Service,
     file: UploadFile = File(...),
-    entity: str = Form("monthly_demand", description="monthly_demand | product | material | bom | inventory | capacity | routing"),
+    entity: str = Form("monthly_demand", description="monthly_demand | product | material | bom | inventory | capacity | routing | scheduled_receipt"),
     default_unit: str | None = Form(None, description="월별 수요 파일에 단위 열이 없을 때 적용 (다른 entity 는 단위 열 필수)"),
     column_overrides: str | None = Form(None, description='JSON 객체. 예: {"demand_qty": "C"}'),
     sheet: str | None = Form(None),

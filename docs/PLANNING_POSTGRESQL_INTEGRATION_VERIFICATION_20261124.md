@@ -2,6 +2,8 @@
 
 2026-11-24 KST · 메인 Windows PC · 김대영 · 기준 [91927a0](https://github.com/ChungPaMo/decision-supporter-mvp/commit/91927a0d568962526c896de518e4d3a01cd7b0ec)
 
+2026-11-24 후속 작업은 [c4cb3c5](https://github.com/ChungPaMo/decision-supporter-mvp/commit/c4cb3c519e4dc205f2e74f1f2196b0fbd91a75f4)에서 시작했다. P0 증거를 보존했고 P1 승인 단일 실DB 테스트를 완료했다. P2 원장·승인 흐름·SQL reader·`0010` 파일을 작성했다. `0010` 실제 적용과 합성 입고 DB 등록은 미실행이다.
+
 ## P0 · 개발 DB 읽기 전용 실측
 
 Docker Engine 29.4.0의 `chungpamo-monorepo-db`는 `healthy`였다. Compose 프로젝트는 `chungpamo-monorepo`, 호스트 바인딩은 `127.0.0.1:55433`, 전용 볼륨은 `chungpamo-monorepo-pgdata`였다. PostgreSQL 16.6의 `chungpamo`에 `chungpamo_app`으로 연결했다. 첫 연결부터 `default_transaction_read_only=on`을 적용했고 실제 `transaction_read_only=on` 및 Alembic `0009`를 확인했다.
@@ -59,9 +61,20 @@ production_quantity_limit, production_resource, production_routing,
 production_routing_resource_requirement, production_routing_step, sales_order
 ```
 
-[기존 단일 테스트](../backend/tests/test_db_dataset_e2e.py)에서 Preview 이력 불변·BASE와 WHAT_IF의 201/200·상세 결과 및 입력/계산 digest·부모 원본 보존·타 데이터셋 부모 404·APPROVE 501을 검증하도록 보강했다. 실제 저장 SQL과 투영이 완료된 직후 SQL 오류를 주입해 일곱 계획 테이블의 행 수가 원복되는지도 검증한다. 쓰기·초기화는 이번 P1 범위를 승인받은 뒤 한 번만 수행한다. 승인 전 실DB BASE/WHAT_IF 저장과 롤백은 **미실행** 상태다.
+[지정 단일 테스트](../backend/tests/test_db_dataset_e2e.py)를 검증 당시의 `0009`에서 1회 실행했다. 대상·역할·sentinel·revision·업무 행 0·다른 세션 0·스키마별 28개 FK 폐쇄 집합이 승인 범위와 정확히 일치했다. 승인된 fixture 재생성 후 **1 passed / 0 failed / 0 skipped**였다. 기존 Starlette/httpx 경고 1건이 있었다.
 
-## P2 · C02 승인 입고 원장과 SQL reader 제안
+| P1 실DB 항목 | 실제 결과 |
+| --- | --- |
+| 공식 3개월 입력 진단·Preview | 각각 200, Preview 전후 실행 이력 0→0, `persisted=false` |
+| BASE | 신규 201, 동일 요청 200, 저장 상세 200. Preview와 결과 및 입력·계산 digest 일치 |
+| 저장 부모를 참조한 WHAT_IF | Preview 200, 신규 저장 201, 동일 요청 200, 저장 상세 200. 3후보 재계산, 부모 입력·결과 digest와 승인 원본 스냅샷 보존 |
+| 2027-02 SAW1 잔업 80h | 안정형 결품 **3,612→1,437 EA**, 생산 **96,583→97,791 EA**. 실제 저장된 입력을 계산 코어로 대조했고, 저장 API의 월별 생산 행도 일치 |
+| 범위 밖 부모·정식 승인 | LEGACY에서 CP 부모 조회·What-if 실행/저장 404, 정식 APPROVE 501 |
+| SQL 오류와 정리 | 실제 저장·투영 직후 SQL 오류로 500 `PERSISTENCE_ERROR`. 일곱 계획 테이블 행 수 불변. 28개씩 정리 후 양쪽 스키마 시드만 남고 업무 행 0 |
+
+P1은 입고 reader 미연결 스냅샷으로 실행했다. 개발 DB의 테이블 60개·객체 735개·정의 660개 지문은 P0와 실행 전후 모두 일치했다. 비공개 JUnit XML과 사전·종료 증거는 `.artifacts/planning-postgresql-20261124/p1/`에 남겼다.
+
+## P2 · C02 승인 입고 원장과 SQL reader 구현
 
 `0009`의 `import_batch.ck_batch_entity`와 승인 기록 수 검증 트리거에 `scheduled_receipt`가 없다. `ReceiptLedgerRow`, `ReceiptLedgerReader`, `open_receipts`, 출처 검사와 `ScheduledReceipt` DTO는 이미 있다. 이 경계를 재사용하며 승인 매핑·등록 파이프라인을 중복하지 않는다. [C02 계약](PLANNING_CONTRACT_V04_HANDOFF.md#c02-승인-예정-입고) · [공급 인터페이스](../backend/app/integrations/planning_receipts.py) · [SQL provider](../backend/app/integrations/planning.py)
 
@@ -76,9 +89,29 @@ production_routing_resource_requirement, production_routing_step, sales_order
 
 조회 제안에서 최신 개정을 고른 다음 취소·완료 및 계획 종료 뒤 입고를 제외한다. 기준일 당일 또는 이전의 미입고는 제외하지 않고 첫 달 및 `RECEIPT_OVERDUE`로 전달한다. 기준일 뒤·계획 시작 전에도 첫 달 귀속 규칙을 보존한다. SQL reader 미연결은 `null`, 연결·조회 성공 후 적용 입고 없음은 `[]`다. 연결된 reader에 DB 오류가 나면 기존 오류 계약으로 실패시켜 확인 가능한 빈 공급과 구별한다.
 
-### 별도 승인 요청 범위와 수용 기준
+### 작성한 코드와 입력 방식
 
-신규 migration은 `0009` 다음 순번으로 제안한다. **migration 파일 작성 및 연결 코드 구현**에는 별도 승인이 필요하다. 예상 변경은 기존 활성·보관 데이터셋의 배치 entity 체크와 승인/행 수 트리거 확장, 승인 입고 원장·인덱스·불변 제약, 신규 dataset provisioning, 기존 배치 검증기와 SQL reader다. 이전 revision 파일과 승인 데이터의 재작성은 필요 없다. 그다음 **실행 승인**은 전용 회귀 DB에만 upgrade 및 합성 쓰기를 적용하는 별도 건으로 요청한다. 개발 DB 적용·운영 입고 등록은 추가 검토 범위다.
+`0010`은 기존 활성·보관 데이터셋의 배치 entity 조건과 기존 지연 승인 행 수 함수를 확장하고 데이터셋별 입고 원장·인덱스·불변 트리거를 추가한다. 동일한 구조를 신규 데이터셋 초기화에 연결했다. 이전 migration 파일은 수정하지 않았다. 개발 0009 카탈로그에서 양쪽 스키마의 기존 승인 행 수 함수 정의를 읽어 함수 본문 접합을 메모리로 검증했다. 작성한 DDL은 실DB에서 실행하지 않았다. [0010 migration](../backend/migrations/versions/0010_scheduled_receipts.py) · [원장 DDL](../backend/app/dataset_schema_v3.py) · [배치 서비스](../backend/app/batches/receipts.py)
+
+`POST /batches?dataset_id=CHUNGPAMO-2027`에 multipart `entity=scheduled_receipt`와 CSV 또는 명시적으로 선택한 단일 XLSX 시트를 전송한다. 열은 정확한 필드명 또는 `column_overrides`로 지정한다. 기존 재검증과 승인 API를 통해 `expected_result_digest`를 확인한다. 승인 직전 발주 단위로 잠근 뒤 승인 개정을 다시 확인하며, DB 트리거가 동일 트랜잭션의 승인 배치·수량·자재 기준단위·개정 순서를 추가로 검사한다.
+
+```csv
+po_id,po_line_id,revision,material_id,expected_date,effective_date,ordered_qty,received_qty,unit,supplier_id,status
+PO-2701-001,,1,MR-N3,2027-01-20,2026-12-31,10000,0,kg,SUP-PULP-A,OPEN
+```
+
+예시의 `effective_date`는 계획 기준일에 이 합성 발주가 유효하다는 테스트 조건이다. 계획 키는 행 없는 발주의 `po_id`, 행이 있는 발주의 `po_id--po_line_id`다. 구분자 `--`와 점은 개별 입력 키에서 쓰지 않는다. 같은 발주에서 행 있는 방식과 행 없는 방식을 혼합하지 않는다. `revision`은 1에서 시작해 연속으로 증가하며 효력일 및 누적 입고량은 역행하지 않는다. 완료·취소 개정은 종결로 처리한다. 재개나 사후 정정의 예외 정책은 업무 협의 대상이다.
+
+SQL reader는 계획 기준일 이하의 `effective_date`와 읽기 트랜잭션에서 확인된 승인 상태를 사용한다. `approved_at`은 행이 효력을 갖는 업무일과 별개인 감사 시각이다. 오늘 조회를 과거 시점의 승인 가능 상태로 재구성하지 않으며, 저장 결과와 What-if는 이미 저장한 부모의 승인 증거를 사용한다. 최신 유효 승인 개정의 취소·완료·기간 밖 행을 적용 입고에서 제외하고, 해당 승인 배치는 조회 당시의 출처로 유지한다. 0009에서 미연결은 `null`, 0010에서 정상 조회한 빈 공급은 `[]`이며 스키마 불일치·조회 실패는 오류로 전달한다.
+
+비DB의 실제 계획 엔진·SQL 조회 대역에서 공식 입고 전후의 1월 가용량 **82,100→92,100 kg**과 앞 표의 후보별 발주량 **4,028.4006 / 7,135.1947 / 1,827.2391→0 kg**, 미연결 사유 제거, 같은 후보 판정을 검증했다. 수량 변경과 0 취소 가정으로 자재 가용량이 변해도 부모와 승인 입력이 유지됐다.
+
+### 별도 실행 승인 요청 범위와 수용 기준
+
+- 대상은 `chungpamo-monorepo-db`의 `127.0.0.1:55433/chungpamo_regression`, 역할 `chungpamo_regression_runner`, 동일 sentinel이다. 최초 연결은 읽기 전용으로 세션·스키마·FK·시드 전용 여부와 개발 DB 접속 권한 부재를 확인한다.
+- 회귀 DB 한정 `0009→0010` upgrade **1회**. 이 migration은 등록된 `public`과 CHUNGPAMO-2027 두 스키마에 DDL을 적용한다. 기존 개발 DB는 `0009` 상태로 유지한다.
+- [전용 실DB 테스트](../backend/tests/test_db_scheduled_receipts.py) `test_actual_approved_receipts_and_parent_what_if` **1회**. 별도 토큰 `CHUNGPAMO_ALLOW_RECEIPT_SQL_TEST=chungpamo_regression@127.0.0.1:55433`과 전용 `TEST_DATABASE_URL`이 필요하다. 이 테스트는 migration·스키마 재생성을 수행하지 않는다.
+- CHUNGPAMO-2027에만 공식 합성 9배치, 새 예측, 합성 PO 개정·거절 사례, BASE 및 WHAT_IF를 작성한다. LEGACY는 교차 데이터셋 조회만 수행한다. 종료 시 기존 P1 목록의 28개와 `scheduled_receipt_revision`을 합친 CHUNGPAMO-2027의 **29개 테이블만 명시적 `TRUNCATE … RESTRICT`**로 정리한다. 새 FK 폐쇄 집합을 실측해 다르면 중단한다. 개발 DB와 레지스트리·단위 시드, 볼륨은 정리 범위에서 제외한다.
 
 1. 연결 없음 `null`, 연결·승인 없음 `[]`, 같은 PO의 미승인 개정·타 데이터셋·취소·완전 입고 또는 기간 밖의 입고를 검증한다. 잘못된 자재·단위·날짜·과입고·중복·동시 승인 실패를 확인한다.
 2. 공식 합성 `PO-2701-001`을 실제 업로드·검증·명시적 승인한다. 기준일 2026-12-31부터 2027-01~03을 검증하고, 승인 전후 1월 MR-N3 가용량 82,100→92,100 kg과 후보별 신규 발주량을 대조한다. 앞의 공식 입고 포함 계산은 기대값이다. C02 연결 후 모든 후보가 `FEASIBLE`일 것으로 가정하지 않는다.
@@ -87,10 +120,10 @@ production_routing_resource_requirement, production_routing_step, sales_order
 ### 팀 인계
 
 - 희원님은 `PLANNING_RULES-v0.4` 계산과 기존 3,612→1,437 결품 기준을 유지한다. 실DB에서는 입고 공급이 연결되기 전후의 자재 판정이 달랐다. 공개 DTO의 제품 결품 사유와 수량 표시가 별개임을 공유한다.
-- 김대영은 별도 승인 후 회귀 단일 테스트와 C02 DDL·reader·승인 통합을 담당한다. 독립 회귀 쓰기 후 개발 DB 지문을 다시 대조한다.
+- 김대영은 별도 승인 후 회귀 0010 적용과 C02 단일 SQL 테스트를 담당한다. 독립 회귀 쓰기 후 개발 DB 지문을 다시 대조한다.
 - 나미님은 `scheduled_receipts.ready=false`와 확인된 빈 공급을 구별해 표시하고, Preview와 실제 저장·승인 가능 여부를 각각 표시한다. 정식 `APPROVE`는 현재 501이다.
 
-메인 PC에서 전체 비DB pytest는 **1,359 passed, 68 skipped**였다. 실제 PostgreSQL 쓰기 테스트는 건너뜀에 포함된다. 검증 증거는 Git 제외 `.artifacts/planning-postgresql-20261124/`에 보존했다. 이번 작업에서 Upstage 호출과 AI 매핑 연구비 사용은 없었다.
+P2 코드와 동기화 후 전체 비DB pytest는 **1,371 passed, 69 skipped**였다. 0010 전용 실DB 테스트는 건너뜀에 포함된다. OpenAPI와 JSON Schema 생성물, 오프라인 Alembic 계보와 기존 승인 게이트 계약이 일치했다. 새 코드를 기존 개발 0009에 연결한 읽기 전용 검사 7개도 통과했으며 P0의 계획 입력·결과 digest 및 이력 건수와 일치했다. 검증 증거는 Git 제외 `.artifacts/planning-postgresql-20261124/`에 보존했다. 이번 작업에서 Upstage 호출과 AI 매핑 연구비 사용은 없었다.
 
 ```powershell
 .\.venv\Scripts\python.exe scripts/verify_readonly_dataset_api.py --output .artifacts/planning-postgresql-20261124/readonly-dataset-api.json

@@ -1419,3 +1419,27 @@
 
 **관련 자료**
 - [실제 개발 DB 결과, 회귀 정리 범위와 C02 설계](PLANNING_POSTGRESQL_INTEGRATION_VERIFICATION_20261124.md).
+
+### 2026-11-24 — 실제 계획 저장·부모 What-if 검증 및 C02 승인 입고 구현
+
+**Git**
+- 시작 Commit [`c4cb3c5`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/c4cb3c519e4dc205f2e74f1f2196b0fbd91a75f4), 브랜치 `main`.
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='feat: integrate approved scheduled receipt revisions'`으로 확인한다.
+
+**작업 목적**
+- 실DB에서 공식 3개월 계산의 저장·조회·부모 What-if를 검증하고 C02 승인 공급을 기존 배치 체계에 연결한다.
+
+**구현 내용**
+- `scheduled_receipt` 배치에서 발주·행·개정, 수량·자재·단위·효력일, 원본 위치·지문을 검증하고 기존 승인 거래에서 이력을 추가한다. `0010`은 데이터셋별 원장, 승인 행 수 및 불변 트리거를 추가한다.
+- SQL reader가 같은 읽기 트랜잭션으로 최신 유효 승인 개정만 조회한다. `null`과 `[]`를 구분하고 부모 What-if에서 승인 스냅샷을 유지한다.
+- OpenAPI/Schema와 화면 인계를 동기화했다. 공통 ingest entity enum의 선언을 하나로 맞춰 import 순서에 따라 스냅샷 순서가 바뀌던 문제를 수정했다.
+
+**검증 결과**
+- P1 실DB 1통과·0실패·0건너뜀. 안정형 결품 3,612→1,437 EA, 생산량 96,583→97,791 EA. 28개씩 정리 후 업무 행 0, 개발 DB 지문 일치.
+- P2 비DB 실제 엔진에서 MR-N3 가용량 82,100→92,100 kg과 세 후보의 1월 신규 발주 필요량 0, 승인 입고 변동·취소와 부모 보존을 확인했다. 전체 비DB 1,371 통과·69 건너뜀, 현 개발 0009 읽기 전용 7개 통과. 개발·회귀 DB의 0010 적용과 실제 합성 입고 등록은 미실행이다.
+
+**기술적 결정 및 남은 문제**
+- 취소·완료 후 재개나 사후 정정은 기존 개정으로 처리하지 않는다. 실제 0010 적용은 별도 승인하고 회귀 DB의 CHUNGPAMO-2027 29개 테이블에 한정해 정리한다. Upstage 호출은 없었다.
+
+**관련 자료**
+- [실제 P1 시험과 다음 C02 승인 범위](PLANNING_POSTGRESQL_INTEGRATION_VERIFICATION_20261124.md).

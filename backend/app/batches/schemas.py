@@ -36,7 +36,7 @@ class BatchSettings(BaseModel):
 class BatchSummary(BaseModel):
     dataset_id: str = "TISSUE-LEGACY"
     batch_id: uuid.UUID
-    entity: Literal["monthly_demand", "product", "material", "bom", "inventory", "capacity", "routing"]
+    entity: Literal["monthly_demand", "product", "material", "bom", "inventory", "capacity", "routing", "scheduled_receipt"]
     status: BatchStatus = Field(description="MAPPING_HOLD → 열 지정 필요 / HAS_ERRORS → 원본 수정 후 재업로드 / READY_FOR_APPROVAL → 승인 가능 / APPROVED, REJECTED → 최종")
     source_type: SourceType
     source_note: str | None

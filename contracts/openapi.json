@@ -560,7 +560,8 @@
               "bom",
               "inventory",
               "capacity",
-              "routing"
+              "routing",
+              "scheduled_receipt"
             ],
             "title": "Entity",
             "type": "string"
@@ -837,7 +838,8 @@
               "bom",
               "inventory",
               "capacity",
-              "routing"
+              "routing",
+              "scheduled_receipt"
             ],
             "title": "Entity",
             "type": "string"
@@ -1000,9 +1002,9 @@
             "enum": [
               "product",
               "material",
-              "monthly_demand",
               "bom",
-              "inventory"
+              "inventory",
+              "monthly_demand"
             ],
             "title": "Entity",
             "type": "string"
@@ -1200,7 +1202,7 @@
           },
           "entity": {
             "default": "monthly_demand",
-            "description": "monthly_demand | product | material | bom | inventory | capacity | routing",
+            "description": "monthly_demand | product | material | bom | inventory | capacity | routing | scheduled_receipt",
             "title": "Entity",
             "type": "string"
           },
@@ -1325,9 +1327,9 @@
             "enum": [
               "product",
               "material",
-              "monthly_demand",
               "bom",
-              "inventory"
+              "inventory",
+              "monthly_demand"
             ],
             "title": "Entity",
             "type": "string"
@@ -4945,9 +4947,9 @@
             "enum": [
               "product",
               "material",
-              "monthly_demand",
               "bom",
-              "inventory"
+              "inventory",
+              "monthly_demand"
             ],
             "title": "Entity",
             "type": "string"
@@ -7561,6 +7563,107 @@
         "title": "QuantityLimit",
         "type": "object"
       },
+      "ReceiptRevisionRecordOut": {
+        "additionalProperties": false,
+        "properties": {
+          "effective_date": {
+            "format": "date",
+            "title": "Effective Date",
+            "type": "string"
+          },
+          "expected_date": {
+            "format": "date",
+            "title": "Expected Date",
+            "type": "string"
+          },
+          "location": {
+            "$ref": "#/components/schemas/LocationOut"
+          },
+          "material_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Material Id",
+            "type": "string"
+          },
+          "ordered_qty": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Ordered Qty",
+            "type": "string"
+          },
+          "po_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Po Id",
+            "type": "string"
+          },
+          "po_line_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Po Line Id"
+          },
+          "received_qty": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Received Qty",
+            "type": "string"
+          },
+          "revision": {
+            "maximum": 2147483647.0,
+            "minimum": 1.0,
+            "title": "Revision",
+            "type": "integer"
+          },
+          "source_row_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Source Row Sha256",
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "OPEN",
+              "CANCELLED"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "supplier_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Supplier Id"
+          },
+          "unit": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "po_id",
+          "revision",
+          "material_id",
+          "expected_date",
+          "effective_date",
+          "ordered_qty",
+          "received_qty",
+          "unit",
+          "status",
+          "location",
+          "source_row_sha256"
+        ],
+        "title": "ReceiptRevisionRecordOut",
+        "type": "object"
+      },
       "RecordOut": {
         "properties": {
           "demand_qty": {
@@ -8436,6 +8539,9 @@
                 },
                 {
                   "$ref": "#/components/schemas/CapacityRecordOut"
+                },
+                {
+                  "$ref": "#/components/schemas/ReceiptRevisionRecordOut"
                 }
               ]
             },

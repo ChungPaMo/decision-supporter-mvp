@@ -3,11 +3,10 @@ from typing import Literal
 from pydantic import Field, model_validator
 from .base import StrictModel
 from .dataset import DatasetId
-from .modules import ClassificationOutput
+from .modules import ClassificationOutput, Entity
 from .xlsx import Column, XlsxTableSelection
 
 INGESTION_VERSION = 'ingestion-assistance-0.1'
-Entity = Literal['product', 'material', 'monthly_demand', 'bom', 'inventory']
 
 
 class ValueExample(StrictModel):
