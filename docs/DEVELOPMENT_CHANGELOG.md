@@ -1291,3 +1291,29 @@
 
 **관련 자료**
 - [고정밀 판별 연구 보고서](MAPPING_ACCURACY_OPTIMIZATION_20261124.md).
+
+### 2026-11-24 — Phase 6 최신 스키마 매칭 연구의 오프라인 비교
+
+**Git**
+- 시작 Commit [`cf4603d`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/cf4603d6b7ebb707f8d32d13d7e2798c9468e5f4), 브랜치 `main`.
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='research: benchmark paper-inspired schema matching offline'`으로 확인한다.
+
+**작업 목적**
+- 논문의 판별·문맥·후보 순위·위험 보정 기법을 같은 제조업 평가에서 비교하고 정밀도와 추천 범위를 동시에 개선하는 조건을 찾는다.
+
+**구현 내용**
+- `scripts/mapping_phase6_*.py`에 독립 합성 분리, 형식·업무 증거 기반 판별과 후보 순위, 위험 보정, 요청·응답 구조를 추가했다.
+- `scripts/evaluate_mapping_phase6.py`에 SHA 동결 평가와 기존 Solar 재생, `scripts/audit_mapping_phase6.py`에 공통 임곗값 소거 실험을 구현했다. 운영 앱·팀원 모듈 및 승인 경로 변경은 없다.
+
+**검증 결과**
+- 같은 신규 200문서에서 Phase 5 대비 341→510정답, 68→27오추천. 정확 추천율 43.40%, 정밀도 94.97%, HOLD 정답 거절 98.40%. 기존 180문서 회귀에서는 557→603정답, 6→0오추천을 확인했다.
+- 비DB 1,342 통과·68 건너뜀. RapidFuzz 48·70건, Phase 3 캐시 회귀, OpenAPI·JSON Schema 및 변경 파일 보안 검사 통과. 신규 API·DB·Docker 미실행.
+
+**기술적 결정**
+- Selection에서 동결한 정책을 별도 Holdout에 적용했다. 초기 후보는 형식·업무 증거와 절대 신뢰도, 제한적 후보 확장이다. 공동 비교와 역할군 단계의 독립 이득은 작았고 자동 별칭은 정답과 오류를 함께 늘렸다. 운영 교체는 보류했다.
+
+**남은 문제**
+- 신뢰도 보류 376열, 검색 누락 138열, BOM 손실 비율/자재 소요량 오추천 18건을 개선한다. 비용 예약의 증빙과 새 합성 전송 승인을 얻은 뒤 실제 Solar·GEPA·MIPROv2와 신규 계약 영향률을 검증한다.
+
+**관련 자료**
+- [논문 기반 알고리즘 비교와 재현](MAPPING_RESEARCH_PAPER_BENCHMARK_20261124.md) · [Phase 5 오프라인 기준](MAPPING_ACCURACY_OPTIMIZATION_20261124.md) · [Phase 3 캐시의 원 실측](MAPPING_FINAL_ARCHITECTURE_EVALUATION_20261124.md).
