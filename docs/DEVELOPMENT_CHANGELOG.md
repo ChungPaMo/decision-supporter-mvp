@@ -1160,3 +1160,29 @@
 
 **관련 자료**
 - [활성화 검증과 Docker PC 체크리스트](PLANNING_ENGINE_ACTIVATION_VERIFICATION_20261124.md), [v0.4 인계](PLANNING_CONTRACT_V04_HANDOFF.md).
+
+### 2026-11-24 — 제조업 컬럼 매핑 종합 벤치마크
+
+**Git**
+- 시작 Commit [`560de30`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/560de30b20fb365e5e9e12aa229eac53c0dc912b). 브랜치 `main`.
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='research: benchmark manufacturing column matching'`으로 확인한다.
+
+**작업 목적**
+- 임베딩 유무, 후보 판별, 표 전체 제약과 HOLD가 CPU 환경에서 추천 정밀도·회수·수동 작업량에 미치는 효과를 분리한다.
+
+**구현 내용**
+- `scripts/mapping_research_*.py`와 `evaluate_mapping_research.py`에 문서/분할·값 프로파일·업무 신호·지도학습·보정·Valentine·재고 관계·전역 배정·이력·임베딩/LLM의 독립 평가를 추가했다. Upstage용 정답 제거 입력, 캐시/비용 및 응답 검증을 마련했다.
+- 기존 48·70건과 운영 매핑·검증·승인 경로를 보존했다. 모델과 원시 결과는 Git 제외 폴더에 보관했다.
+
+**검증 결과**
+- 표준 입력 타입 5종의 연구용 합성 Train 8,539열·Calibration 703열·Final 1,132열을 고정했다. 130문서 최종에서 LightGBM 474 정답·18 오추천·정밀도 96.34%, 타 방법과 비교는 보고서에 기록했다.
+- 기존 RapidFuzz 회귀 48·70건 지표 재현. 전체 비DB **1,252 passed / 0 failed / 68 skipped**. 변경 15개 파일 보안 검사 탐지 0건. 공급사 API 호출·결제·DB 작업은 미실행이다.
+
+**기술적 결정**
+- 보정셋의 정밀도와 회수 기준으로 로컬 LightGBM 전체 후보 평가를 유력한 shadow 후보로 선정했다. 신규 최종셋에서 Top-1/3 목표에는 미달했고 전역 할당이나 Reranker를 기본값으로 제안할 개선 근거는 없었다.
+
+**남은 문제**
+- 독립 회사 양식과 복합 변환 표에서 재검증한다. BGE/Qwen 전체 문맥과 원본 encoder 재학습을 이어갈 경우 캐시와 고정 split을 사용한다. Upstage는 사용 및 예산 승인 후 같은 채점기를 실행한다.
+
+**관련 자료**
+- [종합 벤치마크·재현 명령](MAPPING_COMPREHENSIVE_RESEARCH_20261124.md) · [선행 연구](MAPPING_RESEARCH_LITERATURE_20261124.md).

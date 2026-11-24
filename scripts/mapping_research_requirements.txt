@@ -1,0 +1,8 @@
+# Optional research dependencies. Install into an ignored directory with pip --target.
+scikit-learn==1.9.1
+lightgbm==4.7.0
+catboost==1.2.10
+valentine==1.0.1
+onnxruntime==1.32.0
+tokenizers==0.23.3
+psutil==7.2.2

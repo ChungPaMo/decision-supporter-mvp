@@ -1,5 +1,7 @@
 # 충파모 프로젝트 진행상황
 
+2026-11-24 (KST), 보조 PC. 시작 `main` [`560de30`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/560de30b20fb365e5e9e12aa229eac53c0dc912b)에서 김대영이 신규 합성 Train 8,539열·Calibration 703열·Final 1,132열(130문서)로 제조업 매핑을 비교했다. 문자열·통계·업무 지식 LightGBM은 474 정답·18 오추천·정밀도 96.34%·최종 Top-3 475/779. 전통 매칭, E5 소거/학습 투영층, BGE·Qwen 헤더, Reranker, 로컬 LLM, 전역 배정·이력을 분리 검증했다. 운영 교체·유료 API 호출·DB 작업은 후속 범위다. [종합 보고서](MAPPING_COMPREHENSIVE_RESEARCH_20261124.md)
+
 최종 확인 **2026-11-24 (KST), 보조 PC**. 시작 `main` [`ec3a0d3`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/ec3a0d3)에서 김대영이 이희원 어댑터를 실제 BASE·WHAT_IF Preview/저장 서비스에 활성화했다. 공식 합성 2027-01~03의 독립 정답 **제약 306개·생산 81행·자재 81행** 일치. 입력 누락 전달, 월별 BOM·라우팅 선택, 입고 공급 상태, 메모리 저장 `201`·중복 `200`과 부모 지문을 검증했다. 전체 비DB **1,239 passed / 68 skipped**, Playwright 8개 통과. 실DB Preview·개발 DB 지문 비교·PostgreSQL 영구 저장은 이 PC에서 미실행이다. [판정·Docker PC 체크리스트](PLANNING_ENGINE_ACTIVATION_VERIFICATION_20261124.md)
 
 최종 확인 **2026-11-23 (KST), 기존 개발 PC**. 김대영이 [`82fa99f`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/82fa99fd2018dee5e73072924e9c7280f7353cda)에서 로컬 CPU 컬럼 비교를 실행했다. 기존 48건 RapidFuzz·BGE를 재현하고 신규 합성 70건에 Qwen3-0.6B·BGE-M3·multilingual-E5-small의 문맥 효과를 측정했다. Qwen 전체 문맥은 Top-3 29/37·오추천 8/70, RapidFuzz는 6/37·7/70이다. 운영 추천은 RapidFuzz를 유지한다. Upstage 후속 비교용 입력 내보내기와 점수 채점 경로를 마련했다. 전체 비DB **1,220 passed / 0 failed / 67 skipped**. [CPU 비교 및 재현](MAPPING_LOCAL_EMBEDDING_EVALUATION_20261123.md)

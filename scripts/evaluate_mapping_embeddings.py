@@ -168,10 +168,12 @@ def normalized(vectors):
 
 
 class OnnxEncoder:
-    def __init__(self, directory, method, threads):
+    def __init__(self, directory, method, threads, *, artifact_identity=None):
         import onnxruntime as ort
         from tokenizers import Tokenizer
-        if method == 'bge':
+        if artifact_identity is not None:
+            checksums, self.revision = artifact_identity
+        elif method == 'bge':
             from evaluate_mapping_bge import FILE_SHA, MODEL_REVISION
             checksums, self.revision = FILE_SHA, MODEL_REVISION
         else:
