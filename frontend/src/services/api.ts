@@ -201,8 +201,26 @@ class ApiClient {
     return this.request('GET', `/forecasts/${encodeURIComponent(executionId)}`);
   }
 
-  async health() {
+  async health(): Promise<{ status: string; version: string; database?: { status: string } }> {
     return this.request('GET', '/health');
+  }
+
+  // 저장된 기준 계획에 조건을 바꿔 다시 계산한다(저장하지 않는 미리보기).
+  // overrides 키: demand_multiplier, demand_multiplier.<제품>, overtime_hours_limit.<자원>.<월>, receipt_qty.<발주>
+  async whatIf(base: { forecast_execution_id: string; product_ids: string[]; target_month: string; as_of_date: string; base_plan_execution_id: string },
+    overrides: Record<string, string>): Promise<PlanningReply> {
+    return this.request('POST', '/plans/what-if', { body: { ...base, scenario: 'WHAT_IF', overrides } });
+  }
+
+  // 승인된 월별 수요 전체(제품 × 월). 그래프와 기준일 기본값에 쓴다.
+  async demandAll(): Promise<Array<{ product_id: string; period: string; demand_qty: string; unit: string }>> {
+    const rows: Array<{ product_id: string; period: string; demand_qty: string; unit: string }> = [];
+    for (let offset = 0; ; ) {
+      const page = await this.request<Page<{ product_id: string; period: string; demand_qty: string; unit: string }>>('GET', `/demand/monthly?limit=1000&offset=${offset}`);
+      rows.push(...page.items);
+      offset += page.items.length;
+      if (offset >= page.total || page.items.length === 0) return rows;
+    }
   }
 
   // 저장 없는 검증. /batches 가 501 인 동안 실제 서버에 붙는 유일한 업로드 경로

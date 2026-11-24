@@ -1,44 +1,34 @@
-import { useEffect, useState } from 'react';
-import MainLayout from './layouts/MainLayout';
-import ScenarioApp from './scenario/ScenarioApp';
-import { screenFromHash } from './scenario/store';
-import DashboardScreen from './screens/DashboardScreen';
-import DataUploadScreen from './screens/DataUploadScreen';
-import ForecastScreen from './screens/ForecastScreen';
-import PlanningWorkspace from './screens/PlanningWorkspace';
+import { useMemo } from 'react';
+import Shell from './app/Shell';
+import { Empty, Notice, useRoute } from './app/core';
+import { alerts, EMPTY_OVERVIEW, loadOverview, stages, useLoad } from './app/data';
+import ForecastPage from './pages/ForecastPage';
+import HistoryPage from './pages/HistoryPage';
+import HomePage from './pages/HomePage';
+import IngestPage from './pages/IngestPage';
+import PlanPage from './pages/PlanPage';
 import { useProductionStore } from './store/productionStore';
-import './styles/app.css';
-import './styles/operations.css';
+import './styles/theme.css';
+
+// 데이터셋이 바뀌면 key 로 화면을 통째로 다시 만들어, 이전 데이터셋의 선택과 진행 중인 요청을 버린다.
+function Workspace() {
+  const route = useRoute();
+  const overview = useLoad(loadOverview, []);
+  const data = overview.data ?? EMPTY_OVERVIEW;
+  const flow = useMemo(() => stages(data), [data]);
+  const attention = useMemo(() => alerts(data).some((a) => a.tone !== 'info'), [data]);
+  const reload = () => void overview.reload();
+  return <Shell page={route.page} flow={flow} attention={attention}>
+    {overview.error && <Notice tone="bad">{overview.error}</Notice>}
+    {route.page === 'home' && (overview.data ? <HomePage overview={data} onReload={reload} /> : <section className="panel"><Empty>{overview.loading ? '현황을 읽는 중…' : '현황을 읽지 못했습니다.'}</Empty></section>)}
+    {route.page === 'ingest' && <IngestPage onChanged={reload} />}
+    {route.page === 'forecast' && <ForecastPage focus={route.params.f} names={data.names} onChanged={reload} />}
+    {route.page === 'plan' && <PlanPage key={route.params.f ?? 'plan'} focus={route.params.f} names={data.names} onChanged={reload} />}
+    {route.page === 'history' && <HistoryPage overview={data} kind={route.params.kind} onReload={reload} />}
+  </Shell>;
+}
 
 export default function App() {
-  useEffect(() => {
-    const restoreRoute = () => {
-      if (window.location.hash === '#forecast') useProductionStore.getState().setStep('forecast');
-      else if (!window.location.hash) useProductionStore.getState().setStep('data');
-    };
-    window.addEventListener('hashchange', restoreRoute);
-    return () => window.removeEventListener('hashchange', restoreRoute);
-  }, []);
-  const step = useProductionStore((state) => state.step);
   const datasetId = useProductionStore((state) => state.datasetId);
-  // #scenario, #scenario/1~9 는 기획서 예시 시나리오(합성 데이터 UX 시안)로 분리해 보여준다.
-  const [scenario, setScenario] = useState(() => screenFromHash(window.location.hash) != null);
-  useEffect(() => {
-    const sync = () => setScenario(screenFromHash(window.location.hash) != null);
-    window.addEventListener('hashchange', sync);
-    window.addEventListener('popstate', sync);
-    return () => { window.removeEventListener('hashchange', sync); window.removeEventListener('popstate', sync); };
-  }, []);
-
-  if (scenario) return <ScenarioApp />;
-  // key 에 데이터셋을 넣어, 데이터셋이 바뀌면 화면 상태(선택 UUID·이력·진행 중 요청)를 버리고 새로 조회한다.
-  return (
-    <MainLayout>
-      {step === 'dashboard' && <DashboardScreen key={datasetId} />}
-      {step === 'data' && <DataUploadScreen key={datasetId} />}
-      {step === 'verify' && <DataUploadScreen key={`${datasetId}-verify`} view="verify" />}
-      {step === 'forecast' && <ForecastScreen key={datasetId} />}
-      {(['plans', 'diagnosis', 'mrp', 'whatif', 'approval'] as const).map(stage => step === stage && <PlanningWorkspace key={`${datasetId}-${stage}`} stage={stage} />)}
-    </MainLayout>
-  );
+  return <Workspace key={datasetId} />;
 }
