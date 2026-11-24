@@ -1,5 +1,5 @@
-import { useEffect, useMemo, useState } from 'react';
-import { Empty, failure, FeasSt, forecastLabel, forecastMonths, go, Icon, monthLabel, Name, Notice, num, pctText, shortMonth, Tag, when } from '../app/core';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Empty, failure, FeasSt, forecastLabel, forecastMonths, go, Icon, monthLabel, Name, Notice, num, pctText, shortMonth, when } from '../app/core';
 import { demandOf, groupIssues, loadGrid, Names, planMonths, planProducts, PlanResult, PlanSummary, summarizePlan, sumMonth, useLoad } from '../app/data';
 import { HeatLegend, LoadMap, ShortLegend, ShortMap } from '../app/widgets';
 import { apiClient } from '../services/api';
@@ -9,22 +9,27 @@ import { PlanExecutionDetail } from '../types/modules';
 const short = (label: string) => label.split(' ')[0];
 const basis = (label: string) => label.replace(/^\S+\s*/, '').replace(/[()]/g, '');
 
-export default function PlanPage({ focus, names, onChanged }: { focus?: string; names: Names; onChanged: () => void }) {
+type CellPick = { id: string; kind: string; month: string };
+
+export default function PlanPage({ focus, pick, startMonth, startPlan, names, onChanged }: { focus?: string; pick?: CellPick; startMonth?: string; startPlan?: string; names: Names; onChanged: () => void }) {
   const base = useLoad(async () => {
-    const [forecasts, plans] = await Promise.all([apiClient.forecastHistory(50, 0), apiClient.planExecutions(50, 0)]);
-    return { forecasts: forecasts.items.filter((f) => f.status === 'OK' || f.status === 'PARTIAL'), plans: plans.items };
+    const [forecasts, plans, capacity] = await Promise.all([apiClient.forecastHistory(50, 0), apiClient.planExecutions(50, 0), apiClient.approvedData('capacity').catch(() => [] as Array<Record<string, unknown>>)]);
+    const budgets: Record<string, { regular: number; overtime: number }> = {};
+    for (const row of capacity) if (row.section === 'hours_budgets' && row.resource_id && row.period) budgets[`${String(row.resource_id)}.${String(row.period).slice(0, 7)}`] = { regular: Number(row.regular_hours ?? 0), overtime: Number(row.overtime_hours_limit ?? 0) };
+    return { forecasts: forecasts.items.filter((f) => f.status === 'OK' || f.status === 'PARTIAL'), plans: plans.items, budgets };
   });
   const forecasts = base.data?.forecasts ?? [];
   const stored = base.data?.plans ?? [];
   const [forecastId, setForecastId] = useState(focus ?? '');
   const [forecastDetail, setForecastDetail] = useState<ForecastExecution | null>(null);
-  const [month, setMonth] = useState('');
+  const [month, setMonth] = useState(startMonth ?? '');
   const [execution, setExecution] = useState<PlanExecutionDetail | null>(null);
   const [alt, setAlt] = useState<PlanResult | null>(null);
   const [showAlt, setShowAlt] = useState(false);
-  const [planId, setPlanId] = useState('');
+  const [planId, setPlanId] = useState(startPlan ?? '');
   const [view, setView] = useState<'load' | 'products' | 'materials'>('load');
-  const [cell, setCell] = useState<{ id: string; kind: string; month: string } | null>(null);
+  const [cell, setCell] = useState<CellPick | null>(null);
+  const [pending, setPending] = useState<CellPick | null>(pick ?? null);   // 홈에서 들고 온 칸. 계획이 뜨면 한 번 연다.
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ tone: 'ok' | 'warn' | 'bad'; text: string } | null>(null);
   const [multiplier, setMultiplier] = useState(1);
@@ -93,7 +98,23 @@ export default function PlanPage({ focus, names, onChanged }: { focus?: string; 
   const demandTotal = viewMonths.reduce((a, m) => a + sumMonth(fdemand[m]) * factor, 0);
   const qty = (pid: string, m: string) => Number(selected?.plan.production.find((r) => r.product_id === pid && r.period === m)?.production_qty ?? 0);
   const picked = cell && grid ? grid.rows.find((r) => r.id === cell.id && r.kind === cell.kind)?.cells[cell.month] : null;
-  const overrideText = Object.entries(overrides).map(([k, v]) => (k === 'demand_multiplier' ? `수요 ×${v}` : `${names[k.split('.')[1]] ?? k.split('.')[1]} ${shortMonth(k.split('.')[2])} 잔업 ${v}시간`)).join(', ');
+  const sortedRows = useMemo(() => [...(grid?.rows ?? [])].sort((x, y) => Math.max(...Object.values(y.cells).map((c) => c.pct ?? 0)) - Math.max(...Object.values(x.cells).map((c) => c.pct ?? 0))), [grid]);
+  const noticeRef = useRef<HTMLDivElement>(null);
+  // 홈에서 칸을 들고 왔으면 그 칸을 열고, 잔업 한도를 바꾸는 자리가 보이게 내려간다.
+  const arrived = useRef(false);
+  useEffect(() => {
+    if (!pending || cell || !grid?.rows.some((r) => r.id === pending.id && r.kind === pending.kind && r.cells[pending.month])) return;
+    setCell(pending); setView('load');
+    if (!arrived.current) { arrived.current = true; window.setTimeout(() => noticeRef.current?.scrollIntoView({ block: 'center', behavior: 'smooth' }), 120); }
+  }, [pending, grid, cell]);
+  // 조건을 바꾼 결과를 볼 때, 같은 칸의 원래 한도를 함께 보여 주기 위한 원래 계획의 부하.
+  const baseGrid = useMemo(() => (showAlt && alt && baseResult && selected ? loadGrid(baseResult, selected.plan.plan_id) : null), [showAlt, alt, baseResult, selected]);
+  const basePicked = cell && baseGrid ? baseGrid.rows.find((r) => r.id === cell.id && r.kind === cell.kind)?.cells[cell.month] : null;
+  const otKey = cell ? `overtime_hours_limit.${cell.id}.${cell.month}` : '';
+  const budget = cell ? base.data?.budgets[`${cell.id}.${cell.month}`] : undefined;
+  // 칸을 고르면 입력값을 그 칸의 지금 잔업 한도보다 40시간 많게 맞춰 둔다. 같은 값을 넣어 아무 변화가 없는 일을 막는다.
+  useEffect(() => { if (budget && !overtime[otKey]) setOtHours(String(budget.overtime + 40)); }, [cell?.id, cell?.month, budget?.overtime]);
+  const overrideText = Object.entries(overrides).map(([k, v]) => (k === 'demand_multiplier' ? `수요 ×${v}` : `${names[k.split('.')[1]] ?? k.split('.')[1]} ${shortMonth(k.split('.')[2])} 잔업 한도 ${v}시간`)).join(', ');
 
   const fact = (label: string, v: number, unit: string) => <span className={`fact${v ? ' bad' : ''}`}>{label} <b>{v ? `${v}${unit}` : '없음'}</b></span>;
 
@@ -103,7 +124,7 @@ export default function PlanPage({ focus, names, onChanged }: { focus?: string; 
         <div className="formrow">
           <label className="field" style={{ flex: '2 1 300px' }}>어떤 예측으로 계획을 세울까요<select value={forecastId} onChange={(e) => setForecastId(e.target.value)}>{forecasts.map((f) => <option key={f.execution_id} value={f.execution_id}>{forecastLabel(f)} · {when(f.created_at)} 실행</option>)}</select></label>
           <div className="field" style={{ flex: '2 1 260px' }}>계획을 시작할 달 <div className="chips">{months.map((m) => <button key={m} type="button" className="chip" aria-pressed={m === month} onClick={() => setMonth(m)}>{monthLabel(m)}</button>)}</div></div>
-          <button type="button" className="btn primary lg" disabled={busy || !forecast || !month} onClick={() => void calculate()}>{busy ? '계산 중…' : execution ? '다시 계산' : '계획 계산하기'}<Icon name="play" /></button>
+          <button type="button" className={`btn lg${execution ? '' : ' primary'}`} disabled={busy || !forecast || !month} onClick={() => void calculate()}>{busy ? '계산 중…' : execution ? '저장된 계획 다시 계산' : '계획 계산하기'}<Icon name="play" /></button>
         </div>}
       {forecast && <p className="small">{monthLabel(forecast.parameters.trained_until.slice(0, 7))} 말까지의 자료로 만든 예측입니다. 계획도 그 시점에 알고 있던 재고만 씁니다.{execution && ` 이 계획은 ${when(execution.created_at)} 저장됐습니다.`}</p>}
       {message && <Notice tone={message.tone}>{message.text}</Notice>}
@@ -116,33 +137,34 @@ export default function PlanPage({ focus, names, onChanged }: { focus?: string; 
       <div className="cols c31">
         <div className="stack">
           <div className="plans" role="group" aria-label="세 안">{summaries.map((s) => { const cover = demandTotal ? (s.total / demandTotal) * 100 : null;
-            return <button type="button" key={s.plan.plan_id} className={`plan${s.plan.plan_id === selected?.plan.plan_id ? ' selected' : ''}`} aria-pressed={s.plan.plan_id === selected?.plan.plan_id} onClick={() => { setPlanId(s.plan.plan_id); setCell(null); }}>
+            return <button type="button" key={s.plan.plan_id} className={`plan${s.plan.plan_id === selected?.plan.plan_id ? ' selected' : ''}`} aria-pressed={s.plan.plan_id === selected?.plan.plan_id} onClick={() => { setPlanId(s.plan.plan_id); setPending(null); setCell(null); }}>
               <div className="top"><b>{short(s.plan.label)}</b><FeasSt value={s.plan.feasibility} /></div>
               <span className="total num">{num(s.total)} <small>EA</small></span><span className="small muted">{basis(s.plan.label)} · 수요의 {pctText(cover)}</span>
-              <div className="facts">{s.maxUtil !== null && <span className={`fact${s.maxUtil > 1 ? ' bad' : s.maxUtil >= 0.9 ? ' warn' : ''}`}>최대 부하 <b>{pctText(s.maxUtil * 100)}</b></span>}
+              <div className="facts">{s.maxUtil !== null && <span className={`fact${s.maxUtil >= 0.995 ? ' bad' : s.maxUtil >= 0.9 ? ' warn' : ''}`}>최대 부하 <b>{pctText(s.maxUtil * 100)}</b></span>}
                 {fact('설비 초과', s.equipOver, '칸')}{fact('수요 미충족', s.demandMiss, '건')}{fact('안전 재고 미달', s.safetyMiss, '건')}{fact('자재 부족', s.shortages, '건')}</div>
             </button>; })}</div>
 
           <div className="tabs" role="group" aria-label="자세히 볼 것" style={{ alignSelf: 'flex-start' }}><button type="button" aria-pressed={view === 'load'} onClick={() => setView('load')}>설비·인력 부하</button><button type="button" aria-pressed={view === 'products'} onClick={() => setView('products')}>제품별 생산량</button><button type="button" aria-pressed={view === 'materials'} onClick={() => setView('materials')}>자재 부족{selected?.shortages ? ` ${selected.shortages}` : ''}</button></div>
 
-          {view === 'load' && <section className="panel"><header><div><h2>설비·인력 부하 지도 · {selected ? short(selected.plan.label) : ''}</h2><p>달마다 한도의 몇 %를 쓰는지. 칸을 누르면 자세히 봅니다.</p></div><HeatLegend /></header>
-            <div className="body">{grid && <LoadMap months={grid.months} rows={grid.rows} names={names} selected={cell} onPick={setCell} />}
-              {cell && picked && <Notice tone={picked.pct !== null && picked.pct > 100 ? 'bad' : picked.pct !== null && picked.pct >= 90 ? 'warn' : 'info'}>
+          {view === 'load' && <section className="panel"><header><div><h2>설비·인력 부하 지도 · {selected ? short(selected.plan.label) : ''}</h2><p>달마다 한도의 몇 %를 쓰는지, 빠듯한 순서입니다. 칸을 누르면 그 칸의 잔업 한도를 바꿀 수 있습니다.</p></div><HeatLegend /></header>
+            <div className="body bare">{grid && <LoadMap months={grid.months} rows={sortedRows} names={names} selected={cell} onPick={(next) => { setPending(null); setCell(next); }} />}
+              {cell && picked && <div ref={noticeRef}><Notice tone={picked.pct !== null && picked.pct >= 99.5 ? 'bad' : picked.pct !== null && picked.pct >= 90 ? 'warn' : 'info'}>
                 <span><b>{names[cell.id] ?? cell.id} · {monthLabel(cell.month)}</b> — {picked.limit === null ? `필요 ${num(picked.used, 1)}${picked.unit}, 한도 자료가 없습니다.` : `필요 ${num(picked.used, 1)}${picked.unit} / 한도 ${num(picked.limit, 0)}${picked.unit}. ${picked.used > picked.limit ? `${num(picked.used - picked.limit, 1)}${picked.unit} 모자랍니다.` : `여유 ${num(picked.limit - picked.used, 1)}${picked.unit}.`}`}
-                  {' '}<button type="button" className="btn sm" onClick={() => { setOvertime({ ...overtime, [`overtime_hours_limit.${cell.id}.${cell.month}`]: String(Number(otHours) || 0) }); }}>이 칸에 잔업 {otHours}시간 넣기</button></span></Notice>}</div>
+                  {budget && ` 정규 ${num(budget.regular, 0)}시간 + 잔업 한도 ${num(budget.overtime, 0)}시간.`}{' '}{overtime[otKey] ? <><b>잔업 한도를 {budget ? `${num(budget.overtime, 0)}시간에서 ` : ''}{overtime[otKey]}시간으로 바꿨습니다.</b>{basePicked && basePicked.limit !== null && picked.limit !== null && basePicked.limit !== picked.limit && ` 전체 한도 ${num(basePicked.limit, 0)}${picked.unit} → ${num(picked.limit, 0)}${picked.unit}.`} <button type="button" className="btn sm" onClick={() => { const rest = { ...overtime }; delete rest[otKey]; setOvertime(rest); }}>되돌리기</button></>
+                    : <button type="button" className="btn sm" onClick={() => { setOvertime({ ...overtime, [otKey]: String(Number(otHours) || 0) }); }}>이 칸의 잔업 한도를 {otHours}시간으로</button>}</span></Notice></div>}</div>
           </section>}
 
           {view === 'products' && <section className="panel"><header><div><h2>제품별 생산량 · {selected ? short(selected.plan.label) : ''}</h2><p>칸 아래 막대는 예상 수요에 비해 얼마나 만드는지입니다 (가득 차면 수요만큼)</p></div></header>
             <div className="body flush"><div className="tablewrap"><table className="tbl"><thead><tr><th>제품</th>{viewMonths.map((m) => <th key={m} className="r">{monthLabel(m)}</th>)}<th className="r">합계</th><th className="r">수요 대비</th></tr></thead>
               <tbody>{products.map((pid) => { let sum = 0, need = 0;
                 return <tr key={pid}><td><Name code={pid} names={names} /></td>{viewMonths.map((m) => { const q = qty(pid, m), d = (fdemand[m]?.[pid]?.p50 ?? 0) * factor; sum += q; need += d; const ratio = d ? q / d : null;
-                  return <td key={m} className="r num">{num(q)}<span className={`cellbar ${ratio !== null && ratio < 0.95 ? 'over' : ''}`} title={d ? `예상 수요 ${num(d)}` : undefined}><i style={{ width: `${Math.min((ratio ?? 0) * 100, 100)}%` }} /></span></td>; })}
-                  <td className="r num"><b>{num(sum)}</b></td><td className="r num" style={need && sum / need < 0.95 ? { color: 'var(--bad)', fontWeight: 600 } : undefined}>{need ? pctText((sum / need) * 100) : '-'}</td></tr>; })}</tbody>
+                  return <td key={m} className="r num">{num(q)}<span className={`cellbar ${ratio !== null && Math.round(ratio * 100) < 95 ? 'over' : ''}`} title={d ? `예상 수요 ${num(d)}` : undefined}><i style={{ width: `${Math.min((ratio ?? 0) * 100, 100)}%` }} /></span></td>; })}
+                  <td className="r num"><b>{num(sum)}</b></td><td className="r num" style={need && Math.round((sum / need) * 100) < 95 ? { color: 'var(--bad)', fontWeight: 600 } : undefined}>{need ? pctText((sum / need) * 100) : '-'}</td></tr>; })}</tbody>
               <tfoot><tr><td>합계</td>{viewMonths.map((m) => <td key={m} className="r num">{num(selected?.byMonth[m] ?? 0)}</td>)}<td className="r num">{num(selected?.total ?? 0)}</td><td className="r num">{demandTotal ? pctText(((selected?.total ?? 0) / demandTotal) * 100) : '-'}</td></tr></tfoot></table></div></div>
           </section>}
 
-          {view === 'materials' && <section className="panel"><header><div><h2>자재 부족 지도 · {selected ? short(selected.plan.label) : ''}</h2><p>칸이 진할수록 필요한 양에 비해 많이 모자랍니다. 많이 모자라는 자재가 위에 옵니다.</p></div><div className="actions"><ShortLegend /><Tag tone={selected?.shortages ? 'bad' : 'ok'}>{selected?.shortages ? `${selected.shortages}건` : '부족 없음'}</Tag></div></header>
-            <div className="body">{selected?.shortageList.length ? <ShortMap months={viewMonths} list={selected.shortageList} names={names} /> : <Empty>이 안에서는 모자라는 자재가 없습니다.</Empty>}</div>
+          {view === 'materials' && <section className="panel"><header><div><h2>자재 부족 지도 · {selected ? short(selected.plan.label) : ''}</h2><p>칸이 진할수록 필요한 양에 비해 많이 모자랍니다. 많이 모자라는 자재가 위에 옵니다.</p></div><ShortLegend /></header>
+            <div className="body bare">{selected?.shortageList.length ? <ShortMap months={viewMonths} list={selected.shortageList} names={names} /> : <Empty>이 안에서는 모자라는 자재가 없습니다.</Empty>}</div>
           </section>}
         </div>
 
@@ -151,9 +173,9 @@ export default function PlanPage({ focus, names, onChanged }: { focus?: string; 
             <div className="body">
               <label className="field">수요를 몇 배로 볼까요 <b className="num" style={{ color: 'var(--ink)', fontSize: '0.9rem' }}>×{multiplier.toFixed(2)}{multiplier !== 1 && ` (${multiplier > 1 ? '+' : ''}${Math.round((multiplier - 1) * 100)}%)`}</b>
                 <input type="range" min="0.7" max="1.4" step="0.05" value={multiplier} onChange={(e) => setMultiplier(Number(e.target.value))} /></label>
-              <div className="formrow"><label className="field">잔업 한도 (시간)<input type="number" min="0" step="10" value={otHours} onChange={(e) => setOtHours(e.target.value)} /></label>
-                <span className="small muted" style={{ flex: '2 1 150px' }}>부하 지도의 칸을 누른 뒤 "잔업 넣기"를 누르면 그 설비·달에 추가됩니다.</span></div>
-              {Object.keys(overtime).length > 0 && <div className="chips">{Object.entries(overtime).map(([k, v]) => <button key={k} type="button" className="chip" title="눌러서 빼기" onClick={() => { const next = { ...overtime }; delete next[k]; setOvertime(next); }}>{names[k.split('.')[1]] ?? k.split('.')[1]} {shortMonth(k.split('.')[2])} +{v}h ✕</button>)}</div>}
+              <div className="formrow"><label className="field">바꿀 잔업 한도 (시간)<input type="number" min="0" step="10" value={otHours} onChange={(e) => setOtHours(e.target.value)} /></label>
+                <span className="small muted" style={{ flex: '2 1 150px' }}>부하 지도의 칸을 누르면 그 설비·달의 잔업 한도를 이 값으로 바꿉니다. 원래 잔업 한도에 더하는 것이 아니라 대신합니다.</span></div>
+              {Object.keys(overtime).length > 0 && <div className="chips">{Object.entries(overtime).map(([k, v]) => <button key={k} type="button" className="chip" title="눌러서 빼기" onClick={() => { const next = { ...overtime }; delete next[k]; setOvertime(next); }}>{names[k.split('.')[1]] ?? k.split('.')[1]} {shortMonth(k.split('.')[2])} 잔업 한도 {v}h<Icon name="x" /></button>)}</div>}
               <div className="actions"><button type="button" className="btn primary lg" disabled={busy || !Object.keys(overrides).length} onClick={() => void recalc()}><Icon name="refresh" />{busy ? '계산 중…' : '이 조건으로 다시 계산'}</button>
                 <button type="button" className="btn" disabled={busy || (!alt && !Object.keys(overrides).length)} onClick={resetWhatIf}>처음으로</button></div>
               {alt && <><div className="tabs" role="group" aria-label="볼 결과"><button type="button" aria-pressed={!showAlt} onClick={() => setShowAlt(false)}>원래 계획</button><button type="button" aria-pressed={showAlt} onClick={() => setShowAlt(true)}>바꾼 결과</button></div>
@@ -162,14 +184,14 @@ export default function PlanPage({ focus, names, onChanged }: { focus?: string; 
           </section>
 
           {alt && <section className="panel"><header><h2>바꾸기 전 → 후</h2></header>
-            <div className="body flush"><table className="tbl"><thead><tr><th>안</th><th className="r">생산 합계</th><th>실행 가능성</th></tr></thead>
+            <div className="body flush"><table className="tbl tight"><thead><tr><th>안</th><th className="r">생산 합계</th><th>실행 가능성</th></tr></thead>
               <tbody>{baseSummaries.map((b) => { const a = altSummaries.find((s) => s.plan.plan_id === b.plan.plan_id); if (!a) return null; const diff = a.total - b.total;
                 return <tr key={b.plan.plan_id}><td><b>{short(b.plan.label)}</b></td><td className="r num">{num(a.total)}<br /><span className="small muted">{diff > 0 ? '+' : ''}{num(diff)}</span></td>
                   <td><FeasSt value={b.plan.feasibility} /><br /><span className="small muted">→ </span><FeasSt value={a.plan.feasibility} /></td></tr>; })}</tbody></table>
-              <table className="tbl"><thead><tr><th>무엇이 달라졌나</th>{baseSummaries.map((b) => <th key={b.plan.plan_id} className="r">{short(b.plan.label)}</th>)}</tr></thead>
-                <tbody>{([['설비·인력 초과', (x: PlanSummary) => x.equipOver], ['수요를 못 채움', (x: PlanSummary) => x.demandMiss], ['안전 재고 미달', (x: PlanSummary) => x.safetyMiss], ['자재 부족', (x: PlanSummary) => x.shortages]] as Array<[string, (x: PlanSummary) => number]>).map(([label, pick]) =>
+              <table className="tbl tight"><thead><tr><th>달라진 것</th>{baseSummaries.map((b) => <th key={b.plan.plan_id} className="r">{short(b.plan.label)}</th>)}</tr></thead>
+                <tbody>{([['설비 초과', (x: PlanSummary) => x.equipOver], ['수요 미충족', (x: PlanSummary) => x.demandMiss], ['안전 재고 미달', (x: PlanSummary) => x.safetyMiss], ['자재 부족', (x: PlanSummary) => x.shortages]] as Array<[string, (x: PlanSummary) => number]>).map(([label, pick]) =>
                   <tr key={label}><td>{label}</td>{baseSummaries.map((b) => { const a = altSummaries.find((s) => s.plan.plan_id === b.plan.plan_id); const before = pick(b), after = a ? pick(a) : before;
-                    return <td key={b.plan.plan_id} className="r num">{before} → <b className={after > before ? 'delta-up' : after < before ? 'delta-down' : ''}>{after}</b></td>; })}</tr>)}</tbody></table></div>
+                    return <td key={b.plan.plan_id} className={`r num${after === before ? ' same' : ''}`}>{before}→<b className={after > before ? 'delta-up' : after < before ? 'delta-down' : ''}>{after}</b></td>; })}</tr>)}</tbody></table></div>
           </section>}
         </div>
       </div>

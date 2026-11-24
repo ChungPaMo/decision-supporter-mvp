@@ -1,9 +1,9 @@
-// 그림으로 보여 주는 부품: 선 그래프, 묶음 막대, 링 게이지, 추세선, 가로 막대, 설비 부하 지도, 자재 부족 지도.
-import { ReactNode, RefObject, useEffect, useId, useRef, useState } from 'react';
+// 그림으로 보여 주는 부품: 선 그래프, 설비·인력 부하 지도, 자재 부족 지도.
+import { CSSProperties, ReactNode, RefObject, useEffect, useId, useRef, useState } from 'react';
 import { monthLabel, num, shortMonth } from './core';
 import { LoadCell, Names } from './data';
 
-export const C = { actual: '#6b7684', forecast: '#3182f6', teal: '#3182f6', plan: '#191f28', alt: '#b0b8c1', demand: '#d1d6db', ok: '#0a8f5c', warn: '#f5a524', bad: '#d92d3a' };
+export const C = { actual: '#6b7684', forecast: '#2563eb', teal: '#2563eb', plan: '#191f28', alt: '#b0b8c1', demand: '#d1d6db', ok: '#087a4e', warn: '#f5a524', bad: '#d92d3a' };
 export interface Series { name: string; color: string; values: Array<number | null>; dash?: boolean; dots?: boolean; area?: boolean }
 export interface Band { name: string; lo: Array<number | null>; hi: Array<number | null>; color: string }
 
@@ -30,7 +30,12 @@ export function LineChart({ months, series, band, split, height = 240, unit = ''
   const H = height, L = 50, R = 14, T = 12, B = 24;
   const all = [...series.flatMap((s) => s.values), ...(band ? [...band.lo, ...band.hi] : [])].filter((v): v is number => v !== null);
   if (months.length < 2 || !all.length) return <div className="empty" ref={box}>그릴 자료가 없습니다.</div>;
-  const max = Math.max(...all) * 1.06, min = Math.min(...all) * 0.9;
+  // 세로 눈금은 딱 떨어지는 값(25,000 / 30,000 …)으로 잡는다.
+  const rawMax = Math.max(...all), rawMin = Math.min(...all);
+  const rough = (rawMax - rawMin || rawMax || 1) / 3, pow = 10 ** Math.floor(Math.log10(rough));
+  const step = [1, 2, 2.5, 5, 10].map((k) => k * pow).find((k) => k >= rough) ?? 10 * pow;
+  const min = Math.floor(rawMin / step) * step, max = Math.max(Math.ceil(rawMax / step) * step, min + step);
+  const ticks = Array.from({ length: Math.round((max - min) / step) + 1 }, (_, k) => min + k * step);
   const x = (i: number) => L + (i / (months.length - 1)) * (W - L - R);
   const y = (v: number) => T + (1 - (v - min) / (max - min || 1)) * (H - T - B);
   const pts = (values: Array<number | null>) => values.map((v, i) => (v === null ? null : [x(i), y(v)] as const)).filter((p): p is readonly [number, number] => p !== null);
@@ -46,13 +51,13 @@ export function LineChart({ months, series, band, split, height = 240, unit = ''
   return <div className="chart" ref={box} onMouseMove={(e) => move(e.clientX)} onMouseLeave={() => setHover(null)}>
     <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: H, display: 'block' }} role="img" aria-label={`${series.map((s) => s.name).join(', ')} 그래프. ${monthLabel(months[0])}부터 ${monthLabel(months[months.length - 1])}까지`}>
       <defs>{series.filter((s) => s.area).map((s, i) => <linearGradient key={i} id={`${gid}a${i}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={s.color} stopOpacity="0.12" /><stop offset="1" stopColor={s.color} stopOpacity="0" /></linearGradient>)}</defs>
-      {[0, 1, 2, 3].map((k) => { const v = min + ((max - min) * k) / 3; return <g key={k}><line x1={L} x2={W - R} y1={y(v)} y2={y(v)} stroke="#f0f2f4" strokeDasharray={k ? '3 4' : undefined} /><text x={L - 8} y={y(v) + 4} textAnchor="end">{num(v)}</text></g>; })}
+      {ticks.map((v, k) => { return <g key={k}><line x1={L} x2={W - R} y1={y(v)} y2={y(v)} stroke="#f0f2f4" strokeDasharray={k ? '3 4' : undefined} /><text x={L - 8} y={y(v) + 4} textAnchor="end">{num(v)}</text></g>; })}
       {split !== undefined && split > 0 && split < months.length && <><rect x={x(split - 1)} y={T} width={W - R - x(split - 1)} height={H - T - B} rx="6" fill="#f7f8fa" /><text x={x(split - 1) + 8} y={T + 14} style={{ fontWeight: 500 }}>예측</text></>}
       {bandPoints && <polygon points={bandPoints} fill={band!.color} fillOpacity="0.12" />}
       {series.filter((s) => s.area).map((s, i) => <path key={s.name} d={areaPath(s.values)} fill={`url(#${gid}a${i})`} />)}
       {series.map((s) => <g key={s.name}><polyline points={path(s.values)} fill="none" stroke={s.color} strokeWidth="2" strokeDasharray={s.dash ? '6 5' : undefined} strokeLinejoin="round" strokeLinecap="round" />
         {s.dots && s.values.map((v, i) => v !== null && <circle key={i} cx={x(i)} cy={y(v)} r="4" fill="#fff" stroke={s.color} strokeWidth="2.5" />)}</g>)}
-      {months.map((m, i) => (i % every === 0 || i === months.length - 1) && <text key={m} x={x(i)} y={H - 6} textAnchor="middle">{axisMonth(m, i === 0)}</text>)}
+      {months.map((m, i) => ((i % every === 0 && months.length - 1 - i >= every / 2) || i === months.length - 1) && <text key={m} x={x(i)} y={H - 6} textAnchor={i === months.length - 1 ? 'end' : 'middle'}>{axisMonth(m, i === 0)}</text>)}
       {hover !== null && <line x1={x(hover)} x2={x(hover)} y1={T} y2={H - B} stroke="#23282f" strokeOpacity="0.3" strokeDasharray="3 3" />}
       {hover !== null && series.map((s) => s.values[hover] !== null && <circle key={s.name} cx={x(hover)} cy={y(s.values[hover]!)} r="5" fill={s.color} stroke="#fff" strokeWidth="2.5" />)}
     </svg>
@@ -63,96 +68,10 @@ export function LineChart({ months, series, band, split, height = 240, unit = ''
 }
 export const Legend = ({ items }: { items: Array<[string, string, boolean?]> }) => <div className="legend">{items.map(([name, color, dash]) => <span key={name}><i style={{ background: dash ? 'transparent' : color, border: dash ? `2px dashed ${color}` : undefined }} />{name}</span>)}</div>;
 
-// 달마다 여러 값을 나란히 세운 막대 (예: 예상 수요와 세 안의 생산량). 막대는 0에서 시작한다.
-export function GroupBars({ months, groups, height = 230, unit = '' }: { months: string[]; groups: Array<{ name: string; color: string; values: number[] }>; height?: number; unit?: string }) {
-  const [hover, setHover] = useState<number | null>(null);
-  const box = useRef<HTMLDivElement>(null);
-  const W = useWidth(box, 520);
-  const H = height, L = 46, R = 8, T = 20, B = 24;
-  const all = groups.flatMap((g) => g.values);
-  if (!months.length || !all.some((v) => v > 0)) return <div className="empty" ref={box}>그릴 자료가 없습니다.</div>;
-  const max = Math.max(...all) * 1.12;
-  const band = (W - L - R) / months.length;
-  const bw = Math.min(46, (band * 0.72) / groups.length), gap = 3;
-  const y = (v: number) => T + (1 - v / max) * (H - T - B);
-  const start = (i: number) => L + band * i + (band - (bw * groups.length + gap * (groups.length - 1))) / 2;
-  const compact = (v: number) => (v >= 10000 ? `${num(v / 1000, 1)}천` : num(v));
-  return <div className="chart" ref={box} onMouseLeave={() => setHover(null)}>
-    <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: H, display: 'block' }} role="img" aria-label={`${groups.map((g) => g.name).join(', ')}을 달마다 견준 막대 그래프`}>
-      {[0, 0.5, 1].map((k) => <g key={k}><line x1={L} x2={W - R} y1={y((max / 1.12) * k)} y2={y((max / 1.12) * k)} stroke="#f0f2f4" strokeDasharray={k ? '3 4' : undefined} /><text x={L - 8} y={y((max / 1.12) * k) + 4} textAnchor="end">{compact((max / 1.12) * k)}</text></g>)}
-      {months.map((m, i) => <g key={m} onMouseEnter={() => setHover(i)}>
-        <rect x={L + band * i} y={T - 8} width={band} height={H - T - B + 8} fill={hover === i ? '#f7f8fa' : 'transparent'} rx="8" />
-        {groups.map((g, k) => { const v = g.values[i] ?? 0; const bx = start(i) + k * (bw + gap);
-          return <g key={g.name}><rect x={bx} y={y(v)} width={bw} height={Math.max(0, H - B - y(v))} rx={Math.min(5, bw / 3)} fill={g.color} style={{ animationDelay: `${(i * groups.length + k) * 40}ms` }} />
-            {bw >= 30 && <text x={bx + bw / 2} y={y(v) - 5} textAnchor="middle" style={{ fontSize: 10, fontWeight: 700, fill: '#4e5968' }}>{compact(v)}</text>}</g>; })}
-        <text x={L + band * (i + 0.5)} y={H - 6} textAnchor="middle" style={{ fontWeight: 700 }}>{monthLabel(m)}</text></g>)}
-    </svg>
-    {hover !== null && <div className="tip" style={{ left: `${((L + band * (hover + 0.5)) / W) * 100}%`, top: `${(T / H) * 100}%` }}><b>{monthLabel(months[hover])}</b>
-      {groups.map((g) => <div key={g.name}><i style={{ background: g.color }} />{g.name} {num(g.values[hover])}{unit}</div>)}</div>}
-  </div>;
-}
-
-// 링 게이지: 한도나 목표에 견준 비율 하나를 크게 보여 준다.
-export function Ring({ value, label, sub, center, size = 92, stroke = 10, tone, dark }: { value: number | null; label?: ReactNode; sub?: ReactNode; center?: string; size?: number; stroke?: number; tone?: 'ok' | 'warn' | 'bad'; dark?: boolean }) {
-  const [on, setOn] = useState(false);
-  useEffect(() => { const t = requestAnimationFrame(() => setOn(true)); return () => cancelAnimationFrame(t); }, []);
-  const r = (size - stroke) / 2, len = 2 * Math.PI * r;
-  const shown = value === null ? 0 : Math.max(0, Math.min(100, value));
-  const color = tone === 'bad' ? (dark ? '#ff8d82' : C.bad) : tone === 'warn' ? (dark ? '#ffc766' : C.warn) : dark ? '#7cf0cf' : C.teal;
-  const text = center ?? (value === null ? '-' : `${num(value, 0)}%`);
-  return <div className="ring" role="img" aria-label={`${typeof label === 'string' ? label : ''} ${text}`}>
-    <svg width={size} height={size} viewBox={`0 0 ${size} ${size}`}>
-      <circle cx={size / 2} cy={size / 2} r={r} fill="none" stroke={dark ? 'rgba(255,255,255,0.16)' : '#ebf1f0'} strokeWidth={stroke} />
-      <circle className="arc" cx={size / 2} cy={size / 2} r={r} fill="none" stroke={color} strokeWidth={stroke} strokeLinecap="round" strokeDasharray={len} strokeDashoffset={on ? len * (1 - shown / 100) : len} transform={`rotate(-90 ${size / 2} ${size / 2})`} />
-      <text x="50%" y="50%" textAnchor="middle" dominantBaseline="central" style={{ fontSize: size * (text.length > 4 ? 0.2 : 0.25) }}>{text}</text>
-    </svg>
-    {label && <span className="lab">{label}</span>}{sub && <span className="sub">{sub}</span>}
-  </div>;
-}
-
-// 작은 추세선: 숫자 옆에 "어떻게 움직여 왔는지"를 곁들인다.
-export function Spark({ values, color = C.forecast, width = 96, height = 40 }: { values: number[]; color?: string; width?: number; height?: number }) {
-  const gid = useId().replace(/:/g, '');
-  if (values.length < 2) return null;
-  const max = Math.max(...values), min = Math.min(...values), pad = 4;
-  const x = (i: number) => pad + (i / (values.length - 1)) * (width - pad * 2);
-  const y = (v: number) => pad + (1 - (v - min) / (max - min || 1)) * (height - pad * 2);
-  const line = values.map((v, i) => `${x(i)},${y(v)}`).join(' ');
-  return <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden="true">
-    <defs><linearGradient id={gid} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={color} stopOpacity="0.28" /><stop offset="1" stopColor={color} stopOpacity="0" /></linearGradient></defs>
-    <path d={`M${x(0)},${height} L${line.replace(/ /g, ' L')} L${x(values.length - 1)},${height} Z`} fill={`url(#${gid})`} />
-    <polyline points={line} fill="none" stroke={color} strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
-    <circle cx={x(values.length - 1)} cy={y(values[values.length - 1])} r="3.2" fill="#fff" stroke={color} strokeWidth="2" />
-  </svg>;
-}
-// 작은 세로 막대 묶음 (달별 값 서너 개)
-export function MiniBars({ values, color = C.plan, width = 84, height = 40 }: { values: number[]; color?: string; width?: number; height?: number }) {
-  if (!values.length) return null;
-  const max = Math.max(...values, 1), bw = Math.min(18, (width - (values.length - 1) * 5) / values.length);
-  const total = bw * values.length + 5 * (values.length - 1);
-  return <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden="true" className="chart">
-    {values.map((v, i) => { const h = Math.max(3, (v / max) * (height - 4)); return <rect key={i} x={width - total + i * (bw + 5)} y={height - h} width={bw} height={h} rx="4" fill={color} fillOpacity={i === values.length - 1 ? 1 : 0.55} />; })}
-  </svg>;
-}
-// 몇 개 중 몇 개 (점으로)
-export function Dots({ total, on, color = C.teal }: { total: number; on: number; color?: string }) {
-  return <svg width={total * 20} height={40} viewBox={`0 0 ${total * 20} 40`} aria-hidden="true">{Array.from({ length: total }, (_, i) => <circle key={i} cx={10 + i * 20} cy={20} r="7" fill={i < on ? color : '#dbe5e3'} />)}</svg>;
-}
-
-// 가로 막대: 목표(검은 눈금)에 견줘 얼마나 채웠는지. 줄마다 자기 목표에 맞춘다.
-export function TargetBars({ rows, narrow }: { rows: Array<{ key: string; label: ReactNode; value: number; target: number; unit?: string }>; narrow?: boolean }) {
-  if (!rows.length) return <div className="empty">그릴 자료가 없습니다.</div>;
-  const SCALE = 1.12;        // 목표의 112%까지 그린다. 눈금은 100% 자리에 선다.
-  return <div className={`hbars${narrow ? ' narrow' : ''}`}>{rows.map((r, i) => { const ratio = r.target > 0 ? r.value / r.target : null;
-    return <div className="row" key={r.key}><div style={{ minWidth: 0 }}>{r.label}</div>
-      <div className="track" title={`목표 ${num(r.target)}${r.unit ?? ''}`}><i className={ratio === null || ratio >= 0.995 ? '' : ratio >= 0.9 ? 'short' : 'bad'} style={{ width: `${Math.min(100, ((ratio ?? 0) / SCALE) * 100)}%`, animationDelay: `${i * 40}ms` }} />{ratio !== null && <u style={{ left: `${100 / SCALE}%` }} />}</div>
-      <div className="val num">{ratio === null ? '-' : `${num(ratio * 100, 0)}%`} <small>{num(r.value)} / {num(r.target)}</small></div></div>; })}</div>;
-}
-
-// 사용률에 따른 색 단계: 여유 → 보통 → 높음 → 빠듯 → 초과
-export const heatLevel = (pct: number | null) => (pct === null ? 'na' : pct > 100 ? 'l4' : pct >= 90 ? 'l3' : pct >= 70 ? 'l2' : pct >= 40 ? 'l1' : '');
+// 사용률에 따른 색 단계: 여유 있음 → 빠듯(90% 이상) → 한도 도달·초과(99.5% 이상)
+export const heatLevel = (pct: number | null) => (pct === null ? 'na' : pct >= 99.5 ? 'l4' : pct >= 90 ? 'l3' : '');
 export function HeatLegend() {
-  return <div className="legend"><span><i style={{ background: 'var(--h0)' }} />40% 미만</span><span><i style={{ background: 'var(--h1)' }} />40~70%</span><span><i style={{ background: 'var(--h2)' }} />70~90%</span><span><i style={{ background: 'var(--h3)' }} />90~100% 빠듯</span><span><i style={{ background: 'var(--h4)' }} />100% 초과</span></div>;
+  return <div className="legend"><span><i style={{ background: 'var(--h2)' }} />90% 미만</span><span><i style={{ background: 'var(--h3)' }} />90~100% 빠듯</span><span><i style={{ background: 'var(--h4)' }} />한도 도달·초과</span></div>;
 }
 // 설비·인력(행) × 달(열) 부하 지도. 막히는 칸이 색으로 바로 보인다.
 export function LoadMap({ months, rows, names, selected, onPick, compact }: {
@@ -160,17 +79,16 @@ export function LoadMap({ months, rows, names, selected, onPick, compact }: {
   selected?: { id: string; kind: string; month: string } | null; onPick?: (pick: { id: string; kind: string; month: string }) => void; compact?: boolean;
 }) {
   if (!rows.length) return <div className="empty">설비·인력 부하 자료가 없습니다.</div>;
-  return <div className="heat" role="table" aria-label="설비와 인력의 달별 사용률" style={{ gridTemplateColumns: `minmax(120px, ${compact ? '1.2fr' : '1.6fr'}) repeat(${months.length}, minmax(64px, 1fr))` }}>
-    <div className="hd" style={{ textAlign: 'left' }}>설비·인력</div>{months.map((m) => <div className="hd" key={m}>{monthLabel(m)}</div>)}
+  return <div className="heat" role="table" aria-label="설비와 인력의 달별 사용률" style={{ '--n': months.length } as CSSProperties}>
+    <div className="hd">설비·인력</div>{months.map((m) => <div className="hd" key={m}><span className="wide">{monthLabel(m)}</span><span className="tiny">{shortMonth(m)}</span></div>)}
     {rows.map((row) => { const key = `${row.id}|${row.kind}`;
       return [<div className="rl" key={key} title={`${names[row.id] ?? row.id} (${row.id})`}><b>{names[row.id] ?? row.id}</b><span className="code">{row.id}{row.kind === 'WORK_HOURS' ? ' · 인력' : ' · 설비'}</span></div>,
         ...months.map((m) => { const cell = row.cells[m];
           const body: ReactNode = !cell ? '-' : cell.pct === null ? <>자료 없음</> : <>{num(cell.pct, 0)}%{!compact && <small>{num(cell.used, 0)} / {num(cell.limit, 0)}{cell.unit}</small>}</>;
-          const fill = cell && cell.pct !== null ? <u><b style={{ width: `${Math.min(100, cell.pct)}%` }} /></u> : null;
           const cls = `cl ${cell ? heatLevel(cell.pct) : 'na'}${selected && selected.id === row.id && selected.kind === row.kind && selected.month === m ? ' sel' : ''}`;
           const label = `${names[row.id] ?? row.id} ${monthLabel(m)} ${cell?.pct == null ? '자료 없음' : `사용률 ${num(cell.pct, 0)}%`}`;
-          return onPick && cell ? <button type="button" key={`${key}-${m}`} className={cls} aria-label={label} onClick={() => onPick({ id: row.id, kind: row.kind, month: m })}><span>{body}</span>{fill}</button>
-            : <div key={`${key}-${m}`} className={cls} aria-label={label}><span>{body}</span>{fill}</div>; })]; })}
+          return onPick && cell ? <button type="button" key={`${key}-${m}`} className={cls} aria-label={label} onClick={() => onPick({ id: row.id, kind: row.kind, month: m })}><span>{body}</span></button>
+            : <div key={`${key}-${m}`} className={cls} aria-label={label}><span>{body}</span></div>; })]; })}
   </div>;
 }
 
@@ -180,8 +98,8 @@ export function ShortMap({ months, list, names }: { months: string[]; list: Arra
   const worst = (id: string) => Math.max(...list.filter((m) => m.material_id === id).map((m) => m.shortage / (m.required || 1)));
   ids.sort((a, b) => worst(b) - worst(a));
   const level = (ratio: number) => (ratio >= 0.7 ? 's4' : ratio >= 0.35 ? 's3' : ratio >= 0.1 ? 's2' : 's1');
-  return <div className="shortmap" role="table" aria-label="자재별 달별 부족량" style={{ gridTemplateColumns: `minmax(130px, 1.6fr) repeat(${months.length}, minmax(70px, 1fr))` }}>
-    <div className="hd" style={{ textAlign: 'left' }}>자재</div>{months.map((m) => <div className="hd" key={m}>{monthLabel(m)}</div>)}
+  return <div className="shortmap" role="table" aria-label="자재별 달별 부족량" style={{ '--n': months.length } as CSSProperties}>
+    <div className="hd">자재</div>{months.map((m) => <div className="hd" key={m}><span className="wide">{monthLabel(m)}</span><span className="tiny">{shortMonth(m)}</span></div>)}
     {ids.map((id) => [<div className="name" key={id} style={{ justifyContent: 'center' }} title={`${names[id] ?? id} (${id})`}><b>{names[id] ?? id}</b><span className="code">{id}</span></div>,
       ...months.map((m) => { const hit = list.find((x) => x.material_id === id && x.period === m);
         if (!hit) return <div className="cl" key={`${id}-${m}`} aria-label={`${names[id] ?? id} ${monthLabel(m)} 부족 없음`}>·</div>;
@@ -190,5 +108,5 @@ export function ShortMap({ months, list, names }: { months: string[]; list: Arra
   </div>;
 }
 export function ShortLegend() {
-  return <div className="legend"><span><i style={{ background: 'var(--h0)' }} />부족 없음</span><span><i style={{ background: '#fdf1dc' }} />10% 미만</span><span><i style={{ background: '#fbdcc0' }} />10~35%</span><span><i style={{ background: '#f7c1ba' }} />35~70%</span><span><i style={{ background: '#ee9a90' }} />70% 이상</span></div>;
+  return <div className="legend"><span><i style={{ background: 'var(--h0)' }} />부족 없음</span><span><i style={{ background: '#fff3d6' }} />10% 미만</span><span><i style={{ background: '#ffe3c2' }} />10~35%</span><span><i style={{ background: '#ffd0d4' }} />35~70%</span><span><i style={{ background: '#ffb3ba' }} />70% 이상</span></div>;
 }

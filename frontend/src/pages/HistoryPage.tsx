@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { BatchSt, Empty, ENTITY_NAME, failure, forecastLabel, go, Kpi, monthLabel, Notice, St, Tag, when } from '../app/core';
+import { BatchSt, Empty, ENTITY_NAME, failure, forecastLabel, go, monthLabel, Notice, St, Tag, when } from '../app/core';
 import { Overview } from '../app/data';
 import { apiClient } from '../services/api';
 import { BatchSummary } from '../types/api';
@@ -24,7 +24,6 @@ export default function HistoryPage({ overview, kind, onReload }: { overview: Ov
     ...overview.plans.map((p) => ({ kind: 'plan' as const, at: p.created_at, key: p.execution_id, title: `${monthLabel(p.target_month)}부터의 생산계획${p.scenario_type === 'WHAT_IF' ? ' (조건 변경)' : ''}`, sub: `${monthLabel(p.as_of_date.slice(0, 7))} 말 기준 · ${DECISION[p.decision_status] ?? p.decision_status}`, plan: p })),
   ].sort((a, b) => (a.at < b.at ? 1 : -1)), [overview]);
   const shown = rows.filter((r) => (filter === 'all' || r.kind === filter) && (!query.trim() || `${r.title} ${r.sub}`.toLowerCase().includes(query.trim().toLowerCase())));
-  const messy = overview.batches.filter((b) => b.status === 'MAPPING_HOLD' || b.status === 'HAS_ERRORS');
 
   async function reject() {
     if (!rejecting) return;
@@ -35,12 +34,6 @@ export default function HistoryPage({ overview, kind, onReload }: { overview: Ov
   }
 
   return <>
-    <section className="kpis" aria-label="기록 요약">
-      <Kpi label="올린 자료" value={`${overview.batches.length}`} unit="건" note={`승인 ${overview.batches.filter((b) => b.status === 'APPROVED').length} · 반려 ${overview.batches.filter((b) => b.status === 'REJECTED').length}`} />
-      <Kpi label="정리할 자료" value={`${messy.length}`} unit="건" note={messy[0] ? `${messy[0].file.name}` : '없음'} tone={messy.length ? 'warn' : 'ok'} />
-      <Kpi label="예측 실행" value={`${overview.forecasts.length}`} unit="건" note={overview.forecasts[0] ? `마지막: ${when(overview.forecasts[0].created_at)}` : '없음'} />
-      <Kpi label="저장된 계획" value={`${overview.plans.length}`} unit="건" note={overview.plans[0] ? `마지막: ${when(overview.plans[0].created_at)}` : '없음'} />
-    </section>
     {message && <Notice tone={message.tone}>{message.text}</Notice>}
     {overview.problems.map((p) => <Notice key={p} tone="warn">{p}</Notice>)}
     {rejecting && <section className="panel"><header><div><h2>자료 반려</h2><p>{rejecting.file.name} ({ENTITY_NAME[rejecting.entity]})을 반려합니다. 반려한 자료는 예측과 계획에 쓰이지 않습니다.</p></div></header>
@@ -55,7 +48,7 @@ export default function HistoryPage({ overview, kind, onReload }: { overview: Ov
         <div className="tablewrap"><table className="tbl"><thead><tr><th>언제</th><th>종류</th><th>내용</th><th>상태</th><th>할 수 있는 일</th></tr></thead>
           <tbody>{shown.map((r) => <tr key={`${r.kind}-${r.key}`}>
             <td className="small muted nw">{when(r.at)}</td>
-            <td><Tag tone={r.kind === 'batch' ? 'muted' : r.kind === 'forecast' ? 'info' : 'ok'}>{r.kind === 'batch' ? '자료' : r.kind === 'forecast' ? '예측' : '계획'}</Tag></td>
+            <td><Tag>{r.kind === 'batch' ? '자료' : r.kind === 'forecast' ? '예측' : '계획'}</Tag></td>
             <td><span className="name"><b>{r.title}</b><span className="code">{r.sub}</span></span></td>
             <td className="nw">{'batch' in r ? <BatchSt status={r.batch.status} /> : 'forecast' in r ? <St tone={r.forecast.status === 'OK' ? 'ok' : r.forecast.status === 'PARTIAL' ? 'warn' : 'bad'}>{r.forecast.status === 'OK' ? '완료' : r.forecast.status}</St> : <St tone={r.plan.status === 'COMPLETED' ? 'ok' : 'warn'}>{r.plan.status === 'COMPLETED' ? '저장됨' : r.plan.status}</St>}</td>
             <td><div className="actions">

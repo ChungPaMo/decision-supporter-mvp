@@ -1,12 +1,15 @@
+/* 글꼴은 저장소에 넣어 둔 파일을 쓴다 (인터넷이 없어도 같은 모습). 출처와 라이선스는 public/fonts/CREDITS.md */
+@font-face { font-family: "Pretendard Variable"; font-weight: 45 920; font-style: normal; font-display: swap; src: url("/fonts/PretendardVariable.woff2") format("woff2-variations") }
+
 /* 충파모 화면 테마.
    익숙하고 세련된 제품 화면: 흰 작업면, 한 단계 낮은 회색 메뉴, 강조색 하나(파랑)는 누를 것과 고른 것에만.
    빨강·주황은 막힌 곳과 빠듯한 곳에만 쓴다. 그림자와 테두리 장식은 쓰지 않는다. */
 :root {
-  --ink: #191f28; --ink-2: #333d4b; --text: #4e5968; --muted: #6b7684; --faint: #8b95a1;
+  --ink: #191f28; --ink-2: #333d4b; --text: #4e5968; --muted: #56616e; --faint: #6b7684;
   --line: #e5e8eb; --line-2: #f0f2f4; --wash: #f7f8fa; --bg: #ffffff; --side-bg: #f7f8fa;
-  --accent: #3182f6; --accent-press: #1b64da; --accent-wash: #e8f3ff; --accent-ink: #1957c2;
-  --ok: #0a8f5c; --ok-wash: #e6f6ee; --warn: #b86e00; --warn-wash: #fff3d6; --warn-mark: #f5a524; --bad: #d92d3a; --bad-wash: #ffecee;
-  --h0: #f4f5f7; --h1: #eceef1; --h2: #e1e4e9; --h3: #ffe9b8; --h4: #ffd0d4;
+  --accent: #2563eb; --accent-press: #1d4ed8; --accent-wash: #eaf2ff; --accent-ink: #1d4ed8;
+  --ok: #087a4e; --ok-wash: #e6f6ee; --warn: #9a5b00; --warn-wash: #fff3d6; --warn-mark: #f5a524; --bad: #c41f2c; --bad-wash: #ffecee;
+  --h0: #f4f5f7; --h1: #f4f5f7; --h2: #f4f5f7; --h3: #ffedc2; --h4: #ffd6da;
   --r-sm: 6px; --r: 10px; --r-lg: 14px;
   --side: 232px; --side-rail: 64px; --top: 60px;
   --s1: 4px; --s2: 8px; --s3: 12px; --s4: 16px; --s5: 24px; --s6: 32px; --s7: 48px;
@@ -51,7 +54,7 @@ svg.ic { width: 1.15em; height: 1.15em; display: block; flex: none }
 .health:hover { background: #eceef1 }
 .health i { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); flex: none }
 .health.warn i { background: var(--warn-mark) } .health.bad i { background: var(--bad) }
-.health small { display: block; color: var(--faint); font-size: 0.73rem }
+.health small { display: block; color: var(--muted); font-size: 0.73rem }
 .shell.collapsed .brand { padding: 0; justify-content: center }
 .shell.collapsed .brand div, .shell.collapsed .navitem span, .shell.collapsed .health span { display: none }
 .shell.collapsed .navitem { justify-content: center; padding: 0; position: relative } .shell.collapsed .navitem .dot { position: absolute; top: 8px; right: 14px; margin: 0 }
@@ -62,12 +65,14 @@ svg.ic { width: 1.15em; height: 1.15em; display: block; flex: none }
 .topbar .right { margin-left: auto; display: flex; align-items: center; gap: 6px }
 .iconbtn { display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; color: var(--muted); transition: background 0.15s, color 0.15s }
 .iconbtn:hover { background: var(--line-2); color: var(--ink) }
+.select, .field select { -webkit-appearance: none; appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%235d6875' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E") !important; background-repeat: no-repeat !important; background-position: right 10px center !important; padding-right: 30px !important }
 .select { height: 32px; border: 1px solid var(--line); border-radius: 8px; padding: 0 8px; background: #fff; max-width: 100%; font-size: 0.87rem; color: var(--ink-2) }
 .select:hover { border-color: #cfd4da }
 /* 진행 단계: 자료 → 예측 → 계획 */
 .flow { display: flex; align-items: center; gap: 2px; margin-left: var(--s4) }
 .flow button { display: flex; align-items: center; gap: 6px; height: 30px; padding: 0 9px; border-radius: 8px; font-size: 0.8rem; color: var(--muted); white-space: nowrap; transition: background 0.15s }
 .flow button:hover { background: var(--line-2) }
+.flow button b svg.ic { width: 11px; height: 11px; stroke-width: 3 }
 .flow button b { display: grid; place-items: center; width: 16px; height: 16px; border-radius: 50%; font-size: 0.66rem; background: var(--line); color: var(--muted); font-weight: 700 }
 .flow button.done b { background: var(--ok-wash); color: var(--ok) } .flow button.now b { background: var(--ink); color: #fff }
 .flow button strong { font-weight: 600; color: var(--ink-2) }
@@ -118,7 +123,6 @@ main.page { padding: var(--s6) var(--s6) 72px; display: flex; flex-direction: co
 .kpi > strong small { font-size: 0.87rem; font-weight: 500; color: var(--muted); letter-spacing: 0 }
 .kpi > em { font-style: normal; font-size: 0.87rem; color: var(--muted) }
 .kpi > em.ok { color: var(--ok) } .kpi > em.warn { color: var(--warn) } .kpi > em.bad { color: var(--bad) }
-.kpi > .viz { display: none }
 
 /* ── 상태: 색 점과 글자 ── */
 .st { display: inline-flex; align-items: center; gap: 6px; font-size: 0.87rem; font-weight: 500; white-space: nowrap; color: var(--text) }
@@ -140,6 +144,9 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 0.93rem }
 .tbl tbody tr.selected { background: var(--accent-wash) } .tbl tbody tr.selected td { color: var(--ink) }
 .tbl tfoot td { font-weight: 650; color: var(--ink); border-top: 1px solid var(--line); border-bottom: 0 }
 .tbl b { font-weight: 600; color: var(--ink) }
+.tbl b.delta-up { color: var(--bad) } .tbl b.delta-down { color: var(--ok) } .tbl td.same, .tbl td.same b { color: var(--faint); font-weight: 400 }
+.tbl.tight { font-size: 0.87rem } .tbl.tight th, .tbl.tight td { padding: 8px 6px; white-space: nowrap; height: 40px } .tbl.tight th:last-child, .tbl.tight td:last-child { padding-right: var(--s4) } .tbl.tight th:first-child, .tbl.tight td:first-child { padding-left: var(--s4) }
+.tbl.fit td:first-child, .tbl.fit th:first-child { width: 100%; max-width: 0 }
 .name { display: flex; flex-direction: column; line-height: 1.3; min-width: 0 } .name b { font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
 .cellbar { position: relative; display: block; height: 4px; border-radius: 2px; background: var(--line-2); margin-top: 4px; overflow: hidden }
 .cellbar i { position: absolute; inset: 0 auto 0 0; border-radius: 2px; background: #b0b8c1 }
@@ -158,17 +165,16 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 0.93rem }
 .empty { padding: var(--s6) var(--s5); text-align: center; color: var(--muted); font-size: 0.93rem; display: grid; gap: var(--s3); justify-items: center }
 
 /* ── 설비·인력 부하 지도 ── */
-.heat { display: grid; gap: 2px; font-size: 0.93rem; align-items: stretch }
+.heat { grid-template-columns: minmax(120px, 1.6fr) repeat(var(--n, 3), minmax(64px, 1fr)); display: grid; gap: 2px; font-size: 0.93rem; align-items: stretch }
+.hd .tiny { display: none }
 .heat .hd { font-size: 0.83rem; color: var(--muted); font-weight: 500; text-align: left; padding: 0 var(--s3) 8px }
 .heat .rl { display: flex; flex-direction: column; justify-content: center; line-height: 1.3; padding-right: var(--s3); min-width: 0 }
 .heat .rl b { font-weight: 600; color: var(--ink); overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
 .heat .cl { display: flex; align-items: center; min-height: 48px; padding: 0 var(--s3); border-radius: var(--r-sm); font-weight: 650; color: var(--ink-2); font-variant-numeric: tabular-nums; background: var(--h0); border: 0; position: relative; text-align: left; transition: box-shadow 0.15s }
 .heat .cl > span { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap }
-.heat .cl > u { display: none }
 .heat .cl small { font-weight: 400; font-size: 0.8rem; color: var(--muted) }
-.heat .cl.l1 { background: var(--h1) } .heat .cl.l2 { background: var(--h2) }
-.heat .cl.l3 { background: var(--h3); color: #6b4200 } .heat .cl.l3 small { color: #8a5a0a }
-.heat .cl.l4 { background: var(--h4); color: #a8222d } .heat .cl.l4 small { color: #b5404a }
+.heat .cl.l3 { background: var(--h3); color: #6b4200 } .heat .cl.l3 small { color: #7a4c00 }
+.heat .cl.l4 { background: var(--h4); color: #a8222d } .heat .cl.l4 small { color: #9b1c27 }
 .heat .cl.na { background: transparent; box-shadow: inset 0 0 0 1px var(--line); color: var(--faint); font-weight: 400 }
 .heat button.cl:hover { box-shadow: inset 0 0 0 1.5px var(--faint) } .heat .cl.sel { box-shadow: inset 0 0 0 2px var(--ink) }
 .legend { display: flex; gap: var(--s4); flex-wrap: wrap; align-items: center; font-size: 0.83rem; color: var(--muted) }
@@ -188,11 +194,10 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 0.93rem }
 .fact b { font-weight: 500; color: var(--text) } .fact.bad b { color: var(--bad); font-weight: 600 } .fact.warn b { color: var(--warn); font-weight: 600 }
 /* 홈의 세 안 목록 */
 .rows { display: grid }
-.rows > * { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px var(--s3); align-items: center; padding: var(--s4) 0; border-top: 1px solid var(--line-2); text-align: left; width: 100% }
-.rows > *:first-child { border-top: 0; padding-top: var(--s1) }
+.rows { gap: 4px } .rows > * { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 2px var(--s3); align-items: center; padding: var(--s3) var(--s4); border-radius: var(--r); text-align: left; width: 100%; transition: background 0.15s }
+.rows > button:hover { background: var(--wash) } .rows > [aria-pressed="true"] { background: var(--accent-wash) }
 .rows b { font-weight: 650; color: var(--ink) } .rows strong { font-size: 1.33rem; font-weight: 700; letter-spacing: -0.03em; color: var(--ink); font-variant-numeric: tabular-nums }
 .rows small { grid-column: 1 / -1; font-size: 0.87rem; color: var(--muted) }
-.rows button:hover b { color: var(--accent-ink) }
 
 /* ── 입력 ── */
 .tabs { display: inline-flex; gap: 2px; background: var(--line-2); border-radius: 9px; padding: 3px; flex-wrap: wrap }
@@ -202,13 +207,14 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 0.93rem }
 .chips { display: flex; gap: 6px; flex-wrap: wrap; align-items: center }
 .chip { box-shadow: inset 0 0 0 1px var(--line); background: #fff; border-radius: 999px; padding: 0 12px; height: 32px; font-size: 0.87rem; font-weight: 500; color: var(--text); white-space: nowrap; transition: box-shadow 0.15s, background 0.15s, color 0.15s }
 button.chip:hover { box-shadow: inset 0 0 0 1px #c9ced6; color: var(--ink) }
-.chip[aria-pressed="true"] { background: var(--ink); box-shadow: none; color: #fff; font-weight: 600 }
+.chip[aria-pressed="true"] { background: var(--accent-wash); box-shadow: inset 0 0 0 1.5px var(--accent); color: var(--accent-ink); font-weight: 600 }
+.chip svg.ic { width: 12px; height: 12px; display: inline-block; vertical-align: -1px; margin-left: 4px }
 .chip.static { cursor: default; display: inline-flex; align-items: center; height: 28px; background: var(--wash); box-shadow: none }
 .field { display: grid; gap: 6px; font-size: 0.87rem; font-weight: 500; color: var(--text); min-width: 0 }
 .field input, .field select { width: 100%; min-width: 0; height: 40px; border: 1px solid var(--line); border-radius: 8px; padding: 0 12px; background: #fff; color: var(--ink); font-size: 0.93rem; font-weight: 400; transition: border-color 0.15s, box-shadow 0.15s }
 .field input::placeholder { color: var(--faint) }
 .field input:hover, .field select:hover { border-color: #c9ced6 }
-.field input:focus, .field select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.16); outline: none }
+.field input:focus, .field select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18); outline: none }
 .field input[aria-invalid="true"] { border-color: var(--bad) }
 .formrow { display: flex; gap: var(--s3); flex-wrap: wrap; align-items: end }
 .formrow .field { flex: 1 1 140px }
@@ -236,7 +242,7 @@ input[type=range]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 
 /* ── 그래프 ── */
 .chart { position: relative }
 .chart svg { display: block; width: 100%; height: auto; overflow: visible }
-.chart text { font-size: 12px; fill: var(--faint); font-family: inherit }
+.chart text { font-size: 12px; fill: var(--muted); font-family: inherit }
 .chart .tip { position: absolute; pointer-events: none; background: var(--ink); color: #fff; border-radius: 8px; padding: 8px 11px; font-size: 0.83rem; line-height: 1.55; white-space: nowrap; transform: translate(-50%, -100%); margin-top: -10px; z-index: 4; box-shadow: 0 8px 24px rgba(25, 31, 40, 0.18) }
 .chart .tip b { display: block; font-weight: 600 }
 .chart .tip i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 6px }
@@ -255,10 +261,10 @@ input[type=range]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 
 .hbars .val small { font-weight: 400; color: var(--muted) }
 
 /* 자재 부족 지도 */
-.shortmap { display: grid; gap: 2px; font-size: 0.87rem; align-items: stretch }
+.shortmap { grid-template-columns: minmax(130px, 1.6fr) repeat(var(--n, 3), minmax(70px, 1fr)); display: grid; gap: 2px; font-size: 0.87rem; align-items: stretch }
 .shortmap .hd { font-size: 0.83rem; color: var(--muted); font-weight: 500; padding: 0 var(--s3) 8px }
-.shortmap .cl { display: flex; align-items: center; min-height: 44px; padding: 0 var(--s3); border-radius: var(--r-sm); background: var(--h0); color: var(--faint); font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.2 }
-.shortmap .cl > span { display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap }
+.shortmap .cl { display: flex; align-items: center; min-height: 52px; padding: 0 var(--s3); border-radius: var(--r-sm); background: var(--h0); color: var(--faint); font-weight: 600; font-variant-numeric: tabular-nums; line-height: 1.2 }
+.shortmap .cl > span { display: grid; gap: 1px }
 .shortmap .cl small { font-size: 0.8rem; font-weight: 400 }
 .shortmap .cl.s1 { background: #fff3d6; color: #6b4200 } .shortmap .cl.s2 { background: #ffe3c2; color: #7a3c00 } .shortmap .cl.s3 { background: #ffd0d4; color: #a8222d } .shortmap .cl.s4 { background: #ffb3ba; color: #8e1622 }
 
@@ -276,7 +282,15 @@ input[type=range]::-moz-range-thumb { width: 18px; height: 18px; border-radius: 
 .steps button span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap }
 .steps button.done i { background: var(--ok) } .steps button.wait i { background: var(--warn-mark) } .steps button.stuck i { background: var(--bad) } .steps button.on span { color: var(--ink); font-weight: 650 }
 
+/* ── 펄프 사진: 글자가 놓이지 않는 자리에만 옅게 깐다 ──
+   사이드바는 메뉴와 상태 표시 사이의 빈 곳, 작업면은 내용이 끝난 뒤의 띠. 사진 출처는 public/img/CREDITS.md */
+.sidebar::before { content: ""; position: absolute; left: 0; right: 0; bottom: 60px; height: min(52%, calc(100% - 340px)); background: url("/img/sidebar.jpg") center bottom / cover no-repeat, url("/img/pulp.jpg") center / cover no-repeat; opacity: 0.9; -webkit-mask-image: linear-gradient(to top, #000 0%, #000 45%, transparent 100%); mask-image: linear-gradient(to top, #000 0%, #000 45%, transparent 100%); pointer-events: none; z-index: 0 }
+.sidebar > * { position: relative; z-index: 1 }
+main.page::after { content: ""; display: block; height: 220px; margin: var(--s6) calc(var(--s6) * -1) -72px; background: url("/img/pulp.jpg") center 30% / cover no-repeat; opacity: 0.45; -webkit-mask-image: linear-gradient(to top, #000 0%, transparent 100%); mask-image: linear-gradient(to top, #000 0%, transparent 100%); pointer-events: none }
+.shell.collapsed .sidebar::before { opacity: 0.6 }
+
 @media (max-width: 1280px) { .flow .note { display: none } .cols { column-gap: var(--s6) } }
 @media (max-width: 1080px) { .cols.c21, .cols.c31, .cols.c12 { grid-template-columns: minmax(0, 1fr) } .stack.sticky { position: static } .lead h2 { font-size: 1.73rem } }
-@media (max-width: 900px) { .shell, .shell.collapsed { grid-template-columns: var(--side-rail) minmax(0, 1fr) } .shell .brand div, .shell .navitem span, .shell .health span { display: none } .shell .navitem { justify-content: center; padding: 0 } .shell .brand { padding: 0; justify-content: center } .shell .health { justify-content: center } .plans, .cols.c11 { grid-template-columns: minmax(0, 1fr) } .flow { display: none } main.page, .topbar { padding-left: var(--s4); padding-right: var(--s4) } .steps button span { display: none } }
+@media (max-width: 900px) { .shell, .shell.collapsed { grid-template-columns: var(--side-rail) minmax(0, 1fr) } .shell .brand div, .shell .navitem span, .shell .health span { display: none } .shell .navitem { justify-content: center; padding: 0 } .shell .brand { padding: 0; justify-content: center } .shell .health { justify-content: center } .plans, .cols.c11 { grid-template-columns: minmax(0, 1fr) } .flow { display: none } .topbar > .iconbtn:first-child { display: none } main.page::after { margin-left: calc(var(--s4) * -1); margin-right: calc(var(--s4) * -1) } main.page, .topbar { padding-left: var(--s4); padding-right: var(--s4) } .steps button span { display: none } }
+@media (max-width: 640px) { .heat, .shortmap { grid-template-columns: minmax(84px, 1.1fr) repeat(var(--n, 3), minmax(0, 1fr)); font-size: 0.87rem } .heat .cl, .shortmap .cl { padding: 0 8px; white-space: nowrap } .heat .cl small, .shortmap .cl small { display: none } .heat .rl b { white-space: normal } .heat, .shortmap { row-gap: 8px } .hd .wide { display: none } .hd .tiny { display: inline } .heat .hd, .shortmap .hd { padding: 0 8px 8px; font-size: 0.75rem } .lead h2 { font-size: 1.6rem } .btn.lg, .btn.cta { height: 44px } .topbar .select { max-width: 190px } }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important } }

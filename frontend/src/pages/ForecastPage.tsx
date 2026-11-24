@@ -99,24 +99,23 @@ export default function ForecastPage({ focus, names, onChanged }: { focus?: stri
         <Kpi label="보고 있는 예측" value={`${monthLabel(baseMonth)} 말`} note={`${when(detail.created_at)} 실행 · ${months.length}개월`} />
         <Kpi label={first ? `${monthLabel(first)} 예상 수요` : '예상 수요'} value={num(sum('p50'))} unit="EA" note={yoyAll === null ? '작년 같은 달 자료 없음' : `작년 ${shortMonth(first)} 대비 ${yoyAll > 0 ? '+' : ''}${num(yoyAll, 1)}%`} />
         <Kpi label="많이 팔릴 때" value={num(sum('p90'))} unit="EA" note={spread === null ? '' : `가운데 값보다 +${num(spread, 1)}%`} />
-        <Kpi label="예측한 제품" value={`${products.length}`} unit="개" note={`학습에 쓴 이력 ${num(detail.input_row_count)}행`} />
-        <Kpi label="건너뛴 제품 · 경고" value={`${detail.result?.skipped.length ?? 0} · ${detail.result?.warnings.length ?? 0}`} note={detail.status === 'OK' ? '정상 완료' : detail.status} tone={detail.result?.skipped.length || detail.result?.warnings.length ? 'warn' : 'ok'} />
+        {((detail.result?.skipped.length ?? 0) > 0 || (detail.result?.warnings.length ?? 0) > 0) && <Kpi label="건너뛴 제품 · 경고" value={`${detail.result?.skipped.length ?? 0} · ${detail.result?.warnings.length ?? 0}`} note={detail.status === 'OK' ? '정상 완료' : detail.status} tone={detail.result?.skipped.length || detail.result?.warnings.length ? 'warn' : 'ok'} />}
       </section>
 
       <div className="cols c21">
         <section className="panel"><header><div><h2>{product === ALL ? '전체 제품 수요' : names[product] ?? product}</h2><p>옅은 구간이 예측입니다. 마우스를 올리면 값이 나옵니다.</p></div>
           <Legend items={[['실제 수요', C.actual], ['예측 가운데 값', C.forecast, true], ['많이 팔릴 때까지의 범위', '#cfe0fb']]} /></header>
-          <div className="body"><LineChart months={chart.months} split={chart.split} height={340} unit=" EA" band={{ name: '범위', lo: chart.p50, hi: chart.p90, color: C.forecast }}
+          <div className="body bare"><LineChart months={chart.months} split={chart.split} height={340} unit=" EA" band={{ name: '범위', lo: chart.p50, hi: chart.p90, color: C.forecast }}
             series={[{ name: '실제 수요', color: C.actual, values: chart.actual }, { name: '예측 가운데 값', color: C.forecast, values: chart.p50, dash: true, dots: true }]} /></div>
         </section>
 
         <section className="panel"><header><div><h2>제품별 {first ? shortMonth(first) : ''} 예측</h2><p>줄을 누르면 왼쪽 그래프가 그 제품으로 바뀝니다</p></div>
           {product !== ALL && <button type="button" className="btn sm" onClick={() => setProduct(ALL)}>전체 보기</button>}</header>
-          <div className="body flush"><div className="tablewrap"><table className="tbl"><thead><tr><th>제품</th><th className="r">가운데 값</th><th className="r">작년 대비</th></tr></thead>
+          <div className="body flush"><div className="tablewrap"><table className="tbl fit"><thead><tr><th>제품</th><th className="r nw">가운데 값</th><th className="r nw">작년 대비</th></tr></thead>
             <tbody>{table.map((r) => <tr key={r.pid} className={`clickable${r.pid === product ? ' selected' : ''}`} onClick={() => setProduct(r.pid === product ? ALL : r.pid)}>
               <td><span className="name" title={`${names[r.pid] ?? r.pid} (${r.pid})`}><b>{names[r.pid] ?? r.pid}</b><span className="code">{r.pid}</span></span></td>
-              <td className="r num" style={{ minWidth: 96 }}><b>{num(r.p50)}</b><span className="cellbar"><i style={{ width: `${(r.p50 / (table[0]?.p50 || 1)) * 100}%` }} /></span></td>
-              <td className={`r num ${r.yoy === null ? 'muted' : r.yoy > 0 ? 'delta-up' : 'delta-down'}`} style={r.yoy !== null && r.yoy > 0 ? { color: 'var(--ink-2)' } : undefined}>{r.yoy === null ? '-' : `${r.yoy > 0 ? '+' : ''}${pctText(r.yoy)}`}</td></tr>)}</tbody>
+              <td className="r num nw" style={{ minWidth: 84 }}><b>{num(r.p50)}</b><span className="cellbar"><i style={{ width: `${(r.p50 / (table[0]?.p50 || 1)) * 100}%` }} /></span></td>
+              <td className={`r num nw ${r.yoy === null ? 'muted' : r.yoy > 0 ? 'delta-up' : 'delta-down'}`} style={r.yoy !== null && r.yoy > 0 ? { color: 'var(--ink-2)' } : undefined}>{r.yoy === null ? '-' : `${r.yoy > 0 ? '+' : ''}${pctText(r.yoy)}`}</td></tr>)}</tbody>
             <tfoot><tr><td>합계</td><td className="r num">{num(sum('p50'))}</td><td className="r num">{yoyAll === null ? '-' : `${yoyAll > 0 ? '+' : ''}${pctText(yoyAll)}`}</td></tr></tfoot></table></div></div>
         </section>
       </div>

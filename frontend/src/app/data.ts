@@ -138,7 +138,7 @@ export function stages(o: Overview): Stage[] {
   const approved = approvedEntities(o.batches).length;
   const dataDone = approved === ENTITY_ORDER.length, hasForecast = o.forecasts.some((f) => f.status === 'OK' || f.status === 'PARTIAL'), hasPlan = !!o.latestPlan;
   return [
-    { id: 'ingest', label: '자료', state: dataDone ? 'done' : 'now', note: `${approved}/${ENTITY_ORDER.length}종 승인` },
+    { id: 'ingest', label: '자료', state: dataDone ? 'done' : 'now', note: dataDone ? '모두 승인됨' : `${ENTITY_ORDER.length - approved}종 남음` },
     { id: 'forecast', label: '예측', state: hasForecast ? 'done' : dataDone ? 'now' : 'wait', note: o.latestForecast ? `${monthLabel(o.latestForecast.parameters.trained_until.slice(0, 7))} 말 기준` : '아직 없음' },
     { id: 'plan', label: '계획', state: hasPlan ? 'done' : hasForecast ? 'now' : 'wait', note: o.latestPlan ? `${monthLabel(o.latestPlan.target_month)}부터` : '아직 없음' },
   ];
@@ -175,8 +175,8 @@ export function alerts(o: Overview): Alert[] {
     const short = (x: PlanSummary) => x.plan.label.split(' ')[0];
     const line = (pick: (x: PlanSummary) => number, unit: string) => s.filter((x) => pick(x) > 0).map((x) => `${short(x)} ${pick(x)}${unit}`).join(' · ');
     const add = (tone: Alert['tone'], title: string, pick: (x: PlanSummary) => number, unit: string) => { const text = line(pick, unit); if (text) out.push({ tone, title, text, page: 'plan' }); };
-    add('bad', '설비·인력 한도 초과', (x) => x.equipOver, '칸');
-    add('bad', '수요를 채우지 못함', (x) => x.demandMiss, '건');
+    add('bad', '설비 초과', (x) => x.equipOver, '칸');
+    add('bad', '수요 미충족', (x) => x.demandMiss, '건');
     add('warn', '안전 재고 미달', (x) => x.safetyMiss, '건');
     add('warn', '자재 부족', (x) => x.shortages, '건');
     for (const g of groupIssues(result)) out.push({ tone: 'info', title: g.count > 1 ? `${g.text} (${g.count}건)` : g.text, text: '', page: 'plan' });

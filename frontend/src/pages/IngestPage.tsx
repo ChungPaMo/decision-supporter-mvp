@@ -228,6 +228,7 @@ export default function IngestPage({ onChanged }: { onChanged: () => void }) {
   const holds = detail?.validation?.sheets.flatMap((sheet) => sheet.holds) ?? [];
   const issues = detail?.validation?.sheets.flatMap((sheet) => sheet.issues) ?? [];
   const busyAny = running || sorting || items.some((i) => i.busy);
+  const anyAction = rows.some((r) => (r.item && r.batch?.status !== 'APPROVED') || (r.batch && r.batch.status !== 'APPROVED'));
   const kindCounts = useMemo(() => { const map = new Map<string, number>(); for (const i of items) if (i.kind) map.set(i.kind, (map.get(i.kind) ?? 0) + 1); return [...Object.values(KIND), UNKNOWN].filter((k) => map.has(k)).map((k) => [k, map.get(k)!] as const); }, [items]);
   const sorted = items.filter((i) => i.kind).length;
 
@@ -249,12 +250,12 @@ export default function IngestPage({ onChanged }: { onChanged: () => void }) {
       <div className="body"><div className="tally">{kindCounts.map(([k, n]) => <div key={k} className={`count${k === UNKNOWN ? ' warn' : ''}`}><strong className="num">{n}<small>개</small></strong><span>{k}</span></div>)}</div></div></section>}
     {done === SLOTS.length && <Notice tone="ok"><Icon name="check" /><span><b>자료가 모두 준비됐습니다.</b> 이제 수요를 예측할 수 있습니다. <button type="button" className="btn sm" onClick={() => go('forecast')}>수요 예측으로<Icon name="arrow" /></button></span></Notice>}
 
-    <section className="kpis" aria-label="자료 현황">
-      <Kpi label="승인된 자료" value={`${done} / ${SLOTS.length}`} unit="개" note={done === SLOTS.length ? '모두 준비됨' : `${SLOTS.length - done}개 남음`} tone={done === SLOTS.length ? 'ok' : 'warn'} />
+    {done < SLOTS.length && <section className="kpis" aria-label="자료 현황">
+      <Kpi label="승인된 파일" value={`${done} / ${SLOTS.length}`} unit="개" note={done === SLOTS.length ? '모두 준비됨' : `${SLOTS.length - done}개 남음`} tone={done === SLOTS.length ? 'ok' : 'warn'} />
       <Kpi label="다음에 넣을 자료" value={nextRow ? nextRow.slot.label : '없음'} note={nextRow ? (nextRow.item ? `${nextRow.item.file.name} 대기 중` : '파일을 놓으세요') : '모두 승인됨'} />
       <Kpi label="지금 올린 파일" value={`${items.length + staged.length}`} unit="개" note={staged.length ? `${staged.length}개 분류 전` : items.length ? `순서에 맞춘 것 ${items.filter((i) => i.slot).length}개` : '아직 없음'} />
       <Kpi label="손봐야 하는 것" value={`${stuck.length + loose.length + orphans.length}`} unit="건" note={stuck[0] ? stuck[0].slot.label : loose[0] ? `${loose[0].file.name} 유형 미정` : orphans[0] ? `${orphans[0].file.name} 정리 필요` : '없음'} tone={stuck.length + loose.length + orphans.length ? 'warn' : 'ok'} />
-    </section>
+    </section>}
 
     {docs && <section className="panel"><header><div><h2>문서 종류 분류 결과</h2><p>파일 {docs.total}개를 종류별로 나눴습니다. 보기만 하는 기능이고 등록되지 않습니다.</p></div>
       <div className="actions">{docs.busy ? <St tone="info">분류 중 {docs.results.length} / {docs.total}</St> : <St tone="ok">{docs.results.length}개 완료</St>}<button type="button" className="btn sm" onClick={() => setDocs(null)}>닫기</button></div></header>
@@ -270,18 +271,17 @@ export default function IngestPage({ onChanged }: { onChanged: () => void }) {
       <section className="panel"><header><div><h2>등록 순서</h2><p>위에서부터 차례로 승인합니다. 제품과 자재가 먼저입니다.</p></div>
         <div className="actions">{(pending.length > 0 || running) && <button type="button" className="btn primary lg" disabled={busyAny} onClick={() => void runAll()}><Icon name="check" />{running ? '진행 중…' : `문제없는 ${pending.length}개 모두 승인`}</button>}</div></header>
         <div className="body bare" style={{ paddingBottom: 12 }}><div className="steps" role="group" aria-label="등록 진행">{rows.map(({ slot, item, batch: b }) => <button type="button" key={slot.key} title={slot.label} className={`${b?.status === 'APPROVED' ? 'done' : item?.error || b?.status === 'MAPPING_HOLD' || b?.status === 'HAS_ERRORS' ? 'stuck' : item || b ? 'wait' : ''}${slot.key === current?.slot.key ? ' on' : ''}`} onClick={() => void open(slot.key)}><i /><span>{slot.label}</span></button>)}</div></div>
-        <div className="body flush"><div className="tablewrap"><table className="tbl"><thead><tr><th className="c">순서</th><th>자료</th><th>파일</th><th>상태</th><th>할 수 있는 일</th></tr></thead>
+        <div className="body flush"><div className="tablewrap"><table className="tbl"><thead><tr><th className="c">순서</th><th>자료</th><th>파일</th><th>상태</th>{anyAction && <th>할 수 있는 일</th>}</tr></thead>
           <tbody>{rows.map(({ slot, item, batch: b }, i) => <tr key={slot.key} className={`clickable${slot.key === current?.slot.key ? ' selected' : ''}`} onClick={() => void open(slot.key)}>
             <td className="c num muted">{i + 1}</td>
             <td><span className="name"><b>{slot.label}</b><span className="code">{slot.tech}</span></span></td>
-            <td>{item ? <span className="name"><b>{item.file.name}</b><span className="code">{num(item.file.size / 1024, 0)} KB · {item.manual ? '직접 고름' : '자동 인식'}</span></span> : b ? <span className="name"><b>{b.file.name}</b><span className="code">이전에 등록함</span></span> : <span className="faint">파일을 놓으세요</span>}</td>
+            <td>{item ? <span className="name"><b>{item.file.name}</b><span className="code">{num(item.file.size / 1024, 0)} KB · {item.manual ? '직접 고름' : '자동 인식'}</span></span> : b ? <span className="name"><b>{b.file.name}</b><span className="code">{b.status === 'APPROVED' ? `${when(b.approved_at)} 승인` : '이전에 등록함'}</span></span> : <span className="faint">파일을 놓으세요</span>}</td>
             <td className="nw">{item?.error ? <St tone="bad">문제 있음</St> : item?.busy ? <St tone="info">처리 중</St> : b ? <BatchSt status={b.status} /> : item ? <St>등록 전</St> : <St>없음</St>}</td>
-            <td onClick={(e) => e.stopPropagation()}><div className="actions">
+            {anyAction && <td onClick={(e) => e.stopPropagation()}><div className="actions">
               {item && (!b || b.status === 'REJECTED') && <button type="button" className="btn sm" disabled={item.busy || running || !noteOk} onClick={() => void register(item).then(finish)}>등록</button>}
               {b?.status === 'READY_FOR_APPROVAL' && <button type="button" className="btn primary sm" disabled={busyAny || !actorOk} onClick={() => void approve(item, b).then(finish)}>승인</button>}
-              {b?.status === 'APPROVED' && <span className="small muted">{when(b.approved_at)}</span>}
               {(b?.status === 'MAPPING_HOLD' || b?.status === 'HAS_ERRORS') && <button type="button" className="btn sm" onClick={() => void open(slot.key)}>확인하기</button>}
-            </div></td></tr>)}</tbody></table></div>
+            </div></td>}</tr>)}</tbody></table></div>
           {loose.length > 0 && <div className="alerts">{loose.map((item) => <div className="alert warn" key={item.id}><i /><div><b>{item.file.name}</b><br /><span>{item.error || item.note || '유형을 정하지 못했습니다.'}</span></div>
             <select className="select" aria-label={`${item.file.name}의 자료 종류`} value="" onChange={(e) => patch(item.id, { slot: e.target.value, manual: true, error: '', batch: match(server, item.file.name, slotOf(e.target.value)?.entity) })}>
               <option value="">자료 종류 고르기</option>{SLOTS.filter((s) => !rows.find((r) => r.slot.key === s.key)?.item).map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}</select></div>)}</div>}

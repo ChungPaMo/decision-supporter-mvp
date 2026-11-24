@@ -8,7 +8,7 @@ const plain = (name: string) => name.replace(/\s*\(.*\)\s*$/, '');
 // 받침에 따라 조사를 고른다 ("절단기가", "작업자 풀이").
 const josa = (word: string, withFinal: string, without: string) => { const code = word.charCodeAt(word.length - 1) - 0xac00; return code >= 0 && code <= 11171 && code % 28 !== 0 ? withFinal : without; };
 
-export default function HomePage({ overview, onReload }: { overview: Overview; onReload: () => void }) {
+export default function HomePage({ overview }: { overview: Overview; onReload: () => void }) {
   const { latestPlan, planForecast, latestForecast, demand, names } = overview;
   const next = useMemo(() => nextAction(overview), [overview]);
   const notes = useMemo(() => alerts(overview), [overview]);
@@ -24,8 +24,8 @@ export default function HomePage({ overview, onReload }: { overview: Overview; o
 
   // 가장 빠듯한 설비·인력 칸이 이 화면의 첫 문장이 된다.
   const tightest = useMemo(() => {
-    let best: { id: string; month: string; pct: number; used: number; limit: number | null; unit: string } | null = null;
-    for (const row of grid?.rows ?? []) for (const [m, cell] of Object.entries(row.cells)) if (cell.pct !== null && (!best || cell.pct > best.pct)) best = { id: row.id, month: m, pct: cell.pct, used: cell.used, limit: cell.limit, unit: cell.unit };
+    let best: { id: string; kind: string; month: string; pct: number; used: number; limit: number | null; unit: string } | null = null;
+    for (const row of grid?.rows ?? []) for (const [m, cell] of Object.entries(row.cells)) if (cell.pct !== null && (!best || cell.pct > best.pct)) best = { id: row.id, kind: row.kind, month: m, pct: cell.pct, used: cell.used, limit: cell.limit, unit: cell.unit };
     return best;
   }, [grid]);
   const sortedRows = useMemo(() => [...(grid?.rows ?? [])].sort((a, b) => Math.max(...Object.values(b.cells).map((c) => c.pct ?? 0)) - Math.max(...Object.values(a.cells).map((c) => c.pct ?? 0))), [grid]);
@@ -58,21 +58,18 @@ export default function HomePage({ overview, onReload }: { overview: Overview; o
       <h2>{shortMonth(tightest.month)}, <mark>{lead.name}</mark>{josa(lead.name, '이', '가')} {lead.verb}</h2>
       <p>{tightest.limit === null ? `${num(tightest.used, 0)}${tightest.unit}이 필요합니다.` : `가동 한도 ${num(tightest.limit, 0)}시간 중 ${num(tightest.used, 0)}시간을 씁니다.`}
         {lead.cover !== null && ` ${short(picked.plan.label)}으로는 ${shortMonth(tightest.month)} 생산량이 예상 수요의 ${pctText(lead.cover)}입니다.`}</p>
-      <div className="actions"><button type="button" className="btn primary lg" onClick={() => go('plan')}>잔업을 넣어 다시 계산<Icon name="arrow" /></button>
-        {next.tone !== 'ok' && next.page !== 'plan' && <button type="button" className="btn lg" onClick={() => go(next.page, next.params)}>{next.button}</button>}
-        <button type="button" className="btn ghost lg" onClick={onReload}><Icon name="refresh" />새로고침</button></div>
+      <div className="actions"><button type="button" className="btn primary lg" onClick={() => go('plan', { f: latestPlan?.forecast_execution_id, t: latestPlan?.target_month, p: picked.plan.plan_id, r: tightest.id, k: tightest.kind, m: tightest.month })}>잔업 한도를 바꿔 다시 계산<Icon name="arrow" /></button></div>
     </section> : <section className={`lead ${next.tone === 'info' ? 'ok' : next.tone}`} aria-label="다음에 할 일">
       <h2>{next.title}</h2><p>{next.text}</p>
       <div className="actions"><button type="button" className="btn primary lg" onClick={() => go(next.page, next.params)}>{next.button}<Icon name="arrow" /></button></div>
     </section>}
 
     {picked && grid && <div className="cols c31">
-      <section className="panel"><header><div><h2>설비·인력 사용률</h2><p>달마다 한도의 몇 %를 쓰는지, 빠듯한 순서입니다. 칸을 누르면 생산계획에서 자세히 봅니다.</p></div>
-        <div className="tabs" role="group" aria-label="볼 안">{summaries.map((s) => <button key={s.plan.plan_id} type="button" aria-pressed={s.plan.plan_id === picked.plan.plan_id} onClick={() => setPlanId(s.plan.plan_id)}>{short(s.plan.label)}</button>)}</div></header>
-        <div className="body bare"><LoadMap months={grid.months} rows={sortedRows} names={names} onPick={() => go('plan')} /><HeatLegend /></div>
+      <section className="panel"><header><div><h2>설비·인력 사용률</h2><p>{short(picked.plan.label)} · 달마다 한도의 몇 %를 쓰는지, 빠듯한 순서입니다. 테두리 친 칸이 가장 빠듯한 곳입니다.</p></div></header>
+        <div className="body bare"><LoadMap months={grid.months} rows={sortedRows} names={names} selected={tightest} onPick={(pick) => go('plan', { f: latestPlan?.forecast_execution_id, t: latestPlan?.target_month, p: picked.plan.plan_id, r: pick.id, k: pick.kind, m: pick.month })} /><HeatLegend /></div>
       </section>
 
-      <section className="panel"><header><div><h2>세 안</h2><p>{latestPlan ? `${monthLabel(latestPlan.target_month)}부터 3개월 · 예상 수요 대비` : ''}</p></div></header>
+      <section className="panel"><header><div><h2>세 안</h2><p>{latestPlan ? `${monthLabel(latestPlan.target_month)}부터 3개월 · 예상 수요 대비. 누르면 왼쪽 표가 그 안으로 바뀝니다.` : ''}</p></div></header>
         <div className="body bare"><div className="rows">{summaries.map((s) => { const cover = demandAll ? (s.total / demandAll) * 100 : null;
           const detail = [s.equipOver ? `설비 초과 ${s.equipOver}칸` : '', s.demandMiss ? `수요 미충족 ${s.demandMiss}건` : '', s.safetyMiss ? `안전 재고 미달 ${s.safetyMiss}건` : '', s.shortages ? `자재 부족 ${s.shortages}건` : ''].filter(Boolean).join(' · ');
           return <button type="button" key={s.plan.plan_id} onClick={() => setPlanId(s.plan.plan_id)} aria-pressed={s.plan.plan_id === picked.plan.plan_id}>

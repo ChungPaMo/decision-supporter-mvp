@@ -58,7 +58,7 @@ export default function Shell({ page, flow, attention, children }: { page: PageI
         <h1>{current.label}</h1>
         <nav className="flow" aria-label="진행 단계">{flow.map((stage, i) => <Fragment key={stage.id}>{i > 0 && <span className="sep" />}
           <button type="button" className={stage.state} onClick={() => go(stage.id)} title={`${stage.label}: ${stage.note}`}>
-            <b>{stage.state === 'done' ? '✓' : i + 1}</b><strong>{stage.label}</strong><span className="note">{stage.note}</span></button></Fragment>)}</nav>
+            <b>{stage.state === 'done' ? <Icon name="check" /> : i + 1}</b><strong>{stage.label}</strong><span className="note">{stage.note}</span></button></Fragment>)}</nav>
         <div className="right">
           <select className="select" value={datasetId} onChange={(event) => setDataset(event.target.value)} aria-label="데이터셋">
             {(datasets ?? []).some((d) => d.dataset_id === datasetId) || <option value={datasetId}>{datasetId}</option>}

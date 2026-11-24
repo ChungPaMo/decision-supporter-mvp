@@ -1,0 +1,670 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-11-24T15:49:43.341Z",
+  "title": "Design System: 충파모",
+  "extensions": {
+    "colorMeta": {
+      "ink": {
+        "role": "neutral",
+        "displayName": "먹색",
+        "canonical": "#191f28",
+        "tonalRamp": [
+          "#191f28",
+          "#333d4b",
+          "#4e5968",
+          "#5d6875",
+          "#6b7684",
+          "#b0b8c1",
+          "#e5e8eb",
+          "#f7f8fa"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "본문 진한 회색",
+        "canonical": "#333d4b",
+        "tonalRamp": [
+          "#191f28",
+          "#333d4b",
+          "#4e5968",
+          "#5d6875",
+          "#6b7684",
+          "#b0b8c1",
+          "#e5e8eb",
+          "#f7f8fa"
+        ]
+      },
+      "text": {
+        "role": "neutral",
+        "displayName": "문단 회색",
+        "canonical": "#4e5968",
+        "tonalRamp": [
+          "#191f28",
+          "#333d4b",
+          "#4e5968",
+          "#5d6875",
+          "#6b7684",
+          "#b0b8c1",
+          "#e5e8eb",
+          "#f7f8fa"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "보조 회색",
+        "canonical": "#5d6875",
+        "tonalRamp": [
+          "#191f28",
+          "#333d4b",
+          "#4e5968",
+          "#5d6875",
+          "#6b7684",
+          "#b0b8c1",
+          "#e5e8eb",
+          "#f7f8fa"
+        ]
+      },
+      "faint": {
+        "role": "neutral",
+        "displayName": "가장 옅은 글자색",
+        "canonical": "#6b7684",
+        "tonalRamp": [
+          "#191f28",
+          "#333d4b",
+          "#4e5968",
+          "#5d6875",
+          "#6b7684",
+          "#b0b8c1",
+          "#e5e8eb",
+          "#f7f8fa"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "선",
+        "canonical": "#e5e8eb",
+        "tonalRamp": [
+          "#191f28",
+          "#333d4b",
+          "#4e5968",
+          "#5d6875",
+          "#6b7684",
+          "#b0b8c1",
+          "#e5e8eb",
+          "#f7f8fa"
+        ]
+      },
+      "line-2": {
+        "role": "neutral",
+        "displayName": "옅은 선",
+        "canonical": "#f0f2f4",
+        "tonalRamp": [
+          "#191f28",
+          "#333d4b",
+          "#4e5968",
+          "#5d6875",
+          "#6b7684",
+          "#b0b8c1",
+          "#e5e8eb",
+          "#f7f8fa"
+        ]
+      },
+      "line-hover": {
+        "role": "neutral",
+        "displayName": "hover 선",
+        "canonical": "#c9ced6",
+        "tonalRamp": [
+          "#191f28",
+          "#333d4b",
+          "#4e5968",
+          "#5d6875",
+          "#6b7684",
+          "#b0b8c1",
+          "#e5e8eb",
+          "#f7f8fa"
+        ]
+      },
+      "wash": {
+        "role": "neutral",
+        "displayName": "옅은 바탕",
+        "canonical": "#f7f8fa",
+        "tonalRamp": [
+          "#191f28",
+          "#333d4b",
+          "#4e5968",
+          "#5d6875",
+          "#6b7684",
+          "#b0b8c1",
+          "#e5e8eb",
+          "#f7f8fa"
+        ]
+      },
+      "bg": {
+        "role": "neutral",
+        "displayName": "흰 작업면",
+        "canonical": "#ffffff",
+        "tonalRamp": [
+          "#191f28",
+          "#333d4b",
+          "#4e5968",
+          "#5d6875",
+          "#6b7684",
+          "#b0b8c1",
+          "#e5e8eb",
+          "#ffffff"
+        ]
+      },
+      "side-bg": {
+        "role": "neutral",
+        "displayName": "메뉴 바탕",
+        "canonical": "#f7f8fa",
+        "tonalRamp": [
+          "#191f28",
+          "#333d4b",
+          "#4e5968",
+          "#5d6875",
+          "#6b7684",
+          "#b0b8c1",
+          "#e5e8eb",
+          "#f7f8fa"
+        ]
+      },
+      "accent": {
+        "role": "primary",
+        "displayName": "파랑",
+        "canonical": "#2563eb",
+        "tonalRamp": [
+          "#0f2a6b",
+          "#173ea6",
+          "#1d4ed8",
+          "#2563eb",
+          "#6f9af3",
+          "#cfe4ff",
+          "#eaf2ff",
+          "#fbfdff"
+        ]
+      },
+      "accent-press": {
+        "role": "primary",
+        "displayName": "누른 파랑",
+        "canonical": "#1d4ed8",
+        "tonalRamp": [
+          "#0f2a6b",
+          "#173ea6",
+          "#1d4ed8",
+          "#2563eb",
+          "#6f9af3",
+          "#cfe4ff",
+          "#eaf2ff",
+          "#fbfdff"
+        ]
+      },
+      "accent-wash": {
+        "role": "primary",
+        "displayName": "옅은 파랑",
+        "canonical": "#eaf2ff",
+        "tonalRamp": [
+          "#0f2a6b",
+          "#173ea6",
+          "#1d4ed8",
+          "#2563eb",
+          "#6f9af3",
+          "#cfe4ff",
+          "#eaf2ff",
+          "#fbfdff"
+        ]
+      },
+      "accent-ink": {
+        "role": "primary",
+        "displayName": "짙은 파랑 글자",
+        "canonical": "#1d4ed8",
+        "tonalRamp": [
+          "#0f2a6b",
+          "#173ea6",
+          "#1d4ed8",
+          "#2563eb",
+          "#6f9af3",
+          "#cfe4ff",
+          "#eaf2ff",
+          "#fbfdff"
+        ]
+      },
+      "ok": {
+        "role": "secondary",
+        "displayName": "초록",
+        "canonical": "#087a4e",
+        "tonalRamp": [
+          "#03301f",
+          "#054d32",
+          "#06704a",
+          "#087a4e",
+          "#3fae82",
+          "#86cfb0",
+          "#c4e9d8",
+          "#e6f6ee"
+        ]
+      },
+      "ok-wash": {
+        "role": "secondary",
+        "displayName": "옅은 초록",
+        "canonical": "#e6f6ee",
+        "tonalRamp": [
+          "#03301f",
+          "#054d32",
+          "#06704a",
+          "#087a4e",
+          "#3fae82",
+          "#86cfb0",
+          "#c4e9d8",
+          "#e6f6ee"
+        ]
+      },
+      "warn": {
+        "role": "secondary",
+        "displayName": "주황 글자",
+        "canonical": "#9a5b00",
+        "tonalRamp": [
+          "#6b4200",
+          "#7a3c00",
+          "#7a4a00",
+          "#9a5b00",
+          "#f5a524",
+          "#ffe3c2",
+          "#ffedc2",
+          "#fff3d6"
+        ]
+      },
+      "warn-wash": {
+        "role": "secondary",
+        "displayName": "옅은 주황",
+        "canonical": "#fff3d6",
+        "tonalRamp": [
+          "#6b4200",
+          "#7a3c00",
+          "#7a4a00",
+          "#9a5b00",
+          "#f5a524",
+          "#ffe3c2",
+          "#ffedc2",
+          "#fff3d6"
+        ]
+      },
+      "warn-mark": {
+        "role": "secondary",
+        "displayName": "주황 점·막대",
+        "canonical": "#f5a524",
+        "tonalRamp": [
+          "#6b4200",
+          "#7a3c00",
+          "#7a4a00",
+          "#9a5b00",
+          "#f5a524",
+          "#ffe3c2",
+          "#ffedc2",
+          "#fff3d6"
+        ]
+      },
+      "bad": {
+        "role": "secondary",
+        "displayName": "빨강",
+        "canonical": "#d92d3a",
+        "tonalRamp": [
+          "#8e1622",
+          "#9b1c27",
+          "#a8222d",
+          "#d92d3a",
+          "#ffb3ba",
+          "#f3c2c6",
+          "#ffd6da",
+          "#ffecee"
+        ]
+      },
+      "bad-wash": {
+        "role": "secondary",
+        "displayName": "옅은 빨강",
+        "canonical": "#ffecee",
+        "tonalRamp": [
+          "#8e1622",
+          "#9b1c27",
+          "#a8222d",
+          "#d92d3a",
+          "#ffb3ba",
+          "#f3c2c6",
+          "#ffd6da",
+          "#ffecee"
+        ]
+      },
+      "h0": {
+        "role": "neutral",
+        "displayName": "부하 90% 미만",
+        "canonical": "#f4f5f7",
+        "tonalRamp": [
+          "#191f28",
+          "#333d4b",
+          "#4e5968",
+          "#5d6875",
+          "#6b7684",
+          "#b0b8c1",
+          "#e5e8eb",
+          "#f4f5f7"
+        ]
+      },
+      "h3": {
+        "role": "secondary",
+        "displayName": "부하 90~100% 빠듯",
+        "canonical": "#ffedc2",
+        "tonalRamp": [
+          "#6b4200",
+          "#7a3c00",
+          "#7a4a00",
+          "#9a5b00",
+          "#f5a524",
+          "#ffe3c2",
+          "#ffedc2",
+          "#fff3d6"
+        ]
+      },
+      "h4": {
+        "role": "secondary",
+        "displayName": "한도 도달·초과",
+        "canonical": "#ffd6da",
+        "tonalRamp": [
+          "#8e1622",
+          "#9b1c27",
+          "#a8222d",
+          "#d92d3a",
+          "#ffb3ba",
+          "#f3c2c6",
+          "#ffd6da",
+          "#ffecee"
+        ]
+      },
+      "bar-neutral": {
+        "role": "neutral",
+        "displayName": "중립 막대",
+        "canonical": "#b0b8c1",
+        "tonalRamp": [
+          "#191f28",
+          "#333d4b",
+          "#4e5968",
+          "#5d6875",
+          "#6b7684",
+          "#b0b8c1",
+          "#e5e8eb",
+          "#f7f8fa"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "홈 맨 위 문장."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "계획 카드 합계, 분류 개수 같은 큰 숫자. 고정폭 숫자."
+      },
+      "headline-sm": {
+        "displayName": "Headline-sm",
+        "purpose": "요약 줄의 숫자."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "구획 제목."
+      },
+      "title-sm": {
+        "displayName": "Title-sm",
+        "purpose": "상단 막대의 화면 이름, 계획 카드 이름, 파일 놓는 칸의 제목, 큰 버튼 글자."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "문단, 표 본문, 알림."
+      },
+      "label": {
+        "displayName": "Label",
+        "purpose": "설명, 상태 글자, 입력 이름표, 칩, 탭, 촘촘한 표."
+      },
+      "label-sm": {
+        "displayName": "Label-sm",
+        "purpose": "표 머리글, 범례, 부하 지도 머리글, 작은 버튼, 그래프 말풍선."
+      },
+      "caption": {
+        "displayName": "Caption",
+        "purpose": "곁들이는 코드, 부하 지도 칸의 작은 글자, 진행 단계, 딱지."
+      }
+    },
+    "shadows": [
+      {
+        "name": "tab-selected",
+        "value": "0 1px 2px rgba(25, 31, 40, 0.1)",
+        "purpose": "탭 묶음 안에서 고른 흰 칸."
+      },
+      {
+        "name": "slider-thumb",
+        "value": "0 0 0 1px rgba(25, 31, 40, 0.12), 0 2px 6px rgba(25, 31, 40, 0.18)",
+        "purpose": "슬라이더 손잡이."
+      },
+      {
+        "name": "chart-tip",
+        "value": "0 8px 24px rgba(25, 31, 40, 0.18)",
+        "purpose": "그래프 말풍선."
+      },
+      {
+        "name": "field-focus",
+        "value": "0 0 0 3px rgba(49, 130, 246, 0.16)",
+        "purpose": "입력 칸 포커스 테. theme.css에 적힌 값 그대로이며 rgb는 이전 파랑(#3182f6)의 것."
+      },
+      {
+        "name": "hairline-inset",
+        "value": "inset 0 0 0 1px #e5e8eb",
+        "purpose": "칩, 계획 카드의 안쪽 1px 선."
+      },
+      {
+        "name": "chip-selected",
+        "value": "inset 0 0 0 1.5px #2563eb",
+        "purpose": "고른 칩의 안쪽 1.5px 파랑 선."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease",
+        "value": "cubic-bezier(0.22, 1, 0.36, 1)",
+        "purpose": "메뉴 접기·펴기 (0.2s)."
+      },
+      {
+        "name": "state",
+        "value": "0.15s",
+        "purpose": "버튼, 메뉴, 칩, 입력의 색·바탕 변화."
+      },
+      {
+        "name": "row",
+        "value": "0.12s",
+        "purpose": "표 줄과 알림 줄의 hover 바탕."
+      },
+      {
+        "name": "press",
+        "value": "transform: scale(0.98), 0.1s",
+        "purpose": "버튼을 누를 때."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "wide",
+        "value": "1280px"
+      },
+      {
+        "name": "stack",
+        "value": "1080px"
+      },
+      {
+        "name": "rail",
+        "value": "900px"
+      },
+      {
+        "name": "narrow",
+        "value": "640px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "주된 버튼",
+      "kind": "button",
+      "refersTo": "button-primary-lg",
+      "description": "화면의 주된 일에 쓰는 파랑 큰 버튼.",
+      "html": "<button class=\"ds-btn ds-btn-primary ds-btn-lg\">잔업을 넣어 다시 계산<svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M5 12h14M13 6l6 6-6 6\"/></svg></button>",
+      "css": ".ds-btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 36px; padding: 0 14px; border: 0; border-radius: 8px; font: 600 13.5px 'Pretendard Variable', Pretendard, sans-serif; white-space: nowrap; cursor: pointer; background: var(--line-2, #f0f2f4); color: var(--ink-2, #333d4b); transition: background 0.15s, color 0.15s, transform 0.1s; } .ds-btn svg { width: 1.15em; height: 1.15em; } .ds-btn:active { transform: scale(0.98); } .ds-btn:focus-visible { outline: 2px solid var(--accent, #2563eb); outline-offset: 2px; } .ds-btn-primary { background: var(--accent, #2563eb); color: #fff; } .ds-btn-primary:hover { background: var(--accent-press, #1d4ed8); } .ds-btn-lg { height: 46px; padding: 0 20px; font-size: 15px; font-weight: 650; border-radius: 12px; }"
+    },
+    {
+      "name": "기본 버튼",
+      "kind": "button",
+      "refersTo": "button-default",
+      "description": "주된 일이 아닌 모든 버튼. 옅은 회색 바탕.",
+      "html": "<button class=\"ds-btn2\">다시 읽기</button>",
+      "css": ".ds-btn2 { display: inline-flex; align-items: center; justify-content: center; gap: 6px; height: 36px; padding: 0 14px; border: 0; border-radius: 8px; font: 600 13.5px 'Pretendard Variable', Pretendard, sans-serif; white-space: nowrap; cursor: pointer; background: var(--line-2, #f0f2f4); color: var(--ink-2, #333d4b); transition: background 0.15s, transform 0.1s; } .ds-btn2:hover { background: #e5e8eb; } .ds-btn2:active { transform: scale(0.98); } .ds-btn2:focus-visible { outline: 2px solid var(--accent, #2563eb); outline-offset: 2px; }"
+    },
+    {
+      "name": "위험한 버튼",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "반려처럼 되돌리기 어려운 일.",
+      "html": "<button class=\"ds-btn-danger\">반려</button>",
+      "css": ".ds-btn-danger { display: inline-flex; align-items: center; justify-content: center; height: 36px; padding: 0 14px; border: 0; border-radius: 8px; font: 600 13.5px 'Pretendard Variable', Pretendard, sans-serif; cursor: pointer; background: transparent; color: var(--bad, #d92d3a); box-shadow: inset 0 0 0 1px #f3c2c6; transition: background 0.15s, transform 0.1s; } .ds-btn-danger:hover { background: var(--bad-wash, #ffecee); } .ds-btn-danger:active { transform: scale(0.98); } .ds-btn-danger:focus-visible { outline: 2px solid var(--accent, #2563eb); outline-offset: 2px; }"
+    },
+    {
+      "name": "메뉴 항목",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "회색 메뉴 면 위의 항목. 지금 화면은 진한 회색 바탕과 먹색 글자.",
+      "html": "<nav class=\"ds-nav\"><button class=\"ds-navitem ds-active\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 11l9-8 9 8M5 10v10h5v-6h4v6h5V10\"/></svg><span>홈</span><i class=\"ds-dot\"></i></button><button class=\"ds-navitem\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M12 16V4m0 0l-4 4m4-4l4 4M4 16v3a1 1 0 001 1h14a1 1 0 001-1v-3\"/></svg><span>자료 넣기</span></button><button class=\"ds-navitem\"><svg viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"1.9\" stroke-linecap=\"round\" stroke-linejoin=\"round\" aria-hidden=\"true\"><path d=\"M3 17l6-6 4 4 8-8M15 7h6v6\"/></svg><span>수요 예측</span></button></nav>",
+      "css": ".ds-nav { width: 232px; padding: 8px 10px; display: flex; flex-direction: column; gap: 2px; background: var(--side-bg, #f7f8fa); border-right: 1px solid var(--line, #e5e8eb); } .ds-navitem { display: flex; align-items: center; gap: 10px; width: 100%; height: 38px; padding: 0 10px; border: 0; border-radius: 8px; background: none; color: var(--text, #4e5968); font: 500 14px 'Pretendard Variable', Pretendard, sans-serif; text-align: left; cursor: pointer; transition: background 0.15s, color 0.15s; } .ds-navitem svg { width: 18px; height: 18px; color: var(--faint, #6b7684); flex: none; } .ds-navitem:hover { background: #eceef1; color: var(--ink, #191f28); } .ds-navitem:focus-visible { outline: 2px solid var(--accent, #2563eb); outline-offset: 2px; } .ds-navitem.ds-active { background: #e9ecef; color: var(--ink, #191f28); font-weight: 650; } .ds-navitem.ds-active svg { color: var(--ink, #191f28); } .ds-dot { margin-left: auto; width: 6px; height: 6px; border-radius: 50%; background: var(--bad, #d92d3a); }"
+    },
+    {
+      "name": "칩",
+      "kind": "chip",
+      "refersTo": "chip",
+      "description": "여러 개 중 하나를 고를 때. 고른 칩은 옅은 파랑 바탕에 1.5px 파랑 선과 짙은 파랑 글자.",
+      "html": "<div class=\"ds-chips\"><button class=\"ds-chip\" aria-pressed=\"false\">2027년 1월</button><button class=\"ds-chip\" aria-pressed=\"true\">2027년 2월</button><button class=\"ds-chip\" aria-pressed=\"false\">2027년 3월</button></div>",
+      "css": ".ds-chips { display: flex; gap: 6px; flex-wrap: wrap; } .ds-chip { height: 32px; padding: 0 12px; border: 0; border-radius: 999px; background: #fff; box-shadow: inset 0 0 0 1px var(--line, #e5e8eb); color: var(--text, #4e5968); font: 500 13px 'Pretendard Variable', Pretendard, sans-serif; white-space: nowrap; cursor: pointer; transition: box-shadow 0.15s, background 0.15s, color 0.15s; } .ds-chip:hover { box-shadow: inset 0 0 0 1px #c9ced6; color: var(--ink, #191f28); } .ds-chip:focus-visible { outline: 2px solid var(--accent, #2563eb); outline-offset: 2px; } .ds-chip[aria-pressed=\"true\"] { background: var(--accent-wash, #eaf2ff); box-shadow: inset 0 0 0 1.5px var(--accent, #2563eb); color: var(--accent-ink, #1d4ed8); font-weight: 600; }"
+    },
+    {
+      "name": "탭",
+      "kind": "custom",
+      "refersTo": "",
+      "description": "같은 자리에서 보는 내용을 바꿀 때. 회색 통 안의 흰 칸이 고른 것.",
+      "html": "<div class=\"ds-tabs\"><button aria-pressed=\"true\">설비·인력 부하</button><button aria-pressed=\"false\">제품별 생산량</button><button aria-pressed=\"false\">자재 부족</button></div>",
+      "css": ".ds-tabs { display: inline-flex; gap: 2px; padding: 3px; border-radius: 9px; background: var(--line-2, #f0f2f4); } .ds-tabs button { height: 28px; padding: 0 12px; border: 0; border-radius: 7px; background: none; color: var(--muted, #5d6875); font: 600 13px 'Pretendard Variable', Pretendard, sans-serif; white-space: nowrap; cursor: pointer; transition: color 0.15s, background 0.15s; } .ds-tabs button:hover { color: var(--ink, #191f28); } .ds-tabs button:focus-visible { outline: 2px solid var(--accent, #2563eb); outline-offset: 2px; } .ds-tabs button[aria-pressed=\"true\"] { color: var(--ink, #191f28); background: #fff; box-shadow: 0 1px 2px rgba(25, 31, 40, 0.1); }"
+    },
+    {
+      "name": "입력 칸",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "이름표가 위에 있는 높이 40px 입력 칸.",
+      "html": "<label class=\"ds-field\">담당자 코드<input placeholder=\"예: PLN01\" /></label>",
+      "css": ".ds-field { display: grid; gap: 6px; width: 240px; color: var(--text, #4e5968); font: 500 13px 'Pretendard Variable', Pretendard, sans-serif; } .ds-field input { width: 100%; height: 40px; padding: 0 12px; border: 1px solid var(--line, #e5e8eb); border-radius: 8px; background: #fff; color: var(--ink, #191f28); font: 400 14px 'Pretendard Variable', Pretendard, sans-serif; transition: border-color 0.15s, box-shadow 0.15s; } .ds-field input::placeholder { color: var(--faint, #6b7684); } .ds-field input:hover { border-color: var(--line-hover, var(--line-hover, #c9ced6)); } .ds-field input:focus { border-color: var(--accent, #2563eb); box-shadow: 0 0 0 3px rgba(49, 130, 246, 0.16); outline: none; }"
+    },
+    {
+      "name": "선택 상자",
+      "kind": "input",
+      "refersTo": "select",
+      "description": "브라우저 기본 화살표 대신 12px 꺾쇠를 직접 그린 선택 상자.",
+      "html": "<select class=\"ds-select\"><option>CHUNGPAMO-2027</option><option>다른 데이터셋</option></select>",
+      "css": ".ds-select { -webkit-appearance: none; appearance: none; height: 32px; max-width: 100%; padding: 0 30px 0 8px; border: 1px solid var(--line, #e5e8eb); border-radius: 8px; background: #fff url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12' fill='none' stroke='%235d6875' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M3 4.5l3 3 3-3'/%3E%3C/svg%3E\") no-repeat right 10px center; color: var(--ink-2, #333d4b); font: 400 13px 'Pretendard Variable', Pretendard, sans-serif; cursor: pointer; } .ds-select:hover { border-color: #cfd4da; } .ds-select:focus-visible { outline: 2px solid var(--accent, #2563eb); outline-offset: 2px; }"
+    },
+    {
+      "name": "상태 점과 딱지",
+      "kind": "chip",
+      "refersTo": "tag",
+      "description": "상태는 색 점과 글자로, 개수는 딱지로.",
+      "html": "<div class=\"ds-status\"><span class=\"ds-st ds-ok\">실행 가능</span><span class=\"ds-st ds-warn\">확인 필요</span><span class=\"ds-st ds-bad\">실행 불가</span><span class=\"ds-tag\">3건</span><span class=\"ds-tag ds-bad\">오류 2</span></div>",
+      "css": ".ds-status { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; font-family: 'Pretendard Variable', Pretendard, sans-serif; } .ds-st { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--text, #4e5968); white-space: nowrap; } .ds-st::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--faint, #6b7684); } .ds-st.ds-ok::before { background: var(--ok, #087a4e); } .ds-st.ds-warn { color: var(--warn, #9a5b00); } .ds-st.ds-warn::before { background: var(--warn-mark, #f5a524); } .ds-st.ds-bad { color: var(--bad, #d92d3a); } .ds-st.ds-bad::before { background: var(--bad, #d92d3a); } .ds-tag { display: inline-flex; align-items: center; padding: 1px 7px; border-radius: 6px; font-size: 12px; line-height: 1.6; font-weight: 600; background: var(--line-2, #f0f2f4); color: var(--text, #4e5968); } .ds-tag.ds-bad { background: var(--bad-wash, #ffecee); color: var(--bad, #d92d3a); }"
+    },
+    {
+      "name": "계획 카드",
+      "kind": "card",
+      "refersTo": "plan-card",
+      "description": "세 안을 나란히 비교할 때. 고른 카드는 2px 파랑 선.",
+      "html": "<button class=\"ds-plan ds-selected\"><span class=\"ds-plan-top\"><b>기준형</b><span class=\"ds-plan-st\">실행 가능</span></span><span class=\"ds-plan-total\">84,200 <small>EA</small></span><span class=\"ds-plan-fact\"><span>예상 수요 대비</span><b>97%</b></span></button>",
+      "css": ".ds-plan { display: grid; gap: 8px; width: 260px; padding: 16px 24px; border: 0; border-radius: 14px; background: #fff; box-shadow: inset 0 0 0 1px var(--line, #e5e8eb); text-align: left; font-family: 'Pretendard Variable', Pretendard, sans-serif; cursor: pointer; transition: box-shadow 0.15s, background 0.15s; } .ds-plan:hover { box-shadow: inset 0 0 0 1px #c9ced6; } .ds-plan:focus-visible { outline: 2px solid var(--accent, #2563eb); outline-offset: 2px; } .ds-plan.ds-selected { box-shadow: inset 0 0 0 2px var(--accent, #2563eb); background: #fbfdff; } .ds-plan-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; } .ds-plan-top b { font-size: 15px; font-weight: 650; color: var(--ink, #191f28); } .ds-plan-st { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 500; color: var(--text, #4e5968); } .ds-plan-st::before { content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--ok, #087a4e); } .ds-plan-total { font-size: 26px; font-weight: 700; letter-spacing: -0.035em; line-height: 1.2; color: var(--ink, #191f28); font-variant-numeric: tabular-nums; } .ds-plan-total small { font-size: 13px; font-weight: 500; color: var(--muted, #5d6875); letter-spacing: 0; } .ds-plan-fact { display: flex; justify-content: space-between; padding-top: 12px; border-top: 1px solid var(--line-2, #f0f2f4); font-size: 13px; color: var(--muted, #5d6875); } .ds-plan-fact b { font-weight: 500; color: var(--text, #4e5968); }"
+    },
+    {
+      "name": "부하 지도",
+      "kind": "custom",
+      "refersTo": "heat-cell",
+      "description": "설비·인력(줄) × 달(칸)의 사용률. 90% 아래는 한 가지 회색, 빠듯하면 주황, 한도에 닿으면 빨강.",
+      "html": "<div class=\"ds-heat\"><div class=\"ds-hd\">설비·인력</div><div class=\"ds-hd\">1월</div><div class=\"ds-hd\">2월</div><div class=\"ds-hd\">3월</div><div class=\"ds-rl\"><b>롤 절단기</b><span>EQ-01 · 설비</span></div><button class=\"ds-cl\">82%<small>328 / 400시간</small></button><button class=\"ds-cl ds-l4 ds-sel\">100%<small>400 / 400시간</small></button><button class=\"ds-cl ds-l3\">94%<small>376 / 400시간</small></button><div class=\"ds-rl\"><b>포장 라인</b><span>EQ-02 · 설비</span></div><button class=\"ds-cl\">36%<small>144 / 400시간</small></button><button class=\"ds-cl\">58%<small>232 / 400시간</small></button><button class=\"ds-cl\">61%<small>244 / 400시간</small></button></div>",
+      "css": ".ds-heat { display: grid; grid-template-columns: minmax(120px, 1.6fr) repeat(3, minmax(64px, 1fr)); gap: 2px; align-items: stretch; font: 14px 'Pretendard Variable', Pretendard, sans-serif; } .ds-hd { padding: 0 12px 8px; font-size: 12.5px; font-weight: 500; color: var(--muted, #5d6875); } .ds-rl { display: flex; flex-direction: column; justify-content: center; line-height: 1.3; padding-right: 12px; } .ds-rl b { font-weight: 600; color: var(--ink, #191f28); } .ds-rl span { font-size: 12px; color: var(--faint, #6b7684); } .ds-cl { display: flex; align-items: baseline; align-content: center; flex-wrap: wrap; gap: 0 8px; min-height: 48px; padding: 8px 12px; border: 0; border-radius: 6px; background: var(--h0, #f4f5f7); color: var(--ink-2, #333d4b); font: 650 14px 'Pretendard Variable', Pretendard, sans-serif; font-variant-numeric: tabular-nums; text-align: left; cursor: pointer; transition: box-shadow 0.15s; } .ds-cl small { font-weight: 400; font-size: 12px; color: var(--muted, #5d6875); } .ds-cl.ds-l3 { background: var(--h3, #ffedc2); color: #6b4200; } .ds-cl.ds-l3 small { color: #7a4c00; } .ds-cl.ds-l4 { background: var(--h4, #ffd6da); color: #a8222d; } .ds-cl.ds-l4 small { color: #9b1c27; } .ds-cl:hover { box-shadow: inset 0 0 0 1.5px var(--faint, #6b7684); } .ds-cl:focus-visible { outline: 2px solid var(--accent, #2563eb); outline-offset: 2px; } .ds-cl.ds-sel { box-shadow: inset 0 0 0 2px var(--ink, #191f28); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "익숙하고 세련된 제품 화면",
+    "overview": "충파모는 색다른 세계관을 입히지 않습니다. 요즘 잘 만든 웹 서비스(토스, Linear, Stripe 대시보드)의 문법을 그대로 따르고, 그 옆에 놓아도 어색하지 않은 완성도를 목표로 합니다. 화면은 흰 작업면과 한 단계 낮은 회색 메뉴 두 겹뿐이고, 색은 파랑 하나만 눈에 띄게 씁니다.\n\n홈 맨 위에는 숫자 카드 줄이 아니라 문장 하나가 옵니다. \"2월, 롤 절단기가 한도를 다 씁니다\"처럼 지금 막히는 곳을 말하고, 막히는 곳이 없으면 다음에 할 일을 말합니다. 나머지 네 화면(자료 넣기, 수요 예측, 생산계획, 기록)은 조건을 고르는 입력 묶음이나 표에서 바로 시작합니다. 빨강과 주황은 막힌 칸과 빠듯한 칸을 가리킬 때만 나오므로, 화면에 따뜻한 색이 보이면 그곳이 봐야 할 곳입니다.\n\n구획은 상자로 나누지 않습니다. 테두리 상자는 표, 입력 묶음, 계획 카드 셋, 파일을 놓는 칸에만 쓰고, 그래프와 부하 지도는 상자 없이 그대로 놓습니다. 나머지는 여백과 가는 선으로 나눕니다. 그림자는 기본적으로 없습니다.",
+    "keyCharacteristics": [
+      "흰 작업면 + 회색 메뉴, 두 겹의 평평한 면",
+      "강조색은 파랑 하나. 주된 버튼, 포커스, 고른 것에 씀",
+      "빨강·주황은 막힌 곳과 빠듯한 곳에만",
+      "홈 첫 줄은 문장 (약 32px), 그 아래 주된 버튼 하나",
+      "테두리 상자는 표, 입력 묶음, 계획 카드, 파일 놓는 칸에만. 그래프와 부하 지도는 상자 없이",
+      "Pretendard 한 가지 글꼴, 숫자는 고정폭 숫자",
+      "상태는 6px 색 점과 글자로 표시"
+    ],
+    "rules": [
+      {
+        "name": "파랑 하나 규칙",
+        "body": "파랑 채움 버튼은 한 화면에서 주된 일 하나에만 씁니다. 나머지 버튼은 회색 바탕이거나 바탕이 없습니다.",
+        "section": "colors"
+      },
+      {
+        "name": "따뜻한 색은 신호 규칙",
+        "body": "빨강과 주황은 막힌 곳, 빠듯한 곳, 오류에만 씁니다. 정상인 값은 회색으로 둡니다. 부하 지도에서 90% 아래 칸이 모두 한 가지 회색인 것이 이 규칙입니다.",
+        "section": "colors"
+      },
+      {
+        "name": "고른 것은 두 가지 규칙",
+        "body": "값을 고르면 파랑입니다(표 줄과 목록 줄은 옅은 파랑 바탕, 칩은 옅은 파랑 바탕에 1.5px 파랑 선과 짙은 파랑 글자, 계획 카드는 2px 파랑 선). 보는 자리를 고르면 무채색입니다(탭은 흰 칸, 메뉴는 진한 회색 바탕, 부하 지도 칸은 2px 먹색 테두리).",
+        "section": "colors"
+      },
+      {
+        "name": "숫자 고정폭 규칙",
+        "body": "표, 부하 지도, 큰 숫자는 모두 고정폭 숫자로 씁니다. 숫자 뒤 단위는 작게(0.87rem, 500, 보조 회색) 붙입니다.",
+        "section": "typography"
+      },
+      {
+        "name": "이름 먼저 규칙",
+        "body": "제품·설비·자재는 이름을 굵게(600, 먹색) 쓰고 코드는 그 아래 0.8rem 옅은 글자로 곁들입니다.",
+        "section": "typography"
+      },
+      {
+        "name": "낱말 단위 줄바꿈",
+        "body": "한국어 본문은 word-break: keep-all로 낱말 중간에서 끊지 않습니다. 맨 위 문장은 text-wrap: balance입니다.",
+        "section": "typography"
+      },
+      {
+        "name": "평평함이 기본 규칙",
+        "body": "구획, 카드, 표, 버튼에는 그림자를 넣지 않습니다. 위 세 곳 말고 새 그림자가 필요해 보이면 먼저 선이나 바탕색으로 해결합니다.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "Do 홈처럼 상황을 먼저 말해야 하는 화면은 맨 위에 문장 하나(2.13rem / 700)와 주된 버튼 하나를 둡니다. 문장은 지금 막히는 곳이나 다음에 할 일을 말합니다.",
+      "Do 파랑 채움 버튼은 화면의 주된 일 하나에만 씁니다.",
+      "Do 고른 값(줄, 칩, 카드)은 파랑으로, 보는 자리(탭, 메뉴, 부하 지도 칸)는 무채색으로 표시합니다.",
+      "Do 정상인 값은 회색으로 두고, 빨강·주황은 한도 초과, 빠듯함, 오류에만 씁니다.",
+      "Do 상태는 6px 색 점과 글자로 말하고, 색 딱지는 개수를 셀 때만 씁니다. 분류 이름은 회색 딱지로 적습니다.",
+      "Do 숫자에는 고정폭 숫자를 쓰고, 무엇에 견준 값인지(한도 대비, 수요 대비)를 옆이나 아래에 적습니다.",
+      "Do 제품·설비·자재는 이름을 먼저 쓰고 코드는 작게 곁들입니다.",
+      "Do 색과 간격은 theme.css의 변수(--ink, --accent, --s1~--s7, --r-sm, --r, --r-lg)를 씁니다.",
+      "Do 색만으로 뜻을 전하지 않습니다. 부하 지도의 칸에는 숫자가, 상태 점 옆에는 글자가 항상 같이 있습니다."
+    ],
+    "donts": [
+      "Don't 구획마다 테두리 상자나 카드를 두르지 않습니다. 테두리 상자는 표, 입력 묶음, 계획 카드, 파일 놓는 칸에만 쓰고 그래프와 부하 지도에는 두르지 않습니다.",
+      "Don't 카드, 구획, 버튼에 그림자를 넣지 않습니다. 그림자는 고른 탭, 슬라이더 손잡이, 그래프 말풍선에만 있습니다.",
+      "Don't 두 번째 강조색을 들이지 않습니다. 파랑 말고는 상태색 셋뿐입니다.",
+      "Don't faint보다 옅은 회색을 글자에 쓰지 않습니다.",
+      "Don't 어두운 바탕 화면을 만들지 않습니다. 밝은 화면만 씁니다.",
+      "Don't 달력, 현황판 같은 비유나 색다른 세계관을 입히지 않습니다.",
+      "Don't 화면 머리에 숫자 카드 네 개를 늘어놓지 않습니다. 요약이 꼭 필요한 화면에만 선 사이의 한 줄로 둡니다.",
+      "Don't 측정하지 않은 값을 그리거나 예측 범위를 확률처럼 보이게 하지 않습니다."
+    ]
+  }
+}

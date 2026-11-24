@@ -23,7 +23,7 @@ function Workspace() {
     {route.page === 'home' && (overview.data ? <HomePage overview={data} onReload={reload} /> : <section className="panel"><Empty>{overview.loading ? '현황을 읽는 중…' : '현황을 읽지 못했습니다.'}</Empty></section>)}
     {route.page === 'ingest' && <IngestPage onChanged={reload} />}
     {route.page === 'forecast' && <ForecastPage focus={route.params.f} names={data.names} onChanged={reload} />}
-    {route.page === 'plan' && <PlanPage key={route.params.f ?? 'plan'} focus={route.params.f} names={data.names} onChanged={reload} />}
+    {route.page === 'plan' && <PlanPage key={route.params.f ?? 'plan'} focus={route.params.f} startMonth={route.params.t} startPlan={route.params.p} pick={route.params.r && route.params.k && route.params.m ? { id: route.params.r, kind: route.params.k, month: route.params.m } : undefined} names={data.names} onChanged={reload} />}
     {route.page === 'history' && <HistoryPage overview={data} kind={route.params.kind} onReload={reload} />}
   </Shell>;
 }
