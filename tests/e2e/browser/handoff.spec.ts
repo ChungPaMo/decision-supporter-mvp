@@ -30,10 +30,13 @@ test('actual classifier holds ambiguous input without creating a batch', async (
   await page.getByRole('button', { name: /데이터 업로드/ }).click();
   const panel = page.getByRole('region', { name: '파일 유형 자동 분류' });
   await panel.getByLabel('분류할 파일 (CSV/XLSX)', { exact: true }).setInputFiles({ name: 'synthetic.csv', mimeType: 'text/csv', buffer: Buffer.from('product_id,qty\nTP-10R,10\n') });
+  const classification = page.waitForResponse(r => new URL(r.url()).pathname === '/classifications/file' && r.request().method() === 'POST');
   await panel.getByRole('button', { name: '파일 유형 추천 요청' }).click();
+  const reply = await classification;
+  expect(reply.status()).toBe(200);
+  expect((await reply.json()).module_version).toContain('rules-');
   await expect(panel.getByText(/HOLD —/)).toBeVisible();
   await expect(panel.getByRole('button', { name: '검토한 추천 유형 선택' })).toBeDisabled();
-  await expect(panel.getByRole('table')).toContainText('rules-');
   expect(writes).toBe(0);
 });
 
@@ -54,10 +57,10 @@ test('classification HOLD and reviewed entity selection never create a batch', a
   expect(writes).toBe(0);
 });
 
-test('actual planning 501 never switches back to synthetic results', async ({ page }) => {
+test('disabled approved sources never switch back to synthetic plan results', async ({ page }) => {
   await savedForecastDouble(page);
   await page.getByRole('button', { name: '읽기 전용 계획 계산 요청' }).click();
-  await expect(page.getByRole('region', { name: '실제 계획 모듈 연결' }).getByRole('alert')).toContainText('MODULE_NOT_IMPLEMENTED');
+  await expect(page.getByRole('region', { name: '실제 계획 모듈 연결' }).getByRole('alert')).toContainText('PERSISTENCE_DISABLED');
   await expect(page.getByRole('region', { name: '서버 계획 미리보기' })).toHaveCount(0);
   await expect(page.getByRole('button', { name: '실제 모듈 연결', exact: true })).toHaveAttribute('aria-pressed', 'true');
   await expect(page.getByText(/DEMO \/ UNVERIFIED —/)).toHaveCount(0);

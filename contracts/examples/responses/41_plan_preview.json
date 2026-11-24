@@ -1,0 +1,325 @@
+{
+  "_note": "합성 CSV 로 생성한 응답 형식 예시. /batches 계열은 테스트 전용 인메모리 저장소 결과이며 영구 저장 동작을 증명하지 않는다.",
+  "request": {
+    "method": "POST",
+    "path": "/plans",
+    "json": {
+      "dataset_id": "TISSUE-LEGACY",
+      "contract_version": "planning-integration-0.1-draft",
+      "forecast_execution_id": "00000000-0000-4000-8000-000000000001",
+      "product_ids": [
+        "TP-10R"
+      ],
+      "target_month": "2027-01",
+      "horizon_months": 1,
+      "as_of_date": "2026-12-31",
+      "scenario": "BASE",
+      "base_plan_execution_id": null,
+      "overrides": {}
+    }
+  },
+  "status": 200,
+  "response": {
+    "contract_version": "planning-preview-0.2-draft",
+    "forecast_execution_id": "00000000-0000-4000-8000-000000000001",
+    "input_digest": "sha256:9d640cc4a0b50822fced8a0c54748989f83260e28d693cc967aafac4bde03a27",
+    "result": {
+      "contract_version": "planning-handoff-0.2-draft",
+      "status": "OK",
+      "plans": [
+        {
+          "plan_id": "BASELINE",
+          "plan_type": "BASELINE",
+          "label": "기준형 (P50 + 잔업)",
+          "feasibility": "UNVERIFIED",
+          "production": [
+            {
+              "product_id": "TP-10R",
+              "period": "2027-01",
+              "production_qty": "11000",
+              "unit": "EA"
+            }
+          ],
+          "policy_ref": "PLANNING_RULES-v0.4",
+          "unverified": [
+            {
+              "code": "INVENTORY_MISSING",
+              "message": "재고가 없어 0으로 계산했습니다.",
+              "input_refs": [
+                "TP-10R"
+              ]
+            },
+            {
+              "code": "ROUTING_MISSING",
+              "message": "라우팅이 없어 설비 사용시간을 계산하지 못했습니다.",
+              "input_refs": [
+                "TP-10R"
+              ]
+            },
+            {
+              "code": "BOM_MISSING",
+              "message": "BOM이 없어 자재 소요를 계산하지 못했습니다.",
+              "input_refs": [
+                "TP-10R"
+              ]
+            }
+          ]
+        },
+        {
+          "plan_id": "STABLE",
+          "plan_type": "STABLE",
+          "label": "안정형 (P80 + 잔업)",
+          "feasibility": "UNVERIFIED",
+          "production": [
+            {
+              "product_id": "TP-10R",
+              "period": "2027-01",
+              "production_qty": "13000",
+              "unit": "EA"
+            }
+          ],
+          "policy_ref": "PLANNING_RULES-v0.4",
+          "unverified": [
+            {
+              "code": "INVENTORY_MISSING",
+              "message": "재고가 없어 0으로 계산했습니다.",
+              "input_refs": [
+                "TP-10R"
+              ]
+            },
+            {
+              "code": "ROUTING_MISSING",
+              "message": "라우팅이 없어 설비 사용시간을 계산하지 못했습니다.",
+              "input_refs": [
+                "TP-10R"
+              ]
+            },
+            {
+              "code": "BOM_MISSING",
+              "message": "BOM이 없어 자재 소요를 계산하지 못했습니다.",
+              "input_refs": [
+                "TP-10R"
+              ]
+            }
+          ]
+        },
+        {
+          "plan_id": "COST_SAVING",
+          "plan_type": "COST_SAVING",
+          "label": "비용절감형 (P50, 잔업 0)",
+          "feasibility": "UNVERIFIED",
+          "production": [
+            {
+              "product_id": "TP-10R",
+              "period": "2027-01",
+              "production_qty": "11000",
+              "unit": "EA"
+            }
+          ],
+          "policy_ref": "PLANNING_RULES-v0.4",
+          "unverified": [
+            {
+              "code": "INVENTORY_MISSING",
+              "message": "재고가 없어 0으로 계산했습니다.",
+              "input_refs": [
+                "TP-10R"
+              ]
+            },
+            {
+              "code": "ROUTING_MISSING",
+              "message": "라우팅이 없어 설비 사용시간을 계산하지 못했습니다.",
+              "input_refs": [
+                "TP-10R"
+              ]
+            },
+            {
+              "code": "BOM_MISSING",
+              "message": "BOM이 없어 자재 소요를 계산하지 못했습니다.",
+              "input_refs": [
+                "TP-10R"
+              ]
+            }
+          ]
+        }
+      ],
+      "constraint_evaluations": [
+        {
+          "constraint_id": "DEM-TP-10R-2027-01",
+          "plan_id": "BASELINE",
+          "dimension": "OTHER",
+          "period": "2027-01",
+          "resource_id": null,
+          "product_id": "TP-10R",
+          "step_id": null,
+          "status": "SATISFIED",
+          "limit_value": null,
+          "used_value": null,
+          "unit": "EA",
+          "time_basis": null,
+          "strength": "HARD",
+          "application_state": "APPLIED",
+          "input_refs": [],
+          "reason_codes": []
+        },
+        {
+          "constraint_id": "SS-TP-10R-2027-01",
+          "plan_id": "BASELINE",
+          "dimension": "SAFETY_STOCK",
+          "period": "2027-01",
+          "resource_id": null,
+          "product_id": "TP-10R",
+          "step_id": null,
+          "status": "SATISFIED",
+          "limit_value": "1000",
+          "used_value": "1000",
+          "unit": "EA",
+          "time_basis": null,
+          "strength": "SOFT",
+          "application_state": "APPLIED",
+          "input_refs": [],
+          "reason_codes": []
+        },
+        {
+          "constraint_id": "DEM-TP-10R-2027-01",
+          "plan_id": "STABLE",
+          "dimension": "OTHER",
+          "period": "2027-01",
+          "resource_id": null,
+          "product_id": "TP-10R",
+          "step_id": null,
+          "status": "SATISFIED",
+          "limit_value": null,
+          "used_value": null,
+          "unit": "EA",
+          "time_basis": null,
+          "strength": "HARD",
+          "application_state": "APPLIED",
+          "input_refs": [],
+          "reason_codes": []
+        },
+        {
+          "constraint_id": "SS-TP-10R-2027-01",
+          "plan_id": "STABLE",
+          "dimension": "SAFETY_STOCK",
+          "period": "2027-01",
+          "resource_id": null,
+          "product_id": "TP-10R",
+          "step_id": null,
+          "status": "SATISFIED",
+          "limit_value": "1000",
+          "used_value": "1000",
+          "unit": "EA",
+          "time_basis": null,
+          "strength": "SOFT",
+          "application_state": "APPLIED",
+          "input_refs": [],
+          "reason_codes": []
+        },
+        {
+          "constraint_id": "DEM-TP-10R-2027-01",
+          "plan_id": "COST_SAVING",
+          "dimension": "OTHER",
+          "period": "2027-01",
+          "resource_id": null,
+          "product_id": "TP-10R",
+          "step_id": null,
+          "status": "SATISFIED",
+          "limit_value": null,
+          "used_value": null,
+          "unit": "EA",
+          "time_basis": null,
+          "strength": "HARD",
+          "application_state": "APPLIED",
+          "input_refs": [],
+          "reason_codes": []
+        },
+        {
+          "constraint_id": "SS-TP-10R-2027-01",
+          "plan_id": "COST_SAVING",
+          "dimension": "SAFETY_STOCK",
+          "period": "2027-01",
+          "resource_id": null,
+          "product_id": "TP-10R",
+          "step_id": null,
+          "status": "SATISFIED",
+          "limit_value": "1000",
+          "used_value": "1000",
+          "unit": "EA",
+          "time_basis": null,
+          "strength": "SOFT",
+          "application_state": "APPLIED",
+          "input_refs": [],
+          "reason_codes": []
+        }
+      ],
+      "material_requirements": [],
+      "evidence": [
+        {
+          "code": "POLICY_APPLIED",
+          "message": "계산 규칙",
+          "input_refs": [
+            "PLANNING_RULES-v0.4"
+          ]
+        }
+      ],
+      "warnings": [
+        {
+          "code": "INVENTORY_MISSING",
+          "message": "재고가 없어 0으로 계산했습니다.",
+          "input_refs": [
+            "TP-10R"
+          ]
+        },
+        {
+          "code": "BOM_MISSING",
+          "message": "BOM이 없어 자재 소요를 계산하지 못했습니다.",
+          "input_refs": [
+            "TP-10R"
+          ]
+        }
+      ],
+      "unverified": [
+        {
+          "code": "RECEIPT_SOURCE_UNAVAILABLE",
+          "message": "승인된 입고 예정 자료가 연결되지 않아 입고 0으로 계산했습니다.",
+          "input_refs": []
+        },
+        {
+          "code": "BOM_COVERAGE",
+          "message": "BOM_COVERAGE",
+          "input_refs": []
+        },
+        {
+          "code": "CAPACITY_NOT_REGISTERED",
+          "message": "CAPACITY_NOT_REGISTERED",
+          "input_refs": []
+        },
+        {
+          "code": "HOURS_COVERAGE",
+          "message": "HOURS_COVERAGE",
+          "input_refs": []
+        },
+        {
+          "code": "INVENTORY_COVERAGE",
+          "message": "INVENTORY_COVERAGE",
+          "input_refs": []
+        },
+        {
+          "code": "ROUTING_COVERAGE",
+          "message": "ROUTING_COVERAGE",
+          "input_refs": []
+        },
+        {
+          "code": "ROUTING_NOT_REGISTERED",
+          "message": "ROUTING_NOT_REGISTERED",
+          "input_refs": []
+        }
+      ],
+      "errors": [],
+      "module_version": "chungpamo-planning/PLANNING_RULES-v0.4"
+    },
+    "persisted": false,
+    "approval_available": false
+  },
+  "_plan_note": "REAL_ENGINE / synthetic approved input fixture. Read-only calculation; no PostgreSQL or approval."
+}

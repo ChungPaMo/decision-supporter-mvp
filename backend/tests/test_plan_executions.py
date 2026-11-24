@@ -11,12 +11,12 @@ from openpyxl import load_workbook
 from fastapi.testclient import TestClient
 from app.main import app
 from app.errors import ApiError,ErrorCode
-from app.integrations.planning_validation import validate_pair
+from app.integrations.planning_validation import validate_pair, with_input_coverage
 from app.plans.service import what_if_snapshot, PlanService
 from app.plans.repository import PlanRepository, digest
 from app.plans.approval import transition,ApprovalContext
 from app.plans.exports import test_double_export as make_test_export,formal_export
-from contracts.interfaces.planning import PlanningInput,PlanningOutput,PlanCommand
+from contracts.interfaces.planning import PlanningInput,PlanningOutput,PlanningIssue,PlanCommand
 from contracts.interfaces.plan_execution import PlanExecutionDetail,PlanDecisionRequest
 
 ROOT=Path(__file__).resolve().parents[2]
@@ -290,19 +290,21 @@ def test_unapproved_formal_export_and_formula_injection():
     assert not any(c.data_type=='f' for ws in wb for row in ws for c in row)
 
 
-def test_unimplemented_real_api_and_approval_never_use_fixtures():
+def test_disabled_storage_never_falls_back_to_fixtures():
     e=example()
     with TestClient(app) as client:
         r=client.post('/plan-executions',json=e.input_snapshot.command.model_dump(mode='json'))
-        assert r.status_code==501
+        assert r.status_code==501 and r.json()['detail']['code']=='PERSISTENCE_DISABLED'
         r=client.post('/plan-executions/'+str(e.execution_id)+'/decisions',json=request(e,'APPROVE').model_dump(mode='json'))
-        assert r.status_code==501
+        assert r.status_code==501 and r.json()['detail']['code']=='PERSISTENCE_DISABLED'
 
 
 def test_service_dedup_and_save_rollback_with_explicit_memory_double(monkeypatch):
     from engine import planning
     from app.plans import service
     e=example()
+    e.result_snapshot.unverified = [PlanningIssue(code=code, message='Synthetic coverage evidence')
+                                    for code in with_input_coverage(e.input_snapshot).missing_inputs]
     class Database:
         def __init__(self):self.ids=[];self.fail=False
         @contextmanager
@@ -346,6 +348,8 @@ def test_preview_and_store_share_canonical_selection_and_output_validation(monke
     source, output = execution.input_snapshot, execution.result_snapshot
     source.approved_inputs.products.append(source.approved_inputs.products[0].model_copy(update={'product_id': 'P2'}))
     source.forecast_rows.append(source.forecast_rows[0].model_copy(update={'product_id': 'P2'}))
+    output.unverified = [PlanningIssue(code=code, message='Synthetic coverage evidence')
+                         for code in with_input_coverage(source).missing_inputs]
 
     class Provider:
         def __init__(self, *args):

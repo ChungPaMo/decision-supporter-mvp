@@ -59,9 +59,7 @@
       "ROUTING_COVERAGE",
       "ROUTING_NOT_REGISTERED"
     ],
-    "warning_codes": [
-      "POLICY_NOT_CONFIRMED"
-    ],
+    "warning_codes": [],
     "approved_sources": [
       {
         "batch_id": "00000000-0000-4000-8000-000000000002",
@@ -73,8 +71,8 @@
       }
     ],
     "forecast_input_digest": "sha256:cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
-    "input_digest": "sha256:b6142dfe66cf977bec8a37250b376fd4926c6e8cc7b95dde1cc5cc30143dc0d3",
-    "engine_available": false,
+    "input_digest": "sha256:9d640cc4a0b50822fced8a0c54748989f83260e28d693cc967aafac4bde03a27",
+    "engine_available": true,
     "persisted": false
   }
 }

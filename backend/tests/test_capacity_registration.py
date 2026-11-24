@@ -74,10 +74,14 @@ def test_snapshot_excludes_other_month_and_preserves_midmonth_versions(sample,mo
     rows={s:[{'payload':p,'batch_id':UUID(int=2)} for p in sample[s]] for s in service.MODELS}
     rows['routing_steps'][0]['payload']['valid_to']='2027-01-15'
     rows['routing_steps'].append({'batch_id':UUID(int=3),'payload':{**sample['routing_steps'][0],'routing_version':'V2','valid_from':'2027-01-16','valid_to':None}})
+    rows['routing_steps'].append({'batch_id':UUID(int=5),'payload':{**sample['routing_steps'][0],
+        'step_id':'PREVIOUS','valid_from':'2026-12-01','valid_to':'2026-12-31'}})
+    rows['routing_steps'].append({'batch_id':UUID(int=6),'payload':{**rows['routing_steps'][-1]['payload'],
+        'routing_version':'UNRELATED'}})
     rows['hours_budgets'].append({'batch_id':UUID(int=4),'payload':{**sample['hours_budgets'][0],'period':'2027-02','capacity_id':'NEXT'}})
     monkeypatch.setattr(service,'approved_rows',lambda c,s:rows[s])
     cmd=PlanCommand(forecast_execution_id=UUID(int=1),product_ids=['TP-10R'],target_month='2027-01',horizon_months=1,as_of_date='2026-12-31')
-    capacity,routing,ids,missing=service.planning_snapshot(None,cmd)
-    assert len(routing['routing_steps'])==2
+    capacity,routing,ids=service.planning_snapshot(None,cmd)
+    assert len(routing['routing_steps'])==3
     assert len(capacity['hours_budgets'])==2 and UUID(int=4) not in ids
-    assert 'ROUTING_VERSION_POLICY_REQUIRED' in missing
+    assert {UUID(int=3), UUID(int=5)} <= ids and UUID(int=6) not in ids

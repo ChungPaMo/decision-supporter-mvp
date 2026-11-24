@@ -2,7 +2,7 @@
 
 2026-11-22 갱신 기준은 [v0.4 통합 계약](PLANNING_CONTRACT_V04_HANDOFF.md)이다. 실행 기간은 입력 JSONB에 저장하며 기존 행을 단일 월로 읽는다.
 
-2026-11-15. **저장 시스템 기반 구현이며 실제 계산·인증·정식 승인 활성화 완료가 아니다.** engine.planning.run은 AVAILABLE=False다. frontend와 알고리즘 담당 폴더는 변경하지 않았다.
+2026-11-24 기준 `engine.planning.run`이 활성화됐다. 실제 계산과 메모리 저장 회귀를 검증했다. PostgreSQL의 실제 엔진 저장과 정식 승인 인증은 후속이다. 아래 11/15 검증 항목은 저장 기반 구현 시점의 기록이다. [실제 엔진 검증 및 인계](PLANNING_ENGINE_ACTIVATION_VERIFICATION_20261124.md)
 
 ## API와 예시
 
@@ -10,7 +10,7 @@
 
 | API | 계약·현재 상태 |
 |---|---|
-| POST /plan-executions | PlanExecutionCreate → PlanExecutionReply. 현재 501 MODULE_NOT_IMPLEMENTED, Fixture 대체 없음 |
+| POST /plan-executions | PlanExecutionCreate → PlanExecutionReply. 실제 엔진 신규 201, 동일 실행 재사용 200. 저장 비활성 501 PERSISTENCE_DISABLED |
 | GET /plan-executions | limit(1~100)/offset → items/total/limit/offset. REAL_ENGINE만 조회, 현재 0건 |
 | GET /plan-executions/{execution_id} | 입력·결과 전체 Snapshot, digest·버전·검토 상태·이력. 없음/TEST_DOUBLE이면 404 |
 | GET /plan-executions/{execution_id}/candidates | 실행에 속한 후보 목록 |
@@ -32,7 +32,7 @@
 
 실제로는 조회 응답의 version/input_digest를 그대로 보낸다. actor_id는 **미인증 역할 코드 주장**이며 신원 증명이 아니다. REVIEW/REJECT의 auth_verified=false를 명시한다. 요청 JSON에 role/auth_verified/exception_codes를 넣으면 거부한다.
 
-생성 응답은 `{execution: PlanExecutionDetail, reused: boolean}`이다. 성공 201, 동일 성공/PARTIAL 재사용 200. 검증된 엔진 INPUT_INVALID/UNSUPPORTED는 FAILED 실행으로 보존하고 HTTP 422, FAILED 출력은 HTTP 500이다. 예외/잘못된 DTO/DB 오류는 후보를 저장하지 않고 안전한 오류를 반환한다. PERSISTENCE 비활성 501, DB 불가 503, DB 저장 오류 500이며 부분 저장을 성공으로 반환하지 않는다. 실제 응답 형식은 생성된 contracts/examples/responses/40~42 예시를 참고한다. 이는 테스트 대역/차단 응답이며 엔진 성공 증명이 아니다.
+생성 응답은 `{execution: PlanExecutionDetail, reused: boolean}`이다. 성공 201, 동일 성공/PARTIAL 재사용 200. 검증된 엔진 INPUT_INVALID/UNSUPPORTED는 FAILED 실행으로 보존하고 HTTP 422, FAILED 출력은 HTTP 500이다. 예외/잘못된 DTO/DB 오류는 후보를 저장하지 않고 안전한 오류를 반환한다. PERSISTENCE 비활성 501, DB 불가 503, DB 저장 오류 500이며 부분 저장을 성공으로 반환하지 않는다. 40번과 42번은 빈 이력과 승인 차단 예시다. 41번은 합성 입력으로 실행한 실제 [읽기 전용 Preview](../contracts/examples/responses/41_plan_preview.json)다.
 
 ## DB — Alembic 0007
 
@@ -64,7 +64,7 @@
 
 허용 Override는 `demand_multiplier`, `demand_multiplier.<product_id>`, `overtime_hours_limit.<resource_id>.<YYYY-MM>`, `receipt_qty.<po_id>`다. 값은 비음수 Decimal 문자열이며 입고 수량 0은 시나리오에서 취소를 뜻한다. 부모의 승인 원본과 결과는 보존한다. 레거시 생산량 키와 참조 범위 밖 조정은 422다.
 
-base_plan_snapshot에 실제 부모 ID·forecast UUID·input/result digest·전체 부모 결과를 넣고, 자식 실행에 원본 입력 사실과 새 command를 보존한다. 원본/변경 조건/각 평가 결과를 비교할 수 있으며 KPI 차이 공식을 발명하지 않는다. 기준 계획이 있어도 엔진 미구현이면 계산은 501이다.
+base_plan_snapshot에 실제 부모 ID·forecast UUID·input/result digest·전체 부모 결과를 넣고, 자식 실행에 원본 입력 사실과 새 command를 보존한다. 원본/변경 조건/각 평가 결과를 비교할 수 있다. `/plans/what-if`는 저장 없이 세 안을 계산한다.
 
 ## 검토·정식 승인·출력
 

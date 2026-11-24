@@ -20,7 +20,7 @@ def test_module_metadata_reflects_owned_module_availability(monkeypatch):
     assert response.json()['formal_plan_approval'] == 'DISABLED_AUTH_POLICY'
 
 
-def test_real_classifier_holds_ambiguous_input_and_planning_remains_unimplemented():
+def test_real_classifier_holds_ambiguous_input_and_plan_preview_needs_approved_sources():
     with TestClient(app) as client:
         result = client.post('/classifications', json={'filename': 'synthetic.csv', 'sha256': '0' * 64,
                              'sheets': [{'name': 'Sheet', 'columns': ['product'], 'sample_rows': [['TP-10R']]}]})
@@ -29,7 +29,7 @@ def test_real_classifier_holds_ambiguous_input_and_planning_remains_unimplemente
         assert result.json()['reasons'] and 'batch_id' not in result.json()
         result = client.post('/plans', json={'forecast_execution_id': '00000000-0000-4000-8000-000000000001',
                              'product_ids': ['TP-10R'], 'target_month': '2027-01', 'as_of_date': '2026-12-31'})
-        assert result.status_code == 501 and 'plans' not in result.json()
+        assert result.status_code == 501 and result.json()['detail']['code'] == 'PERSISTENCE_DISABLED'
 
 
 def test_unavailable_classifier_is_still_a_501(monkeypatch):

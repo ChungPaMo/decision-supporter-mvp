@@ -90,6 +90,10 @@ OK 후보의 생산행에는 요청 제품×월마다 정확히 한 행이 필�
 - 개발 DB 테이블 60개와 스키마 객체 735개의 지문, 승인 배치 7+9건, 예측 각 1건, 전용 Docker 자원이 전후 일치했다. manifest 14개와 별도 예정 입고 CSV SHA도 보존했다. 운영 계획 저장, SQL 승인 입고, DB 쓰기·migration·파괴적 회귀 및 브라우저는 미실행이다. 로컬 증거는 Git 제외 `.artifacts/planning-contract-20261122/`에 있다.
 - 변경 후보의 휴리스틱 보안 검사 결과는 0건이다. 전체 트리 검사는 시작 커밋에 이미 있던 분류기 샘플 Excel 200건과 샘플 전화번호 생성 코드 1건을 표시했다. 이번 변경 목록과 교차 대조했다.
 
+## 2026-11-24 엔진 활성화
+
+`/planning-inputs/preview`는 `engine_available=true`를 반환한다. `/plans`와 `/plans/what-if`는 Preview를 계산하고, `/plan-executions`는 실제 계산과 저장 경로를 사용한다. 입력 저장소 비활성은 501 `PERSISTENCE_DISABLED`, 입력 범위·출처 충돌은 409, 엔진의 `INPUT_INVALID`·`UNSUPPORTED`는 422다. 정식 승인 501 `PLAN_APPROVAL_DISABLED`는 유지한다. 실제 PostgreSQL 계획 Preview·저장 결과는 후속이다. [활성화 결과와 Docker PC 인계](PLANNING_ENGINE_ACTIVATION_VERIFICATION_20261124.md)
+
 ## 2026-11-22 백엔드 통합 사전검증과 화면 연동
 
 2026-11-22 KST, 기존 개발 PC. 아래는 `5552b56` 이후 통합 사전검증에서 확인한 계약이다. 일반 요청에서 제품 선택 순서를 정규화하므로 동일 제품·기간·승인 입력·엔진 소스 조합은 같은 실행 키를 사용한다. 진단의 digest와 실행의 digest는 같은 입력에서 일치한다. 두 요청 사이에 승인 입력이 달라지면 지문도 달라지며, 진단의 지문은 저장 예약 토큰이 아니다. 실패 실행은 재사용 대상에서 제외된다. [공통 라우터](../backend/app/api/integrations.py) · [영구 실행 서비스](../backend/app/plans/service.py) · [저장소](../backend/app/plans/repository.py)

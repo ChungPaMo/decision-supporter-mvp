@@ -3,7 +3,7 @@ import { test, expect } from '@playwright/test';
 test('real API errors never turn into fixture approvals or forecasts', async ({ page, request }) => {
   const modules = await request.get('http://127.0.0.1:8001/integrations/modules');
   expect(modules.status()).toBe(200);
-  expect((await modules.json()).planning).toBe('NOT_IMPLEMENTED');
+  expect((await modules.json()).planning).toBe('IMPLEMENTED');
   await page.goto('/');
   await expect(page.getByRole('alert')).toContainText('PERSISTENCE_DISABLED');
   await expect(page.getByLabel('등록 파일 (CSV/XLSX)', { exact: true })).toBeDisabled();
@@ -19,7 +19,7 @@ test('PPT workflow is interactive but does not fake planning or approval', async
     target_month: '2027-01', as_of_date: '2026-12-31',
   } });
   expect(response.status()).toBe(501);
-  expect((await response.json()).detail.code).toBe('MODULE_NOT_IMPLEMENTED');
+  expect((await response.json()).detail.code).toBe('PERSISTENCE_DISABLED');
   await page.goto('/');
   await page.getByRole('button', { name: /생산계획 비교/ }).click();
   await expect(page.getByText(/DEMO \/ UNVERIFIED —/)).toBeVisible();

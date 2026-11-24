@@ -6,7 +6,7 @@ from sqlalchemy import text
 from sqlalchemy.exc import DBAPIError,OperationalError,InterfaceError
 from app.errors import ApiError,ErrorCode
 from app.integrations import planning as adapter
-from app.integrations.planning_validation import validate_overrides
+from app.integrations.planning_validation import validate_input, validate_overrides, with_input_coverage
 from contracts.interfaces.planning import PlanningInput
 from contracts.interfaces.plan_execution import PlanExecutionReply
 from .repository import PlanRepository,digest
@@ -65,11 +65,11 @@ class PlanService:
         if command.dataset_id!=getattr(self.database,'dataset_id','TISSUE-LEGACY'):
             raise ApiError(409,ErrorCode.DATASET_MISMATCH,'Plan request and selected dataset do not match.')
         validate_overrides(command)
-        from engine import planning
-        if not planning.AVAILABLE:
-            raise ApiError(501,ErrorCode.MODULE_NOT_IMPLEMENTED,'Planning algorithm is not implemented; no execution was fabricated.')
+        adapter.require_engine()
         try:
             snapshot=adapter.SqlPlanningSourceProvider(self.database).load(command)
+            validate_input(command, snapshot)
+            snapshot=with_input_coverage(snapshot)
             identity=runtime_identity()
             key=digest({'input':snapshot.model_dump(mode='json'),'runtime':identity})[7:]
             with self.database.begin() as c:

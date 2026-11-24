@@ -1,6 +1,6 @@
 """Reference checks and coverage of an approved planning snapshot."""
 from calendar import monthrange
-from collections import Counter
+from collections import defaultdict
 from datetime import date
 
 from app.errors import ApiError, ErrorCode
@@ -23,6 +23,17 @@ def horizon_bounds(command: PlanCommand) -> tuple[date, date]:
 
 def forecast_scope(command: PlanCommand) -> set[tuple[str, str]]:
     return {(product, month) for product in command.product_ids for month in command.months}
+
+
+def overlaps(start, end, first, last):
+    return start <= last and (end is None or end >= first)
+
+
+def routing_versions(steps):
+    versions = defaultdict(list)
+    for step in steps:
+        versions[step.product_id, step.routing_id, step.routing_version].append(step)
+    return versions
 
 
 def validate_input(command: PlanCommand, snapshot: PlanningInput) -> None:
@@ -80,8 +91,10 @@ def validate_input(command: PlanCommand, snapshot: PlanningInput) -> None:
         if any(row.product_id not in requested or products.get(row.product_id) != row.unit
                for row in draft.quantity_limits):
             raise input_conflict('CAPACITY_PRODUCT_OR_UNIT_MISMATCH')
-        if any(row.product_id not in requested or products.get(row.product_id) != row.quantity_unit
-               or row.valid_from > last or (row.valid_to and row.valid_to < first) for row in draft.routing_steps):
+        if (any(row.product_id not in requested or products.get(row.product_id) != row.quantity_unit
+                for row in draft.routing_steps)
+                or any(not any(overlaps(row.valid_from, row.valid_to, first, last) for row in steps)
+                       for steps in routing_versions(draft.routing_steps).values())):
             raise input_conflict('ROUTING_PRODUCT_UNIT_OR_PERIOD_MISMATCH')
 
 
@@ -98,52 +111,81 @@ def receipt_snapshot_problem(snapshot, approved, materials) -> str | None:
     return None
 
 
+_LEGACY_ADVISORIES = {
+    'POLICY_NOT_CONFIRMED', 'BOM_VERSION_POLICY_REQUIRED', 'ROUTING_VERSION_POLICY_REQUIRED',
+    'INVENTORY_SNAPSHOT_POLICY_REQUIRED',
+}
+
+
+def month_version(versions, first, last, kind, warnings):
+    """Mirror the engine's whole-month rule for diagnostics and coverage only."""
+    active = [(start, end, value) for start, end, value in versions if overlaps(start, end, first, last)]
+    full = [value for start, end, value in active if start <= first and (end is None or end >= last)]
+    if len(full) < len(active):
+        warnings.add(f'{kind}_VERSION_MIDMONTH')
+    if len(full) > 1:
+        warnings.add(f'{kind}_VERSION_AMBIGUOUS')
+    return (full[0] if len(full) == len(active) == 1 else None), bool(active)
+
+
 def input_coverage(snapshot: PlanningInput):
-    """Summarize facts without selecting BOM versions, inventory dates or capacity policies."""
+    """Summarize the same approved scope that the engine calculates."""
     facts = snapshot.approved_inputs
     requested = set(snapshot.command.product_ids)
     months = snapshot.command.months
-    selected_boms = [bom for bom in facts.boms if bom.header.product_id in requested]
-    stock_counts = Counter((row.item_type, row.item_id) for row in facts.inventory)
-    direct_components = {(line.component_type, line.component_id) for bom in selected_boms for line in bom.lines}
-    stock_needed = {('PRODUCT', product) for product in requested} | direct_components
     capacity, routing = snapshot.capacity_snapshot, snapshot.routing_snapshot
-    drafts = [d for d in (capacity, routing) if d is not None]
-    resources = {row.resource_id for draft in drafts for row in draft.resources}
+    resources = {row.resource_id for draft in (capacity, routing) if draft for row in draft.resources}
     routes = routing.routing_steps if routing else []
     budgets = capacity.hours_budgets if capacity else []
-    missing = set(snapshot.missing_inputs)
-    warnings = {'POLICY_NOT_CONFIRMED'}
-    warnings.update(code for code in missing if code.endswith('POLICY_REQUIRED') or code == 'POLICY_NOT_CONFIRMED')
-    missing -= warnings
-    if stock_needed - stock_counts.keys():
-        missing.add('INVENTORY_COVERAGE')
-    if not budgets or {(resource, month) for resource in resources for month in months} - {
-            (row.resource_id, row.period) for row in budgets}:
-        missing.add('HOURS_COVERAGE')
-    if not resources:
-        missing.add('CAPACITY_NOT_REGISTERED')
-    def covers_day(row, day):
-        return row.valid_from <= day and (row.valid_to is None or row.valid_to >= day)
+    missing = set(snapshot.missing_inputs) - _LEGACY_ADVISORIES
+    warnings = set()
+    boms_by_product = defaultdict(list)
+    routes_by_product = defaultdict(list)
+    mixed_products = set()
+    for bom in facts.boms:
+        header = bom.header
+        if header.status == 'APPROVED' and header.is_active:
+            boms_by_product[header.product_id].append((header.valid_from, header.valid_to, bom.lines))
+    for (product, _, _), steps in routing_versions(routes).items():
+        windows = {(step.valid_from, step.valid_to) for step in steps}
+        if len(windows) != 1:
+            mixed_products.add(product)
+            warnings.add('ROUTING_STEP_VALIDITY_MIXED')
+        else:
+            (start, end), = windows
+            routes_by_product[product].append((start, end, steps))
 
+    direct_components = set()
+    used_resources = set()
     for month in months:
         first, last = month_bounds(month)
         for product in requested:
-            boms = [row.header for row in selected_boms if row.header.product_id == product
-                    and row.header.valid_from <= last and (row.header.valid_to is None or row.header.valid_to >= first)]
-            steps = [row for row in routes if row.product_id == product and row.valid_from <= last
-                     and (row.valid_to is None or row.valid_to >= first)]
-            if not boms:
+            lines, has_bom = month_version(boms_by_product[product], first, last, 'BOM', warnings)
+            steps, has_route = month_version(routes_by_product[product], first, last, 'ROUTING', warnings)
+            if not has_bom:
                 missing.add('BOM_COVERAGE')
-            if not steps:
+            if not has_route and product not in mixed_products:
                 missing.add('ROUTING_COVERAGE')
-            if len(boms) > 1 or any(not covers_day(row, first) or not covers_day(row, last) for row in boms):
-                warnings.add('BOM_VERSION_POLICY_REQUIRED')
-            versions = {(row.routing_id, row.routing_version) for row in steps}
-            if len(versions) > 1 or any(not covers_day(row, first) or not covers_day(row, last) for row in steps):
-                warnings.add('ROUTING_VERSION_POLICY_REQUIRED')
-    if any(stock_counts[key] > 1 for key in stock_needed):
-        warnings.add('INVENTORY_SNAPSHOT_POLICY_REQUIRED')
+            direct_components.update((line.component_type, line.component_id) for line in lines or [])
+            used_resources.update(req.resource_id for step in steps or [] for req in (step, *step.resource_requirements))
+
+    stock_needed = {('PRODUCT', product) for product in requested} | direct_components
+    stock_dates = defaultdict(list)
+    for row in facts.inventory:
+        stock_dates[row.item_type, row.item_id].append(row.as_of_date)
+    if stock_needed - stock_dates.keys():
+        missing.add('INVENTORY_COVERAGE')
+    if any(dates.count(max(dates)) > 1 for key, dates in stock_dates.items() if key in stock_needed):
+        warnings.add('INVENTORY_AMBIGUOUS')
+
+    budget_keys = {(row.resource_id, row.period) for row in budgets}
+    if ({(resource, month) for resource in used_resources for month in months} - budget_keys
+            or not (budgets or routes)):
+        missing.add('HOURS_COVERAGE')
+    if not resources:
+        missing.add('CAPACITY_NOT_REGISTERED')
+    if routing is None:
+        missing.add('ROUTING_NOT_REGISTERED')
     if snapshot.scheduled_receipts is None:
         missing.add('RECEIPT_SOURCE_UNAVAILABLE')
     elif any(row.expected_date <= snapshot.command.as_of_date
@@ -155,15 +197,20 @@ def input_coverage(snapshot: PlanningInput):
         'forecast': (len(snapshot.forecast_rows), True),
         'products': (len(facts.products), True),
         'materials': (len(facts.materials), 'BOM_COVERAGE' not in missing),
-        'bom': (len(facts.boms), 'BOM_COVERAGE' not in missing and 'BOM_VERSION_POLICY_REQUIRED' not in warnings),
-        'inventory': (len(facts.inventory), 'INVENTORY_COVERAGE' not in missing and 'INVENTORY_SNAPSHOT_POLICY_REQUIRED' not in warnings),
+        'bom': (len(facts.boms), 'BOM_COVERAGE' not in missing and not any(code.startswith('BOM_') for code in warnings)),
+        'inventory': (len(facts.inventory), 'INVENTORY_COVERAGE' not in missing and 'INVENTORY_AMBIGUOUS' not in warnings),
         'resources': (len(resources), bool(resources)),
         'quantity_limits': (len(capacity.quantity_limits) if capacity else 0, True),
         'hours_budgets': (len(budgets), 'HOURS_COVERAGE' not in missing),
-        'routing': (len(routes), 'ROUTING_COVERAGE' not in missing and 'ROUTING_VERSION_POLICY_REQUIRED' not in warnings),
+        'routing': (len(routes), 'ROUTING_COVERAGE' not in missing and not any(code.startswith('ROUTING_') for code in warnings)),
         'scheduled_receipts': (len(snapshot.scheduled_receipts or []), snapshot.scheduled_receipts is not None),
     }
-    return inputs, sorted(missing), sorted(warnings)
+    return inputs, sorted(missing), sorted(warnings - missing)
+
+
+def with_input_coverage(snapshot: PlanningInput) -> PlanningInput:
+    _, missing, _ = input_coverage(snapshot)
+    return snapshot.model_copy(update={'missing_inputs': missing})
 
 
 def validate_overrides(command: PlanCommand, parent: PlanningInput | None = None) -> None:
@@ -211,9 +258,13 @@ def validate_pair(snapshot: PlanningInput, result: PlanningOutput, *, check_curr
         if result.status == 'OK' and keys != units.keys():
             raise ValueError('Incomplete OK candidate')
 
-    if any(plan.feasibility == 'FEASIBLE' for plan in result.plans):
-        if snapshot.missing_inputs or (check_current_coverage and input_coverage(snapshot)[1]):
-            raise ValueError('Missing approved input cannot be reported as verified')
+    missing = snapshot.missing_inputs
+    if check_current_coverage and result.plans:
+        _, missing, warnings = input_coverage(snapshot)
+        if any('_VERSION_' in code or code in {'ROUTING_STEP_VALIDITY_MIXED', 'INVENTORY_AMBIGUOUS'} for code in warnings):
+            raise ValueError('Conflicting approved versions or inventory cannot produce candidates')
+    if missing and any(plan.feasibility == 'FEASIBLE' for plan in result.plans):
+        raise ValueError('Missing approved input cannot be reported as verified')
 
     resources = {row.resource_id for draft in (snapshot.capacity_snapshot, snapshot.routing_snapshot)
                  if draft for row in draft.resources}

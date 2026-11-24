@@ -44,6 +44,10 @@ def test_examples_show_the_intended_outcomes():
     p = load("28_error_persistence_disabled_default")
     assert p["status"] == 501 and p["response"]["detail"]["code"] == "PERSISTENCE_DISABLED"
     assert load("24_list_inventory")["response"]["items"][1]["available_qty"] == "7"
+    preview = load('41_plan_preview')
+    assert preview['status'] == 200 and preview['response']['persisted'] is False
+    assert preview['response']['result']['module_version'].startswith('chungpamo-planning/')
+    assert len(preview['response']['result']['plans']) == 3
 
 
 def test_sample_files_are_synthetic_and_kept_as_lf():

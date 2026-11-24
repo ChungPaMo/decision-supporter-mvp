@@ -26,8 +26,8 @@ export async function verifyDatasetSelection(page: Page, apiBase: string): Promi
     expect(response.ok()).toBeTruthy();
     expect((await response.json()).total).toBe(27);
   }
-  await page.getByRole('button', { name: '계획 실행' }).click();
-  await expect(page.getByText('MODULE_NOT_IMPLEMENTED', { exact: false })).toBeVisible();
+  const capabilities = await page.request.get(`${apiBase}/integrations/modules`);
+  expect((await capabilities.json()).planning).toBe('IMPLEMENTED');
   const legacyProducts = page.waitForResponse(r => r.url().includes('/products') && new URL(r.url()).searchParams.get('dataset_id') === 'TISSUE-LEGACY');
   await selector.selectOption('TISSUE-LEGACY');
   const legacy = await (await legacyProducts).json();

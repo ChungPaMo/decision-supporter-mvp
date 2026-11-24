@@ -5985,6 +5985,7 @@
             "type": "object"
           },
           "missing_inputs": {
+            "description": "Unresolved required input codes, distinct from policy advisories. Successful calculations report these in unverified and cannot claim FEASIBLE while any are present.",
             "items": {
               "type": "string"
             },
@@ -13262,7 +13263,7 @@
             "description": "오류 (detail.code 참고)"
           }
         },
-        "summary": "Engine-gated immutable plan execution (currently 501)",
+        "summary": "Store or reuse an immutable real-engine BASE or WHAT_IF execution",
         "tags": [
           "plan-executions"
         ]
@@ -14166,7 +14167,7 @@
             "description": "오류 (detail.code 참고)"
           }
         },
-        "summary": "실제 예측 실행 ID를 참조하는 계획 진입점 (현재 501, 저장 없음)",
+        "summary": "실제 엔진의 BASE 미리보기 (승인 입력 사용, 저장 없음)",
         "tags": [
           "module-integration"
         ]
@@ -14307,7 +14308,7 @@
             "description": "오류 (detail.code 참고)"
           }
         },
-        "summary": "저장된 기준 계획의 What-if 진입점 (현재 501)",
+        "summary": "저장된 기준 계획의 What-if 재계산 미리보기 (저장 없음)",
         "tags": [
           "module-integration"
         ]

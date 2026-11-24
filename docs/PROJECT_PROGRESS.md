@@ -1,5 +1,7 @@
 # 충파모 프로젝트 진행상황
 
+최종 확인 **2026-11-24 (KST), 보조 PC**. 시작 `main` [`ec3a0d3`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/ec3a0d3)에서 김대영이 이희원 어댑터를 실제 BASE·WHAT_IF Preview/저장 서비스에 활성화했다. 공식 합성 2027-01~03의 독립 정답 **제약 306개·생산 81행·자재 81행** 일치. 입력 누락 전달, 월별 BOM·라우팅 선택, 입고 공급 상태, 메모리 저장 `201`·중복 `200`과 부모 지문을 검증했다. 전체 비DB **1,239 passed / 68 skipped**, Playwright 8개 통과. 실DB Preview·개발 DB 지문 비교·PostgreSQL 영구 저장은 이 PC에서 미실행이다. [판정·Docker PC 체크리스트](PLANNING_ENGINE_ACTIVATION_VERIFICATION_20261124.md)
+
 최종 확인 **2026-11-23 (KST), 기존 개발 PC**. 김대영이 [`82fa99f`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/82fa99fd2018dee5e73072924e9c7280f7353cda)에서 로컬 CPU 컬럼 비교를 실행했다. 기존 48건 RapidFuzz·BGE를 재현하고 신규 합성 70건에 Qwen3-0.6B·BGE-M3·multilingual-E5-small의 문맥 효과를 측정했다. Qwen 전체 문맥은 Top-3 29/37·오추천 8/70, RapidFuzz는 6/37·7/70이다. 운영 추천은 RapidFuzz를 유지한다. Upstage 후속 비교용 입력 내보내기와 점수 채점 경로를 마련했다. 전체 비DB **1,220 passed / 0 failed / 67 skipped**. [CPU 비교 및 재현](MAPPING_LOCAL_EMBEDDING_EVALUATION_20261123.md)
 
 직전 김대영이 [`1fee108`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/1fee1084385ebcbaccc2ce13f416649dd8279004)에서 별도 승인된 Edge→React→FastAPI→PostgreSQL 선택형 XLSX 쓰기 E2E **1회 실행 통과**를 확인했다. 제품·자재 승인 후 새 변환 `201`, 동일 입력 `200`, 이력·배치 재조회, 재검증·승인 버전 `1→2→3`, 신규 월수요 `0→1`과 화면 새로고침 후 유지까지 확인했다. 승인된 21개 테이블을 정리했고 개발 DB 지문은 모두 일치했다. HOLD→변환의 파일·범위 이관은 정마나미 후속이다. [쓰기 E2E 보고서](XLSX_SELECTION_PERSISTENCE_VERIFICATION.md#2026-11-23-실제-브라우저-쓰기-e2e)
@@ -81,7 +83,7 @@
 | PostgreSQL·데이터셋 격리 | 신규v2의 로컬FK·UUID격리·불변/지연트리거 실제 검증. 보관dataset 포함3스키마·기존81테이블 보존 probe 후 rollback. 개발0009도 별도승인·백업확인 후 적용 | 김대영 | 개발/회귀 현재0009. 기존자료와 연결된 볼륨은 보존, downgrade2개 미실행. dataset_id는 인증권한 아님. [최신 근거](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md) |
 | 수요예측 | 단일 엔진/계약 유지. 실제 승인된 변환 수요498행→예측OK/27행 저장·재조회·P50≤P80≤P90, 미승인 probe 제외 확인 | 이희원(엔진), 김대영(API), 정마나미(화면) | 합성 회귀 결과를 실제 기업 적합성으로 일반화하지 않음. [이번 실DB 검증](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md) |
 | 계획 입력 진단 | 승인 input을 한 트랜잭션에서 1~12개월 조립. CP 1·3개월과 LEGACY 1개월 실제 SQL 읽기 확인, 예측 범위 부족 409. 예정 입고 공급 미연결 표시 | 김대영(API), 정마나미(화면 연계) | 6·12개월 실제 조립에는 그 기간을 포함한 저장 예측이 필요. 화면에서 기간·진단·오류 표시 연계. [v0.4 인계](PLANNING_CONTRACT_V04_HANDOFF.md) |
-| 생산계획·제약 계산 | **11/23 팀 계약 변환부 구현**: `engine.planning.run(PlanningInput)→PlanningOutput`이 변환부 `engine/adapter.py`와 계산 코어(MPS/RCCP/MRP·판정·세 안·What-if)를 호출한다. 연속 1~12개월, 월별 BOM·라우팅 버전(그달 전체 유효 버전, 달 중간 변경 UNSUPPORTED), 승인 입고 예정(null이면 입고 0 + unverified), missing_inputs→unverified, WHAT_IF 세 안 재계산. 보조 PC 비DB 검증: 공식 합성 3개월 계약 입력(`tests/chungpamo/planning_input.json`, CSV 조립·고정 UUID)이 독립 정답과 판정 306개·생산·자재 수량까지 일치, 백엔드 `validate_pair`·`run_snapshot` 통과(입고 있음/없음, What-if), 1·3·6·12개월(연도 경계) 손계산 시험. **`AVAILABLE=False` 유지**(켜면 김대영 생성 예시 2개 갱신 필요 → 같은 커밋에서 켜기로 합의 요청), 실DB 계획 계산·저장은 미검증. 계산 규칙 v0.4 §1~§8(11/22)과 변환 규칙 §11(11/23), HC-01~18 손계산(독립 검산 18/18) | 이희원(계산·변환), 김대영(계약·저장·예시) | 김대영: `AVAILABLE=True`와 `backend/generate_api_examples.py` 41번·`contracts/examples/integration/planning_input_diagnostics.json`(engine_available) 갱신을 한 커밋으로, 기존 개발 PC 실DB에서 공식 3개월 Preview·저장 확인. 입고 예정 승인 원장·reader는 미구현이라 실DB는 항상 `RECEIPT_SOURCE_UNAVAILABLE`. 엔진이 월별 버전을 지원하므로 `*_VERSION_POLICY_REQUIRED` 처리 재검토 가능. 정식 APPROVE501 유지. [변환 규칙](../modules/planning_engine/PLANNING_RULES.md#11-팀-계약-변환-희원-결정-2026-11-23), [대영 계약 인계](PLANNING_CONTRACT_V04_HANDOFF.md) |
+| 생산계획·제약 계산 | **11/24 `AVAILABLE=True`**. 이희원 어댑터·MPS/RCCP/MRP/What-if 코어를 김대영이 Preview와 저장 API에 연결했다. 공식 합성 3개월의 제약 306개·생산/자재 각 81행, 1·3·6·12개월, 월 경계·중간 변경·중복, 공급 있음/빈 목록/null, BASE·WHAT_IF 실계산과 메모리 `201`/`200`을 확인했다. | 이희원(계산·변환), 김대영(계약·저장·예시) | 개발 PC에서 승인 데이터의 읽기 전용 Preview 및 전후 지문 비교, 별도 승인 후 전용 회귀 DB에서 영구 실행. 승인 입고 원장과 reader는 후속이며 정식 `APPROVE`는 501 유지. [활성화 및 실DB 인계](PLANNING_ENGINE_ACTIVATION_VERIFICATION_20261124.md) |
 | 프론트엔드 | 데이터셋 선택·배치 등록/검토/재검증/승인·분류 패널·예측 조회 및 별도 DEMO 화면 구현. **2026-11-23:** 화면 요청 P0·P1 연결 — 원본 파일 공유와 명시적 "이 파일 등록", 등록 전 컬럼 분석·Top-3 후보·열 선택, 판매 원장 변환 정책/미리보기/이력 저장·배치 연결, 변환 이력 목록·상세, CAPA·Routing 7종 등록. `/ingest/*` dataset scope 적용. type-check/build 통과, 보조 PC 로컬 PostgreSQL(0009)에서 공식 자료로 브라우저 확인 | 정마나미 | **2026-11-23 추가:** XLSX 시트·표 범위 선택 UI(`/ingest/xlsx-layout`, `table_selection`/`table_selections`)와 `hold_kind`·`registration_hint` 안내 연결. 대시보드를 "지금 처리할 일" 목록 중심으로 재구성하고 예측·등록·계획 화면의 표시를 정리(표시만 변경, API 계약 변경 없음). 미연결: 계획 v0.4 화면. **`tests/e2e/browser`는 미실행이며 갱신 필요**(등록이 파일 선택 즉시가 아니라 "이 파일 등록" 클릭으로 바뀜, 데이터 종류 7단계). 기존 npm 취약점 2건 미검토. [API 인계](INGESTION_UI_API_HANDOFF.md), [화면 변경 요청](INGESTION_UI_CHANGE_REQUEST.md) |
 | 전체 E2E | 공식14파일 SHA와 입력·저장·승인·예측 **TestClient+실제PostgreSQL** 경로 검증 완료. 메모리/SQL 대역으로 저장 성공을 대체하지 않음 | 김대영(통합), 각 담당 | 신규입력 전체브라우저·실제계획계산을 포함한 제조전체E2E는 미완료. [이번 범위](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md) |
 
@@ -98,14 +100,13 @@
 
 1. **김대영:** 개발0009 적용/기존자료 보존과 회귀DB의 원자성·불변성·동시성·격리·공식자료→승인→예측을 검증했다. 기존공식자료를 개발DB에 중복등록하지 않는다. 백업 실제복구리허설과 보존기간 정책은 후속이며 다음 파괴적 fixture도 새 범위승인이 필요하다.
 2. **정마나미:** [화면 요청 P0/P1](INGESTION_UI_CHANGE_REQUEST.md)에 따라 기존 화면을 재사용해 신규 API를 연결한다. 기존 승인 UI를 중복 구현하지 않는다. 기존 npm 취약점 2건(Vite/esbuild)도 담당 영역에서 검토한다.
-3. **김대영, 기존 개발 PC:** C01/C03/C06과 승인 입고 공급 경계를 구현했고 실DB의 조회·격리를 확인했다. 승인 입고 영구 원장과 변경 이력은 별도 설계 및 DB 적용 승인, 실제 엔진 실행·저장 회귀는 변환부와 격리 DB 사용 승인이 필요하다. [v0.4 인계](PLANNING_CONTRACT_V04_HANDOFF.md)
-4. **이희원·김대영 의존 작업:** 계산 코어, HC-01~18, 공식 9제품×3개월×3안 독립 정답 비교 및 What-if 코어는 11/22 구현을 확인했다. 희원님은 새 공통 DTO와 `run` 변환부를 연결하고 월별 BOM·Routing 버전 및 1·3·6·12개월 인수 기준을 확인한다. 김대영은 같은 계약의 실제 저장·재조회와 정책 버전을 검증한다. 정식 승인은 서버 인증과 별도 승인 정책 확정 후 연결한다.
-5. **통합/화면 담당:** DB 및 화면 연결 후 공식 자료의 전체 브라우저 E2E를 수행한다. 기존 FE client의 영구 계획 메서드를 재사용하고 LIVE Preview와 이력·저장·승인 상태를 구분한다. 제조 전체 E2E는 실제 계획 엔진도 필요하다.
-6. **팀 검토:** 실제 기업 데이터의 이용 범위·단위/거래 상태·매핑 모호성·변환 정책을 검토한다. 합성 데이터 성과를 기업 데이터 성능으로 일반화하지 않는다. 현재 LLM/Upstage 호출은 하지 않으며 후속 입력/출력 계약만 [추천 보고서](MAPPING_RECOMMENDATION_MVP_20261116.md)에 정리돼 있다.
+3. **김대영, 기존 개발 PC:** 공식 3개월 승인 데이터를 READ ONLY로 진단하고 실제 Preview와 전후 지문을 확인한다. 별도 승인 후 `chungpamo_regression`에서 BASE·WHAT_IF 저장·재사용과 격리를 검증한다. 승인 입고 영구 원장과 변경 이력은 별도 설계 및 DB 적용 승인이 필요하다. [실DB 체크리스트](PLANNING_ENGINE_ACTIVATION_VERIFICATION_20261124.md#docker-pc-인계)
+4. **통합/화면 담당:** 공식 자료로 전체 계획 브라우저 E2E를 수행한다. LIVE Preview와 이력·저장·승인 상태를 구분한다. 정식 승인은 서버 인증과 승인 정책 확정 후 연결한다.
+5. **팀 검토:** 실제 기업 데이터의 이용 범위·단위/거래 상태·매핑 모호성·변환 정책을 검토한다. 합성 데이터 성과를 기업 데이터 성능으로 일반화하지 않는다. 현재 LLM/Upstage 호출은 하지 않으며 후속 입력/출력 계약만 [추천 보고서](MAPPING_RECOMMENDATION_MVP_20261116.md)에 정리돼 있다.
 
 ## 개발 환경 제한
 
-**11/23 작업은 Docker·PostgreSQL이 없는 보조 PC에서 수행했다.** DB 접속·마이그레이션·DB 테스트는 미실행이다. 11/22의 기존 개발 PC 검증과 11/17의 별도 승인된 0009 적용은 해당 날짜의 기록이다.
+**11/24 엔진 활성화는 Docker·PostgreSQL이 없는 보조 PC에서 수행했다.** DB 접속·마이그레이션·DB 테스트·실DB Preview는 미실행이다. 기존 개발 PC 검증과 별도 승인된 0009 적용은 각각의 보고서에 기록된 결과다.
 
 - 기존 DB 데이터를 보존한다. 개발 DB/기존 `chungpamo_test` 초기화 금지, 독립 회귀 DB의 파괴적 작업도 [개발 절차](DEVELOPMENT_WORKFLOW.md)의 식별·보존 확인·별도 실행 승인이 필요하다.
 - `frontend/`, `modules/file_classifier/`, `modules/planning_engine/` 담당 폴더 제한과 신규 migration 추가 금지를 유지한다. 추천 점수 기반 자동 등록·승인, 원본 기업 데이터 외부 API 전송을 하지 않는다.

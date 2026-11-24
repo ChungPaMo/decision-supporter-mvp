@@ -112,23 +112,30 @@ def build_examples() -> dict[str, str]:
         get("28_error_persistence_disabled_default", "/batches")
     r.save("29_preview_without_persistence", {"method": "POST", "path": "/ingest/preview", "multipart": {"file": "sample_products.csv", "entity": "product"}},
            c.post("/ingest/preview", files={"file": ("sample_products.csv", _sample("sample_products.csv"))}, data={"entity": "product"}))
-    # Explicit non-persisting plan examples; no engine-success fixture is injected.
+    # Use synthetic approved facts for a real engine preview. The history and
+    # disabled approval examples do not require a database.
     from app.api.plan_executions import get_service as get_plan_service
     from app.plans.service import PlanService
+    from contracts.interfaces.planning import PlanningInput
     from contracts.interfaces.plan_execution import PlanExecutionList
     from types import SimpleNamespace
-    plan_service = PlanService(None)
+    plan_service = PlanService(SimpleNamespace(dataset_id='TISSUE-LEGACY'))
     plan_service.repo = SimpleNamespace(list=lambda limit,offset: PlanExecutionList(items=[],total=0,limit=limit,offset=offset))
     app.dependency_overrides[get_plan_service] = lambda: plan_service
     try:
         get("40_plan_history_empty", "/plan-executions")
-        command = {"forecast_execution_id":"00000000-0000-4000-8000-000000000001","product_ids":["TP-10R"],"target_month":"2027-01","as_of_date":"2026-12-31"}
-        path = "/plan-executions"
-        r.save("41_plan_engine_unavailable", {"method":"POST","path":path,"json":command}, c.post(path,json=command))
+        payload = json.loads((EXAMPLES / 'integration/planning_input.json').read_text(encoding='utf-8'))['payload']
+        source = PlanningInput.model_validate(payload)
+        command = source.command.model_dump(mode='json')
+        path = '/plans'
+        provider = SimpleNamespace(load=lambda cmd: source.model_copy(update={'command': cmd}))
+        with patch('app.integrations.planning.get_source_provider', return_value=provider):
+            r.save('41_plan_preview', {'method': 'POST', 'path': path, 'json': command}, c.post(path, json=command))
+        r.files['41_plan_preview']['_plan_note'] = 'REAL_ENGINE / synthetic approved input fixture. Read-only calculation; no PostgreSQL or approval.'
         decision = {"plan_id":"BASE","action":"APPROVE","actor_id":"TEST-REVIEWER","reason":"Example only","expected_version":1,"expected_input_digest":"sha256:"+"0"*64}
         path = "/plan-executions/00000000-0000-4000-8000-000000000010/decisions"
         r.save("42_plan_approval_disabled", {"method":"POST","path":path,"json":decision},c.post(path,json=decision))
-        for key in ("40_plan_history_empty","41_plan_engine_unavailable","42_plan_approval_disabled"):
+        for key in ("40_plan_history_empty","42_plan_approval_disabled"):
             r.files[key]["_plan_note"] = "SYNTHETIC / TEST-DOUBLE-ONLY transport example. No real plan calculation, DB write or formal approval."
     finally:
         app.dependency_overrides.pop(get_plan_service,None)

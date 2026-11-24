@@ -77,10 +77,48 @@ def test_actual_dataset_api_forecast_and_input(api,dataset,products,resources,de
     ids=[r['product_id'] for r in client.get('/products',params=p).json()['items']]
     snapshot=SqlPlanningSourceProvider(get_dataset_engine(dataset)).load(PlanCommand(dataset_id=dataset,forecast_execution_id=execution['execution_id'],product_ids=ids,target_month='2027-01',horizon_months=1,as_of_date='2026-12-31'))
     assert snapshot.dataset_id==dataset and len(snapshot.capacity_snapshot.resources)==resources
-    assert client.post('/plans',params=p,json=snapshot.command.model_dump(mode='json')).status_code==501
-    assert client.post('/plan-executions',params=p,json=snapshot.command.model_dump(mode='json')).status_code==501
+    preview=client.post('/plans',params=p,json=snapshot.command.model_dump(mode='json'))
+    assert preview.status_code in (200,422) and preview.json()['persisted'] is False,preview.json()
     other='CHUNGPAMO-2027' if dataset=='TISSUE-LEGACY' else 'TISSUE-LEGACY'
     assert client.get('/forecasts/'+execution['execution_id'],params={'dataset_id':other}).status_code==404
+
+
+def test_actual_plan_preview_and_storage_on_regression_db(api):
+    client,_=api
+    dataset='CHUNGPAMO-2027'
+    params={'dataset_id':dataset}
+    forecast=client.post('/forecasts',params=params,json={'trained_until':'2026-12-31','horizon_months':3})
+    assert forecast.status_code in (200,201),forecast.json()
+    command={'dataset_id':dataset,'forecast_execution_id':forecast.json()['execution']['execution_id'],
+             'product_ids':[row['product_id'] for row in client.get('/products',params=params).json()['items']],
+             'target_month':'2027-01','horizon_months':3,'as_of_date':'2026-12-31'}
+    history=client.get('/plan-executions',params=params).json()['total']
+    preview=client.post('/plans',params=params,json=command)
+    assert preview.status_code==200 and preview.json()['persisted'] is False,preview.json()
+    assert client.get('/plan-executions',params=params).json()['total']==history
+    created=client.post('/plan-executions',params=params,json=command)
+    assert created.status_code==201,created.json()
+    parent=created.json()['execution']
+    assert parent['data_origin']=='REAL_ENGINE' and parent['input_digest']==preview.json()['input_digest']
+    assert parent['result_snapshot']==preview.json()['result']
+    assert len(parent['result_snapshot']['plans'])==3
+    retry=client.post('/plan-executions',params=params,json=command)
+    assert retry.status_code==200 and retry.json()=={'execution':parent,'reused':True}
+    child_command={**command,'scenario':'WHAT_IF','base_plan_execution_id':parent['execution_id'],
+                   'overrides':{'demand_multiplier':'1.1'}}
+    what_if=client.post('/plans/what-if',params=params,json=child_command)
+    assert what_if.status_code==200 and what_if.json()['persisted'] is False,what_if.json()
+    child=client.post('/plan-executions',params=params,json=child_command)
+    assert child.status_code==201,child.json()
+    detail=child.json()['execution']
+    assert detail['base_plan_execution_id']==parent['execution_id']
+    assert detail['input_snapshot']['base_plan_snapshot']['result_digest']==parent['result_digest']
+    assert detail['result_snapshot']==what_if.json()['result']
+    child_retry=client.post('/plan-executions',params=params,json=child_command)
+    assert child_retry.status_code==200 and child_retry.json()=={'execution':detail,'reused':True}
+    path='/plan-executions/'+parent['execution_id']
+    assert client.get(path,params=params).json()==parent
+    assert client.get(path,params={'dataset_id':'TISSUE-LEGACY'}).status_code==404
 
 
 def test_actual_cross_refs_rollback_unknown_and_archived(api):

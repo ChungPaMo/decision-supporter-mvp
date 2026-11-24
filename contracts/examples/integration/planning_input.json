@@ -48,9 +48,13 @@
       ]
     },
     "missing_inputs": [
+      "BOM_COVERAGE",
       "CAPACITY_NOT_REGISTERED",
-      "ROUTING_NOT_REGISTERED",
-      "POLICY_NOT_CONFIRMED"
+      "HOURS_COVERAGE",
+      "INVENTORY_COVERAGE",
+      "RECEIPT_SOURCE_UNAVAILABLE",
+      "ROUTING_COVERAGE",
+      "ROUTING_NOT_REGISTERED"
     ]
   }
 }

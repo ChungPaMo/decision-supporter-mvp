@@ -1,4 +1,4 @@
-"""Typed, read-only planning handoff v0.2. Business formulas remain undecided."""
+"""Typed planning handoff for approved inputs and actual engine outputs."""
 from datetime import date, datetime
 from decimal import Decimal
 from typing import Literal
@@ -181,7 +181,9 @@ class PlanningInput(StrictModel):
     capacity_snapshot: CapacityRegistrationDraft | None = None
     routing_snapshot: CapacityRegistrationDraft | None = None
     policy_snapshot: dict[str, str] = Field(default_factory=dict)
-    missing_inputs: list[str] = Field(default_factory=list)
+    missing_inputs: list[str] = Field(default_factory=list, description=(
+        'Unresolved required input codes, distinct from policy advisories. Successful calculations report '
+        'these in unverified and cannot claim FEASIBLE while any are present.'))
     base_plan_snapshot: dict | None = None
 
     @model_validator(mode='after')

@@ -7,7 +7,7 @@ from contracts.interfaces.modules import PlanningInput, PlanningOutput
 
 from engine.adapter import run as _run
 
-AVAILABLE = False
+AVAILABLE = True
 
 
 def run(request: PlanningInput) -> PlanningOutput:

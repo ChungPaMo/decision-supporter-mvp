@@ -146,7 +146,7 @@ def commit(tx,batch_id,actor,records):
 
 
 def planning_snapshot(c, command):
-    from app.integrations.planning_validation import horizon_bounds, month_bounds
+    from app.integrations.planning_validation import horizon_bounds
 
     first_date, last_date = horizon_bounds(command)
     first, last = first_date.isoformat(), last_date.isoformat()
@@ -154,25 +154,17 @@ def planning_snapshot(c, command):
     resources = approved_rows(c,'resources')
     quantities = [r for r in approved_rows(c,'quantity_limits') if r['payload']['period'] in periods and r['payload']['product_id'] in command.product_ids]
     budgets = [r for r in approved_rows(c,'hours_budgets') if r['payload']['period'] in periods]
-    routing = [r for r in approved_rows(c,'routing_steps') if r['payload']['product_id'] in command.product_ids and r['payload']['valid_from']<=last and (r['payload'].get('valid_to') or '9999-12-31')>=first]
+    def route_version(row):
+        p = row['payload']
+        return p['routing_id'], p['routing_version']
+
+    steps = [r for r in approved_rows(c, 'routing_steps') if r['payload']['product_id'] in command.product_ids]
+    versions = {route_version(r) for r in steps if r['payload']['valid_from'] <= last
+                and (r['payload'].get('valid_to') or '9999-12-31') >= first}
+    # Keep all steps of a selected version for graph and mixed-validity checks.
+    routing = [r for r in steps if route_version(r) in versions]
     ids = {r['batch_id'] for r in [*resources,*quantities,*budgets,*routing]}
-    common = {'resources':[r['payload'] for r in resources], 'quantity_limits':[], 'hours_budgets':[], 'routing_steps':[], 'unresolved_policy_refs':['POLICY_NOT_CONFIRMED']}
+    common = {'resources':[r['payload'] for r in resources], 'quantity_limits':[], 'hours_budgets':[], 'routing_steps':[]}
     capacity = {**common,'quantity_limits':[r['payload'] for r in quantities],'hours_budgets':[r['payload'] for r in budgets]} if quantities or budgets else None
     routes = {**common,'routing_steps':[r['payload'] for r in routing]} if routing else None
-    missing = ['POLICY_NOT_CONFIRMED']
-    if capacity is None: missing.append('CAPACITY_NOT_REGISTERED')
-    if routes is None: missing.append('ROUTING_NOT_REGISTERED')
-    budget_keys = {(r['payload']['resource_id'], r['payload']['period']) for r in budgets}
-    if any((r['payload']['resource_id'], month) not in budget_keys for r in resources for month in periods):
-        missing.append('HOURS_COVERAGE')
-    for month in periods:
-        start, end = (day.isoformat() for day in month_bounds(month))
-        for product in command.product_ids:
-            steps = [r['payload'] for r in routing if r['payload']['product_id'] == product
-                     and r['payload']['valid_from'] <= end and (r['payload'].get('valid_to') or '9999-12-31') >= start]
-            versions = {(row['routing_id'], row['routing_version']) for row in steps}
-            if not steps:
-                missing.append('ROUTING_COVERAGE')
-            if len(versions) > 1 or any(row['valid_from'] > start or (row.get('valid_to') or '9999-12-31') < end for row in steps):
-                missing.append('ROUTING_VERSION_POLICY_REQUIRED')
-    return capacity,routes,ids,sorted(set(missing))
+    return capacity, routes, ids

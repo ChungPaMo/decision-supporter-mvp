@@ -68,7 +68,7 @@ def preview_planning_inputs(body: PlanCommand, dataset_id: str = Depends(dataset
 
 @router.post('/plans', response_model=PlanningReply,
              responses={422: {'model': PlanningReply | ErrorResponse}, 500: {'model': PlanningReply | ErrorResponse}},
-             summary='실제 예측 실행 ID를 참조하는 계획 진입점 (현재 501, 저장 없음)')
+             summary='실제 엔진의 BASE 미리보기 (승인 입력 사용, 저장 없음)')
 def create_plan(body: LegacyPlanPreviewCommand, dataset_id: str = Depends(dataset_context)):
     body = PlanCommand.model_validate(scoped_command(body, dataset_id).model_dump())
     if body.scenario != 'BASE': raise ApiError(422, ErrorCode.REQUEST_INVALID, 'What-if는 /plans/what-if를 사용하세요.')
@@ -77,7 +77,7 @@ def create_plan(body: LegacyPlanPreviewCommand, dataset_id: str = Depends(datase
 
 @router.post('/plans/what-if', response_model=PlanningReply,
              responses={422: {'model': PlanningReply | ErrorResponse}, 500: {'model': PlanningReply | ErrorResponse}},
-             summary='저장된 기준 계획의 What-if 진입점 (현재 501)')
+             summary='저장된 기준 계획의 What-if 재계산 미리보기 (저장 없음)')
 def what_if(body: PlanCommand, dataset_id: str = Depends(dataset_context)):
     body = scoped_command(body,dataset_id)
     if body.scenario != 'WHAT_IF': raise ApiError(422, ErrorCode.REQUEST_INVALID, 'WHAT_IF 시나리오와 기준 계획 ID가 필요합니다.')

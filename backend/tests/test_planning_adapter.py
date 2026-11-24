@@ -9,6 +9,7 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.errors import ApiError, ErrorCode
 from app.integrations import planning as adapter
+from app.integrations.planning_validation import with_input_coverage
 from contracts.interfaces.modules import PlanningInput, PlanCommand
 
 ROOT = Path(__file__).resolve().parents[2] / 'contracts/examples/integration'
@@ -22,6 +23,8 @@ def delivered(monkeypatch):
     from engine import planning
     source = PlanningInput.model_validate(payload('planning_input.json'))
     result = payload('planning_output.json')
+    result['unverified'] = [{'code': code, 'message': 'Synthetic coverage evidence'}
+                            for code in with_input_coverage(source).missing_inputs]
     monkeypatch.setattr(planning, 'AVAILABLE', True)
     monkeypatch.setattr(planning, 'run', lambda request: copy.deepcopy(result))
     class Provider:

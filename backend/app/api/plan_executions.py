@@ -35,7 +35,7 @@ def read(call):
 
 @router.post('',response_model=PlanExecutionReply,status_code=201,
              responses={200:{'model':PlanExecutionReply},422:{'model':PlanExecutionReply|ErrorResponse},500:{'model':PlanExecutionReply|ErrorResponse}},
-             summary='Engine-gated immutable plan execution (currently 501)')
+             summary='Store or reuse an immutable real-engine BASE or WHAT_IF execution')
 def create(body:PlanExecutionCreate,svc:Service):
     from app.api.integrations import scoped_command
     context=getattr(svc.database,'dataset_id','TISSUE-LEGACY')

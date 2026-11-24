@@ -33,7 +33,7 @@ def snapshot_data():
     facts['materials'] = [{'material_id': 'M', 'material_name': 'Synthetic', 'safety_stock_qty': '0',
                            'base_unit': 'kg', 'source_type': 'SYNTHETIC', 'batch_id': str(UUID(int=10))}]
     facts['boms'] = [{
-        'header': {'bom_id': 'B', 'product_id': 'TP-10R', 'bom_version': 'V1', 'status': 'ACTIVE',
+        'header': {'bom_id': 'B', 'product_id': 'TP-10R', 'bom_version': 'V1', 'status': 'APPROVED',
                    'is_active': True, 'valid_from': '2026-12-01', 'valid_to': None, 'base_qty': '1'},
         'lines': [{'bom_id': 'B', 'line_no': 1, 'component_type': 'MATERIAL', 'component_id': 'M',
                    'qty_per': '2', 'unit': 'kg', 'scrap_rate': '0'}],
@@ -107,11 +107,11 @@ def test_summary_does_not_calculate_or_create_plan_history(monkeypatch, snapshot
     report = PlanningInputDiagnostics.model_validate(response.json())
     assert report.engine_available is False and report.persisted is False
     assert report.status == 'INPUTS_PRESENT' and report.scope == 'SINGLE_MONTH'
-    assert report.warning_codes == ['POLICY_NOT_CONFIRMED'] and report.missing_inputs == []
+    assert report.warning_codes == report.missing_inputs == []
     assert report.inputs['forecast'].row_count == 1 and report.inputs['routing'].ready
     assert report.inputs['quantity_limits'].row_count == 0 and report.inputs['quantity_limits'].ready
     assert len(report.approved_sources) == 6
-    assert report.input_digest == adapter.snapshot_digest(PlanningInput.model_validate(snapshot_data))
+    assert report.input_digest == adapter.snapshot_digest(adapter.with_input_coverage(PlanningInput.model_validate(snapshot_data)))
     assert 'result' not in response.json() and 'execution_id' not in response.json()
 
 
@@ -144,8 +144,8 @@ def test_engine_available_does_not_resolve_ambiguous_input_or_call_engine(monkey
     report = response.json()
     assert report['engine_available'] is True and report['status'] == 'NEEDS_REVIEW'
     assert report['missing_inputs'] == []
-    assert set(report['warning_codes']) == {'BOM_VERSION_POLICY_REQUIRED', 'INVENTORY_SNAPSHOT_POLICY_REQUIRED', 'POLICY_NOT_CONFIRMED'}
-    assert not report['inputs']['bom']['ready'] and not report['inputs']['inventory']['ready']
+    assert report['warning_codes'] == ['BOM_VERSION_MIDMONTH']
+    assert not report['inputs']['bom']['ready'] and report['inputs']['inventory']['ready']
 
 
 def test_example_matches_the_api_response(monkeypatch):

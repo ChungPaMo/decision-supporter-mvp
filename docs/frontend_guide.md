@@ -26,7 +26,7 @@ TRANSFORM_BLOCKED 409는 미확인 정책·오류·빈 정상 수요 또는 연�
 
 데이터셋 격리 API: `/datasets`, `/datasets/{dataset_id}`. 모든 영구 DB API는 query `dataset_id`로 선택한다. 생략 시 TISSUE-LEGACY만 조회하며 전체 조회가 아니다. 신규 데이터는 CHUNGPAMO-2027을 명시한다. 새 오류 DATASET_INVALID(422), DATASET_NOT_FOUND(404), DATASET_INACTIVE(409), DATASET_EXISTS(409), DATASET_MISMATCH(409). [데이터셋 계약](DATASET_ISOLATION.md)을 따른다. dataset_id는 인증/권한 증명이 아니다.
 
-계획 영구 실행 API(Preview와 별도): `/plan-executions`, `/plan-executions/{execution_id}`, `/plan-executions/{execution_id}/candidates`, `/plan-executions/{execution_id}/decisions`, `/plan-executions/{execution_id}/export.xlsx`. 생성은 엔진 미구현 501, APPROVE는 인증/정책 미연결 501이다. [계약·요청 예시](PLAN_EXECUTION_PERSISTENCE.md)를 따른다. 새 오류: PLAN_NOT_FOUND(404), PLAN_APPROVAL_DISABLED(501), PLAN_DECISION_BLOCKED(409), PLAN_EXPORT_BLOCKED(409), PLAN_OVERRIDE_UNSUPPORTED(422). actor_id는 신원 증명이 아니며 auth_verified=false 검토와 공식 승인을 구별한다.
+계획 영구 실행 API(Preview와 별도): `/plan-executions`, `/plan-executions/{execution_id}`, `/plan-executions/{execution_id}/candidates`, `/plan-executions/{execution_id}/decisions`, `/plan-executions/{execution_id}/export.xlsx`. 실제 엔진 신규 저장은 201, 동일 실행 재사용은 200이다. 실DB 저장 회귀는 후속이다. APPROVE는 인증/정책 미연결로 501이다. [계약·요청 예시](PLAN_EXECUTION_PERSISTENCE.md). 오류: PLAN_NOT_FOUND(404), PLAN_APPROVAL_DISABLED(501), PLAN_DECISION_BLOCKED(409), PLAN_EXPORT_BLOCKED(409), PLAN_OVERRIDE_UNSUPPORTED(422). actor_id는 신원 증명이 아니며 auth_verified=false 검토와 공식 승인을 구별한다.
 
 2026-11-15 CAPA/Routing: 기존 `/batches`의 entity에 capacity/routing을 추가했다. 승인된 조회는 `/capacity`, `/routings`이며 items/total/limit/offset을 반환한다. 새로운 entity UI·표시 타입은 정마나미 후속 작업이다. [데이터 사전](CAPACITY_ROUTING_DATA_DICTIONARY.md)과 [변경 요청](CAPACITY_ROUTING_CHANGE_REQUESTS.md)을 참고한다. 현재 모노레포의 frontend는 존재하며 아래 별도 프로젝트 설명은 초기 이관 전 안내다.
 
@@ -229,11 +229,13 @@ CORS_ALLOW_ORIGINS=http://localhost:5173
 
 ## Monorepo module handoff (draft)
 
-`/integrations/modules`: capability metadata. `/classifications`: MODULE_NOT_IMPLEMENTED (501) until the classifier is delivered; MODULE_ERROR (500) on module failures. `/plans` and `/plans/what-if`: MODULE_NOT_IMPLEMENTED (501); no plan calculation, storage or formal approval. Manual entity selection and the existing batch/forecast APIs remain available. See INTEGRATION_CONTRACT.md.
+`/integrations/modules` reports `planning: IMPLEMENTED`. `/plans` and `/plans/what-if` run the actual engine on approved inputs. If the approved input provider is disabled, both return 501 `PERSISTENCE_DISABLED`. MODULE_NOT_IMPLEMENTED (501) is reserved for a disabled module. MODULE_ERROR (500) indicates a calculation, loader or output contract failure. Manual entity selection and the existing batch/forecast APIs remain available. [Engine verification](PLANNING_ENGINE_ACTIVATION_VERIFICATION_20261124.md)
 
 
 ## Final handoff draft additions
 
-`/classifications/file` builds the bounded classification DTO from an uploaded file without saving. sample_row_limit=0 by default; maximum 20. `/plans` and `/plans/what-if` preserve their paths. Read-only successful replies explicitly set persisted=false and approval_available=false. MODULE_NOT_IMPLEMENTED remains 501 until a module is delivered; PLAN_INPUT_UNAVAILABLE is 409; PLAN_HISTORY_NOT_IMPLEMENTED is 501 until saved base plans exist. Failure statuses are 422/500, never successful plan approvals. See TEAM_HANDOFF.md.
+`/classifications/file` builds the bounded classification DTO from an uploaded file without saving. sample_row_limit=0 by default; maximum 20. `/plans` and `/plans/what-if` set `persisted=false` and `approval_available=false`. Read `result.status` and each candidate's `feasibility` separately. `INPUT_INVALID` and `UNSUPPORTED` use HTTP 422 with engine error details, `PLAN_INPUT_UNAVAILABLE` uses 409, and a missing or out-of-scope saved parent uses 404 `PLAN_NOT_FOUND`. See the [activation report](PLANNING_ENGINE_ACTIVATION_VERIFICATION_20261124.md).
+
+`PLAN_HISTORY_NOT_IMPLEMENTED` is the legacy error code for servers predating saved plan history.
 
 `POST /classifications/documents`는 여러 엑셀(.xlsx, .xlsm, .csv)을 multipart `files`로 받아 파일별 문서 종류(BOM/MPS/MRP/RCCP/CRP/MES/ERP/미분류/확인 필요), 확신도, 근거를 돌려준다. 요청당 50개·파일당 10MB까지이며 화면은 25개씩 나눠 보낸다. 저장하지 않고 DB를 쓰지 않으며, 업로드용 유형 추천(`/classifications/file`)이나 등록·승인과 무관한 추천 전용이다. 읽지 못한 파일은 오류 대신 `확인 필요`와 이유로 돌아온다. 화면은 `DocumentSortPanel`(데이터 업로드).

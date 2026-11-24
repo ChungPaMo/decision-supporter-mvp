@@ -18,6 +18,7 @@ from app.forecast.runs import ForecastRuns
 from app.batches.capacity import planning_snapshot
 from app.integrations.planning_validation import (
     forecast_scope, horizon_bounds, input_conflict, input_coverage, validate_input, validate_overrides, validate_pair,
+    with_input_coverage,
 )
 from app.integrations.planning_receipts import ReceiptLedgerReader, open_receipts
 from contracts.interfaces.modules import PlanCommand, PlanningInput, PlanningOutput, PlanningReply
@@ -86,7 +87,7 @@ class SqlPlanningSourceProvider:
                     raise input_conflict('PRODUCT_COVERAGE')
                 if {(r.product_id, r.target_month) for r in selected} != required or len(selected) != len(required):
                     raise input_conflict('FORECAST_PRODUCT_MONTH_COVERAGE')
-                capacity, routing, capacity_ids, missing = planning_snapshot(c, command)
+                capacity, routing, capacity_ids = planning_snapshot(c, command)
                 ids = {r.batch_id for r in [*products, *materials, *boms, *inventory]} | capacity_ids
                 receipt_rows = self.receipt_reader(c, command.dataset_id) if self.receipt_reader else None
                 receipts = None
@@ -95,8 +96,6 @@ class SqlPlanningSourceProvider:
                     receipts = open_receipts(receipt_rows, command, {row.material_id: row.base_unit for row in materials})
                     receipt_ids = {row.batch_id for row in receipt_rows}
                     ids |= {row.batch_id for row in receipts}
-                else:
-                    missing.append('RECEIPT_SOURCE_UNAVAILABLE')
                 forecast_ids = {row.batch_id for row in execution.input_batches}
                 if not forecast_ids or len(forecast_ids) != len(execution.input_batches):
                     raise input_conflict('FORECAST_SOURCE_MISMATCH')
@@ -118,8 +117,6 @@ AND status='APPROVED' AND blocking_error_count=0 ORDER BY batch_id"""), {
                         raise input_conflict('FORECAST_SOURCE_MISMATCH')
                 # Keep LEGACY plan snapshots compatible while checking forecast provenance for every dataset.
                 source_ids = ids if command.dataset_id == LEGACY_DATASET else ids | forecast_ids
-                if any(not any(b.header.product_id == pid for b in boms) for pid in command.product_ids): missing.append('BOM_COVERAGE')
-                if any(not any(r.item_type == 'PRODUCT' and r.item_id == pid for r in inventory) for pid in command.product_ids): missing.append('INVENTORY_COVERAGE')
                 snapshot = PlanningInput.model_validate(json.loads(_json({
                     'dataset_id': command.dataset_id,
                     'command': command.model_dump(mode='json'), 'forecast_input_digest': execution.input_digest,
@@ -129,12 +126,12 @@ AND status='APPROVED' AND blocking_error_count=0 ORDER BY batch_id"""), {
                                        'p80': r.p80, 'p90': r.p90, 'unit': master[r.product_id].base_unit} for r in selected],
                     'approved_inputs': {'products': [asdict(r) for r in products], 'materials': [asdict(r) for r in materials],
                                         'boms': [asdict(r) for r in boms], 'inventory': [asdict(r) for r in inventory],
-                                        'sources': [approved[id].model_dump(mode='json') for id in sorted(source_ids)]}, 'missing_inputs': missing,
+                                        'sources': [approved[id].model_dump(mode='json') for id in sorted(source_ids)]},
                     'capacity_snapshot': capacity, 'routing_snapshot': routing,
                     'scheduled_receipts': None if receipts is None else [row.model_dump(mode='json') for row in receipts],
                 })))
                 validate_input(command, snapshot)
-                return snapshot
+                return with_input_coverage(snapshot)
         except ValidationError:
             raise input_conflict('STORED_INPUT_INVALID') from None
         except (OperationalError, InterfaceError):
@@ -173,7 +170,7 @@ def preview_inputs(command: PlanCommand) -> PlanningInputDiagnostics:
         engine_available = False
 
     inputs, missing, warnings = input_coverage(snapshot)
-    needs_review = missing or any(code != 'POLICY_NOT_CONFIRMED' for code in warnings)
+    needs_review = missing or warnings
     return PlanningInputDiagnostics(
         dataset_id=command.dataset_id, forecast_execution_id=command.forecast_execution_id,
         target_month=command.target_month, as_of_date=command.as_of_date,
@@ -181,32 +178,41 @@ def preview_inputs(command: PlanCommand) -> PlanningInputDiagnostics:
         status='NEEDS_REVIEW' if needs_review else 'INPUTS_PRESENT',
         inputs={kind: {'row_count': count, 'ready': ready} for kind, (count, ready) in inputs.items()},
         missing_inputs=missing, warning_codes=warnings, approved_sources=snapshot.approved_inputs.sources,
-        forecast_input_digest=snapshot.forecast_input_digest, input_digest=snapshot_digest(snapshot),
+        forecast_input_digest=snapshot.forecast_input_digest, input_digest=snapshot_digest(
+            snapshot.model_copy(update={'missing_inputs': missing})),
         engine_available=engine_available,
     )
 
 
-def execute(command: PlanCommand, provider_factory=get_source_provider) -> PlanningReply:
-    validate_overrides(command)
+def require_engine():
     try:
         from engine import planning
-        if not planning.AVAILABLE:
-            raise NotImplementedError
-    except (ImportError, NotImplementedError):
+    except ImportError:
+        raise ApiError(500, ErrorCode.MODULE_ERROR, '생산계획 계산 모듈을 불러올 수 없습니다.') from None
+    if not planning.AVAILABLE:
         raise ApiError(501, ErrorCode.MODULE_NOT_IMPLEMENTED, '생산계획 계산 모듈은 아직 구현되지 않았습니다.') from None
+    return planning
+
+
+def execute(command: PlanCommand, provider_factory=get_source_provider) -> PlanningReply:
+    validate_overrides(command)
+    require_engine()
     try:
         snapshot = PlanningInput.model_validate(provider_factory().load(command))
     except ApiError:
         raise
+    except ValidationError:
+        raise input_conflict('STORED_INPUT_INVALID') from None
     except Exception:
         raise ApiError(500, ErrorCode.MODULE_ERROR, '계획 입력 스냅샷 구성 또는 계약 검증에 실패했습니다.') from None
     return run_snapshot(command, snapshot)
 
 
 def run_snapshot(command: PlanCommand, snapshot: PlanningInput) -> PlanningReply:
-    from engine import planning
+    planning = require_engine()
     # Prevent a provider mismatch and module mutation from changing the authoritative command/provenance.
     validate_input(command, snapshot)
+    snapshot = with_input_coverage(snapshot)
     if command.scenario == 'WHAT_IF':
         validate_overrides(command, snapshot)
         base = snapshot.base_plan_snapshot or {}
@@ -218,9 +224,15 @@ def run_snapshot(command: PlanCommand, snapshot: PlanningInput) -> PlanningReply
         raw = planning.run(snapshot.model_copy(deep=True))
         result = PlanningOutput.model_validate(raw.model_dump() if isinstance(raw, PlanningOutput) else raw)
         validate_pair(snapshot, result)
-        if (command.scenario == 'WHAT_IF' and result.status in ('OK', 'PARTIAL')
-                and {plan.plan_type for plan in result.plans} != {'BASELINE', 'STABLE', 'COST_SAVING'}):
-            raise ValueError('What-if must recalculate all three plan types')
+        for issues in (result.warnings, result.unverified):
+            if len({(issue.code, tuple(issue.input_refs)) for issue in issues}) != len(issues):
+                raise ValueError('Duplicate planning issue')
+        if result.status in ('OK', 'PARTIAL'):
+            if set(snapshot.missing_inputs) - {issue.code for issue in result.unverified}:
+                raise ValueError('Missing input evidence was lost')
+            if (command.scenario == 'WHAT_IF'
+                    and {plan.plan_type for plan in result.plans} != {'BASELINE', 'STABLE', 'COST_SAVING'}):
+                raise ValueError('What-if must recalculate all three plan types')
         return PlanningReply(forecast_execution_id=command.forecast_execution_id, input_digest=digest, result=result)
     except NotImplementedError:
         raise ApiError(501, ErrorCode.MODULE_NOT_IMPLEMENTED, '요청한 계획 계산은 아직 지원되지 않습니다.') from None

@@ -1133,3 +1133,30 @@
 
 **관련 자료**
 - [모델 근거·측정·재현](MAPPING_LOCAL_EMBEDDING_EVALUATION_20261123.md), [합성 평가셋](../contracts/examples/mapping_semantic_holdout_v1.json), [평가기](../scripts/evaluate_mapping_embeddings.py).
+
+### 2026-11-24 — 실제 생산계획 엔진 활성화와 승인 입력 검증
+
+**Git**
+- 시작 Commit [`ec3a0d3`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/ec3a0d3), 엔진 어댑터 [`2adab58`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/2adab58).
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='feat: activate real production planning engine'`로 확인한다.
+- 브랜치 `main`.
+
+**작업 목적**
+- 이희원 어댑터를 실제 Preview/저장 API에서 활성화하고 승인 입력의 준비 판정과 계산 판정을 일치시킨다.
+
+**구현 내용**
+- `engine/planning.py`에서 `AVAILABLE=True`. `backend/app/integrations/planning*.py`에서 필수 입력 코드를 전달하고 중복·누락 및 모순 출력 검사를 적용했다. SQL 입력 조립은 월 경계를 넘는 버전과 라우팅 단계 전체를 보존한다.
+- 진단 `engine_available`, 실제 엔진 BASE Preview 예시, OpenAPI/Schema, 비DB·실DB 회귀 단언과 읽기 전용 실행기를 갱신했다.
+
+**검증 결과**
+- Windows 보조 PC 비DB **1,239 passed / 0 failed / 68 skipped**, Playwright **8 passed**, 계약 생성 동기화·의존성·TypeScript·Vite 빌드 통과.
+- 공식 3개월 실제 계산의 제약 306개와 생산·자재 각 81행이 독립 정답과 일치했다. BASE·WHAT_IF 메모리 `201`·`200`, 부모 지문, 월별 BOM·라우팅 및 입고 세 상태를 확인했다.
+
+**기술적 결정**
+- 월 전체에 유효한 승인 버전을 기준으로 진단한다. 입력 충돌은 409, 엔진이 반환한 잘못되거나 미지원인 입력은 422, 엔진 계약 위반은 500이다. 계산 코어는 기존 어댑터·규칙을 사용하며 승인 공급 미연결을 `null`로 보존한다.
+
+**남은 문제**
+- 개발 PC에서 읽기 전용 Preview와 DB 전후 지문 비교를 실행한다. 영구 저장 회귀는 별도 승인 후 `chungpamo_regression`에서 실행한다. 승인 입고 원장·reader 및 정식 승인 정책·인증은 별개 후속이다.
+
+**관련 자료**
+- [활성화 검증과 Docker PC 체크리스트](PLANNING_ENGINE_ACTIVATION_VERIFICATION_20261124.md), [v0.4 인계](PLANNING_CONTRACT_V04_HANDOFF.md).
