@@ -1317,3 +1317,29 @@
 
 **관련 자료**
 - [논문 기반 알고리즘 비교와 재현](MAPPING_RESEARCH_PAPER_BENCHMARK_20261124.md) · [Phase 5 오프라인 기준](MAPPING_ACCURACY_OPTIMIZATION_20261124.md) · [Phase 3 캐시의 원 실측](MAPPING_FINAL_ARCHITECTURE_EVALUATION_20261124.md).
+
+### 2026-11-24 — Phase 7 논문 기반 실제 LLM 비교
+
+**Git**
+- 시작 Commit [`df06bf0`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/df06bf01c94738196abc11c649af663fbdeb8871), 브랜치 `main`.
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='research: compare local LLM schema matching and prepare metered Solar runs'`으로 확인한다.
+
+**작업 목적**
+- 후보 검색, 개별 판정, 문맥과 순서 정제의 기여도를 실제 LLM에서 비교하고 Solar 실측을 위한 전송과 비용 경계를 정한다.
+
+**구현 내용**
+- `scripts/mapping_phase7_*.py`에 새 양식군 생성, 독립 후보 생성·Typed 판정·증거 패킹·정제·순열 합의, 공식 옵티마이저와 공용 비용 경로용 어댑터를 추가했다.
+- `scripts/evaluate_mapping_phase7.py`에서 로컬 LLM·동결 평가, 승인 계획과 고정 요청 해시·공용 비용 원장 검사를 지원한다.
+
+**검증 결과**
+- Qwen Pointwise 새 양식 6문서에서 3정답·3오추천, Phase 6은 5정답·2오추천이었다. 60문서 기준선과 기존 Phase 6의 200문서 회귀를 검증했다.
+- 비DB 1,350 통과·68 건너뜀. RapidFuzz 48·70건, 기존 Solar 230문서 캐시, OpenAPI와 JSON Schema, 변경 파일 보안 검사를 확인했다. DB·Docker 미실행.
+
+**기술적 결정**
+- 현 운영 추천과 승인 경로를 유지한다. Solar 초기 요청은 BOM·재고 각 1개 합성 문서만 대상으로 본문과 비용 상한을 동결한다.
+
+**남은 문제**
+- 최대 USD 0.059609 스모크를 위한 합성 전송 및 실행비 승인. 최소 20문서 확대 및 공식 유료 옵티마이저 비교에는 공급사 예약 대조나 추가 비용 승인이 필요하다.
+
+**관련 자료**
+- [Phase 7 연구, 비교 결과 및 재현](MAPPING_LLM_PAPER_OPTIMIZATION_20261124.md).
