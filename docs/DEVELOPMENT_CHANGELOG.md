@@ -1371,3 +1371,27 @@
 
 **관련 자료**
 - [Phase 8 실측 및 확대 계획](MAPPING_SOLAR_PHASE8_20261124.md) · [Phase 7 승인 계획](MAPPING_LLM_PAPER_OPTIMIZATION_20261124.md).
+
+### 2026-11-24 — Phase 9 합성 평가셋과 Solar 기준선 승인 계획
+
+**Git**
+- 시작 Commit [`5dec94b`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/5dec94b2232550dfcb1346bb2f5ece225d643e9f), 브랜치 `main`.
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='research: freeze Phase 9 Solar evaluation and approval plan'`으로 확인한다.
+
+**작업 목적**
+- Phase 8의 쉬운 두 문서에 이어 후보 누락, 역할 혼동과 과다 HOLD를 신규 합성 양식에서 측정한다.
+
+**구현 내용**
+- 합성 Selection 50·Risk 50·Holdout 200을 양식군별 분리했다. Selection의 직접 매핑·로컬 검증·HOLD 복원·독립 검증을 공통 러너에 배치했다.
+- Phase 9의 확대 한도 USD 20을 기존 공용 원장에만 허용한다. 신규 전송은 별도의 정확한 요청 SHA와 최대 예약액을 요구한다. 양방향·전역 유일성·독립 검증·선택적 모델 경로의 오프라인 비교 코드를 추가했다.
+
+**검증 결과**
+- 같은 신규 Selection에서 Exact/RapidFuzz 66정답·0오추천, Phase 5 135·2, Phase 6 147·0. Phase 6 직접 매핑 정확 추천율 45.09%였다. 150개 요청의 해시와 필드를 오프라인 검증했다.
+- 비DB 1,359 통과·68 건너뜀. 기존 Solar 캐시 230문서 재생과 공식 옵티마이저 대역 8개 비교를 통과했다. 신규 Solar 유료 호출 0건. 이전 계산·예약 USD 9.92067637과 공용 원장 지문을 확인했다.
+
+**기술적 결정 및 남은 문제**
+- 월초 전체 날짜는 기존 등록기가 허용하므로 변환 필요 사례를 월중 대표일로 수정해 요청과 데이터 SHA를 다시 고정했다.
+- Phase 9-A는 신규 합성 Selection 50문서 전송·USD 0.27052850 상한 승인이 필요하다. B~E의 실제 비교, 공식 옵티마이저와 최종 홀드아웃 평가는 별도 범위로 남아 있다.
+
+**관련 자료**
+- [Phase 9 계획·기준선·연구 출처](MAPPING_SOLAR_ADVANCED_OPTIMIZATION_20261124.md).

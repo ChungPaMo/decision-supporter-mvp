@@ -33,6 +33,7 @@ PRICE_DATE = '2026-11-24'
 ROOT = Path(__file__).resolve().parents[1]
 SHARED_CACHE = ROOT / '.artifacts/mapping-research/upstage'
 APPROVED_CAP = Decimal('10')
+PHASE9_APPROVED_CAP = Decimal('20')
 VAT = Decimal('1.10')
 
 
@@ -165,9 +166,12 @@ def provider_error_category(error):
 
 
 class PaidResearch:
-    def __init__(self, cache, cap, approved):
-        if not approved or not cap.is_finite() or not 0 < cap <= APPROVED_CAP:
-            raise ValueError(f'Explicit paid authorization and a limit within the approved USD {APPROVED_CAP} are required')
+    def __init__(self, cache, cap, approved, *, phase9=False):
+        maximum = PHASE9_APPROVED_CAP if phase9 else APPROVED_CAP
+        if not approved or not cap.is_finite() or not 0 < cap <= maximum:
+            raise ValueError(f'Explicit paid authorization and a limit within the approved USD {maximum} are required')
+        if phase9 and cache.resolve() != SHARED_CACHE.resolve():
+            raise ValueError('Phase 9 paid authorization is limited to the shared research ledger')
         self.key = os.environ.get('UPSTAGE_API_KEY')
         if not self.key:
             raise ValueError('UPSTAGE_API_KEY must be set locally')

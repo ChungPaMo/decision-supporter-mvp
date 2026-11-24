@@ -1,5 +1,7 @@
 # 충파모 프로젝트 진행상황
 
+2026-11-24 (KST), 메인 Windows PC. 김대영이 기준 `main` [`5dec94b`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/5dec94b2232550dfcb1346bb2f5ece225d643e9f)에서 Phase 9 Selection 50·Risk 50·Holdout 200문서를 분리하고 공용 누적 한도 USD 20의 연구 경로를 준비했다. Selection의 Phase 6은 147/326정답·0오추천·323HOLD였다. 신규 Solar 150회·USD 0.27052850 예약 상한의 정확한 전송 계획은 별도 승인 대기다. 비DB 1,359 통과·68 건너뜀, 기존 Solar 캐시 230문서 재생, 신규 유료 호출 0건. [Phase 9 계획·로컬 실측](MAPPING_SOLAR_ADVANCED_OPTIMIZATION_20261124.md)
+
 2026-11-24 (KST), 메인 Windows PC. 김대영이 기준 `main` [`45de512`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/45de512b4a25395f605947c18c9c950ef9f085a8)에서 Phase 8 Solar 비교를 승인 범위 안에서 실행했다. 고정 Development 합성 BOM·재고에서 3모델×5방식의 신규 요청 30건이 모두 응답했다. Mini 4·Pro 4 직접 방식은 각각 21정답·0오추천·4HOLD로 같은 문서의 Phase 5·6에 필적했다. 신규 USD 0.01385329는 응답 토큰 기준 로컬 계산액이다. 누적 계산·예약 USD 9.92067637, 잔액 USD 0.07932363. 비DB 1,350 통과·68 건너뜀. 신규 양식의 중복 대상·과다 HOLD와 옵티마이저가 다음 연구 대상이다. [Phase 8 실측과 후속 계획](MAPPING_SOLAR_PHASE8_20261124.md)
 
 2026-11-24 (KST), 보조 PC. 김대영이 기준 `main` [`df06bf0`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/df06bf01c94738196abc11c649af663fbdeb8871)에서 논문 기반 LLM 판별과 공식 DSPy·GEPA 연구 경로를 추가했다. 실제 Qwen Pointwise는 Selection 2문서에서 16/18정답·0오추천, 별도로 고정한 신규 6문서에서는 3/27정답·3오추천·계약 영향 2/6이었다. 같은 신규 6문서 Phase 6은 5정답·2오추천이었다. Solar 스모크 예약 추정 USD 0.059609, 합성 입력 전송 및 비용 승인 대기. [Phase 7 연구 보고서](MAPPING_LLM_PAPER_OPTIMIZATION_20261124.md)
