@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { addMonths, Empty, failure, forecastLabel, go, Icon, Kpi, monthEnd, monthLabel, Notice, num, pctText, shortMonth, St, when } from '../app/core';
 import { DemandRow, Names, useLoad } from '../app/data';
-import { C, Legend, LineChart, MiniBars, Ring, Spark } from '../app/widgets';
+import { C, Legend, LineChart } from '../app/widgets';
 import { apiClient } from '../services/api';
 import { ForecastExecution } from '../types/engine';
 
@@ -86,7 +86,7 @@ export default function ForecastPage({ focus, names, onChanged }: { focus?: stri
         <label className="field">언제까지의 자료로 예측할까요 (월말)<input type="date" value={trainedUntil} onChange={(e) => setTrainedUntil(e.target.value)} /></label>
         <label className="field">몇 달을 예측할까요<select value={horizon} onChange={(e) => setHorizon(Number(e.target.value))}>{Array.from({ length: 12 }, (_, i) => <option key={i + 1} value={i + 1}>{i + 1}개월</option>)}</select></label>
         <button type="button" className="btn lg" disabled={busy || !trainedUntil} onClick={() => void run()}><Icon name="play" />{busy ? '예측 중…' : '예측 실행'}</button>
-        <button type="button" className="btn primary cta" disabled={!detail || !rows.length} onClick={() => detail && go('plan', { f: detail.execution_id })}>이 예측으로 계획 세우기<Icon name="arrow" /></button>
+        <button type="button" className="btn primary lg" disabled={!detail || !rows.length} onClick={() => detail && go('plan', { f: detail.execution_id })}>이 예측으로 계획 세우기<Icon name="arrow" /></button>
       </div>
       <p className="small">{lastMonth ? <>승인된 월별 수요는 <b style={{ color: 'var(--ink-2)' }}>{monthLabel(lastMonth)}</b>까지 있습니다. {trainedUntil && <>이 설정이면 <b style={{ color: 'var(--ink-2)' }}>{monthLabel(addMonths(trainedUntil.slice(0, 7), 1))}</b>부터 {horizon}개월을 예측합니다. </>}</> : '승인된 월별 수요가 없습니다. 먼저 자료를 넣으세요. '}
         {horizon > 3 && '4개월 이상은 검증된 범위 밖입니다.'}</p>
@@ -97,27 +97,27 @@ export default function ForecastPage({ focus, names, onChanged }: { focus?: stri
     {!detail ? <section className="panel"><Empty>{base.loading ? '읽는 중…' : '위에서 예측을 실행하면 그래프와 제품별 표가 나옵니다.'}</Empty></section> : <>
       <section className="kpis" aria-label="예측 요약">
         <Kpi label="보고 있는 예측" value={`${monthLabel(baseMonth)} 말`} note={`${when(detail.created_at)} 실행 · ${months.length}개월`} />
-        <Kpi label={first ? `${monthLabel(first)} 예상 수요` : '예상 수요'} value={num(sum('p50'))} unit="EA" note={yoyAll === null ? '작년 같은 달 자료 없음' : `작년 ${shortMonth(first)} 대비 ${yoyAll > 0 ? '+' : ''}${num(yoyAll, 1)}%`} viz={<Spark values={chart.actual.filter((v): v is number => v !== null).slice(-12)} color={C.actual} />} />
-        <Kpi label="많이 팔릴 때" value={num(sum('p90'))} unit="EA" note={spread === null ? '' : `가운데 값보다 +${num(spread, 1)}%`} viz={<MiniBars values={months.map((m) => rows.filter((r) => r.target_month === m).reduce((a, r) => a + Number(r.p90), 0))} color={C.teal} />} />
-        <Kpi label="예측한 제품" value={`${products.length}`} unit="개" note={`학습에 쓴 이력 ${num(detail.input_row_count)}행`} viz={<Ring size={52} stroke={7} value={products.length + (detail.result?.skipped.length ?? 0) ? (products.length / (products.length + (detail.result?.skipped.length ?? 0))) * 100 : null} />} />
+        <Kpi label={first ? `${monthLabel(first)} 예상 수요` : '예상 수요'} value={num(sum('p50'))} unit="EA" note={yoyAll === null ? '작년 같은 달 자료 없음' : `작년 ${shortMonth(first)} 대비 ${yoyAll > 0 ? '+' : ''}${num(yoyAll, 1)}%`} />
+        <Kpi label="많이 팔릴 때" value={num(sum('p90'))} unit="EA" note={spread === null ? '' : `가운데 값보다 +${num(spread, 1)}%`} />
+        <Kpi label="예측한 제품" value={`${products.length}`} unit="개" note={`학습에 쓴 이력 ${num(detail.input_row_count)}행`} />
         <Kpi label="건너뛴 제품 · 경고" value={`${detail.result?.skipped.length ?? 0} · ${detail.result?.warnings.length ?? 0}`} note={detail.status === 'OK' ? '정상 완료' : detail.status} tone={detail.result?.skipped.length || detail.result?.warnings.length ? 'warn' : 'ok'} />
       </section>
 
       <div className="cols c21">
-        <section className="panel"><header><div><h2>{product === ALL ? '전체 제품 수요' : names[product] ?? product}</h2><p>초록 구간이 예측입니다. 마우스를 올리면 값이 나옵니다.</p></div>
-          <Legend items={[['실제 수요', C.actual], ['예측 가운데 값', C.forecast, true], ['많이 팔릴 때까지의 범위', '#b9d0ce']]} /></header>
+        <section className="panel"><header><div><h2>{product === ALL ? '전체 제품 수요' : names[product] ?? product}</h2><p>옅은 구간이 예측입니다. 마우스를 올리면 값이 나옵니다.</p></div>
+          <Legend items={[['실제 수요', C.actual], ['예측 가운데 값', C.forecast, true], ['많이 팔릴 때까지의 범위', '#cfe0fb']]} /></header>
           <div className="body"><LineChart months={chart.months} split={chart.split} height={340} unit=" EA" band={{ name: '범위', lo: chart.p50, hi: chart.p90, color: C.forecast }}
-            series={[{ name: '실제 수요', color: C.actual, values: chart.actual, area: true }, { name: '예측 가운데 값', color: C.forecast, values: chart.p50, dash: true, dots: true }]} /></div>
+            series={[{ name: '실제 수요', color: C.actual, values: chart.actual }, { name: '예측 가운데 값', color: C.forecast, values: chart.p50, dash: true, dots: true }]} /></div>
         </section>
 
         <section className="panel"><header><div><h2>제품별 {first ? shortMonth(first) : ''} 예측</h2><p>줄을 누르면 왼쪽 그래프가 그 제품으로 바뀝니다</p></div>
           {product !== ALL && <button type="button" className="btn sm" onClick={() => setProduct(ALL)}>전체 보기</button>}</header>
-          <div className="body flush"><div className="tablewrap scrollbox"><table className="tbl"><thead><tr><th>제품</th><th className="r">가운데 값</th><th className="r">많이 팔릴 때</th><th className="r">작년 대비</th></tr></thead>
+          <div className="body flush"><div className="tablewrap"><table className="tbl"><thead><tr><th>제품</th><th className="r">가운데 값</th><th className="r">작년 대비</th></tr></thead>
             <tbody>{table.map((r) => <tr key={r.pid} className={`clickable${r.pid === product ? ' selected' : ''}`} onClick={() => setProduct(r.pid === product ? ALL : r.pid)}>
               <td><span className="name" title={`${names[r.pid] ?? r.pid} (${r.pid})`}><b>{names[r.pid] ?? r.pid}</b><span className="code">{r.pid}</span></span></td>
-              <td className="r num" style={{ minWidth: 96 }}><b>{num(r.p50)}</b><span className="cellbar"><i style={{ width: `${(r.p50 / (table[0]?.p50 || 1)) * 100}%` }} /></span></td><td className="r num muted">{num(r.p90)}</td>
+              <td className="r num" style={{ minWidth: 96 }}><b>{num(r.p50)}</b><span className="cellbar"><i style={{ width: `${(r.p50 / (table[0]?.p50 || 1)) * 100}%` }} /></span></td>
               <td className={`r num ${r.yoy === null ? 'muted' : r.yoy > 0 ? 'delta-up' : 'delta-down'}`} style={r.yoy !== null && r.yoy > 0 ? { color: 'var(--ink-2)' } : undefined}>{r.yoy === null ? '-' : `${r.yoy > 0 ? '+' : ''}${pctText(r.yoy)}`}</td></tr>)}</tbody>
-            <tfoot><tr><td>합계</td><td className="r num">{num(sum('p50'))}</td><td className="r num">{num(sum('p90'))}</td><td className="r num">{yoyAll === null ? '-' : `${yoyAll > 0 ? '+' : ''}${pctText(yoyAll)}`}</td></tr></tfoot></table></div></div>
+            <tfoot><tr><td>합계</td><td className="r num">{num(sum('p50'))}</td><td className="r num">{yoyAll === null ? '-' : `${yoyAll > 0 ? '+' : ''}${pctText(yoyAll)}`}</td></tr></tfoot></table></div></div>
         </section>
       </div>
     </>}

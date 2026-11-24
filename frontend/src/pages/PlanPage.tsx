@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Empty, failure, FeasSt, forecastLabel, forecastMonths, go, Icon, monthLabel, Name, Notice, num, pctText, shortMonth, Tag, when } from '../app/core';
 import { demandOf, groupIssues, loadGrid, Names, planMonths, planProducts, PlanResult, PlanSummary, summarizePlan, sumMonth, useLoad } from '../app/data';
-import { C, GroupBars, HeatLegend, Legend, LoadMap, Ring, ShortLegend, ShortMap, TargetBars } from '../app/widgets';
+import { HeatLegend, LoadMap, ShortLegend, ShortMap } from '../app/widgets';
 import { apiClient } from '../services/api';
 import { ForecastExecution, ForecastExecutionSummary } from '../types/engine';
 import { PlanExecutionDetail } from '../types/modules';
@@ -23,6 +23,7 @@ export default function PlanPage({ focus, names, onChanged }: { focus?: string; 
   const [alt, setAlt] = useState<PlanResult | null>(null);
   const [showAlt, setShowAlt] = useState(false);
   const [planId, setPlanId] = useState('');
+  const [view, setView] = useState<'load' | 'products' | 'materials'>('load');
   const [cell, setCell] = useState<{ id: string; kind: string; month: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<{ tone: 'ok' | 'warn' | 'bad'; text: string } | null>(null);
@@ -95,7 +96,6 @@ export default function PlanPage({ focus, names, onChanged }: { focus?: string; 
   const overrideText = Object.entries(overrides).map(([k, v]) => (k === 'demand_multiplier' ? `수요 ×${v}` : `${names[k.split('.')[1]] ?? k.split('.')[1]} ${shortMonth(k.split('.')[2])} 잔업 ${v}시간`)).join(', ');
 
   const fact = (label: string, v: number, unit: string) => <span className={`fact${v ? ' bad' : ''}`}>{label} <b>{v ? `${v}${unit}` : '없음'}</b></span>;
-  const PLAN_COLOR = [C.teal, C.plan, C.alt];
 
   return <>
     <section className="panel"><div className="body">
@@ -103,7 +103,7 @@ export default function PlanPage({ focus, names, onChanged }: { focus?: string; 
         <div className="formrow">
           <label className="field" style={{ flex: '2 1 300px' }}>어떤 예측으로 계획을 세울까요<select value={forecastId} onChange={(e) => setForecastId(e.target.value)}>{forecasts.map((f) => <option key={f.execution_id} value={f.execution_id}>{forecastLabel(f)} · {when(f.created_at)} 실행</option>)}</select></label>
           <div className="field" style={{ flex: '2 1 260px' }}>계획을 시작할 달 <div className="chips">{months.map((m) => <button key={m} type="button" className="chip" aria-pressed={m === month} onClick={() => setMonth(m)}>{monthLabel(m)}</button>)}</div></div>
-          <button type="button" className="btn primary cta" disabled={busy || !forecast || !month} onClick={() => void calculate()}>{busy ? '계산 중…' : execution ? '다시 계산' : '계획 계산하기'}<Icon name="play" /></button>
+          <button type="button" className="btn primary lg" disabled={busy || !forecast || !month} onClick={() => void calculate()}>{busy ? '계산 중…' : execution ? '다시 계산' : '계획 계산하기'}<Icon name="play" /></button>
         </div>}
       {forecast && <p className="small">{monthLabel(forecast.parameters.trained_until.slice(0, 7))} 말까지의 자료로 만든 예측입니다. 계획도 그 시점에 알고 있던 재고만 씁니다.{execution && ` 이 계획은 ${when(execution.created_at)} 저장됐습니다.`}</p>}
       {message && <Notice tone={message.tone}>{message.text}</Notice>}
@@ -118,41 +118,32 @@ export default function PlanPage({ focus, names, onChanged }: { focus?: string; 
           <div className="plans" role="group" aria-label="세 안">{summaries.map((s) => { const cover = demandTotal ? (s.total / demandTotal) * 100 : null;
             return <button type="button" key={s.plan.plan_id} className={`plan${s.plan.plan_id === selected?.plan.plan_id ? ' selected' : ''}`} aria-pressed={s.plan.plan_id === selected?.plan.plan_id} onClick={() => { setPlanId(s.plan.plan_id); setCell(null); }}>
               <div className="top"><b>{short(s.plan.label)}</b><FeasSt value={s.plan.feasibility} /></div>
-              <div className="mid"><Ring size={78} stroke={9} value={cover} tone={cover === null ? undefined : cover < 90 ? 'bad' : cover < 99.5 ? 'warn' : undefined} />
-                <div><span className="total num">{num(s.total)} <small>EA</small></span><span className="small muted">{basis(s.plan.label)} · 수요의 {pctText(cover)}</span></div></div>
+              <span className="total num">{num(s.total)} <small>EA</small></span><span className="small muted">{basis(s.plan.label)} · 수요의 {pctText(cover)}</span>
               <div className="facts">{s.maxUtil !== null && <span className={`fact${s.maxUtil > 1 ? ' bad' : s.maxUtil >= 0.9 ? ' warn' : ''}`}>최대 부하 <b>{pctText(s.maxUtil * 100)}</b></span>}
                 {fact('설비 초과', s.equipOver, '칸')}{fact('수요 미충족', s.demandMiss, '건')}{fact('안전 재고 미달', s.safetyMiss, '건')}{fact('자재 부족', s.shortages, '건')}</div>
             </button>; })}</div>
 
-          <section className="panel"><header><div><h2>설비·인력 부하 지도 · {selected ? short(selected.plan.label) : ''}</h2><p>달마다 한도의 몇 %를 쓰는지. 칸을 누르면 자세히 봅니다.</p></div><HeatLegend /></header>
+          <div className="tabs" role="group" aria-label="자세히 볼 것" style={{ alignSelf: 'flex-start' }}><button type="button" aria-pressed={view === 'load'} onClick={() => setView('load')}>설비·인력 부하</button><button type="button" aria-pressed={view === 'products'} onClick={() => setView('products')}>제품별 생산량</button><button type="button" aria-pressed={view === 'materials'} onClick={() => setView('materials')}>자재 부족{selected?.shortages ? ` ${selected.shortages}` : ''}</button></div>
+
+          {view === 'load' && <section className="panel"><header><div><h2>설비·인력 부하 지도 · {selected ? short(selected.plan.label) : ''}</h2><p>달마다 한도의 몇 %를 쓰는지. 칸을 누르면 자세히 봅니다.</p></div><HeatLegend /></header>
             <div className="body">{grid && <LoadMap months={grid.months} rows={grid.rows} names={names} selected={cell} onPick={setCell} />}
               {cell && picked && <Notice tone={picked.pct !== null && picked.pct > 100 ? 'bad' : picked.pct !== null && picked.pct >= 90 ? 'warn' : 'info'}>
                 <span><b>{names[cell.id] ?? cell.id} · {monthLabel(cell.month)}</b> — {picked.limit === null ? `필요 ${num(picked.used, 1)}${picked.unit}, 한도 자료가 없습니다.` : `필요 ${num(picked.used, 1)}${picked.unit} / 한도 ${num(picked.limit, 0)}${picked.unit}. ${picked.used > picked.limit ? `${num(picked.used - picked.limit, 1)}${picked.unit} 모자랍니다.` : `여유 ${num(picked.limit - picked.used, 1)}${picked.unit}.`}`}
                   {' '}<button type="button" className="btn sm" onClick={() => { setOvertime({ ...overtime, [`overtime_hours_limit.${cell.id}.${cell.month}`]: String(Number(otHours) || 0) }); }}>이 칸에 잔업 {otHours}시간 넣기</button></span></Notice>}</div>
-          </section>
+          </section>}
 
-          <div className="cols c11 stretch">
-            <section className="panel"><header><div><h2>달별 수요와 세 안</h2><p>회색이 예상 수요, 나머지가 각 안의 생산량</p></div>
-              <Legend items={[['예상 수요', C.demand], ...summaries.map((s, i) => [short(s.plan.label), PLAN_COLOR[i % 3]] as [string, string])]} /></header>
-              <div className="body"><GroupBars months={viewMonths} height={310} unit=" EA" groups={[{ name: '예상 수요', color: C.demand, values: viewMonths.map((m) => sumMonth(fdemand[m]) * factor) }, ...summaries.map((s, i) => ({ name: short(s.plan.label), color: PLAN_COLOR[i % 3], values: viewMonths.map((m) => s.byMonth[m] ?? 0) }))]} /></div>
-            </section>
-            <section className="panel"><header><div><h2>제품별 수요 충족 · {selected ? short(selected.plan.label) : ''}</h2><p>3개월 합계. 검은 눈금이 예상 수요입니다.</p></div></header>
-              <div className="body"><TargetBars rows={products.map((pid) => ({ key: pid, label: <Name code={pid} names={names} />, value: viewMonths.reduce((a, m) => a + qty(pid, m), 0), target: viewMonths.reduce((a, m) => a + (fdemand[m]?.[pid]?.p50 ?? 0) * factor, 0) }))} /></div>
-            </section>
-          </div>
-
-          <section className="panel"><header><div><h2>제품별 생산량 · {selected ? short(selected.plan.label) : ''}</h2><p>칸 아래 막대는 예상 수요에 비해 얼마나 만드는지입니다 (가득 차면 수요만큼)</p></div></header>
+          {view === 'products' && <section className="panel"><header><div><h2>제품별 생산량 · {selected ? short(selected.plan.label) : ''}</h2><p>칸 아래 막대는 예상 수요에 비해 얼마나 만드는지입니다 (가득 차면 수요만큼)</p></div></header>
             <div className="body flush"><div className="tablewrap"><table className="tbl"><thead><tr><th>제품</th>{viewMonths.map((m) => <th key={m} className="r">{monthLabel(m)}</th>)}<th className="r">합계</th><th className="r">수요 대비</th></tr></thead>
               <tbody>{products.map((pid) => { let sum = 0, need = 0;
                 return <tr key={pid}><td><Name code={pid} names={names} /></td>{viewMonths.map((m) => { const q = qty(pid, m), d = (fdemand[m]?.[pid]?.p50 ?? 0) * factor; sum += q; need += d; const ratio = d ? q / d : null;
                   return <td key={m} className="r num">{num(q)}<span className={`cellbar ${ratio !== null && ratio < 0.95 ? 'over' : ''}`} title={d ? `예상 수요 ${num(d)}` : undefined}><i style={{ width: `${Math.min((ratio ?? 0) * 100, 100)}%` }} /></span></td>; })}
                   <td className="r num"><b>{num(sum)}</b></td><td className="r num" style={need && sum / need < 0.95 ? { color: 'var(--bad)', fontWeight: 600 } : undefined}>{need ? pctText((sum / need) * 100) : '-'}</td></tr>; })}</tbody>
               <tfoot><tr><td>합계</td>{viewMonths.map((m) => <td key={m} className="r num">{num(selected?.byMonth[m] ?? 0)}</td>)}<td className="r num">{num(selected?.total ?? 0)}</td><td className="r num">{demandTotal ? pctText(((selected?.total ?? 0) / demandTotal) * 100) : '-'}</td></tr></tfoot></table></div></div>
-          </section>
+          </section>}
 
-          <section className="panel"><header><div><h2>자재 부족 지도 · {selected ? short(selected.plan.label) : ''}</h2><p>칸이 진할수록 필요한 양에 비해 많이 모자랍니다. 많이 모자라는 자재가 위에 옵니다.</p></div><div className="actions"><ShortLegend /><Tag tone={selected?.shortages ? 'bad' : 'ok'}>{selected?.shortages ? `${selected.shortages}건` : '부족 없음'}</Tag></div></header>
+          {view === 'materials' && <section className="panel"><header><div><h2>자재 부족 지도 · {selected ? short(selected.plan.label) : ''}</h2><p>칸이 진할수록 필요한 양에 비해 많이 모자랍니다. 많이 모자라는 자재가 위에 옵니다.</p></div><div className="actions"><ShortLegend /><Tag tone={selected?.shortages ? 'bad' : 'ok'}>{selected?.shortages ? `${selected.shortages}건` : '부족 없음'}</Tag></div></header>
             <div className="body">{selected?.shortageList.length ? <ShortMap months={viewMonths} list={selected.shortageList} names={names} /> : <Empty>이 안에서는 모자라는 자재가 없습니다.</Empty>}</div>
-          </section>
+          </section>}
         </div>
 
         <div className="stack sticky">

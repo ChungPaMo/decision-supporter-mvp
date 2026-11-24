@@ -1,6 +1,5 @@
 import { DragEvent, useEffect, useMemo, useRef, useState } from 'react';
 import { BatchSt, Empty, ENTITY_NAME, failure, failureCode, go, Icon, Kpi, Notice, num, St, Tag, when } from '../app/core';
-import { Ring } from '../app/widgets';
 import { apiClient, DocumentVerdict } from '../services/api';
 import { BatchDetail, BatchSummary, Entity } from '../types/api';
 import { ClassificationResult } from '../types/modules';
@@ -237,12 +236,12 @@ export default function IngestPage({ onChanged }: { onChanged: () => void }) {
       onDragOver={(e) => { e.preventDefault(); setOver(true); }} onDragLeave={() => setOver(false)} onDrop={(e) => void drop(e)}
       onClick={() => input.current?.click()} onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') input.current?.click(); }}>
       <Icon name="upload" /><div><b>엑셀·CSV 파일이나 폴더를 여기에 놓으세요</b><span>올린 뒤 "분류하기"를 누르면 무슨 자료가 몇 개인지 나눠 보여 줍니다. {SORT_ONLY_OVER}개보다 많으면 등록하지 않고 문서 종류만 나눕니다.</span></div>
-      <span className="btn primary lg"><Icon name="upload" />파일 고르기</span>
+      <span className="btn">파일 고르기</span>
       <input ref={input} type="file" accept=".xlsx,.xlsm,.csv" multiple hidden onChange={(e) => { void accept(Array.from(e.target.files ?? [])); e.target.value = ''; }} />
     </div>
     {staged.length > 0 && <section className="panel"><header><div><h2>올린 파일 {staged.length}개</h2><p>{sorting ? '분류하는 중입니다…' : staged.length > SORT_ONLY_OVER ? `아직 분류하지 않았습니다. ${SORT_ONLY_OVER}개보다 많아 문서 종류만 나눠 보여 줍니다.` : '아직 분류하지 않았습니다. 분류하면 아래 등록 순서에 맞춰 넣습니다.'}</p></div>
       <div className="actions"><button type="button" className="btn" disabled={sorting} onClick={() => setStaged([])}>비우기</button>
-        <button type="button" className="btn primary cta" disabled={sorting} onClick={() => void classify()}>{sorting ? '분류 중…' : `${staged.length}개 분류하기`}<Icon name="play" /></button></div></header>
+        <button type="button" className="btn primary lg" disabled={sorting} onClick={() => void classify()}>{sorting ? '분류 중…' : `${staged.length}개 분류하기`}<Icon name="play" /></button></div></header>
       <div className="body"><div className="chips">{staged.slice(0, 14).map((f) => <span key={f.name} className="chip static">{f.name}</span>)}{staged.length > 14 && <span className="chip static">외 {staged.length - 14}개</span>}</div></div></section>}
     {message && <Notice tone={message.tone}>{message.text}</Notice>}
     {items.length > 0 && <section className="panel"><header><div><h2>분류 결과</h2><p>{sorted < items.length ? `분류 중 ${sorted} / ${items.length}` : `파일 ${items.length}개를 분류해 아래 등록 순서에 넣었습니다.`}</p></div>
@@ -251,7 +250,7 @@ export default function IngestPage({ onChanged }: { onChanged: () => void }) {
     {done === SLOTS.length && <Notice tone="ok"><Icon name="check" /><span><b>자료가 모두 준비됐습니다.</b> 이제 수요를 예측할 수 있습니다. <button type="button" className="btn sm" onClick={() => go('forecast')}>수요 예측으로<Icon name="arrow" /></button></span></Notice>}
 
     <section className="kpis" aria-label="자료 현황">
-      <Kpi label="승인된 자료" value={`${done} / ${SLOTS.length}`} unit="개" note={done === SLOTS.length ? '모두 준비됨' : `${SLOTS.length - done}개 남음`} tone={done === SLOTS.length ? 'ok' : 'warn'} viz={<Ring size={52} stroke={7} value={(done / SLOTS.length) * 100} tone={done === SLOTS.length ? undefined : 'warn'} />} />
+      <Kpi label="승인된 자료" value={`${done} / ${SLOTS.length}`} unit="개" note={done === SLOTS.length ? '모두 준비됨' : `${SLOTS.length - done}개 남음`} tone={done === SLOTS.length ? 'ok' : 'warn'} />
       <Kpi label="다음에 넣을 자료" value={nextRow ? nextRow.slot.label : '없음'} note={nextRow ? (nextRow.item ? `${nextRow.item.file.name} 대기 중` : '파일을 놓으세요') : '모두 승인됨'} />
       <Kpi label="지금 올린 파일" value={`${items.length + staged.length}`} unit="개" note={staged.length ? `${staged.length}개 분류 전` : items.length ? `순서에 맞춘 것 ${items.filter((i) => i.slot).length}개` : '아직 없음'} />
       <Kpi label="손봐야 하는 것" value={`${stuck.length + loose.length + orphans.length}`} unit="건" note={stuck[0] ? stuck[0].slot.label : loose[0] ? `${loose[0].file.name} 유형 미정` : orphans[0] ? `${orphans[0].file.name} 정리 필요` : '없음'} tone={stuck.length + loose.length + orphans.length ? 'warn' : 'ok'} />
@@ -270,7 +269,7 @@ export default function IngestPage({ onChanged }: { onChanged: () => void }) {
     <div className="cols c21">
       <section className="panel"><header><div><h2>등록 순서</h2><p>위에서부터 차례로 승인합니다. 제품과 자재가 먼저입니다.</p></div>
         <div className="actions">{(pending.length > 0 || running) && <button type="button" className="btn primary lg" disabled={busyAny} onClick={() => void runAll()}><Icon name="check" />{running ? '진행 중…' : `문제없는 ${pending.length}개 모두 승인`}</button>}</div></header>
-        <div className="body" style={{ paddingBottom: 6 }}><div className="steps" role="group" aria-label="등록 진행">{rows.map(({ slot, item, batch: b }) => <button type="button" key={slot.key} title={slot.label} className={`${b?.status === 'APPROVED' ? 'done' : item?.error || b?.status === 'MAPPING_HOLD' || b?.status === 'HAS_ERRORS' ? 'stuck' : item || b ? 'wait' : ''}${slot.key === current?.slot.key ? ' on' : ''}`} onClick={() => void open(slot.key)}><i /><span>{slot.label}</span></button>)}</div></div>
+        <div className="body bare" style={{ paddingBottom: 12 }}><div className="steps" role="group" aria-label="등록 진행">{rows.map(({ slot, item, batch: b }) => <button type="button" key={slot.key} title={slot.label} className={`${b?.status === 'APPROVED' ? 'done' : item?.error || b?.status === 'MAPPING_HOLD' || b?.status === 'HAS_ERRORS' ? 'stuck' : item || b ? 'wait' : ''}${slot.key === current?.slot.key ? ' on' : ''}`} onClick={() => void open(slot.key)}><i /><span>{slot.label}</span></button>)}</div></div>
         <div className="body flush"><div className="tablewrap"><table className="tbl"><thead><tr><th className="c">순서</th><th>자료</th><th>파일</th><th>상태</th><th>할 수 있는 일</th></tr></thead>
           <tbody>{rows.map(({ slot, item, batch: b }, i) => <tr key={slot.key} className={`clickable${slot.key === current?.slot.key ? ' selected' : ''}`} onClick={() => void open(slot.key)}>
             <td className="c num muted">{i + 1}</td>

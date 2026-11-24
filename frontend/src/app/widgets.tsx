@@ -3,7 +3,7 @@ import { ReactNode, RefObject, useEffect, useId, useRef, useState } from 'react'
 import { monthLabel, num, shortMonth } from './core';
 import { LoadCell, Names } from './data';
 
-export const C = { actual: '#5b6672', forecast: '#007f63', teal: '#4fb59c', plan: '#7fa8ee', alt: '#f2bd7a', demand: '#d3e0de', ok: '#4fb59c', warn: '#f0b45c', bad: '#e8857a' };
+export const C = { actual: '#6b7684', forecast: '#3182f6', teal: '#3182f6', plan: '#191f28', alt: '#b0b8c1', demand: '#d1d6db', ok: '#0a8f5c', warn: '#f5a524', bad: '#d92d3a' };
 export interface Series { name: string; color: string; values: Array<number | null>; dash?: boolean; dots?: boolean; area?: boolean }
 export interface Band { name: string; lo: Array<number | null>; hi: Array<number | null>; color: string }
 
@@ -46,11 +46,11 @@ export function LineChart({ months, series, band, split, height = 240, unit = ''
   return <div className="chart" ref={box} onMouseMove={(e) => move(e.clientX)} onMouseLeave={() => setHover(null)}>
     <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: H, display: 'block' }} role="img" aria-label={`${series.map((s) => s.name).join(', ')} 그래프. ${monthLabel(months[0])}부터 ${monthLabel(months[months.length - 1])}까지`}>
       <defs>{series.filter((s) => s.area).map((s, i) => <linearGradient key={i} id={`${gid}a${i}`} x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor={s.color} stopOpacity="0.12" /><stop offset="1" stopColor={s.color} stopOpacity="0" /></linearGradient>)}</defs>
-      {[0, 1, 2, 3].map((k) => { const v = min + ((max - min) * k) / 3; return <g key={k}><line x1={L} x2={W - R} y1={y(v)} y2={y(v)} stroke="#ebf1f0" strokeDasharray={k ? '3 4' : undefined} /><text x={L - 8} y={y(v) + 4} textAnchor="end">{num(v)}</text></g>; })}
-      {split !== undefined && split > 0 && split < months.length && <><rect x={x(split - 1)} y={T} width={W - R - x(split - 1)} height={H - T - B} rx="6" fill="#e8f1f0" fillOpacity="0.75" /><text x={x(split - 1) + 8} y={T + 14} style={{ fontWeight: 700, fill: '#007f63' }}>예측 구간</text></>}
+      {[0, 1, 2, 3].map((k) => { const v = min + ((max - min) * k) / 3; return <g key={k}><line x1={L} x2={W - R} y1={y(v)} y2={y(v)} stroke="#f0f2f4" strokeDasharray={k ? '3 4' : undefined} /><text x={L - 8} y={y(v) + 4} textAnchor="end">{num(v)}</text></g>; })}
+      {split !== undefined && split > 0 && split < months.length && <><rect x={x(split - 1)} y={T} width={W - R - x(split - 1)} height={H - T - B} rx="6" fill="#f7f8fa" /><text x={x(split - 1) + 8} y={T + 14} style={{ fontWeight: 500 }}>예측</text></>}
       {bandPoints && <polygon points={bandPoints} fill={band!.color} fillOpacity="0.12" />}
       {series.filter((s) => s.area).map((s, i) => <path key={s.name} d={areaPath(s.values)} fill={`url(#${gid}a${i})`} />)}
-      {series.map((s) => <g key={s.name}><polyline className={s.dash ? undefined : 'line'} points={path(s.values)} fill="none" stroke={s.color} strokeWidth="2" strokeDasharray={s.dash ? '6 5' : undefined} strokeLinejoin="round" strokeLinecap="round" />
+      {series.map((s) => <g key={s.name}><polyline points={path(s.values)} fill="none" stroke={s.color} strokeWidth="2" strokeDasharray={s.dash ? '6 5' : undefined} strokeLinejoin="round" strokeLinecap="round" />
         {s.dots && s.values.map((v, i) => v !== null && <circle key={i} cx={x(i)} cy={y(v)} r="4" fill="#fff" stroke={s.color} strokeWidth="2.5" />)}</g>)}
       {months.map((m, i) => (i % every === 0 || i === months.length - 1) && <text key={m} x={x(i)} y={H - 6} textAnchor="middle">{axisMonth(m, i === 0)}</text>)}
       {hover !== null && <line x1={x(hover)} x2={x(hover)} y1={T} y2={H - B} stroke="#23282f" strokeOpacity="0.3" strokeDasharray="3 3" />}
@@ -79,12 +79,12 @@ export function GroupBars({ months, groups, height = 230, unit = '' }: { months:
   const compact = (v: number) => (v >= 10000 ? `${num(v / 1000, 1)}천` : num(v));
   return <div className="chart" ref={box} onMouseLeave={() => setHover(null)}>
     <svg viewBox={`0 0 ${W} ${H}`} style={{ width: '100%', height: H, display: 'block' }} role="img" aria-label={`${groups.map((g) => g.name).join(', ')}을 달마다 견준 막대 그래프`}>
-      {[0, 0.5, 1].map((k) => <g key={k}><line x1={L} x2={W - R} y1={y((max / 1.12) * k)} y2={y((max / 1.12) * k)} stroke="#ebf1f0" strokeDasharray={k ? '3 4' : undefined} /><text x={L - 8} y={y((max / 1.12) * k) + 4} textAnchor="end">{compact((max / 1.12) * k)}</text></g>)}
+      {[0, 0.5, 1].map((k) => <g key={k}><line x1={L} x2={W - R} y1={y((max / 1.12) * k)} y2={y((max / 1.12) * k)} stroke="#f0f2f4" strokeDasharray={k ? '3 4' : undefined} /><text x={L - 8} y={y((max / 1.12) * k) + 4} textAnchor="end">{compact((max / 1.12) * k)}</text></g>)}
       {months.map((m, i) => <g key={m} onMouseEnter={() => setHover(i)}>
-        <rect x={L + band * i} y={T - 8} width={band} height={H - T - B + 8} fill={hover === i ? '#e8f1f0' : 'transparent'} rx="8" />
+        <rect x={L + band * i} y={T - 8} width={band} height={H - T - B + 8} fill={hover === i ? '#f7f8fa' : 'transparent'} rx="8" />
         {groups.map((g, k) => { const v = g.values[i] ?? 0; const bx = start(i) + k * (bw + gap);
-          return <g key={g.name}><rect className="bar" x={bx} y={y(v)} width={bw} height={Math.max(0, H - B - y(v))} rx={Math.min(5, bw / 3)} fill={g.color} style={{ animationDelay: `${(i * groups.length + k) * 40}ms` }} />
-            {bw >= 30 && <text x={bx + bw / 2} y={y(v) - 5} textAnchor="middle" style={{ fontSize: 10, fontWeight: 700, fill: '#383e47' }}>{compact(v)}</text>}</g>; })}
+          return <g key={g.name}><rect x={bx} y={y(v)} width={bw} height={Math.max(0, H - B - y(v))} rx={Math.min(5, bw / 3)} fill={g.color} style={{ animationDelay: `${(i * groups.length + k) * 40}ms` }} />
+            {bw >= 30 && <text x={bx + bw / 2} y={y(v) - 5} textAnchor="middle" style={{ fontSize: 10, fontWeight: 700, fill: '#4e5968' }}>{compact(v)}</text>}</g>; })}
         <text x={L + band * (i + 0.5)} y={H - 6} textAnchor="middle" style={{ fontWeight: 700 }}>{monthLabel(m)}</text></g>)}
     </svg>
     {hover !== null && <div className="tip" style={{ left: `${((L + band * (hover + 0.5)) / W) * 100}%`, top: `${(T / H) * 100}%` }}><b>{monthLabel(months[hover])}</b>
@@ -131,7 +131,7 @@ export function MiniBars({ values, color = C.plan, width = 84, height = 40 }: { 
   const max = Math.max(...values, 1), bw = Math.min(18, (width - (values.length - 1) * 5) / values.length);
   const total = bw * values.length + 5 * (values.length - 1);
   return <svg width={width} height={height} viewBox={`0 0 ${width} ${height}`} aria-hidden="true" className="chart">
-    {values.map((v, i) => { const h = Math.max(3, (v / max) * (height - 4)); return <rect className="bar" key={i} x={width - total + i * (bw + 5)} y={height - h} width={bw} height={h} rx="4" fill={color} fillOpacity={i === values.length - 1 ? 1 : 0.55} />; })}
+    {values.map((v, i) => { const h = Math.max(3, (v / max) * (height - 4)); return <rect key={i} x={width - total + i * (bw + 5)} y={height - h} width={bw} height={h} rx="4" fill={color} fillOpacity={i === values.length - 1 ? 1 : 0.55} />; })}
   </svg>;
 }
 // 몇 개 중 몇 개 (점으로)
