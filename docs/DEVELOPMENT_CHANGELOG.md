@@ -1343,3 +1343,31 @@
 
 **관련 자료**
 - [Phase 7 연구, 비교 결과 및 재현](MAPPING_LLM_PAPER_OPTIMIZATION_20261124.md).
+
+### 2026-11-24 — Phase 8 고정 합성 입력 Solar 실측
+
+**Git**
+- 시작 Commit [`45de512`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/45de512b4a25395f605947c18c9c950ef9f085a8), 브랜치 `main`.
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='research: record Phase 8 Solar mapping smoke results'`로 확인한다.
+
+**작업 목적**
+- 같은 합성 BOM·재고에서 Mini 4, Pro 4, Mini 4.5 Preview와 로컬 기준선의 정확도·계약·비용·지연을 비교한다.
+
+**구현 내용**
+- 기존 SHA 고정 연구 실행기를 사용하고 공용 원장·응답 캐시에 결과를 추가했다. 운영 코드, DB와 Docker에는 변경을 가하지 않았다.
+- [실측 보고서](MAPPING_SOLAR_PHASE8_20261124.md)에 15개 조건 결과, 원장 대조, Matchmaker·JevNexus·ConStruM·Magneto·GEPA·MIPROv2 확대 계획을 기록했다.
+
+**검증 결과**
+- 신규 요청 30/30 응답, 재사용·공급사 실패 0건. Mini 4·Pro 4 직접 방식과 Phase 5·6 동결 정책 모두 21정답·0오추천·4HOLD. Solar의 다른 조합은 정답 17~20개였으며 일부 중복 대상이 계약 검증에서 보류됐다.
+- 같은 두 문서에서 Qwen은 루프백 CPU로 12회 응답을 받았다. JevNexus Typed·Magneto Pointwise가 각각 18정답·0오추천·7HOLD였다.
+- 최대 예약 USD 0.05960900, 이번 사용량 기준 계산 USD 0.01385329, 누적 계산·예약 USD 9.92067637, 잔액 USD 0.07932363. 새 캐시 30건의 본문 SHA와 원장 이력을 확인했다.
+- 메인 Windows PC Python 3.11에서 비DB 1,350 통과·68 건너뜀. DB·Docker 검증은 이번 연구에서 실행하지 않았다.
+
+**기술적 결정**
+- Mini 4 직접 방식을 다음 온라인 대조군으로 삼는다. Phase 6 확정 제안을 잠근 경로에서 HOLD 복원과 새 오추천의 순변화를 측정한다.
+
+**남은 문제**
+- 독립 양식에서 확대 계획의 요청 SHA·비용·예시 범위를 다시 승인받는다. GEPA·MIPROv2는 로컬 컴파일부터 진행하고 공급사 정산으로 미확정 예약과 할인을 대조한다.
+
+**관련 자료**
+- [Phase 8 실측 및 확대 계획](MAPPING_SOLAR_PHASE8_20261124.md) · [Phase 7 승인 계획](MAPPING_LLM_PAPER_OPTIMIZATION_20261124.md).
