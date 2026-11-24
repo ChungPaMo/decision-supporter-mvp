@@ -1265,3 +1265,29 @@
 
 **관련 자료**
 - [Upstage 백엔드 연동·검증 및 화면 인계](UPSTAGE_BACKEND_INTEGRATION_20261124.md) · [Phase 3 평가](MAPPING_FINAL_ARCHITECTURE_EVALUATION_20261124.md).
+
+### 2026-11-24 — Phase 5 제조업 매핑 오류 분석과 오프라인 판별
+
+**Git**
+- 시작 Commit [`24d3993`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/24d3993c18ee91bd256417fd9a638a29b3189786), 브랜치 `main`.
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='research: optimize selective manufacturing column matching offline'`으로 확인한다.
+
+**작업 목적**
+- 기존 정답과 오추천이 어떤 조건에서 보류되는지 확인하고 원본을 보전하는 고정밀 연구 정책을 개발한다.
+
+**구현 내용**
+- `scripts/evaluate_mapping_phase5.py`와 `scripts/mapping_phase5_*.py`에서 기존 응답 재생·비용 대조, 버전별 셀 근거·업무 개념과 예시 검색, 캐시 합의·로컬 충돌 비교, 신규 데이터 및 정책 SHA 고정, XLSX 범위·확인 이력 실험을 수행했다.
+- 운영 추천·계약이나 타 팀 담당 모듈에는 연구 정책을 적용하지 않았다.
+
+**검증 결과**
+- 신규 홀드아웃 180문서에서 기존 364정답·113오추천 대비 557정답·6오추천. 정확 추천율 53.30%, 정밀도 98.93%, 전체 오추천 0.39%, HOLD 정답 거절 100%였다.
+- 비DB 1,333건 통과·68건 건너뜀. RapidFuzz 48·70건, Phase 3 캐시, OpenAPI·JSON Schema 일치. 추가 Upstage 비용 0, DB·Docker 미실행.
+
+**기술적 결정**
+- 보정 데이터의 정밀도·오추천·HOLD 요건을 충족하는 로컬 BM25 2개 예시 조합을 고정했다. 현 등록 형식에서 변환이 필요한 값은 후보 정확도 개선을 위해 강제 허용하지 않았다.
+
+**남은 문제**
+- 정확 추천율 목표 미달과 재고 역할 혼동을 개선할 독립 반례가 필요하다. 공급사 CSV 근거에 따른 예약 정산과 별도 신규 합성 전송 승인 후 DSPy·신규 LM 검증을 진행한다.
+
+**관련 자료**
+- [고정밀 판별 연구 보고서](MAPPING_ACCURACY_OPTIMIZATION_20261124.md).
