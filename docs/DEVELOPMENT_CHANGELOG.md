@@ -1238,3 +1238,30 @@
 
 **관련 자료**
 - [Phase 3 원격·로컬·문서 구조 비교와 공용 비용](MAPPING_FINAL_ARCHITECTURE_EVALUATION_20261124.md).
+
+### 2026-11-24 — Phase 4 Upstage 백엔드 연동 기반
+
+**Git**
+- 시작 Commit [`84de5b0`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/84de5b06293e468b109a4f6f241d3142f86175a5), 브랜치 `main`.
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='feat: add opt-in Upstage ingestion review foundation'`으로 확인한다.
+
+**작업 목적**
+- 기존 추천과 승인 절차를 유지하면서 모델·프롬프트·검토 전략을 독립적으로 바꿀 수 있는 Upstage 연동 기반을 마련한다.
+
+**구현 내용**
+- `backend/app/integrations/upstage.py`에 Solar Chat·Embedding·Parse·Extract·Classify·OCR과 통합 오류·비용 예약 인터페이스를 추가했다.
+- `backend/app/ingest/ai_mapping.py`, `ai_documents.py`에 검토 5개 전략, XLSX 위치 후보와 원본 대조, 반복 행 검증을 추가했다.
+- 독립 API와 OpenAPI·JSON Schema·화면 인계, 연구 스크립트와 서버의 공통 검증, 캐시 오프라인 재생 도구를 추가했다.
+
+**검증 결과**
+- Windows 보조 PC 전체 비DB **1,313 passed / 68 skipped**. 계약 동기화와 RapidFuzz 48·70건 회귀 통과.
+- 기존 합성 캐시 230개 재생. Phase 3 정답·오추천·HOLD 일치. 백엔드 보호 정책 적용 결과는 상세 보고서에 기록했다. Upstage 실요청 0건, 연구 원장 SHA와 누적 USD 9.90682308 유지. DB·Docker 미실행.
+
+**기술적 결정**
+- 기본 전략은 로컬 후보가 없는 열만 검토한다. 키 외에도 서버·기능·요청 동의, 데이터셋별 합성 SHA, 비용 예약이 필요하다. Parse가 반환한 위치는 사용자 범위 확인에 사용하고 셀 값은 원본에서 읽는다.
+
+**남은 문제**
+- 배포 인증·요청 한도·비용 계량을 연결하고 실제 전송은 별도 합성 자료·비용 승인 후 검증한다. 기본 HOLD 전략과 버전별 프롬프트 성능, 웹 UI 연결은 후속이다.
+
+**관련 자료**
+- [Upstage 백엔드 연동·검증 및 화면 인계](UPSTAGE_BACKEND_INTEGRATION_20261124.md) · [Phase 3 평가](MAPPING_FINAL_ARCHITECTURE_EVALUATION_20261124.md).

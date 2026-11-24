@@ -1,0 +1,1169 @@
+{
+  "contract_version": "ingestion-ai-review-0.1",
+  "models": {
+    "AIDocumentReply": {
+      "$defs": {
+        "DocumentTable": {
+          "additionalProperties": false,
+          "properties": {
+            "column_count": {
+              "maximum": 64,
+              "minimum": 1,
+              "title": "Column Count",
+              "type": "integer"
+            },
+            "coordinates": {
+              "items": {
+                "$ref": "#/$defs/PagePoint"
+              },
+              "maxItems": 4,
+              "title": "Coordinates",
+              "type": "array"
+            },
+            "element_id": {
+              "title": "Element Id",
+              "type": "integer"
+            },
+            "headers": {
+              "items": {
+                "type": "string"
+              },
+              "maxItems": 64,
+              "title": "Headers",
+              "type": "array"
+            },
+            "page": {
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Page",
+              "type": "integer"
+            },
+            "range_status": {
+              "default": "HOLD",
+              "enum": [
+                "HOLD",
+                "USER_RANGE_MATCH"
+              ],
+              "title": "Range Status",
+              "type": "string"
+            },
+            "reason": {
+              "title": "Reason",
+              "type": "string"
+            },
+            "row_count": {
+              "minimum": 1,
+              "title": "Row Count",
+              "type": "integer"
+            },
+            "source_first_col": {
+              "anyOf": [
+                {
+                  "maximum": 64,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Source First Col"
+            },
+            "source_header_row": {
+              "anyOf": [
+                {
+                  "maximum": 100000,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Source Header Row"
+            },
+            "source_sheet": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Source Sheet"
+            }
+          },
+          "required": [
+            "element_id",
+            "page",
+            "coordinates",
+            "headers",
+            "row_count",
+            "column_count",
+            "reason"
+          ],
+          "title": "DocumentTable",
+          "type": "object"
+        },
+        "PagePoint": {
+          "additionalProperties": false,
+          "properties": {
+            "x": {
+              "maximum": 1,
+              "minimum": 0,
+              "title": "X",
+              "type": "number"
+            },
+            "y": {
+              "maximum": 1,
+              "minimum": 0,
+              "title": "Y",
+              "type": "number"
+            }
+          },
+          "required": [
+            "x",
+            "y"
+          ],
+          "title": "PagePoint",
+          "type": "object"
+        },
+        "ProviderUsage": {
+          "additionalProperties": false,
+          "properties": {
+            "enhanced_pages": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Enhanced Pages"
+            },
+            "input_tokens": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Input Tokens"
+            },
+            "output_tokens": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Output Tokens"
+            },
+            "pages": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Pages"
+            },
+            "standard_pages": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Standard Pages"
+            }
+          },
+          "title": "ProviderUsage",
+          "type": "object"
+        },
+        "ReviewRun": {
+          "additionalProperties": false,
+          "properties": {
+            "elapsed_ms": {
+              "minimum": 0,
+              "title": "Elapsed Ms",
+              "type": "integer"
+            },
+            "knowledge_sha256": {
+              "anyOf": [
+                {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Knowledge Sha256"
+            },
+            "knowledge_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Knowledge Version"
+            },
+            "model": {
+              "title": "Model",
+              "type": "string"
+            },
+            "prompt_sha256": {
+              "anyOf": [
+                {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Prompt Sha256"
+            },
+            "prompt_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Prompt Version"
+            },
+            "request_id": {
+              "title": "Request Id",
+              "type": "string"
+            },
+            "snapshot": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Snapshot"
+            },
+            "usage": {
+              "$ref": "#/$defs/ProviderUsage"
+            }
+          },
+          "required": [
+            "request_id",
+            "model",
+            "elapsed_ms",
+            "usage"
+          ],
+          "title": "ReviewRun",
+          "type": "object"
+        },
+        "XlsxTableSelection": {
+          "additionalProperties": false,
+          "properties": {
+            "data_end_row": {
+              "maximum": 100000,
+              "minimum": 1,
+              "title": "Data End Row",
+              "type": "integer"
+            },
+            "data_start_row": {
+              "maximum": 100000,
+              "minimum": 1,
+              "title": "Data Start Row",
+              "type": "integer"
+            },
+            "first_col": {
+              "maximum": 64,
+              "minimum": 1,
+              "title": "First Col",
+              "type": "integer"
+            },
+            "header_row": {
+              "maximum": 100000,
+              "minimum": 1,
+              "title": "Header Row",
+              "type": "integer"
+            },
+            "last_col": {
+              "maximum": 64,
+              "minimum": 1,
+              "title": "Last Col",
+              "type": "integer"
+            },
+            "sheet": {
+              "maxLength": 31,
+              "minLength": 1,
+              "title": "Sheet",
+              "type": "string"
+            },
+            "source_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "title": "Source Sha256",
+              "type": "string"
+            }
+          },
+          "required": [
+            "source_sha256",
+            "sheet",
+            "header_row",
+            "data_start_row",
+            "data_end_row",
+            "first_col",
+            "last_col"
+          ],
+          "title": "XlsxTableSelection",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "auto_approve": {
+          "const": false,
+          "default": false,
+          "title": "Auto Approve",
+          "type": "boolean"
+        },
+        "contract_version": {
+          "const": "ingestion-ai-review-0.1",
+          "default": "ingestion-ai-review-0.1",
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "dataset_id": {
+          "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+          "title": "Dataset Id",
+          "type": "string"
+        },
+        "element_count": {
+          "default": 0,
+          "minimum": 0,
+          "title": "Element Count",
+          "type": "integer"
+        },
+        "error_request_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Request Id"
+        },
+        "issue": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Issue"
+        },
+        "mode": {
+          "enum": [
+            "standard",
+            "enhanced",
+            "auto"
+          ],
+          "title": "Mode",
+          "type": "string"
+        },
+        "persisted": {
+          "const": false,
+          "default": false,
+          "title": "Persisted",
+          "type": "boolean"
+        },
+        "retry_after_seconds": {
+          "anyOf": [
+            {
+              "maximum": 3600,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Retry After Seconds"
+        },
+        "run": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReviewRun"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "source_sha256": {
+          "pattern": "^[0-9a-f]{64}$",
+          "title": "Source Sha256",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "DISABLED",
+            "BLOCKED",
+            "NOT_NEEDED",
+            "REVIEW",
+            "HOLD",
+            "PARTIAL",
+            "UNAVAILABLE"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "table_selection": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/XlsxTableSelection"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "tables": {
+          "items": {
+            "$ref": "#/$defs/DocumentTable"
+          },
+          "maxItems": 100,
+          "title": "Tables",
+          "type": "array"
+        },
+        "user_selection_required": {
+          "const": true,
+          "default": true,
+          "title": "User Selection Required",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "dataset_id",
+        "source_sha256",
+        "status",
+        "mode"
+      ],
+      "title": "AIDocumentReply",
+      "type": "object"
+    },
+    "AIMappingReply": {
+      "$defs": {
+        "AIColumnReview": {
+          "additionalProperties": false,
+          "properties": {
+            "business_concept": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Business Concept"
+            },
+            "col": {
+              "maximum": 64,
+              "minimum": 1,
+              "title": "Col",
+              "type": "integer"
+            },
+            "conflict": {
+              "default": false,
+              "title": "Conflict",
+              "type": "boolean"
+            },
+            "hold_reason": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Hold Reason"
+            },
+            "reason": {
+              "title": "Reason",
+              "type": "string"
+            },
+            "requires_user_confirmation": {
+              "const": true,
+              "default": true,
+              "title": "Requires User Confirmation",
+              "type": "boolean"
+            },
+            "source": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "AI_SOLAR",
+                    "EXACT",
+                    "RAPIDFUZZ",
+                    "USER_CONFIRMED",
+                    "LOCAL_PROFILE"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Source"
+            },
+            "source_column": {
+              "title": "Source Column",
+              "type": "string"
+            },
+            "source_id": {
+              "title": "Source Id",
+              "type": "string"
+            },
+            "target_field": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Target Field"
+            },
+            "validation": {
+              "enum": [
+                "REVIEWABLE",
+                "HOLD",
+                "PRESERVED"
+              ],
+              "title": "Validation",
+              "type": "string"
+            }
+          },
+          "required": [
+            "source_id",
+            "col",
+            "source_column",
+            "reason",
+            "validation"
+          ],
+          "title": "AIColumnReview",
+          "type": "object"
+        },
+        "ColumnSuggestion": {
+          "additionalProperties": false,
+          "properties": {
+            "col": {
+              "title": "Col",
+              "type": "integer"
+            },
+            "source_column": {
+              "title": "Source Column",
+              "type": "string"
+            },
+            "suggestions": {
+              "items": {
+                "$ref": "#/$defs/MappingCandidate"
+              },
+              "maxItems": 3,
+              "title": "Suggestions",
+              "type": "array"
+            },
+            "unresolved_reasons": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Unresolved Reasons",
+              "type": "array"
+            }
+          },
+          "required": [
+            "col",
+            "source_column",
+            "suggestions",
+            "unresolved_reasons"
+          ],
+          "title": "ColumnSuggestion",
+          "type": "object"
+        },
+        "MappingCandidate": {
+          "additionalProperties": false,
+          "properties": {
+            "evidence": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Evidence",
+              "type": "array"
+            },
+            "method": {
+              "title": "Method",
+              "type": "string"
+            },
+            "requires_review": {
+              "const": true,
+              "default": true,
+              "title": "Requires Review",
+              "type": "boolean"
+            },
+            "target_field": {
+              "title": "Target Field",
+              "type": "string"
+            }
+          },
+          "required": [
+            "target_field",
+            "method",
+            "evidence"
+          ],
+          "title": "MappingCandidate",
+          "type": "object"
+        },
+        "MappingReply": {
+          "additionalProperties": false,
+          "properties": {
+            "approval_required": {
+              "const": true,
+              "default": true,
+              "title": "Approval Required",
+              "type": "boolean"
+            },
+            "auto_approve": {
+              "const": false,
+              "default": false,
+              "title": "Auto Approve",
+              "type": "boolean"
+            },
+            "contract_version": {
+              "default": "ingestion-assistance-0.1",
+              "title": "Contract Version",
+              "type": "string"
+            },
+            "dataset_id": {
+              "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+              "title": "Dataset Id",
+              "type": "string"
+            },
+            "entity": {
+              "enum": [
+                "product",
+                "material",
+                "monthly_demand",
+                "bom",
+                "inventory"
+              ],
+              "title": "Entity",
+              "type": "string"
+            },
+            "master_digest": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Master Digest"
+            },
+            "master_scope": {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Master Scope"
+            },
+            "persisted": {
+              "const": false,
+              "default": false,
+              "title": "Persisted",
+              "type": "boolean"
+            },
+            "saved_rule_storage": {
+              "const": "NOT_IMPLEMENTED",
+              "default": "NOT_IMPLEMENTED",
+              "title": "Saved Rule Storage",
+              "type": "string"
+            },
+            "sheets": {
+              "items": {
+                "$ref": "#/$defs/MappingSheetReply"
+              },
+              "title": "Sheets",
+              "type": "array"
+            },
+            "source_sha256": {
+              "title": "Source Sha256",
+              "type": "string"
+            },
+            "table_selection": {
+              "anyOf": [
+                {
+                  "$ref": "#/$defs/XlsxTableSelection"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null
+            }
+          },
+          "required": [
+            "dataset_id",
+            "entity",
+            "source_sha256",
+            "master_scope",
+            "master_digest",
+            "sheets"
+          ],
+          "title": "MappingReply",
+          "type": "object"
+        },
+        "MappingSheetReply": {
+          "additionalProperties": false,
+          "properties": {
+            "existing_mapping": {
+              "additionalProperties": {
+                "type": "integer"
+              },
+              "title": "Existing Mapping",
+              "type": "object"
+            },
+            "holds": {
+              "items": {
+                "type": "string"
+              },
+              "title": "Holds",
+              "type": "array"
+            },
+            "sheet": {
+              "title": "Sheet",
+              "type": "string"
+            },
+            "status": {
+              "enum": [
+                "MAPPED",
+                "HOLD",
+                "IGNORED"
+              ],
+              "title": "Status",
+              "type": "string"
+            },
+            "suggestions": {
+              "items": {
+                "$ref": "#/$defs/ColumnSuggestion"
+              },
+              "title": "Suggestions",
+              "type": "array"
+            }
+          },
+          "required": [
+            "sheet",
+            "status",
+            "existing_mapping",
+            "suggestions",
+            "holds"
+          ],
+          "title": "MappingSheetReply",
+          "type": "object"
+        },
+        "ProviderUsage": {
+          "additionalProperties": false,
+          "properties": {
+            "enhanced_pages": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Enhanced Pages"
+            },
+            "input_tokens": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Input Tokens"
+            },
+            "output_tokens": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Output Tokens"
+            },
+            "pages": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Pages"
+            },
+            "standard_pages": {
+              "anyOf": [
+                {
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Standard Pages"
+            }
+          },
+          "title": "ProviderUsage",
+          "type": "object"
+        },
+        "ReviewRun": {
+          "additionalProperties": false,
+          "properties": {
+            "elapsed_ms": {
+              "minimum": 0,
+              "title": "Elapsed Ms",
+              "type": "integer"
+            },
+            "knowledge_sha256": {
+              "anyOf": [
+                {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Knowledge Sha256"
+            },
+            "knowledge_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Knowledge Version"
+            },
+            "model": {
+              "title": "Model",
+              "type": "string"
+            },
+            "prompt_sha256": {
+              "anyOf": [
+                {
+                  "pattern": "^[0-9a-f]{64}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Prompt Sha256"
+            },
+            "prompt_version": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Prompt Version"
+            },
+            "request_id": {
+              "title": "Request Id",
+              "type": "string"
+            },
+            "snapshot": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "default": null,
+              "title": "Snapshot"
+            },
+            "usage": {
+              "$ref": "#/$defs/ProviderUsage"
+            }
+          },
+          "required": [
+            "request_id",
+            "model",
+            "elapsed_ms",
+            "usage"
+          ],
+          "title": "ReviewRun",
+          "type": "object"
+        },
+        "XlsxTableSelection": {
+          "additionalProperties": false,
+          "properties": {
+            "data_end_row": {
+              "maximum": 100000,
+              "minimum": 1,
+              "title": "Data End Row",
+              "type": "integer"
+            },
+            "data_start_row": {
+              "maximum": 100000,
+              "minimum": 1,
+              "title": "Data Start Row",
+              "type": "integer"
+            },
+            "first_col": {
+              "maximum": 64,
+              "minimum": 1,
+              "title": "First Col",
+              "type": "integer"
+            },
+            "header_row": {
+              "maximum": 100000,
+              "minimum": 1,
+              "title": "Header Row",
+              "type": "integer"
+            },
+            "last_col": {
+              "maximum": 64,
+              "minimum": 1,
+              "title": "Last Col",
+              "type": "integer"
+            },
+            "sheet": {
+              "maxLength": 31,
+              "minLength": 1,
+              "title": "Sheet",
+              "type": "string"
+            },
+            "source_sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "title": "Source Sha256",
+              "type": "string"
+            }
+          },
+          "required": [
+            "source_sha256",
+            "sheet",
+            "header_row",
+            "data_start_row",
+            "data_end_row",
+            "first_col",
+            "last_col"
+          ],
+          "title": "XlsxTableSelection",
+          "type": "object"
+        }
+      },
+      "additionalProperties": false,
+      "properties": {
+        "auto_approve": {
+          "const": false,
+          "default": false,
+          "title": "Auto Approve",
+          "type": "boolean"
+        },
+        "baseline": {
+          "$ref": "#/$defs/MappingReply"
+        },
+        "columns": {
+          "items": {
+            "$ref": "#/$defs/AIColumnReview"
+          },
+          "maxItems": 64,
+          "title": "Columns",
+          "type": "array"
+        },
+        "contract_version": {
+          "const": "ingestion-ai-review-0.1",
+          "default": "ingestion-ai-review-0.1",
+          "title": "Contract Version",
+          "type": "string"
+        },
+        "error_request_id": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Error Request Id"
+        },
+        "issue": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Issue"
+        },
+        "persisted": {
+          "const": false,
+          "default": false,
+          "title": "Persisted",
+          "type": "boolean"
+        },
+        "retry_after_seconds": {
+          "anyOf": [
+            {
+              "maximum": 3600,
+              "minimum": 0,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Retry After Seconds"
+        },
+        "run": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ReviewRun"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "sheet": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sheet"
+        },
+        "status": {
+          "enum": [
+            "DISABLED",
+            "BLOCKED",
+            "NOT_NEEDED",
+            "REVIEW",
+            "HOLD",
+            "PARTIAL",
+            "UNAVAILABLE"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "strategy": {
+          "title": "Strategy",
+          "type": "string"
+        }
+      },
+      "required": [
+        "baseline",
+        "status",
+        "strategy"
+      ],
+      "title": "AIMappingReply",
+      "type": "object"
+    }
+  }
+}

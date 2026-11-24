@@ -11,6 +11,8 @@ from pathlib import Path
 import numpy as np
 
 from evaluate_mapping_research import baseline_decisions, decisions, timing, write
+from contracts.mapping_review import (HOLD_CONCEPTS, KEYED_INSTRUCTION, SOLAR_PREVIEW, concept_vocabulary,
+                                      decode_mapping, mapping_schema, solar_responses_payload, validate_mapping)
 from mapping_research_confirmatory import OUTPUT as CONFIRM_DIR, cpu_reference, locked_panel
 from mapping_research_data import canonical, sha
 from mapping_research_features import CATALOG, prepare
@@ -24,7 +26,7 @@ from mapping_research_remote import (APPROVED_CAP, CHAT, EMBED, FIXED_SPLITS, PR
 
 OUT = Path('.artifacts/mapping-research/phase3')
 CONFIRM_SHA = 'ea4a86ed84dcfd12400f46cd11ea87d3f6a266a89040299e611752ea7eba5649'
-PREVIEW = 'solar-mini-4-5-preview'
+PREVIEW = SOLAR_PREVIEW
 MODELS = {**dict(zip(('mini','pro'), CHAT, strict=True)), 'preview':PREVIEW}
 RATES = {**CHAT, PREVIEW:(Decimal('.10'),Decimal('.40'))}
 EMBED_RATE = (Decimal('.02'),Decimal(0))
@@ -52,7 +54,6 @@ RECIPES = {
     'embed-solar':Recipe(MINI,'keyed',treatment='embed'),
 }
 CORE = ('mini-table','pro-table','mini-business','pro-business','preview-business')
-HOLD_FIELDS = {'HOLD':None,'ORDER_OR_RETURN':None,'MONEY_OR_PARTY':None,'NEEDS_TRANSFORM':None}
 
 
 @dataclass
@@ -88,13 +89,6 @@ def source_prior(panel, j, method):
     return {key:field for key,field in picks.items() if unique[field]==1}
 
 
-def response_payload(payload):
-    config=payload['response_format']['json_schema']
-    return {'model':payload['model'], 'instructions':payload['messages'][0]['content'],
-            'input':payload['messages'][1]['content'], 'max_output_tokens':payload['max_tokens'],
-            'reasoning':{'effort':'none'}, 'store':False, 'text':{'format':{'type':'json_schema',**config}}}
-
-
 def build_request(doc, indexes, recipe, prior=None, candidates=None):
     locked = (prior or {}) if recipe.treatment == 'hold' else None
     wire,allowed=payload_for(doc,recipe.model,indexes,business=recipe.business,single=recipe.form=='column',previous=locked)
@@ -103,108 +97,34 @@ def build_request(doc, indexes, recipe, prior=None, candidates=None):
     if keyed:
         vocabulary=json.loads(wire['messages'][1]['content'])
         if recipe.form=='concept':
-            vocab={f'concept_{i:02d}':field for i,field in enumerate(CATALOG[doc['entity']],1)} | HOLD_FIELDS
-            vocabulary['concepts']={key:(vocabulary['concepts'][field] if field else {
-                'HOLD':'Unknown or ambiguous','ORDER_OR_RETURN':'Purchase order or returns, outside registration definition',
-                'MONEY_OR_PARTY':'Money, unit price or trading party identifier',
-                'NEEDS_TRANSFORM':'Aggregation, reshape or conversion required'}[key]) for key,field in vocab.items()}
+            vocab=concept_vocabulary(CATALOG[doc['entity']])
+            vocabulary['concepts']={key:(vocabulary['concepts'][field] if field else HOLD_CONCEPTS[key])
+                                    for key,field in vocab.items()}
         if recipe.treatment=='verify':
             vocabulary['proposed_fields_to_check']=prior or {}
             wire['messages'][0]['content']+=' Check the proposed fields independently and correct them or return HOLD if unsupported.'
         if candidates is not None:
             for key in allowed:
                 allowed[key]=set(candidates.get(key,[]))
-        props={key:{'type':'string','enum':[name for name,field in vocab.items() if field is None or field in fields]}
-               for key,fields in allowed.items()}
-        schema={'type':'object','additionalProperties':False,'properties':props,'required':list(props)}
-        wire['response_format']['json_schema']['schema']=schema
-        wire['messages'][0]['content']+=' Return one JSON object keyed by source column ID, not an array.'
+        wire['response_format']['json_schema']['schema']=mapping_schema(allowed,vocab,keyed=True)
+        wire['messages'][0]['content']+=KEYED_INSTRUCTION
         wire['messages'][1]['content']=canonical(vocabulary).decode('utf-8')
     endpoint='/responses' if recipe.model==PREVIEW else '/chat/completions'
-    return endpoint,response_payload(wire) if endpoint=='/responses' else wire,allowed,vocab,keyed
-
-
-def unique_object(items):
-    obj={}
-    for key,value in items:
-        if key in obj:
-            raise ValueError('DUPLICATE_JSON_KEY')
-        obj[key]=value
-    return obj
-
+    return endpoint,solar_responses_payload(wire) if endpoint=='/responses' else wire,allowed,vocab,keyed
 
 def decode_response(body,endpoint,allowed,vocab,keyed):
-    issues=Counter()
-    try:
-        if endpoint=='/responses':
-            status=body['status']
-            if status!='completed':
-                reason=(body.get('incomplete_details') or {}).get('reason')
-                return {},Counter({'OUTPUT_LIMIT' if reason=='max_output_tokens' else 'UNFINISHED_OR_REFUSED':1})
-            blocks=[p for item in body['output'] if item['type']=='message' for p in item['content']]
-            if any(block['type']=='refusal' for block in blocks):
-                return {},Counter(REFUSAL=1)
-            raw=''.join(block['text'] for block in blocks if block['type']=='output_text')
-        else:
-            choice=body['choices'][0]
-            finish=choice['finish_reason']
-            if finish!='stop':
-                return {},Counter({'OUTPUT_LIMIT' if finish=='length' else 'UNFINISHED_OR_REFUSED':1})
-            if choice['message'].get('refusal'):
-                return {},Counter(REFUSAL=1)
-            raw=choice['message']['content']
-        obj=json.loads(raw,object_pairs_hook=unique_object)
-    except (KeyError,TypeError,IndexError,json.JSONDecodeError):
-        return {},Counter(INVALID_JSON_OR_PROVIDER_SCHEMA=1)
-    except ValueError:
-        return {},Counter(DUPLICATE_JSON_KEY=1)
-    if not isinstance(obj,dict) or (not keyed and (set(obj)!={'mapping'} or not isinstance(obj['mapping'],list))):
-        return {},Counter(INVALID_WRAPPER=1)
-    if keyed:
-        pairs=list(obj.items())
-    else:
-        pairs=[]
-        for row in obj['mapping']:
-            if isinstance(row,dict) and set(row)=={'id','field'} and isinstance(row['id'],str):
-                pairs.append((row['id'],row['field']))
-            else:
-                issues['INVALID_ITEM']+=1
-                # A malformed item with a recognizable ID invalidates that ID too.
-                if isinstance(row,dict) and isinstance(row.get('id'),str):
-                    pairs.append((row['id'],None))
-    counts=Counter(key for key,_ in pairs)
-    issues['MISSING_ID']=len(set(allowed)-set(counts))
-    issues['EXTRA_ID']=len(set(counts)-set(allowed))
-    clean={}
-    for key,raw_value in pairs:
-        if key not in allowed:
-            continue
-        if counts[key] != 1:
-            issues['DUPLICATE_ID']+=1
-            continue
-        if (not isinstance(raw_value,str) or raw_value not in vocab
-                or (vocab[raw_value] is not None and vocab[raw_value] not in allowed[key])):
-            issues['INVALID_FIELD']+=1
-            continue
-        clean[key]=vocab[raw_value]
-    return clean,+issues
+    result=decode_mapping(body,endpoint,allowed,vocab,keyed=keyed)
+    return result.values,result.issues
 
 
 def collision_guard(proposals, locked, record):
-    safe=dict(locked)
-    conflicts=Counter(target for target in proposals.values() if target is not None)
-    used=set(locked.values())
-    rejected=Counter()
-    for key,field in proposals.items():
-        if field is None:
-            continue
-        if conflicts[field]>1 or field in used:
-            rejected['DUPLICATE_TARGET']+=1
-        elif not record['allowed'][int(key),record['fields'].index(field)]:
-            rejected['LOCAL_COMPATIBILITY']+=1
-        else:
-            safe[key]=field
-    return safe,rejected
+    def check(key, field):
+        if not record['allowed'][int(key),record['fields'].index(field)]:
+            return 'LOCAL_COMPATIBILITY'
+        return None
+    safe,rejected=validate_mapping(proposals,locked,check)
+    return safe,Counter('DUPLICATE_TARGET' if reason=='EXISTING_MAPPING_CONFLICT' else reason
+                        for reason in rejected.values())
 
 
 def make_jobs(panel, indexes, name, embed_candidates):

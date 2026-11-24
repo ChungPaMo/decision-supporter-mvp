@@ -15,6 +15,7 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 import numpy as np
 
 from evaluate_mapping_research import calibrate, decisions, metrics, timing, write
+from contracts.mapping_review import SYSTEM, mapping_schema, solar_chat_payload
 from mapping_research_data import SCOPE, canonical, load_frozen, sha
 from mapping_research_features import CATALOG, Lexicon, prepare, train_prototypes
 from mapping_research_neural import passages, queries
@@ -117,16 +118,10 @@ def chat_request(bundle, item, model):
     columns = item.get('columns', [{'id':'0', 'input':item.get('input')}])
     fields = item.get('permitted', list(CATALOG[item['entity']]))
     concepts = {field:vocabulary[field] for field in [*fields,'HOLD']}
-    schema = {'type':'object', 'required':['mapping'], 'additionalProperties':False, 'properties':{
-        'mapping':{'type':'array','items':{'type':'object', 'required':['id','field'], 'additionalProperties':False,
-            'properties':{'id':{'type':'string','enum':[col['id'] for col in columns]},
-                          'field':{'type':'string','enum':[*fields,'HOLD']}}}}}}
-    instruction = ('Identify each synthetic column business meaning. Use only allowed fields. Use HOLD if ambiguous, incompatible, '
-                   'unrelated, or needing aggregation or transformation. Never repeat a target field. Return every column ID.')
-    return {'model':model, 'temperature':0, 'max_tokens':max(64, 32 * len(columns)), 'messages':[
-        {'role':'system','content':instruction},{'role':'user','content':canonical({'concepts':concepts,'columns':columns}).decode('utf-8')}],
-        'response_format':{'type':'json_schema','json_schema':{'name':'mapping_result','strict':True,'schema':schema}}}, {
-        col['id']:set(fields) for col in columns}
+    expected = {col['id']:set(fields) for col in columns}
+    schema = mapping_schema(expected,{**{field:field for field in fields},'HOLD':None},keyed=False)
+    content = canonical({'concepts': concepts, 'columns': columns}).decode('utf-8')
+    return solar_chat_payload(model, SYSTEM, content, schema, max(64, 32 * len(columns))), expected
 
 
 def expected_cost(payload, rates):

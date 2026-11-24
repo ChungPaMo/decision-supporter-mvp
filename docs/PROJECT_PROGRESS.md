@@ -1,5 +1,7 @@
 # 충파모 프로젝트 진행상황
 
+2026-11-24 (KST), 보조 PC. 김대영이 [`84de5b0`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/84de5b06293e468b109a4f6f241d3142f86175a5)에서 Upstage Provider 6종과 선택형 Solar 컬럼 검토·문서 구조 API를 추가했다. 외부 기능은 기본 비활성화이며 합성 원본 SHA와 비용 예약을 요구한다. 기존 추천·저장·승인 경로를 유지한다. 비DB 1,313 통과·68 건너뜀, 캐시 230문서 재생 및 RapidFuzz 48·70건 회귀 통과. 추가 Upstage 요청 0건, 연구비 계산·예약 USD 9.90682308 유지. [연동·검증 보고서](UPSTAGE_BACKEND_INTEGRATION_20261124.md)
+
 2026-11-24 (KST), 보조 PC. 매핑 Phase 3에서 승인된 Final 130문서와 Confirmatory 100문서를 실측했다. Final Mini 개념 형식 585정답·26오추천, Confirmatory Exact→RapidFuzz 286정답·0오추천, 같은 입력에 Solar HOLD 부분 채택 448정답·51오추천이었다. 기본 경로는 원본 파서와 별칭을 유지하고 Solar는 선택형 검토 후보로 판단했다. Parse Standard/Auto가 원본 범위 3/24를 연결했고 Extract Enhanced 원본 XLSX는 60초 응답 시간 초과였다. 누적 USD 10 중 계산·예약 USD 9.90682308. 비DB 1,264 통과·68 건너뜀. [최종 아키텍처 평가](MAPPING_FINAL_ARCHITECTURE_EVALUATION_20261124.md)
 
 2026-11-24 (KST), 보조 PC. Phase 2에서 Upstage Solar·Embedding과 문서 분석을 공용 USD 5 원장으로 실측했다. 합성 텍스트 5표에서 Solar Pro 20정답·1오추천, 로컬 독립 100표에서는 정확 일치 280정답·0오추천이었다. 원본 XLSX 4개의 Parse 공통 비교에서 Standard/Auto 10/11표, 합성 PDF 12개의 Classify 10/12, 반복 행 Extract Enhanced 209/210값을 확인했다. BGE/Qwen 전체 문맥과 E5 최종 LayerNorm 학습을 검증했고 원본 셀·운영 매핑·승인 경로를 유지했다. 외부 130문서 전량 평가는 자동 승인 검토에서 보류됐다. [Phase 2](MAPPING_UPSTAGE_AND_FINAL_COMPARISON_20261124.md) · [문서 분석](MAPPING_UPSTAGE_DOCUMENT_INTELLIGENCE_20261124.md)
@@ -84,7 +86,7 @@
 | --- | --- | --- | --- |
 | 데이터 입력·파싱 | CSV/XLSX·7종 배치·수동 매핑·재검증·승인/반려 유지. 공식8마스터+원장 변환9번째 배치와 선택 XLSX 변환 이력을 실제 PostgreSQL로 검증 | 김대영 | 동시 저장 및 화면 전체 E2E는 별도. [공식 자료 검증](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md) · [선택 XLSX 실DB 검증](XLSX_SELECTION_PERSISTENCE_VERIFICATION.md#2026-11-23-기존-개발-pc의-postgresql-검증-결과) |
 | 파일 자동 분류 | 업로드용 `rules-0.4.0`이 구조화 HOLD를 제공하고 백엔드는 CAPA·Routing 등록 힌트를 반환한다. 사용자 선택 범위로 재분류 가능 | 이훤(알고리즘), 김대영(API) | 화면 안내와 범위 선택 연계는 후속. [모듈 갱신](https://github.com/ChungPaMo/decision-supporter-mvp/commit/66880a5) · [표 선택](XLSX_TABLE_SELECTION_HANDOFF.md) |
-| 컬럼 매핑·AI 후보 추천 | 정확 일치·별칭·수동 override와 RapidFuzz Top-3 유지. 11/22 48건의 오추천 6→3, Top-3 26/32 및 승인 전 SQL 저장 검증. 11/23 숫자 열의 단위 후보 반증 추가 | 김대영 | 11/22 BGE-M3 보완은 Top-3 32/32이나 오추천 7/48로 운영 적용 보류. 평면 BOM 원본의 헤더 위치와 식별자 부족은 수동 확인 필요. [기존 평가](MAPPING_BGE_EVALUATION_20261122.md) · [현실형 XLSX](CLASSIFIER_XLSX_MAPPING_VERIFICATION_20261123.md) |
+| 컬럼 매핑·AI 후보 추천 | 정확 일치·별칭·수동 override·RapidFuzz Top-3 유지. 별도 AI 검토 API는 기존 추천과 검토 후보를 함께 반환한다. 기본 비활성화 상태에서 MockTransport 및 합성 캐시 재생으로 검증했다. | 김대영 | 배포 비용 계량·인증, 실제 API 검증, UI 연계는 후속이다. 평면 BOM 원본의 헤더 위치와 식별자 부족은 수동 확인이 필요하다. [Upstage 연동](UPSTAGE_BACKEND_INTEGRATION_20261124.md) · [기존 평가](MAPPING_BGE_EVALUATION_20261122.md) · [현실형 XLSX](CLASSIFIER_XLSX_MAPPING_VERIFICATION_20261123.md) |
 | 정제·변환 | 원본5파일86,214→498, SQL 이력·원본bytes/SHA·승인 전 batch 연결·재조회·동시201/200·실제DB 실패 rollback 검증 완료 | 김대영 | 회귀/개발DB0009 적용 확인. 개발DB는 기존공식자료 중복등록 없이 새이력0건 유지. SYNTHETIC_ONLY를 일반 기업에 자동 적용하지 않음. [이력 계약](INGESTION_INTEGRATION_HISTORY.md), [실DB 근거](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md) |
 | PostgreSQL·데이터셋 격리 | 신규v2의 로컬FK·UUID격리·불변/지연트리거 실제 검증. 보관dataset 포함3스키마·기존81테이블 보존 probe 후 rollback. 개발0009도 별도승인·백업확인 후 적용 | 김대영 | 개발/회귀 현재0009. 기존자료와 연결된 볼륨은 보존, downgrade2개 미실행. dataset_id는 인증권한 아님. [최신 근거](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md) |
 | 수요예측 | 단일 엔진/계약 유지. 실제 승인된 변환 수요498행→예측OK/27행 저장·재조회·P50≤P80≤P90, 미승인 probe 제외 확인 | 이희원(엔진), 김대영(API), 정마나미(화면) | 합성 회귀 결과를 실제 기업 적합성으로 일반화하지 않음. [이번 실DB 검증](POSTGRESQL_INGESTION_E2E_VERIFICATION_20261117.md) |
@@ -108,7 +110,7 @@
 2. **정마나미:** [화면 요청 P0/P1](INGESTION_UI_CHANGE_REQUEST.md)에 따라 기존 화면을 재사용해 신규 API를 연결한다. 기존 승인 UI를 중복 구현하지 않는다. 기존 npm 취약점 2건(Vite/esbuild)도 담당 영역에서 검토한다.
 3. **김대영, 기존 개발 PC:** 공식 3개월 승인 데이터를 READ ONLY로 진단하고 실제 Preview와 전후 지문을 확인한다. 별도 승인 후 `chungpamo_regression`에서 BASE·WHAT_IF 저장·재사용과 격리를 검증한다. 승인 입고 영구 원장과 변경 이력은 별도 설계 및 DB 적용 승인이 필요하다. [실DB 체크리스트](PLANNING_ENGINE_ACTIVATION_VERIFICATION_20261124.md#docker-pc-인계)
 4. **통합/화면 담당:** 공식 자료로 전체 계획 브라우저 E2E를 수행한다. LIVE Preview와 이력·저장·승인 상태를 구분한다. 정식 승인은 서버 인증과 승인 정책 확정 후 연결한다.
-5. **팀 검토:** 실제 기업 데이터의 이용 범위·단위/거래 상태·매핑 모호성·변환 정책을 검토한다. 합성 데이터 성과를 기업 데이터 성능으로 일반화하지 않는다. 현재 LLM/Upstage 호출은 하지 않으며 후속 입력/출력 계약만 [추천 보고서](MAPPING_RECOMMENDATION_MVP_20261116.md)에 정리돼 있다.
+5. **김대영·화면 담당:** 별도 합성 파일 승인·인증·서비스 한도·비용 계량을 연결한 뒤 선택형 AI 검토의 실호출과 사용자 확인 UI를 검증한다. 프롬프트 품질은 별도 평가한다. 기업 데이터 검토는 단위·거래 상태·모호성·변환 정책부터 확인한다. [Upstage 연동 및 UI 인계](UPSTAGE_BACKEND_INTEGRATION_20261124.md)
 
 ## 개발 환경 제한
 

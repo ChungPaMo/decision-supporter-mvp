@@ -10,6 +10,7 @@ import numpy as np
 from scipy.optimize import linear_sum_assignment
 
 from mapping_research_data import csv_bytes, norm, target_catalog
+from contracts.mapping_knowledge import BUSINESS_WORDS, CONFLICTS
 from app.ingest.mapping import map_sheet
 from app.ingest.profiling import parse_analysis_file, profile
 from app.ingest.recommendation import compatible, lexical_similarity, recommend
@@ -20,25 +21,6 @@ STRING = slice(0, 4)
 PROFILE = slice(4, 23)
 DOMAIN = slice(23, 26)
 RELATION = 26
-BUSINESS_WORDS = {
-    'demand_qty': '수요 필요 소요 주문 customer demand requirement requested consumption',
-    'allocated_qty': '예약 배정 묶인 allocated reserved committed held',
-    'available_qty': '가용 가능 잔여 free unreserved available',
-    'on_hand_qty': '현재고 실물 보유 실사 total physical onhand tally',
-    'qty_per': '투입 소모 소요 component usage ingredient factor',
-    'base_qty': '기준 환산 산출 reference denominator output batch',
-    'valid_from': '시작 개시 시행 첫날 start first opens begins',
-    'valid_to': '종료 만료 폐지 마지막날 end last expires closes',
-    'period': '귀속 연월 월간 월별 bucket monthly period month',
-    'scrap_rate': '손실 폐기 비중 loss scrap fraction share waste',
-}
-CONFLICTS = {
-    'demand_qty': '반품 반송 되돌려 환입 생산 공장실적 구매 발주 공급 출고 물류 return refund reverse production manufacture procurement supplier vendor shipment dispatched',
-    'period': '주문일 접수 출고 배송 booked placed shipping submission',
-    'on_hand_qty': '예약제외 unreserved free',
-    'allocated_qty': '미할당 예약제외 unreserved free',
-    'available_qty': '차감전 includingreserved physicaltotal',
-}
 TYPE_EXPECTATIONS = {
     'number': 0, 'money': 8, 'date': 4, 'month': 5, 'unit': 6, 'bool': 15, 'status': 16, 'version': 17,
     'category': 14, 'name': 18, 'product_code': 9, 'material_code': 10, 'stock_code': 3, 'generic_code': 3,

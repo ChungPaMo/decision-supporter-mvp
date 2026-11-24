@@ -1,5 +1,7 @@
 # 프론트엔드 연동 안내
 
+`/ingest/ai-mapping-review`와 `/ingest/ai-document-analysis`는 합성 파일 전용 선택형 검토 API다. 화면 연동 시 기존 추천과 검토 후보를 각각 표시하고, 사용자가 확정한 매핑만 기존 변환·저장 흐름에 전달한다. 필드와 응답 상태는 [Upstage 검토 API 인계](UPSTAGE_BACKEND_INTEGRATION_20261124.md#프론트엔드-연동)를 따른다.
+
 `/ingest/xlsx-layout`에서 시트 목록과 원본 좌표의 구조를 확인한 뒤 `table_selection`을 보내 선택 표를 다시 분석한다. 변환 미리보기 검토 후 동일한 범위와 지문으로 `/ingest/transformations`에 저장하고 반환 배치에서 기존 승인 절차를 진행한다. [범위 선택 UI 계약](XLSX_TABLE_SELECTION_HANDOFF.md) · [저장·승인 인계](XLSX_SELECTION_PERSISTENCE_HANDOFF.md)
 
 선택 오류는 `XLSX_SOURCE_CHANGED`, `XLSX_SHEET_INVALID`, `XLSX_RANGE_INVALID`, `XLSX_MERGED_RANGE`, `XLSX_HEADER_INVALID`로 표시한다.

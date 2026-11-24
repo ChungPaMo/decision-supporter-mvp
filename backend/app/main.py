@@ -9,6 +9,7 @@ from app.api.forecasts import router as forecasts_router
 from app.api.forecasts import history_router as forecast_history_router
 from app.api.health import router as health_router
 from app.api.ingest import router as ingest_router
+from app.api.ingest_ai import router as ingest_ai_router
 from app.api.ingest_assistance import router as ingest_assistance_router
 from app.api.ingest_history import router as ingest_history_router
 from app.api.integrations import router as integrations_router
@@ -25,6 +26,7 @@ from app.api.document_sort import router as document_sort_router
 app = FastAPI(title="충파모 과제 7 MVP", version=get_settings().app_version)
 app.include_router(health_router)
 app.include_router(ingest_router)
+app.include_router(ingest_ai_router)
 app.include_router(ingest_assistance_router)
 app.include_router(ingest_history_router)
 app.include_router(integrations_router)
