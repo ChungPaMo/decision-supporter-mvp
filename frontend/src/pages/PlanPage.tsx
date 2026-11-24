@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Empty, failure, FeasSt, forecastLabel, forecastMonths, go, Icon, monthLabel, Name, Notice, num, pctText, shortMonth, when } from '../app/core';
 import { demandOf, groupIssues, loadGrid, Names, planMonths, planProducts, PlanResult, PlanSummary, summarizePlan, sumMonth, useLoad } from '../app/data';
-import { HeatLegend, LoadMap, ShortLegend, ShortMap } from '../app/widgets';
+import { HeatLegend, LoadMap, Num, ShortLegend, ShortMap } from '../app/widgets';
 import { apiClient } from '../services/api';
 import { ForecastExecution, ForecastExecutionSummary } from '../types/engine';
 import { PlanExecutionDetail } from '../types/modules';
@@ -139,7 +139,7 @@ export default function PlanPage({ focus, pick, startMonth, startPlan, names, on
           <div className="plans" role="group" aria-label="세 안">{summaries.map((s) => { const cover = demandTotal ? (s.total / demandTotal) * 100 : null;
             return <button type="button" key={s.plan.plan_id} className={`plan${s.plan.plan_id === selected?.plan.plan_id ? ' selected' : ''}`} aria-pressed={s.plan.plan_id === selected?.plan.plan_id} onClick={() => { setPlanId(s.plan.plan_id); setPending(null); setCell(null); }}>
               <div className="top"><b>{short(s.plan.label)}</b><FeasSt value={s.plan.feasibility} /></div>
-              <span className="total num">{num(s.total)} <small>EA</small></span><span className="small muted">{basis(s.plan.label)} · 수요의 {pctText(cover)}</span>
+              <span className="total num"><Num value={s.total} /> <small>EA</small></span><span className="small muted">{basis(s.plan.label)} · 수요의 {pctText(cover)}</span>
               <div className="facts">{s.maxUtil !== null && <span className={`fact${s.maxUtil >= 0.995 ? ' bad' : s.maxUtil >= 0.9 ? ' warn' : ''}`}>최대 부하 <b>{pctText(s.maxUtil * 100)}</b></span>}
                 {fact('설비 초과', s.equipOver, '칸')}{fact('수요 미충족', s.demandMiss, '건')}{fact('안전 재고 미달', s.safetyMiss, '건')}{fact('자재 부족', s.shortages, '건')}</div>
             </button>; })}</div>

@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Empty, FeasSt, go, Icon, monthLabel, num, pctText, shortMonth } from '../app/core';
 import { alerts, demandOf, loadGrid, nextAction, Overview, sumMonth, summarizePlan } from '../app/data';
-import { C, HeatLegend, Legend, LineChart, LoadMap } from '../app/widgets';
+import { C, HeatLegend, Legend, LineChart, LoadMap, Num } from '../app/widgets';
 
 const short = (label: string) => label.split(' ')[0];
 const plain = (name: string) => name.replace(/\s*\(.*\)\s*$/, '');
@@ -73,7 +73,7 @@ export default function HomePage({ overview }: { overview: Overview; onReload: (
         <div className="body bare"><div className="rows">{summaries.map((s) => { const cover = demandAll ? (s.total / demandAll) * 100 : null;
           const detail = [s.equipOver ? `설비 초과 ${s.equipOver}칸` : '', s.demandMiss ? `수요 미충족 ${s.demandMiss}건` : '', s.safetyMiss ? `안전 재고 미달 ${s.safetyMiss}건` : '', s.shortages ? `자재 부족 ${s.shortages}건` : ''].filter(Boolean).join(' · ');
           return <button type="button" key={s.plan.plan_id} onClick={() => setPlanId(s.plan.plan_id)} aria-pressed={s.plan.plan_id === picked.plan.plan_id}>
-            <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}><b>{short(s.plan.label)}</b><FeasSt value={s.plan.feasibility} /></span><strong>{pctText(cover)}</strong>
+            <span style={{ display: 'flex', alignItems: 'center', gap: 10 }}><b>{short(s.plan.label)}</b><FeasSt value={s.plan.feasibility} /></span><strong>{cover === null ? '-' : <><Num value={cover} />%</>}</strong>
             <small>{num(s.total)} EA{detail && ` · ${detail}`}</small></button>; })}</div></div>
       </section>
     </div>}

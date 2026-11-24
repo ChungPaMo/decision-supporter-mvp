@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { addMonths, Empty, failure, forecastLabel, go, Icon, Kpi, monthEnd, monthLabel, Notice, num, pctText, shortMonth, St, when } from '../app/core';
 import { DemandRow, Names, useLoad } from '../app/data';
-import { C, Legend, LineChart } from '../app/widgets';
+import { C, Legend, LineChart, Num } from '../app/widgets';
 import { apiClient } from '../services/api';
 import { ForecastExecution } from '../types/engine';
 
@@ -97,8 +97,8 @@ export default function ForecastPage({ focus, names, onChanged }: { focus?: stri
     {!detail ? <section className="panel"><Empty>{base.loading ? '읽는 중…' : '위에서 예측을 실행하면 그래프와 제품별 표가 나옵니다.'}</Empty></section> : <>
       <section className="kpis" aria-label="예측 요약">
         <Kpi label="보고 있는 예측" value={`${monthLabel(baseMonth)} 말`} note={`${when(detail.created_at)} 실행 · ${months.length}개월`} />
-        <Kpi label={first ? `${monthLabel(first)} 예상 수요` : '예상 수요'} value={num(sum('p50'))} unit="EA" note={yoyAll === null ? '작년 같은 달 자료 없음' : `작년 ${shortMonth(first)} 대비 ${yoyAll > 0 ? '+' : ''}${num(yoyAll, 1)}%`} />
-        <Kpi label="많이 팔릴 때" value={num(sum('p90'))} unit="EA" note={spread === null ? '' : `가운데 값보다 +${num(spread, 1)}%`} />
+        <Kpi label={first ? `${monthLabel(first)} 예상 수요` : '예상 수요'} value={<Num value={sum('p50')} />} unit="EA" note={yoyAll === null ? '작년 같은 달 자료 없음' : `작년 ${shortMonth(first)} 대비 ${yoyAll > 0 ? '+' : ''}${num(yoyAll, 1)}%`} />
+        <Kpi label="많이 팔릴 때" value={<Num value={sum('p90')} />} unit="EA" note={spread === null ? '' : `가운데 값보다 +${num(spread, 1)}%`} />
         {((detail.result?.skipped.length ?? 0) > 0 || (detail.result?.warnings.length ?? 0) > 0) && <Kpi label="건너뛴 제품 · 경고" value={`${detail.result?.skipped.length ?? 0} · ${detail.result?.warnings.length ?? 0}`} note={detail.status === 'OK' ? '정상 완료' : detail.status} tone={detail.result?.skipped.length || detail.result?.warnings.length ? 'warn' : 'ok'} />}
       </section>
 
@@ -114,9 +114,9 @@ export default function ForecastPage({ focus, names, onChanged }: { focus?: stri
           <div className="body flush"><div className="tablewrap"><table className="tbl fit"><thead><tr><th>제품</th><th className="r nw">가운데 값</th><th className="r nw">작년 대비</th></tr></thead>
             <tbody>{table.map((r) => <tr key={r.pid} className={`clickable${r.pid === product ? ' selected' : ''}`} onClick={() => setProduct(r.pid === product ? ALL : r.pid)}>
               <td><span className="name" title={`${names[r.pid] ?? r.pid} (${r.pid})`}><b>{names[r.pid] ?? r.pid}</b><span className="code">{r.pid}</span></span></td>
-              <td className="r num nw" style={{ minWidth: 84 }}><b>{num(r.p50)}</b><span className="cellbar"><i style={{ width: `${(r.p50 / (table[0]?.p50 || 1)) * 100}%` }} /></span></td>
+              <td className="r num nw" style={{ minWidth: 84 }}><b><Num value={r.p50} /></b><span className="cellbar"><i style={{ width: `${(r.p50 / (table[0]?.p50 || 1)) * 100}%` }} /></span></td>
               <td className={`r num nw ${r.yoy === null ? 'muted' : r.yoy > 0 ? 'delta-up' : 'delta-down'}`} style={r.yoy !== null && r.yoy > 0 ? { color: 'var(--ink-2)' } : undefined}>{r.yoy === null ? '-' : `${r.yoy > 0 ? '+' : ''}${pctText(r.yoy)}`}</td></tr>)}</tbody>
-            <tfoot><tr><td>합계</td><td className="r num">{num(sum('p50'))}</td><td className="r num">{yoyAll === null ? '-' : `${yoyAll > 0 ? '+' : ''}${pctText(yoyAll)}`}</td></tr></tfoot></table></div></div>
+            <tfoot><tr><td>합계</td><td className="r num"><Num value={sum('p50')} /></td><td className="r num">{yoyAll === null ? '-' : `${yoyAll > 0 ? '+' : ''}${pctText(yoyAll)}`}</td></tr></tfoot></table></div></div>
         </section>
       </div>
     </>}

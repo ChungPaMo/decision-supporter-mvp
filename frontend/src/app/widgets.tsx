@@ -7,6 +7,38 @@ export const C = { actual: '#6b7684', forecast: '#2563eb', teal: '#2563eb', plan
 export interface Series { name: string; color: string; values: Array<number | null>; dash?: boolean; dots?: boolean; area?: boolean }
 export interface Band { name: string; lo: Array<number | null>; hi: Array<number | null>; color: string }
 
+// 값이 바뀌면 이전 값에서 새 값으로 부드럽게 옮겨 간다 (안을 바꾸거나 다시 계산했을 때 그래프와 숫자가 스윽 움직인다).
+// 값이 없는 자리는 NaN 으로 받아 움직이지 않고 바로 바꾼다. "움직임 줄이기" 설정이 켜져 있으면 바로 바꾼다.
+export function useTween(target: number[], ms = 560, groups = 1): number[] {
+  const [shown, setShown] = useState(target);
+  const current = useRef(target);
+  const key = target.join(',');
+  useEffect(() => {
+    let start = current.current;
+    // 점 개수가 달라졌으면 이전 모양을 새 개수에 맞게 늘이거나 줄여서, 끊기지 않고 이어지게 한다.
+    if (start !== target && start.length !== target.length && groups > 0 && start.length % groups === 0 && target.length % groups === 0 && start.length >= groups * 2 && target.length >= groups * 2) {
+      const from = start, a = from.length / groups, b = target.length / groups;
+      start = target.map((_, i) => from[Math.floor(i / b) * a + Math.round(((i % b) / (b - 1)) * (a - 1))]);
+    }
+    const still = typeof window !== 'undefined' && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (still || start.length !== target.length || start === target) { current.current = target; setShown(target); return; }
+    let frame = 0;
+    const began = performance.now();
+    const tick = (now: number) => {
+      const k = Math.min(1, (now - began) / ms), eased = 1 - Math.pow(1 - k, 4);
+      const next = target.map((v, i) => (Number.isFinite(v) && Number.isFinite(start[i]) ? start[i] + (v - start[i]) * eased : v));
+      current.current = next; setShown(next);
+      if (k < 1) frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [key]);
+  return shown.length === target.length ? shown : target;
+}
+// 숫자 하나가 바뀔 때 굴러가듯 바뀐다.
+export function Num({ value, digits = 0 }: { value: number; digits?: number }) { const [v] = useTween([value]); return <>{num(v, digits)}</>; }
+
 // 그림을 놓인 칸의 실제 너비로 그려, 화면이 좁거나 넓어도 글자 크기가 변하지 않게 한다.
 function useWidth(ref: RefObject<HTMLDivElement>, fallback = 760) {
   const [w, setW] = useState(fallback);
@@ -28,20 +60,29 @@ export function LineChart({ months, series, band, split, height = 240, unit = ''
   const W = useWidth(box);
   const gid = useId().replace(/:/g, '');
   const H = height, L = 50, R = 14, T = 12, B = 24;
-  const all = [...series.flatMap((s) => s.values), ...(band ? [...band.lo, ...band.hi] : [])].filter((v): v is number => v !== null);
-  if (months.length < 2 || !all.length) return <div className="empty" ref={box}>그릴 자료가 없습니다.</div>;
+  const flat = [...series.flatMap((s) => s.values), ...(band ? [...band.lo, ...band.hi] : [])];
+  const all = flat.filter((v): v is number => v !== null);
+  const has = months.length >= 2 && all.length > 0;
   // 세로 눈금은 딱 떨어지는 값(25,000 / 30,000 …)으로 잡는다.
-  const rawMax = Math.max(...all), rawMin = Math.min(...all);
+  const rawMax = has ? Math.max(...all) : 1, rawMin = has ? Math.min(...all) : 0;
   const rough = (rawMax - rawMin || rawMax || 1) / 3, pow = 10 ** Math.floor(Math.log10(rough));
   const step = [1, 2, 2.5, 5, 10].map((k) => k * pow).find((k) => k >= rough) ?? 10 * pow;
   const min = Math.floor(rawMin / step) * step, max = Math.max(Math.ceil(rawMax / step) * step, min + step);
   const ticks = Array.from({ length: Math.round((max - min) / step) + 1 }, (_, k) => min + k * step);
-  const x = (i: number) => L + (i / (months.length - 1)) * (W - L - R);
+  const x = (i: number) => L + (i / Math.max(1, months.length - 1)) * (W - L - R);
   const y = (v: number) => T + (1 - (v - min) / (max - min || 1)) * (H - T - B);
-  const pts = (values: Array<number | null>) => values.map((v, i) => (v === null ? null : [x(i), y(v)] as const)).filter((p): p is readonly [number, number] => p !== null);
-  const path = (values: Array<number | null>) => pts(values).map((p) => p.join(',')).join(' ');
-  const areaPath = (values: Array<number | null>) => { const p = pts(values); return p.length < 2 ? '' : `M${p[0][0]},${H - B} ${p.map((q) => `L${q[0]},${q[1]}`).join(' ')} L${p[p.length - 1][0]},${H - B} Z`; };
-  const bandPoints = band ? [...band.hi.map((v, i) => (v === null ? null : `${x(i)},${y(v)}`)), ...band.lo.map((v, i) => (v === null ? null : `${x(i)},${y(v)}`)).reverse()].filter(Boolean).join(' ') : '';
+  // 값이 아니라 "그려지는 높이"를 이전 자리에서 새 자리로 옮긴다.
+  // 그래서 눈금이 바뀌어도 선이 위아래에서 날아오지 않고, 제자리에서 모양만 바뀐다.
+  const groups = series.length + (band ? 2 : 0);
+  const heights = useTween(flat.map((v) => (v === null ? NaN : y(v))), 620, groups);
+  const cut = (k: number) => heights.slice(k * months.length, (k + 1) * months.length).map((v) => (Number.isFinite(v) ? v : null));
+  const drawn = series.map((s, k) => ({ ...s, ys: cut(k) }));
+  const bandHi = band ? cut(series.length + 1) : [], bandLo = band ? cut(series.length) : [];
+  if (!has) return <div className="empty" ref={box}>그릴 자료가 없습니다.</div>;
+  const pts = (ys: Array<number | null>) => ys.map((v, i) => (v === null ? null : [x(i), v] as const)).filter((q): q is readonly [number, number] => q !== null);
+  const path = (ys: Array<number | null>) => pts(ys).map((q) => q.join(',')).join(' ');
+  const areaPath = (ys: Array<number | null>) => { const q = pts(ys); return q.length < 2 ? '' : `M${q[0][0]},${H - B} ${q.map((r) => `L${r[0]},${r[1]}`).join(' ')} L${q[q.length - 1][0]},${H - B} Z`; };
+  const bandPoints = band ? [...bandHi.map((v, i) => (v === null ? null : `${x(i)},${v}`)), ...bandLo.map((v, i) => (v === null ? null : `${x(i)},${v}`)).reverse()].filter(Boolean).join(' ') : '';
   const every = Math.max(1, Math.ceil(months.length / Math.max(4, Math.floor(W / 70))));
   const move = (clientX: number) => {
     const rect = box.current?.getBoundingClientRect(); if (!rect) return;
@@ -54,9 +95,9 @@ export function LineChart({ months, series, band, split, height = 240, unit = ''
       {ticks.map((v, k) => { return <g key={k}><line x1={L} x2={W - R} y1={y(v)} y2={y(v)} stroke="#f0f2f4" strokeDasharray={k ? '3 4' : undefined} /><text x={L - 8} y={y(v) + 4} textAnchor="end">{num(v)}</text></g>; })}
       {split !== undefined && split > 0 && split < months.length && <><rect x={x(split - 1)} y={T} width={W - R - x(split - 1)} height={H - T - B} rx="6" fill="#f7f8fa" /><text x={x(split - 1) + 8} y={T + 14} style={{ fontWeight: 500 }}>예측</text></>}
       {bandPoints && <polygon points={bandPoints} fill={band!.color} fillOpacity="0.12" />}
-      {series.filter((s) => s.area).map((s, i) => <path key={s.name} d={areaPath(s.values)} fill={`url(#${gid}a${i})`} />)}
-      {series.map((s) => <g key={s.name}><polyline points={path(s.values)} fill="none" stroke={s.color} strokeWidth="2" strokeDasharray={s.dash ? '6 5' : undefined} strokeLinejoin="round" strokeLinecap="round" />
-        {s.dots && s.values.map((v, i) => v !== null && <circle key={i} cx={x(i)} cy={y(v)} r="4" fill="#fff" stroke={s.color} strokeWidth="2.5" />)}</g>)}
+      {drawn.filter((s) => s.area).map((s, i) => <path key={s.name} d={areaPath(s.ys)} fill={`url(#${gid}a${i})`} />)}
+      {drawn.map((s) => <g key={s.name}><polyline points={path(s.ys)} fill="none" stroke={s.color} strokeWidth="2" strokeDasharray={s.dash ? '6 5' : undefined} strokeLinejoin="round" strokeLinecap="round" />
+        {s.dots && s.ys.map((v, i) => v !== null && <circle key={i} cx={x(i)} cy={v} r="4" fill="#fff" stroke={s.color} strokeWidth="2.5" />)}</g>)}
       {months.map((m, i) => ((i % every === 0 && months.length - 1 - i >= every / 2) || i === months.length - 1) && <text key={m} x={x(i)} y={H - 6} textAnchor={i === months.length - 1 ? 'end' : 'middle'}>{axisMonth(m, i === 0)}</text>)}
       {hover !== null && <line x1={x(hover)} x2={x(hover)} y1={T} y2={H - B} stroke="#23282f" strokeOpacity="0.3" strokeDasharray="3 3" />}
       {hover !== null && series.map((s) => s.values[hover] !== null && <circle key={s.name} cx={x(hover)} cy={y(s.values[hover]!)} r="5" fill={s.color} stroke="#fff" strokeWidth="2.5" />)}
@@ -84,7 +125,7 @@ export function LoadMap({ months, rows, names, selected, onPick, compact }: {
     {rows.map((row) => { const key = `${row.id}|${row.kind}`;
       return [<div className="rl" key={key} title={`${names[row.id] ?? row.id} (${row.id})`}><b>{names[row.id] ?? row.id}</b><span className="code">{row.id}{row.kind === 'WORK_HOURS' ? ' · 인력' : ' · 설비'}</span></div>,
         ...months.map((m) => { const cell = row.cells[m];
-          const body: ReactNode = !cell ? '-' : cell.pct === null ? <>자료 없음</> : <>{num(cell.pct, 0)}%{!compact && <small>{num(cell.used, 0)} / {num(cell.limit, 0)}{cell.unit}</small>}</>;
+          const body: ReactNode = !cell ? '-' : cell.pct === null ? <>자료 없음</> : <><Num value={cell.pct} />%{!compact && <small><Num value={cell.used} /> / {num(cell.limit, 0)}{cell.unit}</small>}</>;
           const cls = `cl ${cell ? heatLevel(cell.pct) : 'na'}${selected && selected.id === row.id && selected.kind === row.kind && selected.month === m ? ' sel' : ''}`;
           const label = `${names[row.id] ?? row.id} ${monthLabel(m)} ${cell?.pct == null ? '자료 없음' : `사용률 ${num(cell.pct, 0)}%`}`;
           return onPick && cell ? <button type="button" key={`${key}-${m}`} className={cls} aria-label={label} onClick={() => onPick({ id: row.id, kind: row.kind, month: m })}><span>{body}</span></button>
