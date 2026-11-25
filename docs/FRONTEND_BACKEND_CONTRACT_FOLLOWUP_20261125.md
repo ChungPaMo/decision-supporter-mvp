@@ -137,3 +137,24 @@ Preview는 200 `{result, persisted: false, approval_available: false, …}`다. 
 ## 이번 검증
 
 보조 PC 전체 비DB pytest 1,384건 통과·69건 건너뜀. 계약과 생성물 집중 검사 12건 통과. 업로드·승인·경합 재조회는 메모리 저장소 및 SQL 드라이버 오류 대역으로, Health는 연결 대역으로 검증했다. 실제 PostgreSQL·Docker·외부 AI API는 미실행이다.
+
+## 2026-11-25 · 메인 PC Edge와 실제 회귀 API 점검
+
+최신 `main` 기준 `9e61ef8`과 팀원 변경 0건을 확인했다. Edge는 외부 추천 대역 없이 실제 React, Uvicorn, 전용 회귀 PostgreSQL `0010`에 연결했다. 개발 `0010` 및 공식 입고 승인 결과와 브라우저에서 별도 생성한 ID는 각각 증거에 기록한다.
+
+| 단계 | 화면과 실제 계약 확인 |
+| --- | --- |
+| 데이터셋 선택 | Edge에서 CHUNGPAMO-2027 선택. 서버 호출의 데이터셋 파라미터와 화면의 데이터셋별 컴포넌트 재생성을 확인했다. |
+| 업로드·분류·표 범위·매핑 | 첫 실행에서 검증기가 분류 버튼의 파일 개수 접두사를 놓쳤다. 공식 9개 자료와 입고 1개는 API 보조로 등록 201·승인 200했다. 별도 READ ONLY Edge에서 합성 XLSX 파일 선택, 분류 200, `Catalog` 시트·A1:C3 범위 선택, 프로파일/컬럼 후보 조회·수동 재선택 200을 확인했다. 이 화면 검증의 업무 쓰기 요청은 0건이었다. |
+| 검증·승인 계약 | 현재 React는 파일 SHA로 기존 배치를 찾고, 승인에 `expected_source_sha256`과 결과 digest를 보낸다. 재검증 요청은 저장된 column override에 새 선택을 합치고 기존 시트·단위는 서버에 맡긴다. 첫 실행의 수동 재검증 화면은 미검증이다. |
+| 입고 조회·예측·계획 | 입고 10,000 kg 조회 UI, 예측 201·27행, 3개월 BASE Preview 200·미저장, BASE 저장 201, 5,000 kg·0 입고 What-if Preview 200 및 저장 201, 자식·부모 상세 및 새로고침 후 복원을 실제 화면으로 확인했다. |
+| 오류 처리 | API 보조로 중복 등록·재승인 409, 존재하지 않는 계획·타 데이터셋 404, 음수 What-if 422, 같은 BASE 저장 재사용 200과 최종 승인 501 확인. 저장 없는 검증에서 필수 열은 `REQUIRED_FIELD_MISSING`, 잘못된 숫자는 `QTY_INVALID`, 기간은 `PERIOD_INVALID`, SQL 승인 참조에 없는 제품은 `PRODUCT_NOT_REGISTERED`였다. Edge에서 오프라인 연결 배너를 확인했다. 실제 DB 중단에 의한 503 화면은 미실행이다. |
+
+### 담당자별 잔여 사항
+
+- **P1 정마나미 — 부모 입고 선택.** 먼저 BASE를 저장한 뒤 동일한 업무 기준일에 새 입고를 승인하고 기존 BASE를 다시 연다. 현재 화면은 최신 `GET /scheduled-receipts`의 첫 페이지에서 발주를 제시한다. 새 발주를 제출하면 부모 계약상 실제 서버가 422 `PLAN_OVERRIDE_UNSUPPORTED`를 반환한다. 반대로 부모가 사용한 발주가 이후 취소되면 화면에서 사라질 수 있다. `input_snapshot.scheduled_receipts`만 사용해 목록·수량을 표시하고 `null` 또는 `[]`의 상태 문구를 구분한다. 이 차이는 코드에서 확인됐고, 현재·부모 공급이 같은 실측 두 What-if는 성공했다. [PlanPage](../frontend/src/pages/PlanPage.tsx) · [서버 가드](../backend/app/integrations/planning_validation.py)
+- **P2 정마나미 — 입고 목록 페이지 및 이력 링크.** 입고 원장은 첫 100건만 표시하며 페이지를 넘길 UI가 없다. 계획 이력의 “계획 화면에서 열기”는 실행 ID 대신 예측 ID와 시작 월만 전달하므로 같은 시작 월에 여러 실행이 있으면 사용자가 본 실행과 다른 BASE를 열 수 있다. 기록 상세 자체는 실행 ID로 조회한다. [자료 넣기](../frontend/src/pages/IngestPage.tsx) · [계획 기록](../frontend/src/pages/PlanRecord.tsx)
+- **P2 이훤 — 예정 입고 분류.** 분류기는 입고 원장 entity를 아직 확정하지 않으며 최신 React의 파일명 힌트와 사용자 확인으로 처리한다. 표준 입고 CSV 추천을 분류기 계약으로 제공할 경우 합성 반례와 HOLD 기준을 논의한다. [등록 화면의 분류 연결](../frontend/src/pages/IngestPage.tsx)
+- **김대영 — 검증기.** 정확한 버튼 이름을 사용하는 등록·승인 보완 테스트, 현재/부모 원장 불일치의 UI 회귀, 잘못된 입력·재검증 검증을 남겼다. 기존 실행 스크립트 `run_postgres_e2e.py`는 스키마를 삭제하므로 이 작업에서 호출하지 않았다.
+
+첫 쓰기 실행의 BASE ID는 `ab42912f-299a-4476-8c82-61236b4cf4dc`, What-if ID는 `46ef8aae-1fac-4a5b-93e3-691554382003`(5,000 kg)와 `96446ec5-1b17-4fb9-8ddb-9f932da9b574`(0 kg)였다. 회귀 데이터를 정리했고, API 증거와 스크린샷은 Git 제외 `.artifacts/planning-postgresql-20261124/long-e2e-20261125/` 및 `.artifacts/planning-postgresql-20261124/long-ui-readonly-20261125/`에 보관했다. 자동 승인 검토가 추가 회귀 쓰기를 이전 승인 범위 초과로 판단했다. 첫 정리의 업무 행 0건과 시드 지문을 재확인했고 추가 실행은 직접 승인 대기다.
