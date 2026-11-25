@@ -34,7 +34,7 @@ export default function LivePlanningPanel({ stage }: { stage: 'plans' | 'diagnos
   async function run() {
     if (!id || !month || !products.length) return;
     setBusy(true); setError(''); setPlanningPreview(null);
-    try { setPlanningPreview(await apiClient.requestPlan(id, products, month)); }
+    try { const detail = await apiClient.getForecast(id); setPlanningPreview(await apiClient.planPreview({ forecast_execution_id: id, product_ids: products, target_month: month, horizon_months: 1, as_of_date: detail.parameters.trained_until })); }
     catch (failure) {
       if ((failure as Partial<PlanningReply>)?.result) setPlanningPreview(failure as PlanningReply);
       else setError(failure instanceof Error ? failure.message : errorMessage(failure));

@@ -73,17 +73,26 @@ export function when(iso: string | null | undefined): string {
   if (diff < 60 * 24) return `${Math.floor(diff / 60)}시간 전`;
   return `${d.getMonth() + 1}월 ${d.getDate()}일 ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`;
 }
+// 서버가 꺼진 것(응답 없음)과 서버는 켜져 있는데 DB 를 못 쓰는 것을 다른 말로 알린다.
+const CONNECT_TEXT: Record<string, string> = {
+  NETWORK_ERROR: '서버에 연결할 수 없습니다. 서버가 켜져 있는지 확인하세요.',
+  DB_UNAVAILABLE: '서버는 켜져 있지만 DB에 연결하지 못했습니다. DB를 켠 뒤 다시 시도하세요.',
+  PERSISTENCE_DISABLED: '서버의 DB 저장 기능이 꺼져 있어 저장·조회를 할 수 없습니다.',
+  BATCH_SOURCE_MISMATCH: '고른 파일과 승인하려는 자료의 원본이 다릅니다. 승인하지 않았습니다. 파일을 다시 올려 확인하세요.',
+};
 export function failure(error: unknown): string {
   const detail = (error as { detail?: { code?: string; message?: string } | string })?.detail;
   if (typeof detail === 'string') return detail;
+  if (detail?.code && CONNECT_TEXT[detail.code]) return `${CONNECT_TEXT[detail.code]} (${detail.code})`;
   if (detail?.message) return `${detail.message}${detail.code ? ` (${detail.code})` : ''}`;
   if (error instanceof Error) return error.message;
   return '서버에 연결할 수 없습니다. 서버가 켜져 있는지 확인하세요.';
 }
 export const failureCode = (error: unknown) => (error as { detail?: { code?: string } })?.detail?.code ?? '';
 
-export const ENTITY_NAME: Record<Entity, string> = { product: '제품', material: '자재', bom: 'BOM', inventory: '재고', capacity: 'CAPA', routing: 'Routing', monthly_demand: '월별 수요' };
-export const ENTITY_ORDER: Entity[] = ['product', 'material', 'bom', 'inventory', 'capacity', 'routing', 'monthly_demand'];
+export const ENTITY_NAME: Record<Entity, string> = { product: '제품', material: '자재', bom: 'BOM', inventory: '재고', capacity: 'CAPA', routing: 'Routing', monthly_demand: '월별 수요', scheduled_receipt: '예정 입고' };
+// 예측·계획에 꼭 필요한 일곱 가지. 예정 입고는 있으면 쓰는 선택 자료라 여기에 넣지 않는다.
+export const ENTITY_ORDER: Array<Exclude<Entity, 'scheduled_receipt'>> = ['product', 'material', 'bom', 'inventory', 'capacity', 'routing', 'monthly_demand'];
 export const SECTION_NAME: Record<string, string> = { resources: '자원', quantity_limits: '수량 한도', hours_budgets: '시간 예산', routing_steps: '공정 순서' };
 export const BATCH_TONE: Record<BatchStatus, { label: string; tone: Tone }> = {
   MAPPING_HOLD: { label: '열 지정 필요', tone: 'warn' }, HAS_ERRORS: { label: '오류 있음', tone: 'bad' },

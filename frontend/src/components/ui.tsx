@@ -10,6 +10,7 @@ export const ENTITY_LABEL: Record<Entity, string> = {
   monthly_demand: '월별 수요',
   capacity: 'CAPA',
   routing: 'Routing',
+  scheduled_receipt: '예정 입고',
 };
 
 export const PLAN_LABEL: Record<PlanType, string> = {

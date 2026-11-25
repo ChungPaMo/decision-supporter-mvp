@@ -37,7 +37,7 @@ export default function IngestAssistPanel({ file, entity, overrides, onOverrides
     const ticket = ++seq.current;
     setBusy(true); setError('');
     try { await job(); }
-    catch (problem) { if (ticket === seq.current && (problem as { detail?: { code?: string } })?.detail?.code !== 'DATASET_CHANGED') setError(/^XLSX_|ANALYSIS_LIMIT|FILE_TOO_LARGE|UNSUPPORTED_TYPE/.test((problem as { detail?: { code?: string } })?.detail?.code ?? '') ? rangeFailure(problem) : failure(problem)); }
+    catch (problem) { if (ticket === seq.current && (problem as { detail?: { code?: string } })?.detail?.code !== 'DATASET_CHANGED') setError((range ? /^XLSX_|ANALYSIS_LIMIT|FILE_TOO_LARGE|UNSUPPORTED_TYPE/ : /^XLSX_|ANALYSIS_LIMIT|FILE_TOO_LARGE/).test((problem as { detail?: { code?: string } })?.detail?.code ?? '') ? rangeFailure(problem) : failure(problem)); }
     finally { if (ticket === seq.current) setBusy(false); }
   }
   const analyze = () => run(async () => { const ticket = seq.current; const reply = await apiClient.profileFile(file, useApprovedMaster, range); if (ticket === seq.current) setProfile(reply); });

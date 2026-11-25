@@ -12,7 +12,7 @@ export type BatchStatus = 'MAPPING_HOLD' | 'HAS_ERRORS' | 'READY_FOR_APPROVAL' |
 // 분류·매핑 후보·일반 미리보기가 지원하는 5종
 export type CoreEntity = 'product' | 'material' | 'bom' | 'inventory' | 'monthly_demand';
 // 배치 등록·승인은 CAPA·Routing 을 포함한 7종
-export type Entity = CoreEntity | 'capacity' | 'routing';
+export type Entity = CoreEntity | 'capacity' | 'routing' | 'scheduled_receipt';
 
 export interface BatchSummary {
   batch_id: string;

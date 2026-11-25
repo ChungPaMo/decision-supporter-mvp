@@ -311,3 +311,35 @@ main.page > *:nth-child(2) { animation-delay: 0.04s } main.page > *:nth-child(3)
 .sidebar .navitem svg.ic { transition: color 0.2s }
 
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important } }
+
+/* ── 입력 보조(범위 선택·열 추천·판매 원장 변환): 이전 화면의 컴포넌트를 이 테마에 맞춘다 ── */
+.legacy, .legacy .stack { display: flex; flex-direction: column; gap: var(--s3); min-width: 0 }
+.legacy .panel { border: 0; padding: 0 }
+.legacy .panel-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: var(--s3); flex-wrap: wrap }
+.legacy h3, .legacy h4, .legacy legend { font-size: 0.93rem; font-weight: 600; color: var(--ink) }
+.legacy p, .legacy li, .legacy summary { font-size: 0.87rem }
+.legacy .button { display: inline-flex; align-items: center; min-height: 36px; padding: 6px 12px; border-radius: var(--r); border: 1px solid var(--line); background: #fff; color: var(--ink); font: inherit; font-size: 0.87rem; font-weight: 600; cursor: pointer }
+.legacy .button.primary { background: var(--accent); border-color: var(--accent); color: #fff }
+.legacy .button:disabled { opacity: 0.45; cursor: not-allowed }
+.legacy .actions.start { justify-content: flex-start }
+.legacy .badge { display: inline-flex; border-radius: 6px; padding: 1px 7px; font-size: 0.8rem; font-weight: 600; white-space: nowrap; background: var(--line-2); color: var(--text) }
+.legacy .badge-ok { background: var(--ok-wash); color: var(--ok) } .legacy .badge-warn { background: var(--warn-wash); color: var(--warn) } .legacy .badge-info { background: var(--accent-wash); color: var(--accent-ink) }
+.legacy .notice-warn { background: var(--warn-wash); color: #7a4a00 } .legacy .notice-bad { background: var(--bad-wash); color: #a8222d } .legacy .notice-ok { background: var(--ok-wash); color: #06704a } .legacy .notice-muted { background: var(--line-2); color: var(--text) }
+.legacy .table-scroll { overflow: auto; max-height: 340px; border: 1px solid var(--line); border-radius: var(--r) }
+.legacy table { width: 100%; border-collapse: collapse; font-size: 0.85rem }
+.legacy caption { text-align: left; padding: 8px 10px; font-size: 0.82rem; color: var(--muted) }
+.legacy th, .legacy td { padding: 7px 10px; text-align: left; border-top: 1px solid var(--line-2); vertical-align: top }
+.legacy thead th { position: sticky; top: 0; background: #fff; font-weight: 600; color: var(--muted); border-top: 0 }
+.legacy fieldset { border: 1px solid var(--line); border-radius: var(--r); padding: var(--s3) var(--s4); margin: 0; min-width: 0 }
+.legacy .field > span { display: block }
+.legacy .field input[type=file] { padding: 6px }
+.legacy select, .legacy td select { max-width: 100% }
+.legacy .meta-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px 16px; margin: 0 }
+.legacy .meta-grid dt { font-size: 0.8rem; color: var(--muted) } .legacy .meta-grid dd { font-weight: 600; color: var(--ink); overflow-wrap: anywhere }
+.legacy .sales-columns, .legacy .range-inputs { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 10px 12px }
+.legacy .policy-list { display: grid; gap: 3px; padding-left: 20px; margin: 0 }
+.legacy .range-slot { padding: 12px 14px; border: 1px solid var(--line); border-radius: var(--r) }
+.legacy .range-grid th, .legacy .range-grid td { padding: 4px 8px; font-size: 0.78rem; white-space: nowrap; max-width: 170px; overflow: hidden; text-overflow: ellipsis; border-right: 1px solid var(--line-2) }
+.legacy .range-grid tbody th { position: sticky; left: 0; background: var(--line-2); text-align: right }
+.legacy .range-grid .range-header { background: var(--accent-wash); box-shadow: inset 0 -2px 0 var(--accent); font-weight: 700 }
+.legacy .range-grid .range-body { background: #f5fbfa }

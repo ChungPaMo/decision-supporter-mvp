@@ -1521,3 +1521,35 @@
 
 **관련 자료**
 - [조회 계약·예시](FRONTEND_BACKEND_CONTRACT_FOLLOWUP_20261125.md#c02-승인-입고-원장-읽기-api-설계) · [메인 PC 실DB 절차](PLANNING_POSTGRESQL_INTEGRATION_VERIFICATION_20261124.md#c02-읽기-api--메인-pc-실db-검증).
+
+### 2026-11-25 — 새 프런트 통합 검증 후속: 원본 SHA 승인·계획 기간·입력 보조·예정 입고 연결
+
+**Git**
+- 시작 Commit: `d62bd84`
+- 완료 Commit: `git log main -1 --format=%H --fixed-strings --grep='프런트: 통합 검증 후속(원본 SHA 승인·계획 기간·입력 보조·예정 입고)'`
+- 브랜치: `main`
+
+**작업 목적**
+- 김대영의 새 프런트 통합 검증에서 나온 우선 수정 2건, 기존 기능 복구 7건, 추가 연동 중 예정 입고 2건을 `frontend/`에 반영한다.
+
+**구현 내용**
+- 우선 수정: `pages/IngestPage.tsx`가 기존 배치를 파일 이름으로 찾던 것을 원본 SHA-256(`services/api.ts`의 `sha256Hex`) 비교로 바꿨다. 409 `DUPLICATE_UPLOAD`는 `details.batch_id`를 다시 읽어 SHA·유형이 같을 때만 연결하고, 승인에는 고른 파일의 `expected_source_sha256`을 보낸다. `pages/PlanPage.tsx`는 계획 기간 선택(예측이 덮는 달까지)을 추가하고 모든 계획 요청에 `horizon_months`를 넣는다.
+- 복구: 등록 전 `XlsxRangePicker`·`IngestAssistPanel`, 판매 원장 변환 `SalesTransformPanel`을 새 화면에 연결(`styles/theme.css`의 `.legacy` 범위 스타일). 재검증은 열 지정만 보내 서버가 시트·단위를 유지한다. 계획 미리보기(`POST /plans`), What-if 저장(`POST /plan-executions`, 부모 `input_snapshot.command` 복사), 기록의 계획 실행 상세 `pages/PlanRecord.tsx`(기간·부모·바꾼 조건·승인 자료·적용 입고·검토 이력, REVIEW/REJECT 기록, APPROVE 501 안내). `/health` 503 본문을 읽어 DB 불가와 서버 연결 실패를 구분하고 `DB_UNAVAILABLE`·`PERSISTENCE_DISABLED`·`BATCH_SOURCE_MISMATCH` 문구를 추가했다.
+- 추가 연동: `Entity`에 `scheduled_receipt`를 추가하고 자료 넣기에 선택 줄 "예정 입고"(등록·승인·`GET /scheduled-receipts` 조회)를, 계획 화면에 발주별 입고 수량 What-if(`receipt_qty.<receipt_key>`)를 넣었다.
+
+**검증 결과**
+- 2026-11-25, 정마나미 PC. `tsc --noEmit` 통과, `vite build` 통과.
+- 사용자 결정으로 이 PC의 로컬 테스트 PostgreSQL(127.0.0.1:55433, 0010)과 실제 백엔드에 Edge(Playwright)로 확인. `CHUNGPAMO-INGEST-T1`: 이름만 같고 내용이 다른 `01_products.csv`는 "등록 전"으로 남고 별도 배치로 등록됨(확인 뒤 반려), 내용까지 같은 파일은 기존 승인 배치에 연결됨. `CHUNGPAMO-RANGE-T3`: 시트 목록·범위 격자, 열 후보 HOLD 표시, 판매 원장 변환 패널·이력 표시. `CHUNGPAMO-2027-LIVE`: 예정 입고 1건 등록→승인(요청 본문에 `expected_source_sha256` 확인)→조회, BASE Preview·저장과 What-if Preview·저장 요청 본문의 `horizon_months: 3` 확인, `receipt_qty.PO-2701-001=0` What-if 저장 201, 기록 상세에서 승인 자료 10건·검토 기록·APPROVE 501 안내 확인. `CHUNGPAMO-2027-RUN`에는 API로 BASE 계획 1건을 저장했다.
+- 미실행: DB를 끈 상태의 503 화면, 판매 원장 변환의 저장까지의 재실행, 백엔드 pytest, 메인 PC 실DB.
+
+**기술적 결정**
+- 이전 입력 보조 컴포넌트를 다시 쓰지 않고 그대로 연결하고 스타일만 `.legacy` 범위로 맞췄다. 일반 등록(`/batches`)은 표 범위를 받지 않으므로 범위를 적용한 상태에서는 등록을 막는다(이전 화면과 같은 동작).
+- 예정 입고는 예측·계획의 필수 자료가 아니므로 "자료 모두 준비됨" 계산에서 제외했다. 분류기가 이 유형을 모르므로 파일 이름에 입고·발주가 있을 때만 그 줄을 권하고 사람이 확인한다.
+
+**남은 문제**
+- AI 컬럼 매핑 추천(`/ingest/ai-mapping-review`, `/ingest/ai-document-analysis`) 화면 연동은 하지 않았다.
+- 김대영 인계: `scripts`의 `backend.ps1`처럼 `backend/`에서 uvicorn을 띄우면 `contracts.mapping_review`를 찾지 못해 기동에 실패한다(editable 설치가 `contracts.interfaces*`만 포함). 이 PC에서는 저장소 루트를 `sys.path`에 넣어 띄웠다.
+- 자료 넣기 오른쪽 칸이 좁아 열 후보 표가 빽빽하다. 로컬 테스트 DB에 확인용 배치·계획이 남아 있다.
+
+**관련 자료**
+- [프론트엔드 통합 후속 계약](FRONTEND_BACKEND_CONTRACT_FOLLOWUP_20261125.md) · [계획 v0.4 인계](PLANNING_CONTRACT_V04_HANDOFF.md)

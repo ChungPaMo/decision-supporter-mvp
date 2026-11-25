@@ -81,7 +81,7 @@ export default function PlanExecutionPanel() {
       if (!rows.length) { if (alive.current) setNote({ tone: 'bad', text: '선택한 예측 실행에 계획에 사용할 예측 결과가 없습니다.' }); return; }
       const month = rows[0].target_month;
       const reply = await apiClient.createPlanExecution({
-        forecast_execution_id: forecastId, target_month: month, as_of_date: forecast.parameters.trained_until, scenario: 'BASE',
+        forecast_execution_id: forecastId, target_month: month, horizon_months: 1, as_of_date: forecast.parameters.trained_until, scenario: 'BASE',
         product_ids: [...new Set(rows.filter((row) => row.target_month === month).map((row) => row.product_id))],
       });
       if (!alive.current) return;

@@ -1,6 +1,6 @@
 import { BatchDetail, BatchSummary, Entity, Page, ValidationResult } from '../types/api';
 import { ForecastExecution, ForecastExecutionSummary, ForecastRunParameters, ForecastRunReply } from '../types/engine';
-import { ClassificationResult, DatasetDetail, PlanCandidate, PlanDecisionEvent, PlanDecisionRequest, PlanExecutionCommand, PlanExecutionDetail, PlanExecutionReply, PlanExecutionSummary, PlanningReply } from '../types/modules';
+import { ClassificationResult, DatasetDetail, PlanCandidate, PlanDecisionEvent, PlanDecisionRequest, PlanExecutionCommand, PlanExecutionDetail, PlanExecutionReply, PlanExecutionSummary, PlanningReply, ReceiptPage } from '../types/modules';
 import { useProductionStore } from '../store/productionStore';
 import { ClassifiedMappingReply, MappingReply, ProfileReply, SalesTransformPolicy, TransformationDetail, TransformationSummary, TransformReply, XlsxLayoutReply, XlsxTableSelection } from '../types/ingestion';
 
@@ -11,6 +11,12 @@ const API_BASE = import.meta.env.VITE_API_URL || 'http://127.0.0.1:8000';
 const UNSCOPED = ['/health', '/datasets', '/classifications/', '/exports/plans/xlsx', '/dev/'];
 const STALE = { detail: { code: 'DATASET_CHANGED', message: '데이터셋이 변경되어 이전 요청 결과를 버렸습니다.' } };
 const currentDataset = () => useProductionStore.getState().datasetId;
+
+// 파일 원본의 SHA-256. 서버는 같은 데이터셋·유형·원본 SHA 로 같은 파일을 가린다. 파일 이름은 표시용일 뿐이다.
+export async function sha256Hex(file: File): Promise<string> {
+  const digest = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
+}
 
 class ApiClient {
   private scoped(path: string, datasetId: string) {
@@ -179,14 +185,14 @@ class ApiClient {
     return this.request('POST', '/classifications/file', { formData });
   }
 
-  async requestPlan(executionId: string, productIds?: string[], targetMonth?: string): Promise<PlanningReply> {
-    const execution = await this.getForecast(executionId);
-    const rows = execution.result?.forecasts ?? [];
-    if (!rows.length) throw new Error('계획에 사용할 실제 예측 결과가 없습니다.');
-    return this.request('POST', '/plans', { body: {
-      forecast_execution_id: executionId, product_ids: productIds ?? [...new Set(rows.map(row => row.product_id))],
-      target_month: targetMonth ?? rows[0].target_month, as_of_date: execution.parameters.trained_until,
-    } });
+  // 저장하지 않는 기준 계획 미리보기. 기간(horizon_months)을 항상 명시한다 — 생략하면 서버가 1개월로 계산한다.
+  async planPreview(command: { forecast_execution_id: string; product_ids: string[]; target_month: string; horizon_months: number; as_of_date: string }): Promise<PlanningReply> {
+    return this.request('POST', '/plans', { body: { ...command, scenario: 'BASE' } });
+  }
+
+  // 승인된 예정 입고 원장. as_of_date 는 필수 업무 효력일이다.
+  async scheduledReceipts(asOfDate: string, limit = 100, offset = 0): Promise<ReceiptPage> {
+    return this.request('GET', `/scheduled-receipts?as_of_date=${encodeURIComponent(asOfDate)}&limit=${limit}&offset=${offset}`);
   }
 
   async runForecast(parameters: ForecastRunParameters): Promise<ForecastRunReply> {
@@ -201,13 +207,19 @@ class ApiClient {
     return this.request('GET', `/forecasts/${encodeURIComponent(executionId)}`);
   }
 
+  // 503 은 "서버는 응답했지만 DB 를 못 쓴다"는 본문이다. 응답이 아예 오지 않은 연결 실패와 구분한다.
   async health(): Promise<{ status: string; version: string; database?: { status: string } }> {
-    return this.request('GET', '/health');
+    let res: Response;
+    try { res = await fetch(`${API_BASE}/health`); }
+    catch { throw { detail: { code: 'NETWORK_ERROR', message: '서버에 연결할 수 없습니다.' } }; }
+    const body = await res.json().catch(() => null);
+    if (body && typeof body.status === 'string') return body;
+    throw { detail: { code: 'NETWORK_ERROR', message: res.statusText } };
   }
 
   // 저장된 기준 계획에 조건을 바꿔 다시 계산한다(저장하지 않는 미리보기).
   // overrides 키: demand_multiplier, demand_multiplier.<제품>, overtime_hours_limit.<자원>.<월>, receipt_qty.<발주>
-  async whatIf(base: { forecast_execution_id: string; product_ids: string[]; target_month: string; as_of_date: string; base_plan_execution_id: string },
+  async whatIf(base: { forecast_execution_id: string; product_ids: string[]; target_month: string; horizon_months: number; as_of_date: string; base_plan_execution_id: string },
     overrides: Record<string, string>): Promise<PlanningReply> {
     return this.request('POST', '/plans/what-if', { body: { ...base, scenario: 'WHAT_IF', overrides } });
   }
@@ -278,8 +290,8 @@ class ApiClient {
     }
   }
 
-  async approvedData(entity: Entity): Promise<Array<Record<string, unknown>>> {
-    const paths: Record<Entity, string> = { product: '/products', material: '/materials', bom: '/boms', inventory: '/inventory', monthly_demand: '/demand/monthly', capacity: '/capacity', routing: '/routings' };
+  async approvedData(entity: Exclude<Entity, 'scheduled_receipt'>): Promise<Array<Record<string, unknown>>> {
+    const paths: Record<Exclude<Entity, 'scheduled_receipt'>, string> = { product: '/products', material: '/materials', bom: '/boms', inventory: '/inventory', monthly_demand: '/demand/monthly', capacity: '/capacity', routing: '/routings' };
     const page = await this.request<Page<Record<string, unknown>>>('GET', `${paths[entity]}?limit=100&offset=0`);
     if (entity === 'bom') return page.items.flatMap((row) => (row.lines as Array<Record<string, unknown>>).map((line) => ({ ...row, lines: undefined, ...line })));
     // CAPA·Routing 은 section/payload 구조다. 수량·설비시간·인시를 합치거나 환산하지 않고 원래 값 그대로 편다.
@@ -306,9 +318,10 @@ class ApiClient {
   }
 
   // 승인
-  async approveBatch(batchId: string, approved_by: string, expected_result_digest: string): Promise<BatchDetail> {
+  // expected_source_sha256: 방금 고른 파일에서 계산한 SHA. 이름만 같은 다른 배치를 승인하려 하면 서버가 409 BATCH_SOURCE_MISMATCH 로 막는다.
+  async approveBatch(batchId: string, approved_by: string, expected_result_digest: string, expected_source_sha256?: string): Promise<BatchDetail> {
     return this.request('POST', `/batches/${batchId}/approve`, {
-      body: { approved_by, expected_result_digest },
+      body: { approved_by, expected_result_digest, ...(expected_source_sha256 ? { expected_source_sha256 } : {}) },
     });
   }
 

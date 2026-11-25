@@ -4,12 +4,25 @@ import { demandOf, groupIssues, loadGrid, Names, planMonths, planProducts, PlanR
 import { HeatLegend, LoadMap, Num, ShortLegend, ShortMap } from '../app/widgets';
 import { apiClient } from '../services/api';
 import { ForecastExecution, ForecastExecutionSummary } from '../types/engine';
-import { PlanExecutionDetail } from '../types/modules';
+import { PlanExecutionDetail, ReceiptPage } from '../types/modules';
 
 const short = (label: string) => label.split(' ')[0];
 const basis = (label: string) => label.replace(/^\S+\s*/, '').replace(/[()]/g, '');
 
 type CellPick = { id: string; kind: string; month: string };
+const QTY = /^\d+(\.\d+)?$/;
+// 계획 계산이 거절되면 서버가 이유를 detail 이 아니라 결과의 errors 에 담아 줄 때가 있다. 둘 다 읽는다.
+function planFailure(error: unknown): string {
+  const body = error as { result?: { errors?: Array<{ code: string; message: string }> }; execution?: { result_snapshot?: { errors?: Array<{ code: string; message: string }> } } };
+  const errors = body?.result?.errors ?? body?.execution?.result_snapshot?.errors ?? [];
+  return errors.length ? errors.map((e) => `${e.message} (${e.code})`).join(' · ') : failure(error);
+}
+// What-if 는 저장된 부모 계획의 입력(command)을 그대로 복사한다. 결과 표에서 범위를 다시 추정하지 않는다.
+function parentCommand(e: PlanExecutionDetail) {
+  const c = e.input_snapshot?.command;
+  return { forecast_execution_id: c?.forecast_execution_id ?? e.forecast_execution_id, product_ids: c?.product_ids ?? planProducts(e.result_snapshot), target_month: c?.target_month ?? e.target_month,
+    horizon_months: c?.horizon_months ?? e.horizon_months ?? planMonths(e.result_snapshot).length, as_of_date: c?.as_of_date ?? e.as_of_date };
+}
 
 export default function PlanPage({ focus, pick, startMonth, startPlan, names, onChanged }: { focus?: string; pick?: CellPick; startMonth?: string; startPlan?: string; names: Names; onChanged: () => void }) {
   const base = useLoad(async () => {
@@ -35,55 +48,105 @@ export default function PlanPage({ focus, pick, startMonth, startPlan, names, on
   const [multiplier, setMultiplier] = useState(1);
   const [overtime, setOvertime] = useState<Record<string, string>>({});
   const [otHours, setOtHours] = useState('40');
+  const [span, setSpan] = useState(0);                                       // 0 = 예측이 덮는 마지막 달까지
+  const [draft, setDraft] = useState<PlanResult | null>(null);              // 저장하지 않은 미리보기
+  const [receipts, setReceipts] = useState<Record<string, string>>({});     // receipt_key → 바꿀 입고 수량
+  const [ledger, setLedger] = useState<ReceiptPage | null>(null);
+  const [ledgerError, setLedgerError] = useState('');
+  const [altKey, setAltKey] = useState('');                                  // 지금 보고 있는 "바꾼 결과"를 만든 조건
+  const [savedAlt, setSavedAlt] = useState('');                              // 그 조건으로 저장한 계획 실행
 
   const forecast: ForecastExecutionSummary | undefined = forecasts.find((f) => f.execution_id === forecastId);
   const months = forecast ? forecastMonths(forecast) : [];
   useEffect(() => { if (!forecastId && forecasts.length) setForecastId(forecasts[0].execution_id); }, [forecasts, forecastId]);
   useEffect(() => { if (months.length && !months.includes(month)) setMonth(months[0]); }, [months, month]);
+  // 계획 기간은 시작 달부터 예측이 있는 달까지만 고를 수 있다. 예측이 없는 달을 넣으면 서버가 409 로 거절한다.
+  const maxSpan = months.includes(month) ? Math.min(12, months.length - months.indexOf(month)) : 0;
+  const horizon = span && span <= maxSpan ? span : maxSpan;
   useEffect(() => { setForecastDetail(null); if (forecastId) void apiClient.getForecast(forecastId).then(setForecastDetail).catch(() => undefined); }, [forecastId]);
 
   const adopt = (detail: PlanExecutionDetail) => {
-    setExecution(detail); setAlt(null); setShowAlt(false); setOvertime({}); setMultiplier(1); setCell(null);
+    setExecution(detail); setDraft(null); setAlt(null); setShowAlt(false); setOvertime({}); setReceipts({}); setSavedAlt(''); setAltKey(''); setMultiplier(1); setCell(null);
     const plans = detail.result_snapshot.plans;
     setPlanId((id) => (plans.some((p) => p.plan_id === id) ? id : (plans.find((p) => p.feasibility !== 'INFEASIBLE') ?? plans[0])?.plan_id ?? ''));
   };
   // 같은 예측·같은 달로 저장된 계획이 있으면 다시 계산하지 않고 불러온다.
   useEffect(() => {
-    if (!forecastId || !month) return;
-    const found = stored.find((p) => p.forecast_execution_id === forecastId && p.target_month === month && p.scenario_type === 'BASE' && p.status !== 'FAILED');
+    if (!forecastId || !month || !horizon) return;
+    const found = stored.find((p) => p.forecast_execution_id === forecastId && p.target_month === month && (p.horizon_months === undefined || p.horizon_months === horizon) && p.scenario_type === 'BASE' && p.status !== 'FAILED');
+    setDraft(null);
     if (!found) { setExecution(null); setAlt(null); return; }
     if (found.execution_id === execution?.execution_id) return;
     void apiClient.getPlanExecution(found.execution_id).then(adopt).catch((e) => setMessage({ tone: 'bad', text: failure(e) }));
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [forecastId, month, stored]);
+  }, [forecastId, month, horizon, stored]);
 
+  // 기준 계획의 요청. 기간(horizon_months)을 항상 명시한다.
+  async function command() {
+    const detail = forecastDetail ?? await apiClient.getForecast(forecast!.execution_id);
+    const products = [...new Set((detail.result?.forecasts ?? []).map((r) => r.product_id))].sort();
+    return { forecast_execution_id: forecast!.execution_id, product_ids: products, target_month: month, horizon_months: horizon, as_of_date: forecast!.parameters.trained_until };
+  }
   async function calculate() {
-    if (!forecast) return;
+    if (!forecast || !horizon) return;
     setBusy(true); setMessage(null);
     try {
-      const detail = forecastDetail ?? await apiClient.getForecast(forecast.execution_id);
-      const products = [...new Set((detail.result?.forecasts ?? []).map((r) => r.product_id))].sort();
-      const reply = await apiClient.createPlanExecution({ forecast_execution_id: forecast.execution_id, product_ids: products, target_month: month, as_of_date: forecast.parameters.trained_until, scenario: 'BASE' });
+      const reply = await apiClient.createPlanExecution({ ...(await command()), scenario: 'BASE' });
       adopt(reply.execution);
       setMessage({ tone: 'ok', text: reply.reused ? '같은 조건으로 저장된 계획을 불러왔습니다.' : '계획을 계산해 저장했습니다.' });
       await base.reload(); onChanged();
-    } catch (error) { setMessage({ tone: 'bad', text: failure(error) }); }
+    } catch (error) { setMessage({ tone: 'bad', text: planFailure(error) }); }
+    finally { setBusy(false); }
+  }
+  // 저장하지 않고 결과만 본다. 기록에 남지 않는다.
+  async function preview() {
+    if (!forecast || !horizon) return;
+    setBusy(true); setMessage(null);
+    try {
+      const reply = await apiClient.planPreview(await command());
+      setDraft(reply.result); setCell(null);
+      setPlanId((id) => (reply.result.plans.some((p) => p.plan_id === id) ? id : (reply.result.plans.find((p) => p.feasibility !== 'INFEASIBLE') ?? reply.result.plans[0])?.plan_id ?? ''));
+      setMessage({ tone: 'warn', text: '저장하지 않은 미리보기입니다. 기록에 남기거나 조건을 바꿔 비교하려면 "계획 계산하기"를 누르세요.' });
+    } catch (error) { setMessage({ tone: 'bad', text: planFailure(error) }); }
     finally { setBusy(false); }
   }
 
-  const overrides = useMemo(() => ({ ...(multiplier !== 1 ? { demand_multiplier: multiplier.toFixed(2) } : {}), ...overtime }), [multiplier, overtime]);
+  const overrides = useMemo(() => ({ ...(multiplier !== 1 ? { demand_multiplier: multiplier.toFixed(2) } : {}), ...overtime,
+    ...Object.fromEntries(Object.entries(receipts).filter(([, v]) => QTY.test(v)).map(([k, v]) => [`receipt_qty.${k}`, v])) }), [multiplier, overtime, receipts]);
+  const overridesKey = JSON.stringify(overrides);
   async function recalc() {
     if (!execution) return;
     setBusy(true); setMessage(null);
     try {
-      const reply = await apiClient.whatIf({ forecast_execution_id: execution.forecast_execution_id, product_ids: planProducts(execution.result_snapshot), target_month: execution.target_month, as_of_date: execution.as_of_date, base_plan_execution_id: execution.execution_id }, overrides);
-      setAlt(reply.result); setShowAlt(true);
-    } catch (error) { setMessage({ tone: 'bad', text: failure(error) }); }
+      const reply = await apiClient.whatIf({ ...parentCommand(execution), base_plan_execution_id: execution.execution_id }, overrides);
+      setAlt(reply.result); setShowAlt(true); setAltKey(overridesKey); setSavedAlt('');
+    } catch (error) { setMessage({ tone: 'bad', text: planFailure(error) }); }
     finally { setBusy(false); }
   }
-  const resetWhatIf = () => { setMultiplier(1); setOvertime({}); setAlt(null); setShowAlt(false); };
+  // 비교해 본 조건을 그대로 저장한다. 부모(원래 계획)는 바뀌지 않고, 조건을 바꾼 계획이 기록에 따로 남는다.
+  async function saveAlt() {
+    if (!execution || !alt || altKey !== overridesKey) return;
+    setBusy(true); setMessage(null);
+    try {
+      const reply = await apiClient.createPlanExecution({ ...parentCommand(execution), scenario: 'WHAT_IF', base_plan_execution_id: execution.execution_id, overrides });
+      setSavedAlt(reply.execution.execution_id);
+      setMessage({ tone: 'ok', text: reply.reused ? '같은 조건으로 이미 저장된 계획이 있습니다. 기록에서 볼 수 있습니다.' : '조건을 바꾼 계획을 저장했습니다. 기록에서 볼 수 있습니다.' });
+      await base.reload(); onChanged();
+    } catch (error) { setMessage({ tone: 'bad', text: planFailure(error) }); }
+    finally { setBusy(false); }
+  }
+  const resetWhatIf = () => { setMultiplier(1); setOvertime({}); setReceipts({}); setAlt(null); setShowAlt(false); setAltKey(''); setSavedAlt(''); };
+  // 원래 계획의 기준일까지 승인된 예정 입고. 발주별 입고 수량을 바꿔 볼 때 쓴다.
+  useEffect(() => {
+    setLedger(null); setLedgerError('');
+    if (!execution) return;
+    let live = true;
+    void apiClient.scheduledReceipts(execution.as_of_date).then((page) => { if (live) setLedger(page); }).catch((e) => { if (live) setLedgerError(failure(e)); });
+    return () => { live = false; };
+  }, [execution?.execution_id]);
+  const openReceipts = ledger?.source_state === 'AVAILABLE' ? ledger.items.filter((r) => r.state === 'OPEN' || r.state === 'PARTIALLY_RECEIVED') : [];
 
-  const baseResult = execution?.result_snapshot ?? null;
+  const baseResult = execution?.result_snapshot ?? draft;
   const result = showAlt && alt ? alt : baseResult;
   const summaries = useMemo(() => (result ? result.plans.map((p) => summarizePlan(result, p)) : []), [result]);
   const baseSummaries = useMemo(() => (baseResult ? baseResult.plans.map((p) => summarizePlan(baseResult, p)) : []), [baseResult]);
@@ -114,7 +177,7 @@ export default function PlanPage({ focus, pick, startMonth, startPlan, names, on
   const budget = cell ? base.data?.budgets[`${cell.id}.${cell.month}`] : undefined;
   // 칸을 고르면 입력값을 그 칸의 지금 잔업 한도보다 40시간 많게 맞춰 둔다. 같은 값을 넣어 아무 변화가 없는 일을 막는다.
   useEffect(() => { if (budget && !overtime[otKey]) setOtHours(String(budget.overtime + 40)); }, [cell?.id, cell?.month, budget?.overtime]);
-  const overrideText = Object.entries(overrides).map(([k, v]) => (k === 'demand_multiplier' ? `수요 ×${v}` : `${names[k.split('.')[1]] ?? k.split('.')[1]} ${shortMonth(k.split('.')[2])} 잔업 한도 ${v}시간`)).join(', ');
+  const overrideText = Object.entries(overrides).map(([k, v]) => (k === 'demand_multiplier' ? `수요 ×${v}` : k.startsWith('receipt_qty.') ? `발주 ${k.slice('receipt_qty.'.length)} 입고 ${num(v, 3)}` : `${names[k.split('.')[1]] ?? k.split('.')[1]} ${shortMonth(k.split('.')[2])} 잔업 한도 ${v}시간`)).join(', ');
 
   const fact = (label: string, v: number, unit: string) => <span className={`fact${v ? ' bad' : ''}`}>{label} <b>{v ? `${v}${unit}` : '없음'}</b></span>;
 
@@ -124,9 +187,11 @@ export default function PlanPage({ focus, pick, startMonth, startPlan, names, on
         <div className="formrow">
           <label className="field" style={{ flex: '2 1 300px' }}>어떤 예측으로 계획을 세울까요<select value={forecastId} onChange={(e) => setForecastId(e.target.value)}>{forecasts.map((f) => <option key={f.execution_id} value={f.execution_id}>{forecastLabel(f)} · {when(f.created_at)} 실행</option>)}</select></label>
           <div className="field" style={{ flex: '2 1 260px' }}>계획을 시작할 달 <div className="chips">{months.map((m) => <button key={m} type="button" className="chip" aria-pressed={m === month} onClick={() => setMonth(m)}>{monthLabel(m)}</button>)}</div></div>
-          <button type="button" className={`btn lg${execution ? '' : ' primary'}`} disabled={busy || !forecast || !month} onClick={() => void calculate()}>{busy ? '계산 중…' : execution ? '저장된 계획 다시 계산' : '계획 계산하기'}<Icon name="play" /></button>
+          <label className="field" style={{ flex: '0 1 120px' }}>계획 기간<select value={horizon} disabled={!maxSpan} onChange={(e) => setSpan(Number(e.target.value))}>{Array.from({ length: maxSpan }, (_, i) => i + 1).map((n) => <option key={n} value={n}>{n}개월</option>)}</select></label>
+          {!execution && <button type="button" className="btn lg" disabled={busy || !forecast || !horizon} title="저장하지 않고 결과만 봅니다" onClick={() => void preview()}>미리보기</button>}
+          <button type="button" className={`btn lg${execution ? '' : ' primary'}`} disabled={busy || !forecast || !horizon} onClick={() => void calculate()}>{busy ? '계산 중…' : execution ? '저장된 계획 다시 계산' : '계획 계산하기'}<Icon name="play" /></button>
         </div>}
-      {forecast && <p className="small">{monthLabel(forecast.parameters.trained_until.slice(0, 7))} 말까지의 자료로 만든 예측입니다. 계획도 그 시점에 알고 있던 재고만 씁니다.{execution && ` 이 계획은 ${when(execution.created_at)} 저장됐습니다.`}</p>}
+      {forecast && <p className="small">{monthLabel(forecast.parameters.trained_until.slice(0, 7))} 말까지의 자료로 만든 예측입니다. 계획도 그 시점에 알고 있던 재고만 씁니다.{execution ? ` 이 계획은 ${monthLabel(execution.target_month)}부터 ${parentCommand(execution).horizon_months}개월 치이며 ${when(execution.created_at)} 저장됐습니다.` : draft ? ' 지금 보이는 결과는 저장하지 않은 미리보기입니다.' : horizon ? ` ${monthLabel(month)}부터 ${horizon}개월 치를 계산합니다.` : ''}</p>}
       {message && <Notice tone={message.tone}>{message.text}</Notice>}
       {base.error && <Notice tone="bad">{base.error}</Notice>}
     </div></section>
@@ -169,14 +234,25 @@ export default function PlanPage({ focus, pick, startMonth, startPlan, names, on
         </div>
 
         <div className="stack sticky">
-          <section className="panel"><header><div><h2>조건 바꿔 다시 계산</h2><p>저장하지 않고 원래 계획과 비교만 합니다</p></div></header>
+          <section className="panel"><header><div><h2>조건 바꿔 다시 계산</h2><p>먼저 저장 없이 비교하고, 남길 결과만 저장합니다</p></div></header>
             <div className="body">
+              {!execution && <Notice tone="warn">미리보기는 저장된 계획이 아니라 조건을 바꿔 비교할 수 없습니다. "계획 계산하기"로 저장한 뒤 쓰세요.</Notice>}
               <label className="field">수요를 몇 배로 볼까요 <b className="num" style={{ color: 'var(--ink)', fontSize: '0.9rem' }}>×{multiplier.toFixed(2)}{multiplier !== 1 && ` (${multiplier > 1 ? '+' : ''}${Math.round((multiplier - 1) * 100)}%)`}</b>
                 <input type="range" min="0.7" max="1.4" step="0.05" value={multiplier} onChange={(e) => setMultiplier(Number(e.target.value))} /></label>
               <div className="formrow"><label className="field">바꿀 잔업 한도 (시간)<input type="number" min="0" step="10" value={otHours} onChange={(e) => setOtHours(e.target.value)} /></label>
                 <span className="small muted" style={{ flex: '2 1 150px' }}>부하 지도의 칸을 누르면 그 설비·달의 잔업 한도를 이 값으로 바꿉니다. 원래 잔업 한도에 더하는 것이 아니라 대신합니다.</span></div>
               {Object.keys(overtime).length > 0 && <div className="chips">{Object.entries(overtime).map(([k, v]) => <button key={k} type="button" className="chip" title="눌러서 빼기" onClick={() => { const next = { ...overtime }; delete next[k]; setOvertime(next); }}>{names[k.split('.')[1]] ?? k.split('.')[1]} {shortMonth(k.split('.')[2])} 잔업 한도 {v}h<Icon name="x" /></button>)}</div>}
-              <div className="actions"><button type="button" className="btn primary lg" disabled={busy || !Object.keys(overrides).length} onClick={() => void recalc()}><Icon name="refresh" />{busy ? '계산 중…' : '이 조건으로 다시 계산'}</button>
+              <h3>발주별 입고 수량</h3>
+              {ledgerError ? <Notice tone="bad">{ledgerError}</Notice> : !execution ? null : !ledger ? <p className="small muted">예정 입고를 읽는 중…</p>
+                : ledger.source_state === 'UNAVAILABLE' ? <p className="small muted">예정 입고 원장이 아직 연결되지 않았습니다 ({ledger.reason_code}).</p>
+                : openReceipts.length === 0 ? <p className="small muted">{monthLabel(ledger.as_of_date.slice(0, 7))} 말까지 승인된 예정 입고 중 아직 들어올 발주가 없습니다. "자료 넣기"에서 예정 입고 파일을 승인하면 여기서 발주별 수량을 바꿔 볼 수 있습니다.</p>
+                : <><div className="tablewrap scrollbox" style={{ maxHeight: 220 }}><table className="tbl tight"><thead><tr><th>발주</th><th>자재</th><th>입고 예정</th><th className="r">남은 수량</th><th className="r">바꿀 수량</th></tr></thead>
+                    <tbody>{openReceipts.map((r) => <tr key={r.receipt_key}><td className="small nw">{r.receipt_key}</td><td className="small">{names[r.material_id] ?? r.material_id}</td><td className="small nw">{r.expected_date}</td><td className="r num small">{num(r.open_qty, 3)} {r.unit}</td>
+                      <td className="r"><input type="number" min="0" step="any" style={{ width: 96 }} aria-label={`${r.receipt_key} 바꿀 입고 수량`} placeholder={String(Number(r.open_qty))} value={receipts[r.receipt_key] ?? ''} onChange={(e) => { const next = { ...receipts }; if (e.target.value === '') delete next[r.receipt_key]; else next[r.receipt_key] = e.target.value; setReceipts(next); }} /></td></tr>)}</tbody></table></div>
+                  <p className="small muted">비워 두면 원래 수량 그대로입니다. 0을 넣으면 그 발주가 들어오지 않는 것으로 계산합니다. 원래 계획을 만들 때 쓰이지 않은 발주는 서버가 거절합니다.</p></>}
+              <div className="actions"><button type="button" className="btn primary lg" disabled={busy || !execution || !Object.keys(overrides).length} onClick={() => void recalc()}><Icon name="refresh" />{busy ? '계산 중…' : '이 조건으로 다시 계산'}</button>
+                {alt && <button type="button" className="btn" disabled={busy || !!savedAlt || altKey !== overridesKey} title={altKey !== overridesKey ? '조건이 바뀌었습니다. 다시 계산한 뒤 저장하세요.' : undefined} onClick={() => void saveAlt()}>{savedAlt ? '저장됨' : '바꾼 결과 저장'}</button>}
+                {savedAlt && <button type="button" className="btn" onClick={() => go('history', { kind: 'plan', x: savedAlt })}>기록에서 보기</button>}
                 <button type="button" className="btn" disabled={busy || (!alt && !Object.keys(overrides).length)} onClick={resetWhatIf}>처음으로</button></div>
               {alt && <><div className="tabs" role="group" aria-label="볼 결과"><button type="button" aria-pressed={!showAlt} onClick={() => setShowAlt(false)}>원래 계획</button><button type="button" aria-pressed={showAlt} onClick={() => setShowAlt(true)}>바꾼 결과</button></div>
                 <p className="small">{showAlt ? `왼쪽 화면이 바꾼 결과를 보여 줍니다: ${overrideText}` : '왼쪽 화면이 저장된 원래 계획을 보여 줍니다.'}</p></>}

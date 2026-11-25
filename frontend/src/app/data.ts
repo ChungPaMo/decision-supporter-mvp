@@ -37,7 +37,7 @@ export const EMPTY_OVERVIEW: Overview = { batches: [], forecasts: [], plans: [],
 // 승인된 기준정보에서 코드 → 이름을 만든다 (제품, 자재, 설비·인력). 화면은 코드 대신 이름을 보여 준다.
 export async function loadNames(): Promise<Names> {
   const names: Names = {};
-  const take = async (entity: Entity, id: string, name: string) => {
+  const take = async (entity: Exclude<Entity, 'scheduled_receipt'>, id: string, name: string) => {
     try { for (const row of await apiClient.approvedData(entity)) if (row[id] && row[name]) names[String(row[id])] = String(row[name]); } catch { /* 이름이 없으면 코드를 그대로 쓴다 */ }
   };
   await Promise.all([take('product', 'product_id', 'product_name'), take('material', 'material_id', 'material_name'), take('capacity', 'resource_id', 'resource_name')]);

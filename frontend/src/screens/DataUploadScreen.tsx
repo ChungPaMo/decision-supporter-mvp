@@ -105,7 +105,7 @@ function BatchPanel({ batch, disabled, act, linked }: { batch: BatchDetail; disa
 
   useEffect(() => {
     let current = true;
-    if (batch.status === 'APPROVED') {
+    if (batch.status === 'APPROVED' && batch.entity !== 'scheduled_receipt') {
       apiClient.approvedData(batch.entity).then((data) => {
         if (current) setRows(data.filter((row) => row.batch_id === batch.batch_id));
       }).catch((error) => { if (current) setReadError(failureMessage(error)); });
