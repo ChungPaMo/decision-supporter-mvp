@@ -1,3 +1,6 @@
+from contextlib import nullcontext
+from types import SimpleNamespace
+
 from fastapi.testclient import TestClient
 
 from app.main import app
@@ -17,6 +20,18 @@ def test_health_reports_db_unavailable_without_leaking_details(monkeypatch):
     assert r.json()["status"] == "degraded"
     assert r.json()["database"] == {"status": "unavailable"}
     assert "secret_pw" not in r.text
+    responses = client.get("/openapi.json").json()["paths"]["/health"]["get"]["responses"]
+    assert responses["503"]["content"]["application/json"]["schema"] == {"$ref": "#/components/schemas/HealthDegraded"}
+
+
+def test_health_200_shape_matches_openapi_with_connection_double(monkeypatch):
+    from app.api.health import HealthOk
+
+    connection = SimpleNamespace(execute=lambda _: SimpleNamespace(scalar_one=lambda: "16.6"))
+    monkeypatch.setattr("app.api.health.get_engine", lambda: SimpleNamespace(connect=lambda: nullcontext(connection)))
+    r = client.get("/health")
+    assert r.status_code == 200
+    assert HealthOk.model_validate(r.json()).database.server_version == "16.6"
 
 
 def test_health_ok_with_real_db(test_engine, monkeypatch):

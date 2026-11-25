@@ -65,7 +65,7 @@ class ErrorCode(StrEnum):
     EXPORT_TOO_LARGE = "EXPORT_TOO_LARGE"                  # 413 출력 행 또는 실제 수신한 요청 본문이 한도를 넘음
     # --- 배치 ---
     BATCH_NOT_FOUND = "BATCH_NOT_FOUND"                    # 404
-    DUPLICATE_UPLOAD = "DUPLICATE_UPLOAD"                  # 409 같은 파일(SHA-256)이 반려되지 않은 배치로 이미 있음 (details.batch_id)
+    DUPLICATE_UPLOAD = "DUPLICATE_UPLOAD"                  # 409 같은 파일이 등록돼 있음. 확인된 배치만 ID와 원본 SHA 반환
     SOURCE_NOTE_REQUIRED = "SOURCE_NOTE_REQUIRED"          # 422 공개 데이터/합성 데이터는 출처 설명 필수
     VERSION_CONFLICT = "VERSION_CONFLICT"                  # 409 다른 사용자가 먼저 수정함 → 다시 조회 후 재시도
     BATCH_FINALIZED = "BATCH_FINALIZED"                    # 409 이미 승인/반려된 배치는 수정 불가
@@ -78,6 +78,7 @@ class ErrorCode(StrEnum):
     ALREADY_APPROVED = "ALREADY_APPROVED"                  # 409 중복 승인 (details.approved_by, approved_at)
     BATCH_REJECTED = "BATCH_REJECTED"                      # 409 반려된 배치
     RESULT_CHANGED = "RESULT_CHANGED"                      # 409 화면에서 본 검증 결과와 서버의 현재 결과가 다름 → 다시 조회
+    BATCH_SOURCE_MISMATCH = "BATCH_SOURCE_MISMATCH"          # 409 선택한 파일 SHA가 승인 대상 배치의 원본과 다름
     KEYS_ALREADY_APPROVED = "KEYS_ALREADY_APPROVED"        # 409 이미 승인된 키가 있음: 수요 (제품, 월), 재고 (품목, 기준일) (details.keys). 덮어쓰기 미지원
 
 

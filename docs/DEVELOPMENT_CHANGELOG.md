@@ -1465,3 +1465,31 @@
 
 **관련 자료**
 - [P3 실제 결과와 P4 준비](PLANNING_POSTGRESQL_INTEGRATION_VERIFICATION_20261124.md#p3--회귀-postgresql-0010-적용과-c02-승인-결함-확인).
+
+### 2026-11-25 — 프론트엔드 통합 검증 후 백엔드 계약 후속
+
+**Git**
+- 시작 Commit [`a4e2396`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/a4e2396c0250c537902bc89a25aa760ae2b2642d), 브랜치 `main`.
+- 완료 Commit 조회: `git log main -1 --format=%H --fixed-strings --grep='fix: bind batch approval to source and document degraded health'`.
+
+**작업 목적**
+- 중복 업로드와 승인 대상을 원본으로 식별하고, 재검증 설정 보존·Health 상태·계획 요청 및 C02 화면 인계를 명확히 한다.
+
+**구현 내용**
+- `backend/app/batches/service.py`와 배치 API에 같은 데이터셋·유형·SHA의 중복 상세 및 선택형 승인 SHA 검증을 추가했다. 경합 조회는 쓰기 롤백 후 수행한다.
+- 재검증에서 `sheet`·`default_unit`의 생략과 `null`을 구분했다. `/health` 200·503 스키마, OpenAPI와 중복 예시를 갱신했다.
+
+**검증 결과**
+- 메모리 저장소에서 동일 이름·다른 원본의 승인 차단, 경합 후 같은 데이터셋 조회, 기존 digest·버전 검사, 누락·명시적 `null`을 확인했다.
+- DB 장애 응답 503, 단일 월 Preview·저장 기본값 차이와 부모 기간·기준일 충돌을 비DB 테스트로 검증했다. PostgreSQL·Docker·외부 API는 미실행.
+- 보조 PC 전체 비DB 1,384 통과·69 건너뜀. OpenAPI·응답 예시·JSON Schema 계약 검사 12건 통과.
+- 커밋 전 전체 비DB 재실행에서 1,384 통과·69 건너뜀. 변경 대상 17개 파일의 보안 검사에서 발견 0건.
+
+**기술적 결정**
+- 기존 클라이언트의 승인 본문은 호환된다. 새 화면의 선택 파일 기반 승인에는 SHA를 보내도록 인계한다. 계획 검증 규칙은 유지하고 명시적 기간과 저장된 부모 범위 사용을 문서화했다.
+
+**남은 문제**
+- 나미님 담당 화면에서 원본 SHA, 계획 기간, 상태 오류를 연결한다. 김대영은 C02 읽기 전용 조회 설계의 구현과 별도 승인 후 0010 실DB 재검증을 진행한다.
+
+**관련 자료**
+- [프론트엔드 후속 계약·C02 조회 설계](FRONTEND_BACKEND_CONTRACT_FOLLOWUP_20261125.md).

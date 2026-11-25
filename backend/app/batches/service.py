@@ -17,6 +17,7 @@ import re
 import uuid
 from contextlib import contextmanager
 from decimal import Decimal
+from enum import Enum
 
 from app.batches import receipts
 from app.batches.repository import (
@@ -37,6 +38,10 @@ ACTOR_RE = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.\-]{1,59}$")      # 역할 코�
 MAX_LISTED = 50
 FINAL = {BatchStatus.APPROVED.value, BatchStatus.REJECTED.value}
 BATCH_ENTITIES = (*ENTITIES, receipts.ENTITY)
+
+
+class _Setting(Enum):
+    OMITTED = 0
 
 
 def _check_actor(actor: str | None, what: str) -> str:
@@ -106,6 +111,17 @@ class BatchService:
         return {"default_unit": default_unit, "column_overrides": overrides or {}, "sheet": sheet}
 
     @staticmethod
+    def _duplicate_error(existing: BatchRecord | None, requested: BatchRecord) -> ApiError:
+        details = None
+        if (existing is not None and existing.status != BatchStatus.REJECTED.value
+                and (existing.dataset_id, existing.entity, existing.source_sha256)
+                == (requested.dataset_id, requested.entity, requested.source_sha256)):
+            details = {"batch_id": str(existing.batch_id), "status": existing.status,
+                       "source_sha256": existing.source_sha256, "dataset_id": existing.dataset_id,
+                       "entity": existing.entity}
+        return ApiError(409, ErrorCode.DUPLICATE_UPLOAD, "같은 파일이 이미 업로드되어 있습니다.", details)
+
+    @staticmethod
     def _check_overrides(overrides: dict | None, entity: str) -> None:
         if entity == receipts.ENTITY:
             fields = receipts.FIELDS
@@ -131,20 +147,33 @@ class BatchService:
         if created_by is not None:
             created_by = _check_actor(created_by, "업로더")
         self._check_overrides(column_overrides, entity)
-        with self._tx() as tx:
-            preview = self._run(tx, filename, data, entity, default_unit, column_overrides, sheet)
-            digest = result_digest(preview, self._settings(default_unit, column_overrides, sheet))
-            rec = BatchRecord(
-                batch_id=uuid.uuid4(), dataset_id=getattr(self.repo,"dataset_id","TISSUE-LEGACY"), entity=entity, status=preview.status, source_type=source_type, source_name=preview.file.name,
-                source_note=(source_note or None), source_sha256=preview.file.sha256, created_by=created_by,
-                created_at=dt.datetime.now(dt.timezone.utc), default_unit=default_unit, column_overrides=column_overrides or {},
-                sheet_filter=sheet, blocking_error_count=preview.blocking_error_count, warning_count=preview.warning_count,
-                result_digest=digest, validation_result=snapshot(preview))
-            dup = tx.find_live_by_sha(rec.source_sha256, entity)
-            if dup is not None:
-                raise ApiError(409, ErrorCode.DUPLICATE_UPLOAD, "같은 파일이 이미 업로드되어 있습니다.",
-                               {"batch_id": str(dup.batch_id), "status": dup.status})
-            tx.insert_batch(rec, data)
+        rec = None
+        try:
+            with self._tx() as tx:
+                preview = self._run(tx, filename, data, entity, default_unit, column_overrides, sheet)
+                digest = result_digest(preview, self._settings(default_unit, column_overrides, sheet))
+                rec = BatchRecord(
+                    batch_id=uuid.uuid4(), dataset_id=getattr(self.repo, "dataset_id", "TISSUE-LEGACY"),
+                    entity=entity, status=preview.status, source_type=source_type, source_name=preview.file.name,
+                    source_note=(source_note or None), source_sha256=preview.file.sha256, created_by=created_by,
+                    created_at=dt.datetime.now(dt.timezone.utc), default_unit=default_unit,
+                    column_overrides=column_overrides or {}, sheet_filter=sheet,
+                    blocking_error_count=preview.blocking_error_count, warning_count=preview.warning_count,
+                    result_digest=digest, validation_result=snapshot(preview))
+                dup = tx.find_live_by_sha(rec.source_sha256, entity)
+                if dup is not None:
+                    raise self._duplicate_error(dup, rec)
+                tx.insert_batch(rec, data)
+        except ApiError as exc:
+            if exc.code != ErrorCode.DUPLICATE_UPLOAD or not isinstance(exc.__cause__, DuplicateBatchError) or rec is None:
+                raise
+            # The insert transaction has rolled back. The winning row may have been rejected since the collision.
+            try:
+                with self._tx() as tx:
+                    dup = tx.find_live_by_sha(rec.source_sha256, entity)
+            except ApiError:
+                raise exc from None
+            raise self._duplicate_error(dup, rec) from exc
         return rec
 
     # ------------------------------------------------------------ 조회
@@ -195,9 +224,10 @@ class BatchService:
             return tx.list_inventory(item_type, item_id, as_of_date, limit, offset)
 
     # ------------------------------------------------------------ 사용자 수정 → 재검증
-    def revalidate(self, batch_id: uuid.UUID, *, expected_version: int, column_overrides: dict | None,
-                   default_unit: str | None, sheet: str | None) -> BatchRecord:
-        """설정 3종(열 지정, 기본 단위, 시트)을 통째로 교체하고 저장된 원본을 다시 검증한다. 원본 바이트는 바뀌지 않는다."""
+    def revalidate(self, batch_id: uuid.UUID, *, expected_version: int, column_overrides: dict | None = None,
+                   default_unit: str | None | _Setting = _Setting.OMITTED,
+                   sheet: str | None | _Setting = _Setting.OMITTED) -> BatchRecord:
+        """Revalidate the stored file. Omitted sheet and unit retain the settings on the locked row."""
         with self._tx() as tx:
             b = self._locked(tx, batch_id)
             self._check_overrides(column_overrides, b.entity)
@@ -205,6 +235,10 @@ class BatchService:
                 raise ApiError(409, ErrorCode.BATCH_FINALIZED, "이미 승인 또는 반려된 배치는 수정할 수 없습니다.", {"status": b.status})
             if b.version != expected_version:
                 raise ApiError(409, ErrorCode.VERSION_CONFLICT, "다른 변경이 먼저 반영되었습니다. 다시 조회한 뒤 시도하세요.", {"current_version": b.version})
+            if default_unit is _Setting.OMITTED:
+                default_unit = b.default_unit
+            if sheet is _Setting.OMITTED:
+                sheet = b.sheet_filter
             evidence = tx.transformation_for_batch(batch_id)
             if evidence and (default_unit is not None or column_overrides or sheet is not None):
                 raise ApiError(409, ErrorCode.TRANSFORM_BLOCKED, 'Transformed output columns are fixed; review a new transformation to change policy.')
@@ -217,10 +251,13 @@ class BatchService:
                 result_digest=digest, validation_result=snapshot(preview)))
 
     # ------------------------------------------------------------ 승인
-    def approve(self, batch_id: uuid.UUID, *, approved_by: str | None, expected_result_digest: str) -> BatchRecord:
+    def approve(self, batch_id: uuid.UUID, *, approved_by: str | None, expected_result_digest: str,
+                expected_source_sha256: str | None = None) -> BatchRecord:
         actor = _check_actor(approved_by, "승인자")
         with self._tx() as tx:
             b = self._locked(tx, batch_id)
+            if expected_source_sha256 is not None and b.source_sha256 != expected_source_sha256:
+                raise ApiError(409, ErrorCode.BATCH_SOURCE_MISMATCH, "선택한 파일과 이 배치의 원본이 다릅니다. 파일과 배치를 다시 확인하세요.")
             if b.status == BatchStatus.APPROVED.value:
                 raise ApiError(409, ErrorCode.ALREADY_APPROVED, "이미 승인된 배치입니다. 다시 반영하지 않습니다.",
                                {"approved_by": b.approved_by, "approved_at": b.approved_at.isoformat() if b.approved_at else None})

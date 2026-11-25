@@ -16,8 +16,8 @@ from app.plans.service import what_if_snapshot, PlanService
 from app.plans.repository import PlanRepository, digest
 from app.plans.approval import transition,ApprovalContext
 from app.plans.exports import test_double_export as make_test_export,formal_export
-from contracts.interfaces.planning import PlanningInput,PlanningOutput,PlanningIssue,PlanCommand
-from contracts.interfaces.plan_execution import PlanExecutionDetail,PlanDecisionRequest
+from contracts.interfaces.planning import LegacyPlanPreviewCommand,PlanningInput,PlanningOutput,PlanningIssue,PlanCommand
+from contracts.interfaces.plan_execution import PlanExecutionCreate,PlanExecutionDetail,PlanDecisionRequest
 
 ROOT=Path(__file__).resolve().parents[2]
 
@@ -76,6 +76,13 @@ def test_invalid_engine_dto_is_rejected(patch):
     with pytest.raises(ValueError):PlanningOutput.model_validate(data)
 
 
+def test_legacy_preview_and_saved_commands_have_different_defaults():
+    body = example().input_snapshot.command.model_dump(mode='json', exclude={'horizon_months'})
+    assert LegacyPlanPreviewCommand.model_validate(body).months == ('2027-01',)
+    assert PlanExecutionCreate.model_validate(body).months == ('2027-01', '2027-02', '2027-03')
+    assert PlanExecutionCreate.model_validate(body | {'horizon_months': 1}).months == ('2027-01',)
+
+
 @pytest.mark.parametrize('problem',['base','forecast','product','month','override','quarantine'])
 def test_what_if_scope_and_test_double_isolation(problem):
     e=example();data=e.input_snapshot.command.model_dump(mode='json')
@@ -92,6 +99,7 @@ def test_what_if_scope_and_test_double_isolation(problem):
     ({'overrides': {'overtime_hours_limit.UNKNOWN.2027-01': '1'}}, 422),
     ({'overrides': {'receipt_qty.UNKNOWN': '0'}}, 422),
     ({'horizon_months': 3}, 409),
+    ({'as_of_date': '2026-12-30'}, 409),
 ])
 def test_what_if_parent_scope_checks_resources_purchase_orders_and_horizon(changes, status):
     parent = example()

@@ -369,6 +369,19 @@
             "minLength": 64,
             "title": "Expected Result Digest",
             "type": "string"
+          },
+          "expected_source_sha256": {
+            "anyOf": [
+              {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "선택한 원본 바이트의 SHA-256. 전달하면 결과 digest와 별도로 배치 원본과 대조한다.",
+            "title": "Expected Source Sha256"
           }
         },
         "required": [
@@ -2782,6 +2795,39 @@
         "title": "ConstraintResult",
         "type": "object"
       },
+      "DatabaseHealthy": {
+        "properties": {
+          "server_version": {
+            "title": "Server Version",
+            "type": "string"
+          },
+          "status": {
+            "const": "ok",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "server_version"
+        ],
+        "title": "DatabaseHealthy",
+        "type": "object"
+      },
+      "DatabaseUnavailable": {
+        "properties": {
+          "status": {
+            "const": "unavailable",
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status"
+        ],
+        "title": "DatabaseUnavailable",
+        "type": "object"
+      },
       "DatasetCreate": {
         "additionalProperties": false,
         "properties": {
@@ -3323,6 +3369,7 @@
           "ALREADY_APPROVED",
           "BATCH_REJECTED",
           "RESULT_CHANGED",
+          "BATCH_SOURCE_MISMATCH",
           "KEYS_ALREADY_APPROVED"
         ],
         "title": "ErrorCode",
@@ -4254,6 +4301,52 @@
           }
         },
         "title": "HTTPValidationError",
+        "type": "object"
+      },
+      "HealthDegraded": {
+        "properties": {
+          "database": {
+            "$ref": "#/components/schemas/DatabaseUnavailable"
+          },
+          "status": {
+            "const": "degraded",
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "version",
+          "database"
+        ],
+        "title": "HealthDegraded",
+        "type": "object"
+      },
+      "HealthOk": {
+        "properties": {
+          "database": {
+            "$ref": "#/components/schemas/DatabaseHealthy"
+          },
+          "status": {
+            "const": "ok",
+            "title": "Status",
+            "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "version",
+          "database"
+        ],
+        "title": "HealthOk",
         "type": "object"
       },
       "Horizon": {
@@ -7936,6 +8029,7 @@
                 "type": "null"
               }
             ],
+            "description": "생략하면 기존 값 유지. null이면 기본 단위를 지운다.",
             "title": "Default Unit"
           },
           "expected_version": {
@@ -7953,6 +8047,7 @@
                 "type": "null"
               }
             ],
+            "description": "생략하면 기존 시트 유지. null이면 시트 제한을 지운다.",
             "title": "Sheet"
           }
         },
@@ -12178,10 +12273,22 @@
           "200": {
             "content": {
               "application/json": {
-                "schema": {}
+                "schema": {
+                  "$ref": "#/components/schemas/HealthOk"
+                }
               }
             },
             "description": "Successful Response"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthDegraded"
+                }
+              }
+            },
+            "description": "서버에 연결됐으나 데이터베이스를 사용할 수 없음"
           }
         },
         "summary": "서버·DB 상태 확인"

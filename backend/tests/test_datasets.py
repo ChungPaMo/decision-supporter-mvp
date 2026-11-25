@@ -70,6 +70,9 @@ def test_two_memory_datasets_same_codes_refs_and_page_totals():
             assert r.status_code==200
             duplicate=client.post('/batches',params={'dataset_id':d},files={'file':('p.csv',data)},data={'entity':'product'})
             assert duplicate.status_code==409
+            info = duplicate.json()['detail']['details']
+            assert info['dataset_id'] == d and info['batch_id'] == b['batch_id']
+            assert info['source_sha256'] == b['file']['sha256']
         assert client.get('/products').json()['total']==1 # Compatibility defaults to legacy ONLY.
         for d in repositories:
             page=client.get('/products',params={'dataset_id':d,'limit':1,'offset':0}).json()

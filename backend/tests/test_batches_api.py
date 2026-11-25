@@ -1,8 +1,11 @@
 """배치 API 테스트 (DB 없음). 서비스에는 InMemoryBatchRepository 를 주입한다 — 실제 저장이 아니다."""
 import json
+from hashlib import sha256
+from io import BytesIO
 
 import pytest
 from fastapi.testclient import TestClient
+from openpyxl import Workbook
 
 from app.api.batches import get_service
 from app.batches.service import BatchService
@@ -113,6 +116,62 @@ def test_http_status_and_codes(client):
     assert r.status_code == 409 and err(r) == "RESULT_CHANGED"
     r = client.post(f"/batches/{ok['batch_id']}/revalidate", json={"expected_version": 9})
     assert r.status_code == 409 and err(r) == "VERSION_CONFLICT"
+
+
+def test_duplicate_and_approval_bind_to_bytes_even_for_identical_filenames(client):
+    first = upload(client).json()
+    duplicate = upload(client, name="renamed.csv")
+    assert duplicate.status_code == 409 and err(duplicate) == "DUPLICATE_UPLOAD"
+    assert duplicate.json()["detail"]["details"] == {
+        "batch_id": first["batch_id"], "source_sha256": sha256(GOOD).hexdigest(),
+        "status": "READY_FOR_APPROVAL", "dataset_id": first["dataset_id"], "entity": "monthly_demand",
+    }
+
+    newer_bytes = GOOD.replace(b",100,", b",101,")
+    same_name = upload(client, data=newer_bytes)
+    assert same_name.status_code == 201
+    assert same_name.json()["batch_id"] != first["batch_id"]
+    assert same_name.json()["file"]["sha256"] != first["file"]["sha256"]
+    approval = f"/batches/{first['batch_id']}/approve"
+    body = {"approved_by": "REVIEWER-01", "expected_result_digest": first["result_digest"],
+            "expected_source_sha256": sha256(newer_bytes).hexdigest()}
+    response = client.post(approval, json=body)
+    assert response.status_code == 409 and err(response) == "BATCH_SOURCE_MISMATCH"
+    saved = client.get(f"/batches/{first['batch_id']}").json()
+    assert saved["status"] == first["status"] and saved["version"] == first["version"]
+    assert client.get("/demand/monthly").json()["total"] == 0
+
+    assert client.post(approval, json=body | {"expected_source_sha256": "bad"}).status_code == 422
+    assert client.post(approval, json=body | {"expected_source_sha256": sha256(GOOD).hexdigest(),
+                                             "expected_result_digest": "0" * 64}).status_code == 409
+    assert client.post(approval, json=body | {"expected_source_sha256": sha256(GOOD).hexdigest()}).status_code == 200
+
+
+@pytest.mark.parametrize("clear", ["sheet", "default_unit"])
+def test_revalidate_omitted_sheet_and_unit_preserved_and_null_clears_only_requested_setting(client, clear):
+    book = Workbook()
+    data = book.active
+    data.title = "Input"
+    for sheet, period in ((data, "2026-01"), (book.create_sheet("Archive"), "2026-02")):
+        sheet.append(["product_id", "period", "demand_qty"])
+        sheet.append(["FG001", period, 5])
+    source = BytesIO()
+    book.save(source)
+    initial = upload(client, source.getvalue(), "scope.xlsx", sheet="Input", default_unit="EA")
+    assert initial.status_code == 201 and initial.json()["status"] == "READY_FOR_APPROVAL"
+    item = initial.json()
+    url = f"/batches/{item['batch_id']}/revalidate"
+    retained = client.post(url, json={"expected_version": item["version"]})
+    assert retained.status_code == 200
+    updated = retained.json()
+    assert updated["settings"] == item["settings"]
+    assert updated["result_digest"] == item["result_digest"]
+    assert updated["file"]["sha256"] == item["file"]["sha256"]
+    assert updated["version"] == item["version"] + 1
+    cleared = client.post(url, json={"expected_version": updated["version"], clear: None})
+    assert cleared.status_code == 200
+    assert cleared.json()["settings"] == (item["settings"] | {clear: None})
+    assert cleared.json()["result_digest"] != item["result_digest"]
 
 
 def test_duplicate_approval_and_changes_after_approval(client):

@@ -86,14 +86,14 @@ def get_batch(batch_id: uuid.UUID, svc: Service) -> BatchDetail:
 
 @router.post("/batches/{batch_id}/revalidate", response_model=BatchDetail, summary="열 지정·기본 단위 변경 후 재검증 (원본은 불변)")
 def revalidate(batch_id: uuid.UUID, body: RevalidateRequest, svc: Service) -> BatchDetail:
-    return to_detail(svc.revalidate(batch_id, expected_version=body.expected_version, column_overrides=body.column_overrides,
-                                    default_unit=body.default_unit, sheet=body.sheet))
+    return to_detail(svc.revalidate(batch_id, **body.model_dump(exclude_unset=True)))
 
 
 @router.post("/batches/{batch_id}/approve", response_model=BatchDetail,
              summary="명시적 승인 → 배치 entity 의 업무 테이블 반영 (한 트랜잭션)")
 def approve(batch_id: uuid.UUID, body: ApproveRequest, svc: Service) -> BatchDetail:
-    return to_detail(svc.approve(batch_id, approved_by=body.approved_by, expected_result_digest=body.expected_result_digest))
+    return to_detail(svc.approve(batch_id, approved_by=body.approved_by, expected_result_digest=body.expected_result_digest,
+                                 expected_source_sha256=body.expected_source_sha256))
 
 
 @router.post("/batches/{batch_id}/reject", response_model=BatchDetail, summary="반려 (최종 상태)")

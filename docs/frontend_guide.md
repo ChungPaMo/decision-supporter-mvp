@@ -1,5 +1,7 @@
 # 프론트엔드 연동 안내
 
+2026-11-25 통합 후속은 원본 SHA로 중복과 승인 대상을 확인하는 흐름, 재검증 필드의 생략·`null`, 명시적 계획 기간·부모 범위, Health 503을 정리했다. C02 조회는 설계 단계다. [프론트엔드 후속 계약과 예시](FRONTEND_BACKEND_CONTRACT_FOLLOWUP_20261125.md)
+
 `/ingest/ai-mapping-review`와 `/ingest/ai-document-analysis`는 합성 파일 전용 선택형 검토 API다. 화면 연동 시 기존 추천과 검토 후보를 각각 표시하고, 사용자가 확정한 매핑만 기존 변환·저장 흐름에 전달한다. 필드와 응답 상태는 [Upstage 검토 API 인계](UPSTAGE_BACKEND_INTEGRATION_20261124.md#프론트엔드-연동)를 따른다.
 
 `/ingest/xlsx-layout`에서 시트 목록과 원본 좌표의 구조를 확인한 뒤 `table_selection`을 보내 선택 표를 다시 분석한다. 변환 미리보기 검토 후 동일한 범위와 지문으로 `/ingest/transformations`에 저장하고 반환 배치에서 기존 승인 절차를 진행한다. [범위 선택 UI 계약](XLSX_TABLE_SELECTION_HANDOFF.md) · [저장·승인 인계](XLSX_SELECTION_PERSISTENCE_HANDOFF.md)

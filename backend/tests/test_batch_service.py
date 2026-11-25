@@ -1,8 +1,11 @@
 """승인 서비스 단위 테스트. DB 없이 InMemoryBatchRepository(tests/fakes.py)로 서비스 로직만 검증한다.
 실제 DB 트랜잭션·트리거·마이그레이션 동작은 증명하지 않는다 (tests/test_db_rules.py 가 Docker 개발 PC 에서 검증)."""
+from contextlib import contextmanager
+from dataclasses import replace
+
 import pytest
 
-from app.batches.repository import RepositoryError
+from app.batches.repository import RepositoryError, RepositoryUnavailable
 from app.batches.service import BatchService, approval_blockers
 from app.errors import ApiError, ErrorCode
 from tests.fakes import InMemoryBatchRepository
@@ -65,6 +68,44 @@ def test_duplicate_upload_rejected_until_previous_is_rejected(svc):
     assert code_of(e) == (409, ErrorCode.DUPLICATE_UPLOAD) and e.value.details["batch_id"] == str(b.batch_id)
     svc.reject(b.batch_id, rejected_by=APPROVER, reason="재업로드")
     assert svc.create_batch("copy.csv", GOOD).status == "READY_FOR_APPROVAL"
+
+
+@pytest.mark.parametrize("winner", ["same_scope", "rejected", "other_dataset", "other_hash", "unavailable"])
+def test_concurrent_duplicate_lookup_uses_a_fresh_transaction_and_verifies_identity(svc, repo, monkeypatch, winner):
+    original = svc.create_batch("d.csv", GOOD)
+    real_transaction = repo.transaction
+    rollback_before = repo.rollbacks
+    opened = []
+
+    @contextmanager
+    def transaction():
+        opened.append(len(opened))
+        if len(opened) == 2:
+            assert repo.rollbacks == rollback_before + 1
+            if winner == "unavailable":
+                raise RepositoryUnavailable()
+        with real_transaction() as tx:
+            if len(opened) == 1:
+                # Simulate the preflight missing a concurrent insert. The fake's unique check still rejects it.
+                tx.find_live_by_sha = lambda *_: None
+            elif winner == "rejected":
+                tx.find_live_by_sha = lambda *_: replace(original, status="REJECTED")
+            elif winner == "other_dataset":
+                tx.find_live_by_sha = lambda *_: replace(original, dataset_id="CHUNGPAMO-2027")
+            elif winner == "other_hash":
+                tx.find_live_by_sha = lambda *_: replace(original, source_sha256="0" * 64)
+            yield tx
+
+    monkeypatch.setattr(repo, "transaction", transaction)
+    with pytest.raises(ApiError) as duplicate:
+        svc.create_batch("copy.csv", GOOD)
+    assert code_of(duplicate) == (409, ErrorCode.DUPLICATE_UPLOAD)
+    assert len(opened) == 2 and set(repo.state.batches) == {original.batch_id}
+    if winner == "same_scope":
+        assert duplicate.value.details["batch_id"] == str(original.batch_id)
+        assert duplicate.value.details["source_sha256"] == original.source_sha256
+    else:
+        assert duplicate.value.details is None
 
 
 def test_source_note_required_for_public_or_synthetic(svc):

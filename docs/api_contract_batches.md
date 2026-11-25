@@ -44,11 +44,11 @@ GET  /demand/monthly            → 승인된 월별 수요 (예측 모듈과 �
 | 메서드 경로 | 요청 | 성공 응답 |
 |---|---|---|
 | `POST /ingest/preview` | multipart: `file`, 선택 `entity`, `default_unit`, `column_overrides`(JSON), `sheet` | 200 PreviewOut (저장 없음, 기존 제품 대조 없음 → `master_data_checked: false`) |
-| `POST /batches` | multipart: `file`, 선택 `entity`(monthly_demand\|product\|material\|bom\|inventory), `default_unit`(수요 전용), `column_overrides`, `sheet`, `source_type`(CLIENT_UPLOAD\|PUBLIC_DEMAND\|SYNTHETIC), `source_note`, `created_by` | 201 BatchDetail |
+| `POST /batches` | multipart: `file`, 선택 `entity`(monthly_demand\|product\|material\|bom\|inventory\|capacity\|routing\|scheduled_receipt), `default_unit`(수요 전용), `column_overrides`, `sheet`, `source_type`(CLIENT_UPLOAD\|PUBLIC_DEMAND\|SYNTHETIC), `source_note`, `created_by` | 201 BatchDetail |
 | `GET /batches?status=&limit=&offset=` | | 200 BatchPage (최신순) |
 | `GET /batches/{batch_id}` | | 200 BatchDetail |
-| `POST /batches/{batch_id}/revalidate` | JSON `{expected_version, column_overrides, default_unit, sheet}` (설정 **전체 교체**) | 200 BatchDetail (version+1) |
-| `POST /batches/{batch_id}/approve` | JSON `{approved_by, expected_result_digest}` | 200 BatchDetail (APPROVED) |
+| `POST /batches/{batch_id}/revalidate` | JSON `{expected_version, column_overrides, default_unit, sheet}`. 열 지정은 전체 교체. 기본 단위·시트는 생략 시 유지, `null`이면 해제 | 200 BatchDetail (version+1) |
+| `POST /batches/{batch_id}/approve` | JSON `{approved_by, expected_result_digest, expected_source_sha256?}` | 200 BatchDetail (APPROVED) |
 | `POST /batches/{batch_id}/reject` | JSON `{rejected_by, reason}` | 200 BatchDetail (REJECTED) |
 | `GET /products?product_id=&q=&limit=&offset=` | `product_id` 정확히 일치, `q` 품명 부분 일치 | 200 ProductPage |
 | `GET /materials?material_id=&q=&limit=&offset=` | `material_id` 정확히 일치, `q` 자재명 부분 일치 | 200 MaterialPage |
@@ -206,6 +206,7 @@ GET /inventory?item_type=PRODUCT&as_of_date=2026-10-31
 - 조회한 `version` 을 `revalidate` 의 `expected_version` 으로 보낸다. 어긋나면 `409 VERSION_CONFLICT`.
 - 승인은 사용자가 **화면에서 본 결과**에만 유효하다: 조회한 `result_digest` 를 `expected_result_digest` 로 보낸다. 그 사이 재검증 등으로 바뀌었으면 `409 RESULT_CHANGED` → 다시 조회해 확인 후 승인.
 - 서버는 승인 시 저장된 원본을 다시 검증해 같은 `result_digest` 가 나오는지 확인한다(저장된 요약을 믿지 않음). 승인 대기 중 다른 배치가 같은 제품을 먼저 등록해 결과가 달라져도 `RESULT_CHANGED` 로 멈춘다.
+- 선택한 파일의 원본 SHA를 `expected_source_sha256`로 보내면 잠긴 배치의 원본도 함께 대조한다. [중복·재검증·승인 요청 예시](FRONTEND_BACKEND_CONTRACT_FOLLOWUP_20261125.md)
 - 승인자·반려자는 **역할 코드**(`^[A-Za-z0-9][A-Za-z0-9_.-]{1,59}$`, 예: `REVIEWER-01`). 실명·공백·한글은 `422 ACTOR_REQUIRED`. 인증/권한 체계가 정해지면 로그인 사용자에서 서버가 채우도록 바꾼다(미정).
 
 ## 9. 오류 형식과 코드
@@ -222,12 +223,13 @@ GET /inventory?item_type=PRODUCT&as_of_date=2026-10-31
 | `FILE_TOO_LARGE` / `TOO_MANY_ROWS` | 413 | 10MB / 100,000행 한도 |
 | `FILE_EMPTY` / `XLSX_CORRUPT` / `ENCODING_UNKNOWN` / `DELIMITER_UNKNOWN` / `NO_VISIBLE_SHEET` | 422 | 파일 자체 문제 → 파일 확인 |
 | `BATCH_NOT_FOUND` | 404 | |
-| `DUPLICATE_UPLOAD` | 409 | 같은 파일이 이미 있음. `details.batch_id` 로 이동 |
+| `DUPLICATE_UPLOAD` | 409 | 같은 데이터셋·유형·원본 SHA의 활성 배치를 확인하면 `details.batch_id`와 `source_sha256` 제공. 경합 후 확인할 수 없으면 `details` 생략 |
 | `VERSION_CONFLICT` | 409 | 다시 조회 후 재시도 (`details.current_version`) |
 | `BATCH_FINALIZED` | 409 | 이미 승인/반려된 배치는 수정 불가 |
 | `ACTOR_REQUIRED` / `REJECT_REASON_REQUIRED` | 422 | 승인자/반려자/사유 입력 |
 | `APPROVAL_BLOCKED_HOLD` / `APPROVAL_BLOCKED_ERRORS` / `EMPTY_BATCH` | 409 | 승인 불가 상태 (`approval_blockers` 와 같은 코드) |
 | `RESULT_CHANGED` | 409 | 결과가 바뀜 → 다시 조회·확인 |
+| `BATCH_SOURCE_MISMATCH` | 409 | 승인에 전달한 원본 SHA가 대상 배치와 다름 → 선택 파일과 배치를 다시 확인 |
 | `ALREADY_APPROVED` / `BATCH_REJECTED` | 409 | 중복 승인/반려된 배치. 재반영하지 않음 |
 | `KEYS_ALREADY_APPROVED` | 409 | 이미 승인된 키 존재(`details.keys`: 수요는 제품·월, 재고는 품목·기준일). 덮어쓰기 미지원 |
 

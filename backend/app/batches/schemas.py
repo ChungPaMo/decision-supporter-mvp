@@ -71,13 +71,15 @@ class BatchPage(BaseModel):
 class RevalidateRequest(BaseModel):
     expected_version: int = Field(ge=1, description="조회한 배치의 version")
     column_overrides: dict[str, str] = Field(default={}, description="{필드: 헤더 이름 또는 열 문자}. 설정 전체를 교체한다(병합 아님)")
-    default_unit: str | None = None
-    sheet: str | None = None
+    default_unit: str | None = Field(default=None, description="생략하면 기존 값 유지. null이면 기본 단위를 지운다.")
+    sheet: str | None = Field(default=None, description="생략하면 기존 시트 유지. null이면 시트 제한을 지운다.")
 
 
 class ApproveRequest(BaseModel):
     approved_by: str = Field(description="승인자 역할 코드 (예: REVIEWER-01). 실명·공백 불가")
     expected_result_digest: str = Field(min_length=64, max_length=64, description="화면에서 확인한 배치의 result_digest")
+    expected_source_sha256: str | None = Field(default=None, pattern=r'^[0-9a-f]{64}$',
+        description="선택한 원본 바이트의 SHA-256. 전달하면 결과 digest와 별도로 배치 원본과 대조한다.")
 
 
 class RejectRequest(BaseModel):

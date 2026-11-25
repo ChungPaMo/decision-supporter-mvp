@@ -15,7 +15,10 @@
       "message": "같은 파일이 이미 업로드되어 있습니다.",
       "details": {
         "batch_id": "00000000-0000-0000-0000-000000000001",
-        "status": "APPROVED"
+        "status": "APPROVED",
+        "source_sha256": "90400a747b2148b51a794941d00ebd1017b44b6a7770bc50cbfb8a392f328ca1",
+        "dataset_id": "TISSUE-LEGACY",
+        "entity": "product"
       }
     }
   }
