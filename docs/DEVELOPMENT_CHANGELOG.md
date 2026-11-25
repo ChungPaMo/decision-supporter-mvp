@@ -1553,3 +1553,73 @@
 
 **관련 자료**
 - [프론트엔드 통합 후속 계약](FRONTEND_BACKEND_CONTRACT_FOLLOWUP_20261125.md) · [계획 v0.4 인계](PLANNING_CONTRACT_V04_HANDOFF.md)
+
+### 2026-11-25 — 메인 PC 백엔드 재개와 승인 입고 읽기 전용 사전검증
+
+**Git**
+- 기준 [`27f605d`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/27f605d3676a4cf8de5f645dac30d7836a744938). 시작 시점 로컬 `main`과 fetch한 `origin/main` 일치, Git 미커밋 파일 0개. 사전검증 기록은 로컬 문서로 남긴다.
+
+**검증 결과**
+- `127.0.0.1:55433`의 전용 Docker 컨테이너 `chungpamo-monorepo-db`, 볼륨 `chungpamo-monorepo-pgdata`, 네트워크와 PostgreSQL 16.6 확인. 개발 DB `chungpamo`는 `0009`, 회귀 `chungpamo_regression`은 `0010`이다. 회귀 역할·sentinel·개발 DB CONNECT 권한 부재, 다른 세션 0개, 두 스키마의 P3 종료 행 지문/시드 및 FK 폐쇄 집합 각각 29개를 확인했다.
+- 실제 FastAPI TestClient와 PostgreSQL 읽기 전용 연결로 양 데이터셋의 GET 4건 통과. 개발 DB는 200 `UNAVAILABLE`, `items=null`·`total=null`. 회귀 DB는 200 `AVAILABLE`, `items=[]`·`total=0`. 전후 개발 DB 60개 테이블·735개 객체·660개 정의 지문 및 회귀 DB의 업무 행 0건과 기존 시드 일치.
+- 비DB 입고·배치 승인·OpenAPI/Schema 집중 pytest 45통과·1건너뜀, TypeScript 검사·Vite 빌드 통과. 별도 PC 브라우저 이력은 기존 기록에 있으며 메인 PC 브라우저와 SQL 쓰기 테스트는 미실행이다.
+- Solar 원장의 로컬 계산·미확정 예약 합계 USD 9.92067637과 기존 P3·Phase 9 동결 원장 SHA, 응답 캐시 2,111건의 파일 키·본문 SHA, 동결 계획 150회·USD 0.27052850을 대조했다. 신규 API 호출은 0건이고 보조 PC 연구는 별도 보류다.
+
+**계약 비교와 남은 문제**
+- 자료 등록, 배치 재검증·승인(원본 SHA·결과 digest), 수요예측, BASE/What-if Preview·저장, 실행 상세·원장 GET은 새 React 경로에서 실제 API를 호출한다. 일반 XLSX 등록은 선택 범위를 받지 않으며 범위 지정 판매 원장은 변환 이력 저장 API를 사용한다. 정식 계획 APPROVE는 501이다.
+- 정마나미 인계. What-if 입력 행은 현재 `GET /scheduled-receipts` 첫 페이지가 아닌 저장 부모 `input_snapshot.scheduled_receipts`의 `po_id`와 `open_qty`를 사용해야 한다. 부모에 새 승인 입고가 추가되거나 취소돼도 기존 입력이 기준이며 `null`과 `[]`를 구분한다. 자료 넣기의 원장 조회도 `total`에 맞춘 페이지 이동과 기준일 변경 시 이전 결과 표시를 확인한다.
+- 김대영 인계. `scripts/backend.ps1`과 동일하게 `backend/`에서 기본 import를 실행하면 `contracts.mapping_review` 오류가 재현된다. 저장소 루트를 import 경로에 포함하면 정상이다. CSV `source_sheet` 수정은 최신 코드에서 확인했지만, 실제 승인·승인 후 조회·계획 반영·저장 부모 What-if·동시성·롤백은 회귀 `0010`의 지정 테스트 재승인 후 확인한다.
+- 재실행 승인 범위는 CHUNGPAMO-2027 합성 9배치와 입고 개정의 등록·승인, 합성 예측·BASE/WHAT_IF·무결성 검증, 같은 스키마 29개 테이블의 `TRUNCATE … RESTRICT` 정리다. LEGACY는 교차 조회용이며 migration, 스키마 재생성, 개발 DB 쓰기는 현재 재검증에 필요하지 않다.
+
+**관련 자료**
+- [승인 입고 조회 계약](FRONTEND_BACKEND_CONTRACT_FOLLOWUP_20261125.md#c02-승인-입고-원장-읽기-api-설계) · [P3 및 승인 후 실행 명령](PLANNING_POSTGRESQL_INTEGRATION_VERIFICATION_20261124.md#c02-읽기-api--메인-pc-실db-검증)
+
+### 2026-11-25 — C02 실제 승인·계획 재검증과 Windows 기동 수정
+
+**Git**
+- 기준 `main` [`27f605d`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/27f605d3676a4cf8de5f645dac30d7836a744938). 이전 사전검사 문서 편집 보존. Commit·Push는 별도 승인 대기.
+
+**구현 및 검증**
+- 승인된 `chungpamo_regression` `0010`에서 지정 회귀 테스트를 1회 실행했다. 1통과·0실패·0건너뜀. CSV 원장 표기, 승인과 GET 0→1, 10,000 kg 계획 반영, What-if 수량·취소 및 부모 지문, 충돌 200·409, SQL 오류 롤백, 데이터셋 격리와 원본 추적을 검증했다.
+- 회귀 DB의 CHUNGPAMO-2027 29개 테이블을 `TRUNCATE … RESTRICT`로 정리했다. 업무 행 0건 및 `0010`·필수 시드 보존. 개발 `0009`의 테이블·객체·정의 지문 60/735/660과 비용 원장·Phase 9 동결 계획 SHA가 전후 일치했다.
+- `scripts/backend.ps1` 수정 전 기존 스크립트에서 `ModuleNotFoundError: contracts.mapping_review`를 재현했다. 백엔드 실행 디렉터리를 유지하고 Uvicorn `--app-dir`에 저장소 루트를 지정했다. 수정 후 상위 폴더에서 외부 `PYTHONPATH` 없이 스크립트를 실행해 비영구 설정으로 실제 HTTP `/health`·`/openapi.json` 응답 200을 확인했다. 시작한 검사 서버는 종료했다.
+- 비DB 입고·배치 승인·계약·모듈·Upstage 공개 계약 집중 pytest 104통과·0실패·1건너뜀. 실제 외부 API 호출은 0건이었다.
+
+**남은 문제**
+- 정마나미 담당 What-if 발주 선택을 저장된 부모의 입고 스냅샷으로 맞추고 `null`과 빈 배열의 안내를 구분한다. 프론트 코드는 이번에 변경하지 않았다.
+- 개발 DB `0010` 적용 및 공식 PO 등록은 P4 별도 승인 대상이다.
+
+**관련 자료**
+- [지정 실DB 테스트 실제 결과](PLANNING_POSTGRESQL_INTEGRATION_VERIFICATION_20261124.md#2026-11-25--csv-승인-수정-재검증-결과) · [프론트엔드 인계](FRONTEND_BACKEND_CONTRACT_FOLLOWUP_20261125.md#정마나미-인계--저장된-부모의-what-if-입고-선택)
+
+### 2026-11-25 — C02 최종 비DB 회귀와 개발 DB 0010 적용 준비
+
+**Git**
+- 기준 `main` [`27f605d`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/27f605d3676a4cf8de5f645dac30d7836a744938). 로컬과 fetch한 `origin/main`이 동일했고 기존 변경을 보존했다. Commit·Push는 별도 승인 대기.
+
+**검증 결과**
+- 전체 비DB pytest 1,404통과·0실패·69건너뜀. 이미 통과한 지정 SQL 쓰기 테스트는 재실행하지 않았다. `backend.ps1`로 다른 폴더에서 기동했을 때 실제 `/health`와 `/openapi.json`이 모두 200이며, 라이브 OpenAPI JSON이 스냅샷과 동일했다. Health DB 연결은 시작부터 READ ONLY였다.
+- 개발 `0009`는 직전 전후 지문과 일치했다. 60개 테이블·735개 객체·660개 컬럼/인덱스 정의, 승인 7+9배치·예측 2건 보존. 다른 세션과 관련 잠금은 0건이었다. 적용 전 재확인이 필요하다.
+- PostgreSQL 16.6의 `pg_dump`·`pg_restore`와 개발 역할의 읽기 전용 로컬 접속을 확인했다. 과거 `0008` 백업은 목차·해시·전체 디코딩을 통과했다. 현재 `0009`의 새 백업·복구 리허설 및 실제 적용은 계획 단계다. 변경 파일 보안 검사 신규 탐지 0건, `git diff --check` 통과.
+
+**기술적 결정 및 다음 단계**
+- 스키마별 새 원장과 승인 제약 변경을 카탈로그에서 대조했다. P4는 기존 행을 보존하며 두 스키마에 한정한다. 읽기 전용 백업 단계와 승인 가드가 있는 적용 단계를 분리하고 실패 후 지문 확인 절차를 문서화했다.
+- 개발 적용 후 읽기 전용 확인과 격리 DB의 실제 브라우저 쓰기 시나리오를 구분했다. What-if 발주 선택은 정마나미 팀 인계에 남겼다.
+
+**관련 자료**
+- [P4 범위·백업·명령·브라우저 계획](PLANNING_POSTGRESQL_INTEGRATION_VERIFICATION_20261124.md#p4--개발-db-적용-준비와-브라우저-검증-계획)
+
+### 2026-11-25 — 개발 DB 0009 백업과 격리 복구 준비
+
+**Git**
+- 시작 `main` [`27f605d`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/27f605d3676a4cf8de5f645dac30d7836a744938). 완료 커밋은 `git log main -1 --format=%H --fixed-strings --grep='fix: resolve backend startup imports and document C02 PostgreSQL verification'`로 확인한다.
+
+**검증 결과**
+- 사용자 승인에 따라 PostgreSQL 16.6의 개발 `0009`를 처음부터 읽기 전용인 연결로 `pg_dump -Fc` 백업했다. 320,589 bytes, TOC 473개·테이블 데이터 60개, SHA-256 및 전체 디코딩 통과.
+- 백업 전후 데이터와 스키마 지문 60/735/660, 승인 배치 16건·예측 2건 일치. 이전 `0008` 백업과 Solar 원장·Phase 9 동결 계획 SHA 일치.
+
+**남은 작업**
+- 전용 네트워크 없음, 전용 볼륨, 호스트 포트 미공개 방식으로 신규 PostgreSQL 16.6 리허설을 준비했다. 신규 DB 생성·복구·정리 및 개발 DB `0010` 적용은 별도 승인 대상이다.
+
+**관련 자료**
+- [백업 결과와 복구 명령](PLANNING_POSTGRESQL_INTEGRATION_VERIFICATION_20261124.md#격리-복구-리허설-계획--별도-승인-후)

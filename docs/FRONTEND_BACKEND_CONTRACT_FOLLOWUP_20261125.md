@@ -124,6 +124,16 @@ Preview는 200 `{result, persisted: false, approval_available: false, …}`다. 
 
 화면에서는 `source_state`를 먼저 읽는다. `AVAILABLE`은 표와 페이지를 표시하며 `total=0`은 조회 조건에 맞는 건이 없는 상태다. `UNAVAILABLE`은 공급 원장 미연결로 표시한다. 500·503은 조회 실패 상태로 표시한다. 데이터셋·기준일·필터가 바뀌면 `offset=0`으로 다시 조회한다. 승인 직후에는 현재 조건으로 첫 페이지를 새로 요청한다. [조회 테스트](../backend/tests/test_scheduled_receipts_api.py)
 
+### 정마나미 인계 · 저장된 부모의 What-if 입고 선택
+
+`PlanPage.tsx`의 What-if 입고 표는 현재 원장 GET의 첫 페이지를 필터링한다. 같은 업무 기준일로 조회해도 부모 저장 이후 승인된 개정, 계획기간 밖 발주, 페이지에 없는 발주가 포함되거나 빠질 수 있다. 서버는 부모 실행의 입력 지문에 포함된 입고만 조정한다. [현재 화면](../frontend/src/pages/PlanPage.tsx) · [부모 검증](../backend/app/plans/service.py) · [override 검증](../backend/app/integrations/planning_validation.py)
+
+1. 선택한 BASE의 `GET /plan-executions/{execution_id}` 응답에서 `input_snapshot.scheduled_receipts`를 읽는다. 부모에서 각 항목의 `po_id`는 전체 발주 또는 행 단위 조합 키이며, 수량 기본값은 `open_qty`다. 화면의 제출 키는 `receipt_qty.<po_id>`다.
+2. `null`은 부모를 계산할 때 입고 공급 원장이 미연결이었음을 뜻한다. `[]`는 연결된 공급을 확인했으나 그 계획에 적용된 입고가 없음을 뜻한다. 두 경우 모두 입고 override 입력을 제공하지 않고 상태 문구는 구분한다. `PlanRecord.tsx`의 적용 입고 표시도 같은 구분을 사용한다.
+3. 양수는 계산용 잔량 변경, 문자열 `"0"`은 부모 입고의 취소 가정이다. 어떤 경우에도 승인 원장을 수정하지 않는다. 부모에 없던 발주를 조정하면 서버는 422 `PLAN_OVERRIDE_UNSUPPORTED`로 응답한다. 부모를 바꿀 때 기존 입력값을 초기화한다.
+
+수용 기준은 부모 저장 이후 신규 입고가 승인돼도 기존 부모의 입력 표에 추가되지 않고, 기존 부모가 사용한 입고는 이후 취소돼도 그 부모에서 조정할 수 있는 것이다. 현재 승인 원장은 자료 넣기 화면에서 확인한다.
+
 ## 이번 검증
 
 보조 PC 전체 비DB pytest 1,384건 통과·69건 건너뜀. 계약과 생성물 집중 검사 12건 통과. 업로드·승인·경합 재조회는 메모리 저장소 및 SQL 드라이버 오류 대역으로, Health는 연결 대역으로 검증했다. 실제 PostgreSQL·Docker·외부 AI API는 미실행이다.

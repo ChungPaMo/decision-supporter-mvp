@@ -235,3 +235,209 @@ raise SystemExit(pytest.main([
 ```
 
 기대 결과는 지정 테스트 1건 통과와 건너뜀 0건이다. 최초 200 `AVAILABLE`과 빈 목록, 승인 후 조회 출처와 원장 행의 일치, 다른 데이터셋의 빈 결과, 기준일별 개정 선택, 부분 입고 잔량, 완료·취소 잔량 0, 기존 OPEN 개정 제외, 정렬·페이지·전체 건수 유지를 확인한다. 공식 입고 반영 및 부모 What-if의 기존 P3 검증도 통과해야 한다. GET 전후 원장 행 동일과 승인 이력 무결성, 종료 후 회귀 시드와 개발 DB 지문을 확인한다.
+
+### 2026-11-25 · CSV 승인 수정 재검증 결과
+
+기준 `main` [`27f605d`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/27f605d3676a4cf8de5f645dac30d7836a744938), 메인 Windows PC PostgreSQL 16.6. 별도 승인을 받은 지정 테스트를 회귀 `0010`에서 **1회 실행해 1 passed / 0 failed / 0 skipped**였다. 기존 Starlette/httpx 경고 1건이 있었다. 연결 직전 DB명·역할·sentinel·다른 세션 0건·업무 행 0건·개발 DB CONNECT 권한 부재와 29개 정리 FK 집합을 읽기 전용으로 확인했다.
+
+| 실제 경로 | 결과 |
+| --- | --- |
+| `POST /forecasts` | 공식 9개 합성 배치 승인 뒤 3개월 예측 신규 201 |
+| `POST /batches` · `/revalidate` · `/approve` | 공식 합성 PO의 등록 201, 재검증 200과 버전 증가·같은 결과 digest, 승인 200과 원장 1행. 재승인 409 |
+| `GET /scheduled-receipts` | 승인 전 200 `AVAILABLE`·0건, 승인 후 200·1건 `OPEN`·잔량 10,000 kg. CSV 표기와 원본 배치 SHA, 결과 digest, 원본 행 좌표·행 SHA 일치. 효력일 전과 LEGACY 조회는 0건 |
+| `POST /planning-inputs/preview` · `POST /plans` | 진단과 승인 전 Preview 200. 승인 전후 입력 입고 0→1, 1월 MR-N3 가용량 82,100→92,100 kg |
+| `POST /plan-executions` | 승인 입고가 포함된 BASE 201. 입고를 5,000 kg과 0 kg으로 조정한 두 WHAT_IF 모두 Preview 200, 신규 저장 201, 동일 요청 재사용 200, 상세 조회 200 |
+| 거절 및 무결성 | 부모에 없는 발주와 `null` 공급 부모의 입고 조정은 422 `PLAN_OVERRIDE_UNSUPPORTED`. 타 데이터셋 부모 Preview·저장은 404. 동시 개정 승인 200·409. 과입고·잘못된 단위/자재/날짜·중복/역순 개정·누적 입고 역행·취소 뒤 재개 차단 |
+| 실제 SQL 실패 | 읽기 실패는 500 `PERSISTENCE_ERROR`. 승인 행 삽입 직후 SQL 오류를 내자 500과 함께 원장·배치 상태 및 버전이 롤백됐다. 승인 행 직접 UPDATE/DELETE도 불변 트리거가 거절했다. |
+
+| 2027년 1~3월 계획안 | 합계 생산량 EA | 1월 MR-N3 신규 발주 필요량 kg | 판정 |
+| --- | ---: | ---: | --- |
+| 기준형 | 93,481 | 4,028.4006 → 0 | UNVERIFIED |
+| 안정형 | 96,583 | 7,135.1947 → 0 | INFEASIBLE |
+| 비용절감형 | 88,225 | 1,827.2391 → 0 | INFEASIBLE |
+
+입고를 5,000 kg으로 조정하면 1월 가용량은 87,100 kg, 0으로 조정하면 82,100 kg이었다. 승인 입고가 포함된 BASE는 92,100 kg을 유지했다. 두 WHAT_IF의 저장 결과는 각각 Preview와 일치했고, 부모 스냅샷·입력/결과 digest와 승인 원장은 유지됐다. 5,000 kg과 2027-02 SAW1 잔업 80시간을 조합한 Preview도 200으로 가용량 87,100 kg, 안정형 생산 97,791 EA였다. 부분 입고, 완전 입고, 취소, 유효일·기간, 연체 건 첫 달 반영 및 조회 페이지도 통과했다. `null` 부모는 reader 가용성만 대역으로 설정한 저장 시나리오이며, 개발 DB의 실제 미연결 GET은 별도의 읽기 전용 검사에서 확인했다.
+
+종료 시 허용된 CHUNGPAMO-2027 29개 테이블만 `TRUNCATE … RESTRICT`로 정리했다. 양쪽 스키마 업무 행 0건, 회귀 `0010` 및 단위·데이터셋·sentinel 보존, 개발 `0009`의 60개 테이블·735개 객체·660개 정의 지문 일치를 확인했다. 비용 원장 및 Phase 9 동결 계획 SHA도 일치했다. 회귀 증거는 Git 제외 `.artifacts/planning-postgresql-20261124/p3-rerun-20261125/`에 보존했다. P4는 별도 승인 대상이다.
+
+## P4 · 개발 DB 적용 준비와 브라우저 검증 계획
+
+2026-11-25 KST, 메인 PC. [CSV 승인 수정 재검증](#2026-11-25--csv-승인-수정-재검증-결과)을 완료한 `0010` 코드를 기준으로 한다. 개발 DB는 `chungpamo_app@127.0.0.1:55433/chungpamo`, PostgreSQL 16.6, revision `0009`다. 첫 연결부터 READ ONLY로 확인한 60개 테이블·735개 스키마 객체·660개 컬럼/인덱스 정의 지문은 직전 실DB 검증 기록과 일치했다. LEGACY 승인 7배치, CHUNGPAMO-2027 승인 9배치, 예측은 각각 1건이었다. 다른 개발 DB 세션과 관련 테이블 잠금은 각각 0건이었다. 개발 역할의 두 스키마 CREATE·기존 테이블/함수 소유 권한·참조 권한과 0009 승인 함수의 본문 호환성을 확인했다. 적용 직전에 다시 검사한다.
+
+### 대상과 허용 변경
+
+등록된 `public`(TISSUE-LEGACY), `ds_d3ef2e29ee90f6c7258d259aa99525b9`(CHUNGPAMO-2027) 두 스키마에만 적용한다. 실제 online migration은 보관 데이터셋까지 순회하므로 등록 목록이 현재와 다르면 대상을 다시 확정한다. [0010 migration](../backend/migrations/versions/0010_scheduled_receipts.py) · [원장 DDL](../backend/app/dataset_schema_v3.py)
+
+| 대상 | 스키마별 변경 및 기대값 |
+| --- | --- |
+| 신규 원장 | 빈 `scheduled_receipt_revision` 1개, 생성 열 `receipt_key` 포함 17개 컬럼. 데이터셋별 지정 ID와 상태·수량·날짜·출처 CHECK 13개. FK 4개는 `public.dataset`과 로컬 `material`, `unit`, `import_batch`를 참조한다. PK `(receipt_key, revision)`, UNIQUE `(batch_id, source_sheet, source_row_no)`를 포함해 제약 19개 |
+| 인덱스·트리거 | 인덱스 4개(두 제약 인덱스와 `ix_receipt_order`, `ix_receipt_effective`). `trg_receipt_guard`가 승인·단위·개정 순서를 검사하고 `trg_receipt_immutable`이 기존 행 변경·삭제를 차단한다. 신규 함수는 `guard_receipt_revision()`이다. |
+| 기존 객체 | `import_batch.ck_batch_entity`에 `scheduled_receipt` 한 종류를 추가한다. `verify_approved_record_count()`에 원장 개수 분기를 추가하고 검색 경로를 대상 스키마와 `pg_catalog`로 고정한다. 기존 승인 행 수 트리거 정의 및 다른 entity 분기를 유지한다. |
+| 행 데이터 | 기존 업무 행, 승인 이력, 예측, 계획 실행 및 원본에는 backfill이나 변경이 없다. `public.alembic_version`만 `0009→0010`으로 변경된다. 결과는 테이블 62개, 신규 원장 각 0행이 기준이다. |
+
+`ALTER TABLE … DROP/ADD CHECK`는 두 `import_batch`에 `ACCESS EXCLUSIVE` 잠금을 요구하며 CHECK 재검증 중 읽기/쓰기가 대기할 수 있다. 신규 FK 설치도 참조 테이블의 쓰기와 경합할 수 있다. migration은 데이터셋 등록과 같은 advisory lock `880008`을 얻고 전체 변경을 한 PostgreSQL 트랜잭션으로 적용한다. 개발 서버와 스키마 작업을 멈춘 시간에 진행하고, 장기 트랜잭션·대기 잠금이 보이면 적용을 보류한다. 실행 예시는 `lock_timeout=5s`, `statement_timeout=60s`를 적용한다. 제한은 개별 잠금 시도와 문장에 적용되며 전체 작업 시간을 보장하지 않는다. `upgrade --sql`은 레거시 DDL만 보여 주므로 이 적용 경로에는 사용하지 않는다.
+
+### 백업과 복구
+
+- 현 PC의 `pg_dump`·`pg_restore`는 모두 16.6이다. 이전 `0008` 커스텀 아카이브는 크기·SHA·목차와 `pg_restore --file=-` 스트리밍 디코딩이 일치했다. 승인된 현재 `0009` 백업은 아래에 기록했다. 적용 직전 DB 지문이 바뀌면 승인 범위에 맞춰 백업부터 다시 준비한다. 컨테이너 로컬 `chungpamo_app` 접속은 `psql -w`와 READ ONLY로 확인했다.
+- 적용 전에 쓰기 요청을 중지하고 대상, 등록 스키마, revision, 세션, 기존 행/카탈로그 지문을 보존한다. `pg_dump --format=custom`으로 두 스키마를 포함한 전체 DB를 백업한다. 바이너리는 PowerShell의 텍스트 파이프를 피하고 Python 파일 핸들로 저장한다. Git 제외 `.artifacts`의 접근이 제한된 위치에 보관한다. 크기·SHA·`pg_restore --list`·전체 스트리밍 디코딩을 확인한다.
+- 디코딩은 아카이브 무결성 검사다. 복구가 필요하면 별도 승인받은 빈 격리 PostgreSQL 16 대상에 필요한 역할·권한과 `btree_gist`를 준비하고 `pg_restore --exit-on-error --single-transaction --dbname <검증한_별도_복구_DB> <비공개_백업>`을 사용한다. 운영 중인 개발·회귀 DB를 복구 대상으로 사용하지 않는다. 복구 결과의 revision, 업무 지문, 스키마와 승인 조회를 비교한 뒤 전환 여부를 결정한다. 실제 복구 리허설은 대기 중이다.
+- 명령 실패 또는 검증 불일치 시 앱 쓰기를 재개하지 않는다. 로그와 `alembic_version`·스키마·데이터를 새 읽기 전용 연결로 확인한다. `0009`와 사전 지문이 일치하면 롤백을 확인한 것이며, `0010` 또는 일부 차이가 보이면 재실행·downgrade·자동 복구 없이 원인과 복구안을 보고한다.
+
+#### 0009 백업 실측 · 2026-11-25 KST
+
+- 백업은 `.artifacts/planning-postgresql-20261124/p4-dev-0010/chungpamo-before-0010.dump`에 저장했다. PostgreSQL 16.6의 `pg_dump -Fc` 커스텀 아카이브, **320,589 bytes**, SHA-256 `314ba2fcb212e5faa1452f38feea7d1f181493024880cd03f311b86f6a918cf4`. 소스는 `chungpamo_app@127.0.0.1:55433/chungpamo` revision `0009`이며 백업 연결은 읽기 전용이다.
+- `pg_restore --list` 성공. 목차 473개 항목에 60개 테이블의 데이터 항목이 있다. `pg_restore --file=-` 전체 디코딩도 성공했다. 로컬 증거는 같은 디렉터리의 `backup-toc.txt`, `backup-metadata.json`, `before.json`, `after-backup.json`이다. 백업과 이 증거는 Git에서 제외한다.
+- 백업 전후 기존 승인 16배치·예측 2건과 개발 DB 60개 테이블·735개 객체·660개 정의 지문이 동일했다. 이전 `0008` 백업의 크기와 SHA도 일치했다. 실제 복구는 승인 대기다.
+
+#### 격리 복구 리허설 계획 · 별도 승인 후
+
+로컬 `postgres:16.6` 이미지로 새 컨테이너 `chungpamo-restore-0010-rehearsal`과 새 볼륨 `chungpamo-restore-0010-rehearsal-pgdata`를 예약한다. 두 이름의 기존 사용이 없음을 조회했다. 실행 직전에 재확인하고 어느 한쪽이라도 이미 있으면 새 작업을 멈춘다. 컨테이너는 `--network none`, 호스트 포트는 공개하지 않고, 개발·회귀 프로젝트의 네트워크와 볼륨을 연결하지 않는다. 별도 임시 초기화 비밀값 파일은 읽기 전용으로 마운트한다. 아카이브도 컨테이너 stdin으로만 전달한다.
+
+소스 DB 크기는 **13,439,459 bytes (12.82 MiB)**였다. 새 클러스터의 시스템 DB, 인덱스 빌드, WAL을 포함해 작업 공간으로 **512 MiB**를 확보한다. 점검 시 Windows 호스트 여유는 약 **37.6 GiB**였다. 리허설에서 실제 `pg_database_size`와 전용 볼륨 사용량을 기록한다. 이 공간 수치는 사전 예산이며 실제 복구 사용량은 아직 측정하지 않았다.
+
+새 클러스터의 대상 DB는 `chungpamo_restore_0010`, 초기 관리자 역할은 `chungpamo_restore_admin`으로 둔다. 빈 대상에만 복구하고 아카이브 소유권을 검증할 수 있도록 대상 클러스터 안에 `chungpamo_app NOLOGIN`을 만든다. `btree_gist`는 TOC에 포함되며 이미지에서 사용 가능해야 한다. 별도 승인과 컨테이너·네트워크·볼륨·대상 DB 식별 확인 후 실행하는 복구 명령은 다음과 같다.
+
+```powershell
+@'
+from hashlib import sha256
+from pathlib import Path
+import json, subprocess
+
+folder = Path('.artifacts/planning-postgresql-20261124/p4-dev-0010')
+archive = folder / 'chungpamo-before-0010.dump'
+metadata = json.loads((folder / 'backup-metadata.json').read_bytes())
+assert archive.stat().st_size == metadata['bytes']
+assert sha256(archive.read_bytes()).hexdigest() == metadata['sha256']
+container = 'chungpamo-restore-0010-rehearsal'
+item, = json.loads(subprocess.check_output(['docker', 'inspect', container]))
+assert item['Config']['Image'] == 'postgres:16.6' and item['State']['Running']
+assert item['Config']['Labels']['chungpamo.purpose'] == 'restore-0010-rehearsal'
+assert item['HostConfig']['NetworkMode'] == 'none' and not item['HostConfig']['PortBindings']
+assert {m['Name'] for m in item['Mounts'] if m['Type'] == 'volume'} == {container + '-pgdata'}
+identity = subprocess.check_output(['docker', 'exec', container, 'psql', '-X', '-w',
+    '-U', 'chungpamo_restore_admin', '-d', 'chungpamo_restore_0010', '-At', '-c',
+    "SELECT current_database(), session_user, count(*) FROM pg_tables "
+    "WHERE schemaname NOT IN ('pg_catalog', 'information_schema')"], text=True).strip()
+assert identity == 'chungpamo_restore_0010|chungpamo_restore_admin|0'
+with archive.open('rb') as source:
+    subprocess.run(['docker', 'exec', '-i', container,
+        'pg_restore', '-w', '-U', 'chungpamo_restore_admin',
+        '--dbname=chungpamo_restore_0010', '--exit-on-error', '--single-transaction'],
+        stdin=source, check=True)
+'@ | .\.venv\Scripts\python.exe -
+```
+
+복구 후 `0009`, 두 스키마, 업무 표 60개, 원본 행 지문, 승인 16배치·예측 2건을 기록과 대조한다. 대상 DB명과 소유 역할처럼 복구 환경에 의도적으로 다른 속성은 따로 기록한다. 리허설 증거를 보존한 뒤 리허설 라벨, 컨테이너 ID와 그 볼륨 마운트를 다시 확인한다. 정리 승인 후 해당 컨테이너를 중지하고 제거하며, 기록된 리허설 볼륨에 연결된 컨테이너가 없을 때 그 볼륨만 제거한다. 개발·회귀 인스턴스와 기존 자원은 그대로 보존한다. 신규 클러스터·DB 생성, 실제 복구 및 정리 실행은 별도 승인 대상이다.
+
+### 적용 예정 명령
+
+아래 예시는 저장소 루트에서 준비와 적용을 분리해 실행한다. 기본 `prepare`는 읽기 전용 백업과 사전 지문만 남긴다. **별도 적용 승인 이후에만** `CHUNGPAMO_DEV_0010_PHASE=apply`와 `CHUNGPAMO_ALLOW_DEV_0010=0010@127.0.0.1:55433/chungpamo`를 해당 실행 세션에 주입하고 같은 명령을 실행한다. 준비 단계와 적용 사이에 별도 격리 DB에서 복구 리허설을 할 수 있다. 백업 검사 실패·기존 출력 충돌·새 세션·기존 데이터 변경 시 중단한다. 실제 migration은 `backend/`에서 `python -m alembic upgrade 0010`으로 한정한다. URL 비밀값은 검증된 로컬 설정에서 읽고 자식 환경으로만 전달한다.
+
+```powershell
+@'
+from hashlib import sha256
+from pathlib import Path
+import json, os, runpy, subprocess, sys
+
+from sqlalchemy import create_engine, text
+from scripts.postgresql_preservation import development_url, docker_identity
+
+phase = os.environ.get('CHUNGPAMO_DEV_0010_PHASE', 'prepare')
+if phase not in ('prepare', 'apply'):
+    raise SystemExit('Unknown preparation phase')
+if phase == 'apply' and os.environ.get('CHUNGPAMO_ALLOW_DEV_0010') != '0010@127.0.0.1:55433/chungpamo':
+    raise SystemExit('Separate development DB migration approval is required')
+os.environ.pop('PGHOSTADDR', None)
+docker_identity()
+url = development_url()
+scope = 'ds_d3ef2e29ee90f6c7258d259aa99525b9'
+guard = runpy.run_path('.artifacts/xlsx-concurrency-preflight-20261123.py')
+out = Path('.artifacts/planning-postgresql-20261124/p4-dev-0010')
+
+def check_target():
+    engine = create_engine(url, connect_args={'connect_timeout': 3,
+        'options': '-c default_transaction_read_only=on -c statement_timeout=10000'})
+    try:
+        with engine.connect() as connection:
+            identity = connection.execute(text("SELECT current_database(),current_user,session_user,current_setting('transaction_read_only')")).one()
+            schemas = connection.execute(text('SELECT dataset_id,schema_name FROM public.dataset ORDER BY dataset_id')).all()
+            revision = connection.execute(text('SELECT version_num FROM public.alembic_version')).scalar_one()
+            others = connection.execute(text('SELECT count(*) FROM pg_stat_activity WHERE datname=current_database() AND pid<>pg_backend_pid()')).scalar_one()
+            if (tuple(identity) != ('chungpamo', 'chungpamo_app', 'chungpamo_app', 'on')
+                    or schemas != [('CHUNGPAMO-2027', scope), ('TISSUE-LEGACY', 'public')]
+                    or revision != '0009' or others != 0):
+                raise RuntimeError('Unexpected target, schema, revision or active session')
+    finally:
+        engine.dispose()
+
+def fingerprint():
+    return json.loads(json.dumps(guard['development'](), default=str))
+
+dump = out / 'chungpamo-before-0010.dump'
+backup_toc = out / 'backup-toc.txt'
+metadata_path = out / 'backup-metadata.json'
+before_path = out / 'before.json'
+check_target()
+if phase == 'prepare':
+    before = fingerprint()
+    out.mkdir(exist_ok=False)
+    before_path.write_text(json.dumps(before, indent=2), encoding='utf-8')
+    with dump.open('xb') as target:
+        subprocess.run(['docker', 'exec', '-e', 'PGOPTIONS=-c default_transaction_read_only=on',
+            'chungpamo-monorepo-db', 'pg_dump', '-w', '-U', 'chungpamo_app',
+            '-d', 'chungpamo', '-Fc', '--lock-wait-timeout=5s'], stdout=target, check=True)
+    with dump.open('rb') as stream, backup_toc.open('xb') as toc:
+        subprocess.run(['docker', 'exec', '-i', 'chungpamo-monorepo-db', 'pg_restore', '--list'],
+            stdin=stream, stdout=toc, check=True)
+    with dump.open('rb') as stream:
+        subprocess.run(['docker', 'exec', '-i', 'chungpamo-monorepo-db', 'pg_restore', '--file=-'],
+            stdin=stream, stdout=subprocess.DEVNULL, check=True)
+    if not dump.stat().st_size or not backup_toc.stat().st_size or fingerprint() != before:
+        raise RuntimeError('Backup is empty or development fingerprints changed')
+    metadata_path.write_text(json.dumps({'bytes': dump.stat().st_size,
+        'sha256': sha256(dump.read_bytes()).hexdigest(), 'archive_decode_verified': True,
+        'restore_rehearsal': False}, indent=2), encoding='utf-8')
+    raise SystemExit(0)
+
+metadata = json.loads(metadata_path.read_bytes())
+before = json.loads(before_path.read_bytes())
+if (not metadata['archive_decode_verified'] or not backup_toc.stat().st_size
+        or dump.stat().st_size != metadata['bytes'] or sha256(dump.read_bytes()).hexdigest() != metadata['sha256']
+        or fingerprint() != before):
+    raise RuntimeError('Backup or current fingerprints do not match the prepared baseline')
+check_target()
+docker_identity()
+env = dict(os.environ)
+env.pop('REGRESSION_MIGRATION_SCHEMA', None)
+env.update(DATABASE_URL=url.render_as_string(hide_password=False),
+    PGOPTIONS='-c lock_timeout=5000 -c statement_timeout=60000 -c search_path=public,pg_catalog',
+    PYTHONDONTWRITEBYTECODE='1')
+with (out / '0010-apply.log').open('xb') as log:
+    result = subprocess.run([sys.executable, '-m', 'alembic', 'upgrade', '0010'],
+        cwd='backend', env=env, stdout=log, stderr=subprocess.STDOUT)
+with (out / 'after.json').open('x', encoding='utf-8') as after:
+    json.dump(fingerprint(), after, indent=2)
+raise SystemExit(result.returncode)
+'@ | .\.venv\Scripts\python.exe -
+if ($LASTEXITCODE -ne 0) { throw '0010 failed. Review private evidence before any further action.' }
+```
+
+종료 코드 0 다음에는 읽기 전용으로 `0010`, 레지스트리와 컨테이너 동일성, 두 신규 원장과 FK·CHECK·PK·UNIQUE·인덱스·트리거·함수 정의를 P3 카탈로그와 비교한다. 예상 변경 4개(두 `ck_batch_entity`와 두 `verify_approved_record_count()`) 외 기존 정의 지문과 모든 기존 데이터 지문을 대조한다. `public.alembic_version` 행만 비교 예외로 둔다. 승인 7+9배치, 예측 2건, 기존 계획/변환 이력 및 공식 원본 SHA를 대조한다. 원장 쓰기 전에 양쪽 `GET /scheduled-receipts`가 `200 AVAILABLE`, `items=[]`, `total=0`인지 확인한다. `scripts/verify_readonly_dataset_api.py`는 현재 `0009` 고정이므로 `0010` 인식 변경 또는 별도 읽기 경로를 사용한다.
+
+기존 API 확인은 개발 DB에 READ ONLY를 적용한 상태에서 `GET /health`, `/datasets`, `/batches` 및 기존 배치 상세, `/forecasts` 및 기존 예측 상세, `/plan-executions`, 승인 월수요를 스키마별로 대조한다. 기존 예측을 사용하는 3개월 계획 Preview는 입고 조회 상태와 계산·검증 응답을 확인하고 전후 저장 건수가 같은지 확인한다.
+
+### P4 이후 실제 브라우저 E2E
+
+개발 DB 적용 직후에는 읽기 전용으로 기존 데이터·이력·원장 상태만 점검한다. 아래 쓰기 흐름은 별도 승인받은 `0010` 격리 회귀 환경에서 수행한다. 개발 DB에 공식 PO를 등록할 경우에도 별도 승인을 받고 기존 원장·원본 SHA를 먼저 조회한다. 스키마를 초기화하는 기존 `run_postgres_e2e.py`는 이번 브라우저 시나리오에 사용하지 않는다. 실제 브라우저와 FastAPI·PostgreSQL 응답을 기록하고, 화면 조작과 API 보조 확인을 구분한다.
+
+| 순서 | 브라우저 동작과 기대 증거 |
+| --- | --- |
+| 1. 등록·검증 | CHUNGPAMO-2027에서 공식 합성 9배치와 `PO-2701-001` CSV 등록. `/batches` 201과 검증/HOLD를 확인한다. 매핑 수정 후 재검증 200 및 버전 증가를 확인한다. |
+| 2. 승인·원장 | 제품→자재→참조 자료 승인 후 입고 승인. 서버 결과 digest와 선택 파일 SHA로 명시 승인 200. 입고 원장 200·0→1건, 잔량 10,000 kg과 CSV 출처를 확인하고 다른 데이터셋에서 0건인지 확인한다. |
+| 3. 예측 | 승인 월수요 498행을 바탕으로 2026-12-31 기준 MA12 3개월 예측을 실행한다. 27행, 예측 상세 및 새로고침 후 복원을 확인한다. |
+| 4. BASE | 2027-01~03 기간으로 `/plans` 200·`persisted=false`, `/plan-executions` 201·재사용 200. 세 계획안, 입고 출처와 1월 MR-N3 92,100 kg·신규 발주량 0을 응답과 화면에서 확인한다. |
+| 5. What-if | 부모 스냅샷 키 `receipt_qty.PO-2701-001`을 5,000 및 0으로 입력한다. 각각 Preview 200·저장 201·동일 요청 200, 1월 가용량 87,100/82,100 kg을 확인한다. 저장 후 추가 승인/취소가 생겨도 기존 부모의 선택 목록과 지문이 그대로인지 확인한다. |
+| 6. 이력·상세 | BASE·WHAT_IF 실행 ID로 상세를 열고 부모 링크·기간·승인 출처·override·판정을 대조한다. 새로고침 후에도 이력이 유지되고 타 데이터셋 부모가 404를 반환하는지 본다. 정식 계획 APPROVE의 501 안내도 확인한다. |
+
+What-if 발주 선택은 정마나미 담당 화면 수정과 함께 검증한다. `null`과 `[]` 상태 안내, 현재 원장과 저장 부모의 목록 차이, 부모 변경 시 입력값 정리를 브라우저 수용 기준으로 둔다. [프론트엔드 인계](FRONTEND_BACKEND_CONTRACT_FOLLOWUP_20261125.md#정마나미-인계--저장된-부모의-what-if-입고-선택)
