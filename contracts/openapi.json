@@ -13549,6 +13549,16 @@
           "required": true
         },
         "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TransformationDetail"
+                }
+              }
+            },
+            "description": "Reuse the stored transformation for the same input"
+          },
           "201": {
             "content": {
               "application/json": {

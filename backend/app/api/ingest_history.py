@@ -28,6 +28,7 @@ Service = Annotated[TransformationService, Depends(get_history_service)]
 
 
 @router.post('', response_model=TransformationDetail, status_code=201,
+             responses={200: {'model': TransformationDetail, 'description': 'Reuse the stored transformation for the same input'}},
              summary='Explicitly preserve source evidence and create an unapproved monthly-demand batch atomically')
 async def create_transformation(request: Request, svc: Service, response: Response, files: list[UploadFile] = File(...),
         policy: str = Form(...), expected_result_digest: str = Form(..., pattern=r'^[a-f0-9]{64}$'),

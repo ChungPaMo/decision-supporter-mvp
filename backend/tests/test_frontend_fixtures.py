@@ -23,6 +23,14 @@ def test_openapi_snapshot_is_current():
     assert OPENAPI_OUT.read_text(encoding="utf-8") == build_openapi(), HINT
 
 
+def test_openapi_documents_transformation_create_and_reuse():
+    responses = app.openapi()['paths']['/ingest/transformations']['post']['responses']
+    for code in ('200', '201'):
+        assert responses[code]['content']['application/json']['schema']['$ref'] == (
+            '#/components/schemas/TransformationDetail'
+        )
+
+
 def test_every_batch_example_says_it_is_not_persistence_proof():
     for f in OUT_DIR.glob("*.json"):
         assert json.loads(f.read_text(encoding="utf-8"))["_note"] == NOTE

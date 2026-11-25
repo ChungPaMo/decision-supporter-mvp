@@ -1657,3 +1657,21 @@
 
 **관련 자료**
 - [정규화·실DB·공식 합성 입고](PLANNING_POSTGRESQL_INTEGRATION_VERIFICATION_20261124.md#2026-11-25--check-의미-검증-기존-데이터의-0010-적용-및-공식-합성-입고) · [실제 브라우저 및 담당자 인계](FRONTEND_BACKEND_CONTRACT_FOLLOWUP_20261125.md#2026-11-25--메인-pc-edge와-실제-회귀-api-점검)
+
+### 2026-11-25 — 백엔드 최종 안정화와 전체 브라우저 통합
+
+**Git**
+- 앞선 복구 비교와 C02 문서 6개를 [`a22ea37`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/a22ea37eda8e26ee84f65404abc1d68d2760635a)로 main에 반영했다. 메인 PC 최종 안정화의 승인된 7개 파일은 `git log main -1 --format=%H --fixed-strings --grep='fix: complete backend stabilization and end-to-end verification'`로 확인한다.
+
+**구현 및 검증**
+- 변환 저장 재사용의 실제 200이 OpenAPI에 빠진 문제를 수정했다. 신규 201 및 동일 입력 200 응답 모델, 생성 스냅샷과 회귀 테스트를 맞췄다. OpenAPI 업무 operation 48개를 조사했다.
+- 실제 Edge에서 공식 합성 10개를 분류·순서대로 등록 및 승인했다. 예측, BASE Preview·저장·재사용, 입고 What-if 두 건, 부모·자식 이력 새로고침을 확인했다. 두 선택자 오류는 상세 패널과 실제 원장 행을 지정해 보완했다. 별도 HOLD 화면 재검증 1→2, READ ONLY XLSX 범위·컬럼 수정도 통과했다.
+- 회귀 PostgreSQL에서 source SHA/검증 digest 충돌, 잘못된 요청, 동일 승인·계획 경합, SQL 원자 롤백 및 불변성 검사를 수행했다. 지정 C02 SQL pytest 1통과. CP 29개만 정리하여 0행과 기준정보 보존, 개발 업무 지문 동일을 확인했다.
+- 격리 복제본에서 잘못된 대상·레지스트리·잠금 55P03·중간 실패 22012 후 `0009` 데이터/스키마 지문 동일. 새 리허설 자원만 정리했다. 개발 0010의 새 아카이브는 TOC 62개 테이블과 전체 디코딩 성공이다.
+- 전체 비DB 1,423통과·0실패·69건너뜀, 집중 43통과, TypeScript·Vite·기동·OpenAPI 통과. 15회 읽기·Preview 성능 및 회귀 쓰기 시간은 보고서에 남겼다. 비용 원장과 Phase 9는 보존한다.
+
+**남은 작업**
+- 부모 스냅샷 UI와 예정 입고 자동 분류는 팀원 인계에 남겼다. 승인자 인증·역할·예외 기준이 합의될 때까지 정식 계획 APPROVE는 501이다.
+
+**관련 자료**
+- [48개 API, E2E, 실DB 무결성, 성능 및 시연](BACKEND_STABILIZATION_VERIFICATION_20261125.md)
