@@ -1,21 +1,82 @@
-# React frontend
+# 충파모 프론트엔드
 
-Owner: docs/OWNERSHIP.md. Canonical setup and current implementation status: [root README](../README.md).
+생산계획 의사결정 지원 서비스의 화면입니다. React 18 + TypeScript + Vite로 만들었고, 서버(FastAPI)에서 읽은 값만 보여 줍니다.
+
+담당과 저장소 전체의 설치 방법은 [루트 README](../README.md)와 `docs/OWNERSHIP.md`를 보세요.
+
+## 실행
 
 ```powershell
 npm ci
 npm run dev
-npm run type-check
-npm run build
-npm run test:e2e:ui
 ```
 
-Actual registration, approval and forecasts use FastAPI. Connection failures never fall back to fixture approvals or forecasts. VITE_API_URL contains only the public API address, never database credentials.
+- 화면 주소: `http://127.0.0.1:5173`
+- 서버 주소는 `VITE_API_URL`로 정합니다 (기본값 `http://127.0.0.1:8000`, `.env.example` 참고). 이 값에는 공개 API 주소만 넣고, DB 접속 정보는 넣지 않습니다.
+- 서버와 DB가 꺼져 있으면 화면에 "서버 연결 안 됨" 또는 "DB 연결 안 됨"이 뜹니다. 연결이 안 될 때 예시 자료로 대신 보여 주지 않습니다.
 
-The approved PPT informs the navy header, process navigation, cards, forecast SVG chart and planning workspace. MPS/RCCP/MRP/what-if/final approval are explicitly isolated fixed DEMO views, with calculations and formal approval unavailable. No PPT image is used as an application background.
+## 확인 명령
 
-The workflow now has explicit DEMO and live-module modes. ClassificationPanel supports HOLD/review without batch creation. LivePlanningPanel renders typed read-only module responses when delivered and never switches to DEMO on failure. Server planning persistence, formal approval and what-if base-plan storage remain unavailable. See docs/TEAM_HANDOFF.md in the repository root.
+```powershell
+npm run type-check
+npm run build
+```
 
-Legacy PlanComparisonScreen/DiagnosisScreen/ApprovalScreen and mocks remain as migration references; active planning routes use PlanningWorkspace. Historical docs/screenshots do not document the current UI.
+브라우저 시험(`npm run test:e2e:ui`, `npm run test:e2e`)은 루트 `tests/e2e`에 있고 통합 담당이 관리합니다. 지금 시험 코드는 예전 화면 기준이라 새 화면에서는 통과하지 않을 수 있습니다. `test:e2e`는 전용 시험 DB를 초기화하므로, 실행 전에 [개발 절차](../docs/DEVELOPMENT_WORKFLOW.md)를 읽고 별도 승인을 받아야 합니다.
 
-Browser tests live under root tests/e2e, owned by integration. `npm run test:e2e` resets the dedicated test DB and requires separate human approval and target checks. Read [development workflow](../docs/DEVELOPMENT_WORKFLOW.md) first. `test:e2e:ui` never connects to a DB.
+## 화면 구성
+
+왼쪽 메뉴 다섯 개입니다. 주소 뒤의 `#이름`으로 바로 열 수 있고, 뒤로가기가 동작합니다.
+
+| 메뉴 | 주소 | 하는 일 |
+|---|---|---|
+| 홈 | `#home` | 가장 빠듯한 설비·달을 첫 문장으로 보여 주고, 설비·인력 사용률과 세 안, 수요 그래프를 봅니다 |
+| 자료 넣기 | `#ingest` | 엑셀·CSV를 올리고 "분류하기"를 누르면 종류별로 나눕니다. 9가지 자료를 등록·검증·승인합니다. 21개 이상 올리면 등록 없이 문서 종류만 분류합니다 |
+| 수요 예측 | `#forecast` | 승인된 월별 수요로 예측을 실행하고, 제품별 예측과 지난 예측을 봅니다 |
+| 생산계획 | `#plan` | 세 안(기준형, 안정형, 비용절감형)을 계산하고, 설비 부하·제품별 생산량·자재 부족을 봅니다. 수요 배수와 잔업 한도를 바꿔 다시 계산할 수 있습니다 |
+| 기록 | `#history` | 올린 자료, 예측, 계획의 이력을 봅니다 |
+
+상단의 데이터셋 선택 상자로 데이터셋을 바꿉니다. 메뉴는 접을 수 있습니다.
+
+## 폴더
+
+```
+src/
+  App.tsx            화면 전환 (주소의 #이름에 따라 다섯 화면 중 하나)
+  app/
+    Shell.tsx        틀: 왼쪽 메뉴, 상단 진행 표시, 데이터셋 선택, 서버 상태
+    core.tsx         주소 이동, 날짜·숫자 표기, 상태 표시, 아이콘
+    data.ts          서버에서 읽은 현황을 화면용으로 정리 (다음에 할 일, 알림, 계획 요약)
+    widgets.tsx      선 그래프, 설비·인력 부하 지도, 자재 부족 지도, 부드럽게 바뀌는 숫자
+  pages/             다섯 화면
+  services/api.ts    서버 호출
+  store/             고른 데이터셋 기억
+  styles/theme.css   스타일 한 파일 (색·간격 값도 여기에 있음)
+  types/             서버 응답 타입
+public/
+  fonts/             Pretendard 글꼴 (인터넷 없이도 같은 모습). 출처는 fonts/CREDITS.md
+  img/               사이드바·홈 위쪽 사진, 바탕 결 사진. 출처는 img/CREDITS.md
+```
+
+지금 화면은 `src/components/`, `src/screens/`, `src/scenario/`, `src/layouts/`와 `src/styles/`의 `app.css`·`operations.css`·`scenario.css`를 쓰지 않습니다. 예전 화면의 파일이고, 지우지 않고 남겨 둔 상태입니다. `src/mocks/`는 `src/services/fixtures`가 아직 참조합니다.
+
+## 디자인 기준
+
+- [PRODUCT.md](PRODUCT.md): 누가 어떤 상황에서 쓰는지, 지켜야 할 원칙. 익숙하고 세련된 제품 화면을 목표로 하고, 완성도의 기준은 토스·Linear·Stripe 대시보드입니다.
+- [DESIGN.md](DESIGN.md): 색, 글꼴, 간격, 부품 규칙. 2026-11-25에 새 화면 기준으로 다시 썼지만, 그 뒤에 바뀐 일부 색 값(강조 파랑 등)이 아직 반영되지 않았습니다. 실제 값은 `src/styles/theme.css` 맨 위를 기준으로 보세요.
+- `.impeccable/`: 디자인 도구(Impeccable)가 쓰는 기록입니다. `surfaces/`와 `design.json`은 저장소에 올리고, 나머지는 작업용 파일입니다.
+
+화면을 고칠 때 지키는 것:
+
+- 강조색(파랑)은 주된 버튼과 선택한 것에 씁니다. 빨강과 주황은 막힌 곳과 빠듯한 곳에만 씁니다.
+- 제품·설비·자재는 이름으로 보여 주고 코드는 작게 곁들입니다.
+- 숫자는 무엇에 견준 값인지(수요 대비, 한도 대비)와 함께 보여 줍니다.
+- 화면에는 서버에서 읽은 값만 씁니다. 확인하지 않은 값을 만들어 넣지 않습니다.
+- 사진은 글자가 놓이지 않는 자리에만 둡니다.
+
+## 알아 둘 것
+
+- 잔업 한도는 "더하는 시간"이 아니라 "그 설비·달의 잔업 한도를 그 값으로 바꾸는 것"입니다. 화면은 정규 시간과 지금 잔업 한도를 함께 보여 줍니다.
+- 조건을 바꿔 다시 계산한 결과는 저장되지 않고, 원래 계획과 비교만 합니다.
+- 실제 생산 실적을 넣어 다시 계획하는 기능, 로그인·권한, 엑셀 출력은 화면에 없습니다.
+- 공장 사진 두 장(`img/sidebar.jpg`, `img/banner.jpg`)은 팀에서 넣은 파일이고, 출처와 사용 조건은 넣은 사람이 확인해야 합니다.
