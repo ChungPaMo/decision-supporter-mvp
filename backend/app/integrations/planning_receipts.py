@@ -7,7 +7,7 @@ from uuid import UUID
 from sqlalchemy import text
 from sqlalchemy.engine import Connection
 
-from app.batches.receipts import APPROVED_RECEIPTS, installed
+from app.batches.receipts import LATEST_APPROVED_RECEIPTS, installed
 from app.integrations.planning_validation import input_conflict
 from contracts.interfaces.base import Code, DecimalValue, StrictModel
 from contracts.interfaces.dataset import DatasetId
@@ -38,10 +38,9 @@ def read_approved_receipts(connection: Connection, command: PlanCommand) -> list
         SELECT DISTINCT ON (r.receipt_key) r.receipt_key AS po_id, r.dataset_id, r.batch_id, r.material_id,
             r.ordered_qty::text AS ordered_qty, r.received_qty::text AS received_qty, r.unit,
             r.expected_date, r.supplier_id, r.status
-    ''' + APPROVED_RECEIPTS + '''
-        AND r.effective_date <= :as_of
-        ORDER BY r.receipt_key, r.revision DESC
-    '''), {'dataset_id': command.dataset_id, 'as_of': command.as_of_date}).mappings().all()
+    ''' + LATEST_APPROVED_RECEIPTS), {
+        'dataset_id': command.dataset_id, 'as_of': command.as_of_date,
+    }).mappings().all()
     return [ReceiptLedgerRow.model_validate(row) for row in rows]
 
 

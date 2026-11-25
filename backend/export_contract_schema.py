@@ -14,7 +14,7 @@ from contracts.interfaces.modules import ClassificationInput, ClassificationOutp
 from contracts.interfaces.planning import LegacyPlanPreviewCommand, PlanningInputDiagnostics
 from contracts.interfaces.capacity import CapacityRegistrationDraft
 from contracts.interfaces.dataset import DatasetCreate,DatasetDetail
-from contracts.interfaces.receipts import ReceiptRevisionInput
+from contracts.interfaces.receipts import ReceiptLedgerPage, ReceiptRevisionInput
 from contracts.interfaces.plan_execution import (PlanExecutionCreate,PlanExecutionDetail,PlanExecutionList,PlanExecutionReply,
     PlanCandidateDetail,PlanDecisionRequest,PlanDecisionHistory,PlanExportMetadata)
 
@@ -25,6 +25,7 @@ PLAN_OUT = OUT.parent / "plan_export_draft.schema.json"
 FORECAST_OUT = OUT.parent / "dev_forecast_draft.schema.json"
 FORECAST_RUN_OUT = OUT.parent / "forecast_run_v1.schema.json"
 AI_INGESTION_OUT = OUT.parent / 'schemas' / 'ingestion_ai_review_v1.json'
+MODULES_OUT = OUT.parent / 'schemas' / 'module_interfaces_draft.json'
 
 
 def build() -> str:
@@ -52,9 +53,13 @@ def build_forecast_run() -> str:
 
 
 def build_modules() -> str:
-    return json.dumps({m.__name__: m.model_json_schema() for m in
-                       (ClassificationInput, ClassificationOutput, PlanCommand, LegacyPlanPreviewCommand, PlanningInput, PlanningInputDiagnostics, PlanningOutput, PlanningReply, CapacityRegistrationDraft, ReceiptRevisionInput, PlanExecutionCreate,PlanExecutionDetail,PlanExecutionList,PlanExecutionReply,PlanCandidateDetail,PlanDecisionRequest,PlanDecisionHistory,PlanExportMetadata,DatasetCreate,DatasetDetail)},
-                      ensure_ascii=False, indent=2, sort_keys=True) + "\n"
+    models = {m.__name__: m.model_json_schema() for m in
+              (ClassificationInput, ClassificationOutput, PlanCommand, LegacyPlanPreviewCommand, PlanningInput,
+               PlanningInputDiagnostics, PlanningOutput, PlanningReply, CapacityRegistrationDraft, ReceiptRevisionInput,
+               PlanExecutionCreate, PlanExecutionDetail, PlanExecutionList, PlanExecutionReply, PlanCandidateDetail,
+               PlanDecisionRequest, PlanDecisionHistory, PlanExportMetadata, DatasetCreate, DatasetDetail)}
+    models['ReceiptLedgerPage'] = TypeAdapter(ReceiptLedgerPage).json_schema()
+    return json.dumps(models, ensure_ascii=False, indent=2, sort_keys=True) + "\n"
 
 
 def build_ingestion() -> str:
@@ -80,7 +85,7 @@ if __name__ == "__main__":
     PLAN_OUT.write_text(build_plan(), encoding="utf-8", newline="\n")
     FORECAST_OUT.write_text(build_forecast(), encoding="utf-8", newline="\n")
     FORECAST_RUN_OUT.write_text(build_forecast_run(), encoding="utf-8", newline="\n")
-    (OUT.parent / 'schemas' / 'module_interfaces_draft.json').write_text(build_modules(), encoding='utf-8', newline='\n')
+    MODULES_OUT.write_text(build_modules(), encoding='utf-8', newline='\n')
     (OUT.parent / 'schemas' / 'ingestion_assistance_v1.json').write_text(build_ingestion(), encoding='utf-8', newline='\n')
     AI_INGESTION_OUT.write_text(build_ai_ingestion(), encoding='utf-8', newline='\n')
     print("wrote", OUT, PLAN_OUT)

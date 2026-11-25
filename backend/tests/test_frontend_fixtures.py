@@ -48,6 +48,12 @@ def test_examples_show_the_intended_outcomes():
     assert preview['status'] == 200 and preview['response']['persisted'] is False
     assert preview['response']['result']['module_version'].startswith('chungpamo-planning/')
     assert len(preview['response']['result']['plans']) == 3
+    available = load('43_scheduled_receipts_available')['response']
+    assert available['source_state'] == 'AVAILABLE' and available['items'][0]['state'] == 'PARTIALLY_RECEIVED'
+    empty = load('44_scheduled_receipts_empty')['response']
+    assert (empty['source_state'], empty['items'], empty['total']) == ('AVAILABLE', [], 0)
+    disconnected = load('45_scheduled_receipts_unavailable')['response']
+    assert (disconnected['source_state'], disconnected['items'], disconnected['total']) == ('UNAVAILABLE', None, None)
 
 
 def test_sample_files_are_synthetic_and_kept_as_lf():

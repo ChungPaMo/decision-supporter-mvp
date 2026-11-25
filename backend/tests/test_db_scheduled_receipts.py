@@ -8,6 +8,7 @@ import pytest
 from sqlalchemy import create_engine, text
 from sqlalchemy.exc import IntegrityError
 
+from app.api import batches, scheduled_receipts
 from app.batches import receipts
 from app.dataset_schema_v3 import CORE_TABLES, schema_for
 from app.datasets import get_dataset_engine
@@ -97,6 +98,14 @@ def receipt_api(request, tmp_path_factory):
 def test_actual_approved_receipts_and_parent_what_if(receipt_api, monkeypatch, record_property):
     client, _ = receipt_api
     scope = {'dataset_id': DATASET}
+    monkeypatch.setattr(scheduled_receipts, 'get_settings', batches.get_settings)
+
+    def list_receipts(**filters):
+        response = client.get('/scheduled-receipts', params={**scope, 'as_of_date': '2026-12-31', **filters})
+        assert response.status_code == 200, response.json()
+        page = response.json()
+        assert page['source_state'] == 'AVAILABLE' and page['reason_code'] is None
+        return page
 
     def stage(data):
         response = client.post('/batches', params=scope, files={'file': ('receipt.csv', data)},
@@ -147,6 +156,7 @@ def test_actual_approved_receipts_and_parent_what_if(receipt_api, monkeypatch, r
     assert diagnostic.status_code == 200
     assert diagnostic.json()['inputs']['scheduled_receipts'] == {'ready': True, 'row_count': 0}
     assert not ledger()
+    assert list_receipts()['total'] == 0
     empty_reply = post('/plans', command)
     assert empty_reply.status_code == 200
     empty = empty_reply.json()['result']
@@ -174,6 +184,15 @@ def test_actual_approved_receipts_and_parent_what_if(receipt_api, monkeypatch, r
     assert [tuple(row) for row in original_ledger] == [
         ('PO-2701-001', 1, batch['batch_id'], Decimal(10000), Decimal(0), 'CSV', source_row['location']['row'],
          source_row['source_row_sha256'])]
+    item, = list_receipts(po_id='PO-2701-001', state='OPEN')['items']
+    assert (item['state'], item['revision'], Decimal(item['open_qty'])) == ('OPEN', 1, Decimal(10000))
+    assert (item['source']['batch_id'], item['source']['source_sha256'], item['source']['result_digest']) == (
+        batch['batch_id'], approved['file']['sha256'], approved['result_digest'])
+    assert (item['source']['source_sheet'], item['source']['source_row_no'], item['source']['source_row_sha256']) == (
+        'CSV', source_row['location']['row'], source_row['source_row_sha256'])
+    assert list_receipts(as_of_date='2026-12-30')['total'] == 0
+    assert list_receipts(dataset_id='TISSUE-LEGACY', po_id='PO-2701-001')['total'] == 0
+    assert ledger() == original_ledger
     ready = post('/planning-inputs/preview', command)
     assert ready.status_code == 200
     assert ready.json()['inputs']['scheduled_receipts'] == {'ready': True, 'row_count': 1}
@@ -280,10 +299,15 @@ def test_actual_approved_receipts_and_parent_what_if(receipt_api, monkeypatch, r
         decisions = list(pool.map(approve, contenders))
     assert sorted(r.status_code for r in decisions) == [200, 409]
     winning_received = 1000 if decisions[0].status_code == 200 else 2000
+    partial, = list_receipts(po_id='PO-2701-001', material_id='MR-N3', state='PARTIALLY_RECEIVED')['items']
+    assert partial['revision'] == 2 and Decimal(partial['open_qty']) == 10000 - winning_received
     assert all(row[0] == 92100-winning_received for row in january(post('/plans', command).json()['result']).values())
     assert stage(receipt(revision=3, received=winning_received-1))['status'] == 'HAS_ERRORS'
     assert stage(receipt(revision=1, expected='2027-02-01'))['status'] == 'HAS_ERRORS'
     assert approve(stage(receipt(revision=3, received=winning_received, status='CANCELLED'))).status_code == 200
+    cancelled, = list_receipts(po_id='PO-2701-001', state='CANCELLED')['items']
+    assert cancelled['revision'] == 3 and cancelled['open_qty'] == '0'
+    assert list_receipts(po_id='PO-2701-001', state='OPEN')['total'] == 0
     assert stage(receipt(revision=4, received=winning_received))['status'] == 'HAS_ERRORS'
     assert january(post('/plans', command).json()['result']) == january(empty)
     assert client.get(path, params=scope).json() == parent
@@ -293,6 +317,16 @@ def test_actual_approved_receipts_and_parent_what_if(receipt_api, monkeypatch, r
                  receipt(po='PO-FUTURE', effective='2027-01-03'),
                  receipt(po='PO-OVERDUE', ordered=200, expected='2026-12-31')):
         assert approve(stage(data)).status_code == 200
+    complete, = list_receipts(state='COMPLETED')['items']
+    assert complete['po_id'] == 'PO-FULL' and complete['open_qty'] == '0'
+    assert list_receipts(po_id='PO-FUTURE')['total'] == 0
+    assert list_receipts(as_of_date='2027-01-03', po_id='PO-FUTURE')['total'] == 1
+    first = list_receipts(limit=2)
+    tail = list_receipts(limit=2, offset=2)
+    end = list_receipts(limit=2, offset=4)
+    assert first['total'] == tail['total'] == end['total'] == 4 and end['items'] == []
+    assert [i['receipt_key'] for i in first['items'] + tail['items']] == [
+        'PO-2701-001', 'PO-FULL', 'PO-OUTSIDE', 'PO-OVERDUE']
     options = get_dataset_engine(DATASET)
     with options.connect() as c:
         c.exec_driver_sql('SET TRANSACTION READ ONLY')

@@ -28,6 +28,11 @@ APPROVED_RECEIPTS = """
           AND b.approved_at IS NOT NULL AND b.result_digest IS NOT NULL
 """
 
+LATEST_APPROVED_RECEIPTS = APPROVED_RECEIPTS + """
+    AND r.effective_date <= :as_of
+    ORDER BY r.receipt_key, r.revision DESC
+"""
+
 
 def installed(c) -> bool:
     present = c.execute(text("SELECT to_regclass('scheduled_receipt_revision') IS NOT NULL")).scalar_one()

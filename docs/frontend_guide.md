@@ -1,6 +1,6 @@
 # 프론트엔드 연동 안내
 
-2026-11-25 통합 후속은 원본 SHA로 중복과 승인 대상을 확인하는 흐름, 재검증 필드의 생략·`null`, 명시적 계획 기간·부모 범위, Health 503을 정리했다. C02 조회는 설계 단계다. [프론트엔드 후속 계약과 예시](FRONTEND_BACKEND_CONTRACT_FOLLOWUP_20261125.md)
+2026-11-25 통합 후속은 원본 SHA로 중복과 승인 대상을 확인하는 흐름, 재검증 필드의 생략·`null`, 명시적 계획 기간·부모 범위, Health 503을 정리했다. C02 승인 입고 조회는 구현되어 TestClient와 SQL 대역을 통해 검증했다. [프론트엔드 후속 계약과 예시](FRONTEND_BACKEND_CONTRACT_FOLLOWUP_20261125.md)
 
 `/ingest/ai-mapping-review`와 `/ingest/ai-document-analysis`는 합성 파일 전용 선택형 검토 API다. 화면 연동 시 기존 추천과 검토 후보를 각각 표시하고, 사용자가 확정한 매핑만 기존 변환·저장 흐름에 전달한다. 필드와 응답 상태는 [Upstage 검토 API 인계](UPSTAGE_BACKEND_INTEGRATION_20261124.md#프론트엔드-연동)를 따른다.
 
@@ -34,7 +34,7 @@ TRANSFORM_BLOCKED 409는 미확인 정책·오류·빈 정상 수요 또는 연�
 
 2026-11-15 CAPA/Routing: 기존 `/batches`의 entity에 capacity/routing을 추가했다. 승인된 조회는 `/capacity`, `/routings`이며 items/total/limit/offset을 반환한다. 새로운 entity UI·표시 타입은 정마나미 후속 작업이다. [데이터 사전](CAPACITY_ROUTING_DATA_DICTIONARY.md)과 [변경 요청](CAPACITY_ROUTING_CHANGE_REQUESTS.md)을 참고한다. 현재 모노레포의 frontend는 존재하며 아래 별도 프로젝트 설명은 초기 이관 전 안내다.
 
-2026-11-24 C02: `/batches`의 `scheduled_receipt` entity는 승인 입고용이다. 기존 재검증·승인 경로와 결과 digest를 사용한다. 실행에 0010 스키마가 필요하며 0009는 501 `PERSISTENCE_DISABLED`를 반환한다. 계획의 공급 미연결과 승인된 빈 공급을 구분한다. 화면 연동은 별도 범위다. [열 명세·승인 예시](PLANNING_POSTGRESQL_INTEGRATION_VERIFICATION_20261124.md#작성한-코드와-입력-방식)
+`/batches`의 C02 `scheduled_receipt` 등록·승인에는 0010이 필요하며, 0009는 501 `PERSISTENCE_DISABLED`를 반환한다. 읽기 전용 `GET /scheduled-receipts`는 저장이 활성화된 0009에서 200 `UNAVAILABLE`, 0010 정상 빈 원장에서 200 `AVAILABLE`과 빈 배열을 반환한다. 저장 자체가 비활성화된 서버는 조회에서도 501이다. [조회 계약과 화면 처리](FRONTEND_BACKEND_CONTRACT_FOLLOWUP_20261125.md#c02-승인-입고-원장-읽기-api-설계) · [열 명세·승인 예시](PLANNING_POSTGRESQL_INTEGRATION_VERIFICATION_20261124.md#작성한-코드와-입력-방식)
 
 React 화면을 별도 프로젝트로 만드는 담당자를 위한 문서다. 이 저장소에는 프론트엔드 코드가 없다.
 
@@ -89,6 +89,7 @@ cd backend
 | GET | `/materials` | `material_id`, `q`, `limit`, `offset` | 200 | `22_list_materials` |
 | GET | `/boms` | `product_id`, `bom_id`, `active_only`, `limit`, `offset` | 200 | `23_list_boms` |
 | GET | `/inventory` | `item_type`, `item_id`, `as_of_date`, `limit`, `offset` | 200 | `24_list_inventory` |
+| GET | `/scheduled-receipts` | `dataset_id`, 필수 `as_of_date`, `limit`, `offset`, 선택 `po_id`, `material_id`, `state` | 200 `AVAILABLE` 또는 `UNAVAILABLE` | `43`–`45` 승인 입고 원장 |
 | GET | `/demand/monthly` | `product_id`, `period_from`, `period_to`, `limit`, `offset` | 200 | `25_list_demand` |
 | POST | `/exports/plans/xlsx` | JSON 계획 결과 | 200 파일 | §6 |
 

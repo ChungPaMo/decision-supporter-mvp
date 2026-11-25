@@ -159,3 +159,79 @@ P3 재검증에는 현재 `0010`인 같은 회귀 DB·역할·sentinel·스키�
 이전 `0008` private 백업의 크기와 SHA가 기존 기록과 일치했고 목차 검사 기록도 확인했다. `0009`의 신규 백업과 실제 복구 리허설은 P4 준비 단계에 남아 있다.
 
 **P4 상태** — 변경 후 P3 실DB 승인과 후반 검증을 다시 통과하기 전에는 개발 DB 적용 승인을 요청하거나 실행하지 않는다.
+
+## C02 읽기 API · 메인 PC 실DB 검증
+
+2026-11-25에 추가한 `GET /scheduled-receipts`의 실DB 검증 절차다. 보조 PC에서는 TestClient와 SQL 연결 대역으로 검증했다. 아래 작업은 기존 메인 PC에서 환경과 대상을 다시 확인한 뒤 수행한다. 이 API에는 새 migration이 필요하지 않다. [조회 계약](FRONTEND_BACKEND_CONTRACT_FOLLOWUP_20261125.md#c02-승인-입고-원장-읽기-api-설계)
+
+### 개발 DB 0009 읽기 전용
+
+저장소 루트에서 기존 개발 DB의 포트·이름·역할·스키마 및 revision을 확인한다. 아래 절차는 기존 보존 도구의 확인을 재사용해 이름·역할·리소스를 검증하고, 시작부터 연결을 읽기 전용으로 연다. 두 데이터셋에서 200 `UNAVAILABLE`과 `items=null`, `total=null`, `reason_code=RECEIPT_SOURCE_UNAVAILABLE`를 확인한다. GET 전후 테이블 행 수·데이터 지문과 카탈로그를 대조한다.
+
+```powershell
+@'
+from unittest.mock import patch
+
+from fastapi.testclient import TestClient
+from sqlalchemy import create_engine
+
+from scripts.postgresql_preservation import compare, development_url, snapshot
+from app import db
+from app.api import scheduled_receipts
+from app.config import Settings
+from app.main import app
+
+before = snapshot()
+assert before['revision'] == '0009'
+engine = create_engine(development_url(), connect_args={
+    'options': '-c default_transaction_read_only=on', 'connect_timeout': 3,
+})
+settings = Settings(_env_file=None, persistence='postgres')
+try:
+    with patch.object(db, 'get_engine', return_value=engine), patch.object(
+        scheduled_receipts, 'get_settings', return_value=settings
+    ), TestClient(app) as client:
+        for dataset in ('CHUNGPAMO-2027', 'TISSUE-LEGACY'):
+            response = client.get('/scheduled-receipts', params={
+                'dataset_id': dataset, 'as_of_date': '2027-01-05',
+            })
+            assert response.status_code == 200, response.status_code
+            result = response.json()
+            assert result['dataset_id'] == dataset and result['source_state'] == 'UNAVAILABLE'
+            assert result['reason_code'] == 'RECEIPT_SOURCE_UNAVAILABLE'
+            assert result['items'] is None and result['total'] is None
+finally:
+    engine.dispose()
+    after = snapshot()
+    compare(before, after)
+    assert before['objects'] == after['objects']
+print('C02 GET on 0009: 2 unavailable, development DB unchanged')
+'@ | .\.venv\Scripts\python.exe -
+```
+
+### 전용 회귀 DB 0010 통합 검증
+
+P3의 대상·역할·sentinel·합성 출처·업무 행 0개·정리 범위를 읽기 전용으로 사전 확인한다. 아래 지정 테스트는 **별도 실행 승인 후 1회** 실행한다. 이 테스트의 기존 fixture는 합성 승인 개정과 계획 이력을 쓰고 종료 시 지정된 회귀 테이블을 정리한다. `TEST_DATABASE_URL`은 기존 로컬 설정에서 사용한다.
+
+```powershell
+$env:CHUNGPAMO_ALLOW_RECEIPT_SQL_TEST = 'chungpamo_regression@127.0.0.1:55433'
+try {
+@'
+import os
+
+import pytest
+from dotenv import dotenv_values
+
+if not os.environ.get('TEST_DATABASE_URL'):
+    os.environ['TEST_DATABASE_URL'] = dotenv_values('.env.regression.local')['TEST_DATABASE_URL']
+raise SystemExit(pytest.main([
+    '-q', 'backend/tests/test_db_scheduled_receipts.py::test_actual_approved_receipts_and_parent_what_if',
+]))
+'@ | .\.venv\Scripts\python.exe -
+    if ($LASTEXITCODE -ne 0) { throw 'C02 PostgreSQL regression failed' }
+} finally {
+    Remove-Item Env:CHUNGPAMO_ALLOW_RECEIPT_SQL_TEST
+}
+```
+
+기대 결과는 지정 테스트 1건 통과와 건너뜀 0건이다. 최초 200 `AVAILABLE`과 빈 목록, 승인 후 조회 출처와 원장 행의 일치, 다른 데이터셋의 빈 결과, 기준일별 개정 선택, 부분 입고 잔량, 완료·취소 잔량 0, 기존 OPEN 개정 제외, 정렬·페이지·전체 건수 유지를 확인한다. 공식 입고 반영 및 부모 What-if의 기존 P3 검증도 통과해야 한다. GET 전후 원장 행 동일과 승인 이력 무결성, 종료 후 회귀 시드와 개발 DB 지문을 확인한다.

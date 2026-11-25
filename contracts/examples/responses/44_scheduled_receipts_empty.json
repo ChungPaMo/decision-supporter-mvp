@@ -1,0 +1,25 @@
+{
+  "_note": "합성 CSV 로 생성한 응답 형식 예시. /batches 계열은 테스트 전용 인메모리 저장소 결과이며 영구 저장 동작을 증명하지 않는다.",
+  "request": {
+    "method": "GET",
+    "path": "/scheduled-receipts",
+    "query": {
+      "dataset_id": "CHUNGPAMO-2027",
+      "as_of_date": "2027-01-05",
+      "limit": 50,
+      "offset": 0
+    }
+  },
+  "status": 200,
+  "response": {
+    "dataset_id": "CHUNGPAMO-2027",
+    "as_of_date": "2027-01-05",
+    "limit": 50,
+    "offset": 0,
+    "source_state": "AVAILABLE",
+    "reason_code": null,
+    "items": [],
+    "total": 0
+  },
+  "_receipt_note": "합성 원장 조회 대역으로 만든 응답 예시. 실제 PostgreSQL 검증 전."
+}

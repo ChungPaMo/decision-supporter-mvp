@@ -102,9 +102,9 @@ Preview는 200 `{result, persisted: false, approval_available: false, …}`다. 
 
 ## C02 승인 입고 원장 읽기 API 설계
 
-**설계안이다. 새 조회 경로는 이번 변경에서 구현하지 않았다. 0010 승인 후 원장 반영 및 부모 What-if의 실제 PostgreSQL 재검증도 미완료다.** 등록은 기존 `POST /batches`의 `entity=scheduled_receipt`와 재검증·승인 경로를 이용한다. [기존 C02 등록과 실DB 검증 상태](PLANNING_POSTGRESQL_INTEGRATION_VERIFICATION_20261124.md#p3--회귀-postgresql-0010-적용과-c02-승인-결함-확인)
+**2026-11-25에 구현하고 TestClient와 SQL 대역으로 검증했다.** 새 조회의 실DB 검증과 0010 승인·부모 What-if 재검증은 메인 PC에서 진행한다. 등록은 기존 `POST /batches`의 `entity=scheduled_receipt`와 재검증·승인 경로를 이용한다. [메인 PC 실DB 검증 절차](PLANNING_POSTGRESQL_INTEGRATION_VERIFICATION_20261124.md#c02-읽기-api--메인-pc-실db-검증)
 
-`GET /scheduled-receipts?dataset_id=CHUNGPAMO-2027&as_of_date=2027-01-05&limit=50&offset=0`를 제안한다. `as_of_date`는 업무 효력일이다. 동일 데이터셋의 승인 원장 중 `effective_date <= as_of_date`인 행에서 `receipt_key`별 가장 큰 개정을 고른다. `approved_at`은 감사 시각이며 과거 승인 여부를 재구성하는 필터로 쓰지 않는다.
+`GET /scheduled-receipts?dataset_id=CHUNGPAMO-2027&as_of_date=2027-01-05&limit=50&offset=0`로 호출한다. `as_of_date`는 필수 업무 효력일이다. 동일 데이터셋의 승인 원장 중 `effective_date <= as_of_date`인 행에서 `receipt_key`별 가장 큰 개정을 고른다. `approved_at`은 감사 시각이다.
 
 - 요청은 기존 데이터셋 해석과 `get_dataset_engine`을 사용한다. 누락 시 기존 레거시 기본값이 적용되므로 화면은 데이터셋을 명시한다. 목록과 전체 건수는 같은 읽기 전용 스냅샷에서 읽는다. 안정 정렬은 `receipt_key`이며 `limit`은 1~100, 기본 50이다. 페이지 사이에 새 승인이 있으면 첫 페이지부터 새로 읽는다.
 - 계획 reader와 동일한 `APPROVED_RECEIPTS`의 조인·필터 및 `installed` 스키마 확인을 재사용한다. 원장 조회는 계획 기간으로 필터링하지 않는다. 선택 필터 `po_id`, `material_id`, `state`는 최신 개정 선택 후 적용해 취소된 발주의 이전 OPEN 개정이 나타나지 않게 한다.
@@ -112,32 +112,9 @@ Preview는 200 `{result, persisted: false, approval_available: false, …}`다. 
 - `receipt_key`는 발주 전체면 `po_id`, 행 단위는 `po_id--po_line_id`다. What-if의 `receipt_qty.<receipt_key>`에는 현재 조회 목록과 별개로 **저장된 부모의 적용 입고 스냅샷**에 있는 키만 사용한다.
 - 출처에는 승인 배치 ID, 배치의 원본 이름·SHA와 결과 digest, 승인 시각, 시트, 원본 행 번호·SHA를 담는다. CSV 원장 출처의 `source_sheet`는 `"CSV"`이며 XLSX는 실제 시트명이다. 원본 파일 바이트는 반환하지 않는다.
 
-연결된 원장의 응답 예시
+요청·응답 예시는 합성 원장과 조회 대역으로 생성했다. 부분 입고 예시의 주문 `"1000.000000"`과 누적 입고 `"400.000000"`에서 잔량은 `"600.000000"`이다. 화면에서는 수량 문자열을 그대로 표시하거나 10진 연산을 사용한다. [연결된 원장](../contracts/examples/responses/43_scheduled_receipts_available.json) · [정상 빈 원장](../contracts/examples/responses/44_scheduled_receipts_empty.json) · [원장 미연결](../contracts/examples/responses/45_scheduled_receipts_unavailable.json) · [OpenAPI](../contracts/openapi.json)
 
-```json
-{
-  "dataset_id": "CHUNGPAMO-2027",
-  "as_of_date": "2027-01-05",
-  "source_state": "AVAILABLE",
-  "reason_code": null,
-  "items": [{
-    "receipt_key": "PO-SAMPLE--01", "po_id": "PO-SAMPLE", "po_line_id": "01", "revision": 2,
-    "material_id": "MR-N3", "unit": "KG", "ordered_qty": "1000", "received_qty": "400", "open_qty": "600",
-    "ledger_status": "OPEN", "state": "PARTIALLY_RECEIVED",
-    "expected_date": "2027-01-12", "effective_date": "2027-01-04",
-    "source": {
-      "batch_id": "00000000-0000-4000-8000-000000000020", "filename": "synthetic-receipts.csv",
-      "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
-      "result_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
-      "approved_at": "2027-01-04T01:30:00Z", "source_sheet": "CSV", "source_row_no": 2,
-      "source_row_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
-    }
-  }],
-  "total": 1, "limit": 50, "offset": 0
-}
-```
-
-| 상황 | 제안 응답 |
+| 상황 | 응답 |
 | --- | --- |
 | 0010에서 정상 조회했으나 해당 행 없음 | 200 `source_state: "AVAILABLE", reason_code: null, items: [], total: 0` |
 | 0009에서 원장 미연결이 확인됨 | 200 `source_state: "UNAVAILABLE", reason_code: "RECEIPT_SOURCE_UNAVAILABLE", items: null, total: null` |
@@ -145,7 +122,7 @@ Preview는 200 `{result, persisted: false, approval_available: false, …}`다. 
 | 스키마 불일치 또는 쿼리 정합성 실패 | 500 `PERSISTENCE_ERROR`. 정상 빈 원장으로 대체하지 않음 |
 | 데이터셋 없음 또는 보관 상태 | 기존 404 `DATASET_NOT_FOUND` / 409 `DATASET_INACTIVE` |
 
-구현 시 인수 시험은 미래 효력일 제외, 취소·완료·부분 입고, 필터 적용 후 개정 보존, 원본 출처, 페이지 크기 및 같은 발주 키를 가진 타 데이터셋 격리를 포함한다. C02 승인·원장·부모 스냅샷의 실DB 재검증은 메인 PC의 별도 승인 범위다.
+화면에서는 `source_state`를 먼저 읽는다. `AVAILABLE`은 표와 페이지를 표시하며 `total=0`은 조회 조건에 맞는 건이 없는 상태다. `UNAVAILABLE`은 공급 원장 미연결로 표시한다. 500·503은 조회 실패 상태로 표시한다. 데이터셋·기준일·필터가 바뀌면 `offset=0`으로 다시 조회한다. 승인 직후에는 현재 조건으로 첫 페이지를 새로 요청한다. [조회 테스트](../backend/tests/test_scheduled_receipts_api.py)
 
 ## 이번 검증
 

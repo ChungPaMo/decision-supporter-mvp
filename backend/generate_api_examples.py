@@ -8,11 +8,13 @@ from pathlib import Path
 from unittest.mock import patch
 
 from fastapi.testclient import TestClient
+from pydantic import TypeAdapter
 
 from app.api.batches import get_service
 from app.batches.service import BatchService
 from app.main import app
 from app.config import Settings
+from contracts.interfaces.receipts import ReceiptLedgerPage
 from tests.fakes import InMemoryBatchRepository
 
 EXAMPLES = Path(__file__).resolve().parents[1] / "contracts" / "examples"
@@ -139,7 +141,38 @@ def build_examples() -> dict[str, str]:
             r.files[key]["_plan_note"] = "SYNTHETIC / TEST-DOUBLE-ONLY transport example. No real plan calculation, DB write or formal approval."
     finally:
         app.dependency_overrides.pop(get_plan_service,None)
+    _receipt_examples(c, r)
     return {f"{k}.json": json.dumps(v, ensure_ascii=False, indent=2) + "\n" for k, v in r.files.items()}
+
+
+def _receipt_examples(client: TestClient, recorder: _Recorder) -> None:
+    page = {"dataset_id": "CHUNGPAMO-2027", "as_of_date": "2027-01-05", "limit": 50, "offset": 0}
+    item = {
+        "receipt_key": "PO-SAMPLE--01", "po_id": "PO-SAMPLE", "po_line_id": "01", "revision": 2,
+        "material_id": "MR-N3", "unit": "KG", "ordered_qty": "1000.000000",
+        "received_qty": "400.000000", "open_qty": "600.000000",
+        "ledger_status": "OPEN", "state": "PARTIALLY_RECEIVED",
+        "expected_date": "2027-01-12", "effective_date": "2027-01-04",
+        "source": {
+            "batch_id": "00000000-0000-4000-8000-000000000020", "filename": "synthetic-receipts.csv",
+            "source_sha256": "a" * 64, "result_digest": "b" * 64, "approved_at": "2027-01-04T01:30:00Z",
+            "source_sheet": "CSV", "source_row_no": 2, "source_row_sha256": "c" * 64,
+        },
+    }
+    available = {**page, "source_state": "AVAILABLE", "reason_code": None}
+    examples = (
+        ("43_scheduled_receipts_available", dict(available, items=[item], total=1)),
+        ("44_scheduled_receipts_empty", dict(available, items=[], total=0)),
+        ("45_scheduled_receipts_unavailable",
+         dict(page, source_state="UNAVAILABLE", reason_code="RECEIPT_SOURCE_UNAVAILABLE", items=None, total=None)),
+    )
+    path = "/scheduled-receipts"
+    adapter = TypeAdapter(ReceiptLedgerPage)
+    with patch("app.api.scheduled_receipts.get_settings", return_value=Settings(persistence="postgres")):
+        for name, body in examples:
+            with patch("app.api.scheduled_receipts.read_receipt_page", return_value=adapter.validate_python(body)):
+                recorder.save(name, {"method": "GET", "path": path, "query": page}, client.get(path, params=page))
+            recorder.files[name]["_receipt_note"] = "합성 원장 조회 대역으로 만든 응답 예시. 실제 PostgreSQL 검증 전."
 
 
 def build_openapi() -> str:

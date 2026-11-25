@@ -8256,6 +8256,302 @@
     "title": "PlanningReply",
     "type": "object"
   },
+  "ReceiptLedgerPage": {
+    "$defs": {
+      "AvailableReceiptLedgerPage": {
+        "additionalProperties": false,
+        "properties": {
+          "as_of_date": {
+            "format": "date",
+            "title": "As Of Date",
+            "type": "string"
+          },
+          "dataset_id": {
+            "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/$defs/ReceiptLedgerItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "maximum": 100,
+            "minimum": 1,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "minimum": 0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "reason_code": {
+            "title": "Reason Code",
+            "type": "null"
+          },
+          "source_state": {
+            "const": "AVAILABLE",
+            "title": "Source State",
+            "type": "string"
+          },
+          "total": {
+            "minimum": 0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "dataset_id",
+          "as_of_date",
+          "limit",
+          "offset",
+          "source_state",
+          "reason_code",
+          "items",
+          "total"
+        ],
+        "title": "AvailableReceiptLedgerPage",
+        "type": "object"
+      },
+      "ReceiptLedgerItem": {
+        "additionalProperties": false,
+        "properties": {
+          "effective_date": {
+            "format": "date",
+            "title": "Effective Date",
+            "type": "string"
+          },
+          "expected_date": {
+            "format": "date",
+            "title": "Expected Date",
+            "type": "string"
+          },
+          "ledger_status": {
+            "enum": [
+              "OPEN",
+              "CANCELLED"
+            ],
+            "title": "Ledger Status",
+            "type": "string"
+          },
+          "material_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Material Id",
+            "type": "string"
+          },
+          "open_qty": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Open Qty",
+            "type": "string"
+          },
+          "ordered_qty": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Ordered Qty",
+            "type": "string"
+          },
+          "po_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Po Id",
+            "type": "string"
+          },
+          "po_line_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Po Line Id"
+          },
+          "receipt_key": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Receipt Key",
+            "type": "string"
+          },
+          "received_qty": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Received Qty",
+            "type": "string"
+          },
+          "revision": {
+            "minimum": 1,
+            "title": "Revision",
+            "type": "integer"
+          },
+          "source": {
+            "$ref": "#/$defs/ReceiptLedgerSource"
+          },
+          "state": {
+            "enum": [
+              "OPEN",
+              "PARTIALLY_RECEIVED",
+              "COMPLETED",
+              "CANCELLED"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "unit": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "receipt_key",
+          "po_id",
+          "po_line_id",
+          "revision",
+          "material_id",
+          "unit",
+          "ordered_qty",
+          "received_qty",
+          "open_qty",
+          "ledger_status",
+          "state",
+          "expected_date",
+          "effective_date",
+          "source"
+        ],
+        "title": "ReceiptLedgerItem",
+        "type": "object"
+      },
+      "ReceiptLedgerSource": {
+        "additionalProperties": false,
+        "properties": {
+          "approved_at": {
+            "format": "date-time",
+            "title": "Approved At",
+            "type": "string"
+          },
+          "batch_id": {
+            "format": "uuid",
+            "title": "Batch Id",
+            "type": "string"
+          },
+          "filename": {
+            "title": "Filename",
+            "type": "string"
+          },
+          "result_digest": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Result Digest",
+            "type": "string"
+          },
+          "source_row_no": {
+            "minimum": 1,
+            "title": "Source Row No",
+            "type": "integer"
+          },
+          "source_row_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Source Row Sha256",
+            "type": "string"
+          },
+          "source_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Source Sha256",
+            "type": "string"
+          },
+          "source_sheet": {
+            "minLength": 1,
+            "title": "Source Sheet",
+            "type": "string"
+          }
+        },
+        "required": [
+          "batch_id",
+          "filename",
+          "source_sha256",
+          "result_digest",
+          "approved_at",
+          "source_sheet",
+          "source_row_no",
+          "source_row_sha256"
+        ],
+        "title": "ReceiptLedgerSource",
+        "type": "object"
+      },
+      "UnavailableReceiptLedgerPage": {
+        "additionalProperties": false,
+        "properties": {
+          "as_of_date": {
+            "format": "date",
+            "title": "As Of Date",
+            "type": "string"
+          },
+          "dataset_id": {
+            "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "items": {
+            "title": "Items",
+            "type": "null"
+          },
+          "limit": {
+            "maximum": 100,
+            "minimum": 1,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "minimum": 0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "reason_code": {
+            "const": "RECEIPT_SOURCE_UNAVAILABLE",
+            "title": "Reason Code",
+            "type": "string"
+          },
+          "source_state": {
+            "const": "UNAVAILABLE",
+            "title": "Source State",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "null"
+          }
+        },
+        "required": [
+          "dataset_id",
+          "as_of_date",
+          "limit",
+          "offset",
+          "source_state",
+          "reason_code",
+          "items",
+          "total"
+        ],
+        "title": "UnavailableReceiptLedgerPage",
+        "type": "object"
+      }
+    },
+    "discriminator": {
+      "mapping": {
+        "AVAILABLE": "#/$defs/AvailableReceiptLedgerPage",
+        "UNAVAILABLE": "#/$defs/UnavailableReceiptLedgerPage"
+      },
+      "propertyName": "source_state"
+    },
+    "oneOf": [
+      {
+        "$ref": "#/$defs/AvailableReceiptLedgerPage"
+      },
+      {
+        "$ref": "#/$defs/UnavailableReceiptLedgerPage"
+      }
+    ]
+  },
   "ReceiptRevisionInput": {
     "additionalProperties": false,
     "properties": {

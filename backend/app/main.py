@@ -13,6 +13,7 @@ from app.api.ingest_ai import router as ingest_ai_router
 from app.api.ingest_assistance import router as ingest_assistance_router
 from app.api.ingest_history import router as ingest_history_router
 from app.api.integrations import router as integrations_router
+from app.api.scheduled_receipts import router as scheduled_receipts_router
 from app.config import Settings, get_settings
 from app.errors import ApiError, ErrorCode
 from app.exports.limits import ExportBodyLimit
@@ -31,6 +32,7 @@ app.include_router(ingest_assistance_router)
 app.include_router(ingest_history_router)
 app.include_router(integrations_router)
 app.include_router(batches_router)
+app.include_router(scheduled_receipts_router)
 app.include_router(datasets_router)
 app.include_router(plan_executions_router)
 app.include_router(exports_router)

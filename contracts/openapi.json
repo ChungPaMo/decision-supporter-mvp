@@ -491,6 +491,65 @@
         "title": "ApprovedSource",
         "type": "object"
       },
+      "AvailableReceiptLedgerPage": {
+        "additionalProperties": false,
+        "properties": {
+          "as_of_date": {
+            "format": "date",
+            "title": "As Of Date",
+            "type": "string"
+          },
+          "dataset_id": {
+            "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ReceiptLedgerItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "limit": {
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "minimum": 0.0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "reason_code": {
+            "title": "Reason Code",
+            "type": "null"
+          },
+          "source_state": {
+            "const": "AVAILABLE",
+            "title": "Source State",
+            "type": "string"
+          },
+          "total": {
+            "minimum": 0.0,
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "dataset_id",
+          "as_of_date",
+          "limit",
+          "offset",
+          "source_state",
+          "reason_code",
+          "items",
+          "total"
+        ],
+        "title": "AvailableReceiptLedgerPage",
+        "type": "object"
+      },
       "BatchDetail": {
         "properties": {
           "approval_blockers": {
@@ -7656,6 +7715,168 @@
         "title": "QuantityLimit",
         "type": "object"
       },
+      "ReceiptLedgerItem": {
+        "additionalProperties": false,
+        "properties": {
+          "effective_date": {
+            "format": "date",
+            "title": "Effective Date",
+            "type": "string"
+          },
+          "expected_date": {
+            "format": "date",
+            "title": "Expected Date",
+            "type": "string"
+          },
+          "ledger_status": {
+            "enum": [
+              "OPEN",
+              "CANCELLED"
+            ],
+            "title": "Ledger Status",
+            "type": "string"
+          },
+          "material_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Material Id",
+            "type": "string"
+          },
+          "open_qty": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Open Qty",
+            "type": "string"
+          },
+          "ordered_qty": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Ordered Qty",
+            "type": "string"
+          },
+          "po_id": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Po Id",
+            "type": "string"
+          },
+          "po_line_id": {
+            "anyOf": [
+              {
+                "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Po Line Id"
+          },
+          "receipt_key": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Receipt Key",
+            "type": "string"
+          },
+          "received_qty": {
+            "pattern": "^[0-9]{1,14}(\\.[0-9]{1,6})?$",
+            "title": "Received Qty",
+            "type": "string"
+          },
+          "revision": {
+            "minimum": 1.0,
+            "title": "Revision",
+            "type": "integer"
+          },
+          "source": {
+            "$ref": "#/components/schemas/ReceiptLedgerSource"
+          },
+          "state": {
+            "enum": [
+              "OPEN",
+              "PARTIALLY_RECEIVED",
+              "COMPLETED",
+              "CANCELLED"
+            ],
+            "title": "State",
+            "type": "string"
+          },
+          "unit": {
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+            "title": "Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "receipt_key",
+          "po_id",
+          "po_line_id",
+          "revision",
+          "material_id",
+          "unit",
+          "ordered_qty",
+          "received_qty",
+          "open_qty",
+          "ledger_status",
+          "state",
+          "expected_date",
+          "effective_date",
+          "source"
+        ],
+        "title": "ReceiptLedgerItem",
+        "type": "object"
+      },
+      "ReceiptLedgerSource": {
+        "additionalProperties": false,
+        "properties": {
+          "approved_at": {
+            "format": "date-time",
+            "title": "Approved At",
+            "type": "string"
+          },
+          "batch_id": {
+            "format": "uuid",
+            "title": "Batch Id",
+            "type": "string"
+          },
+          "filename": {
+            "title": "Filename",
+            "type": "string"
+          },
+          "result_digest": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Result Digest",
+            "type": "string"
+          },
+          "source_row_no": {
+            "minimum": 1.0,
+            "title": "Source Row No",
+            "type": "integer"
+          },
+          "source_row_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Source Row Sha256",
+            "type": "string"
+          },
+          "source_sha256": {
+            "pattern": "^[0-9a-f]{64}$",
+            "title": "Source Sha256",
+            "type": "string"
+          },
+          "source_sheet": {
+            "minLength": 1,
+            "title": "Source Sheet",
+            "type": "string"
+          }
+        },
+        "required": [
+          "batch_id",
+          "filename",
+          "source_sha256",
+          "result_digest",
+          "approved_at",
+          "source_sheet",
+          "source_row_no",
+          "source_row_sha256"
+        ],
+        "title": "ReceiptLedgerSource",
+        "type": "object"
+      },
       "ReceiptRevisionRecordOut": {
         "additionalProperties": false,
         "properties": {
@@ -9462,6 +9683,62 @@
           "source_locations"
         ],
         "title": "TransformedDemand",
+        "type": "object"
+      },
+      "UnavailableReceiptLedgerPage": {
+        "additionalProperties": false,
+        "properties": {
+          "as_of_date": {
+            "format": "date",
+            "title": "As Of Date",
+            "type": "string"
+          },
+          "dataset_id": {
+            "pattern": "^[A-Z][A-Z0-9_-]{0,39}$",
+            "title": "Dataset Id",
+            "type": "string"
+          },
+          "items": {
+            "title": "Items",
+            "type": "null"
+          },
+          "limit": {
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Limit",
+            "type": "integer"
+          },
+          "offset": {
+            "minimum": 0.0,
+            "title": "Offset",
+            "type": "integer"
+          },
+          "reason_code": {
+            "const": "RECEIPT_SOURCE_UNAVAILABLE",
+            "title": "Reason Code",
+            "type": "string"
+          },
+          "source_state": {
+            "const": "UNAVAILABLE",
+            "title": "Source State",
+            "type": "string"
+          },
+          "total": {
+            "title": "Total",
+            "type": "null"
+          }
+        },
+        "required": [
+          "dataset_id",
+          "as_of_date",
+          "limit",
+          "offset",
+          "source_state",
+          "reason_code",
+          "items",
+          "total"
+        ],
+        "title": "UnavailableReceiptLedgerPage",
         "type": "object"
       },
       "ValidationError": {
@@ -15799,6 +16076,207 @@
         "summary": "Approved routing steps with concurrent resource requirements",
         "tags": [
           "batches"
+        ]
+      }
+    },
+    "/scheduled-receipts": {
+      "get": {
+        "operationId": "list_scheduled_receipts_scheduled_receipts_get",
+        "parameters": [
+          {
+            "description": "Inclusive business effective date",
+            "in": "query",
+            "name": "as_of_date",
+            "required": true,
+            "schema": {
+              "description": "Inclusive business effective date",
+              "format": "date",
+              "title": "As Of Date",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "offset",
+            "required": false,
+            "schema": {
+              "default": 0,
+              "minimum": 0,
+              "title": "Offset",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "po_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Po Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "material_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "pattern": "^[A-Za-z0-9][A-Za-z0-9_.-]{0,39}$",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Material Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "state",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "OPEN",
+                    "PARTIALLY_RECEIVED",
+                    "COMPLETED",
+                    "CANCELLED"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "State"
+            }
+          },
+          {
+            "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+            "in": "query",
+            "name": "dataset_id",
+            "required": false,
+            "schema": {
+              "default": "TISSUE-LEGACY",
+              "description": "Data scope only, not an authorization grant. Omitted = TISSUE-LEGACY, never all.",
+              "title": "Dataset Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "discriminator": {
+                    "mapping": {
+                      "AVAILABLE": "#/components/schemas/AvailableReceiptLedgerPage",
+                      "UNAVAILABLE": "#/components/schemas/UnavailableReceiptLedgerPage"
+                    },
+                    "propertyName": "source_state"
+                  },
+                  "oneOf": [
+                    {
+                      "$ref": "#/components/schemas/AvailableReceiptLedgerPage"
+                    },
+                    {
+                      "$ref": "#/components/schemas/UnavailableReceiptLedgerPage"
+                    }
+                  ],
+                  "title": "Response List Scheduled Receipts Scheduled Receipts Get"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "404": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "409": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "500": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "501": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          },
+          "503": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            },
+            "description": "오류 (detail.code 참고)"
+          }
+        },
+        "summary": "List the latest approved receipt revisions at the business effective date",
+        "tags": [
+          "scheduled-receipts"
         ]
       }
     }

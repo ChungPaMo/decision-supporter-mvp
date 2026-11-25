@@ -1493,3 +1493,31 @@
 
 **관련 자료**
 - [프론트엔드 후속 계약·C02 조회 설계](FRONTEND_BACKEND_CONTRACT_FOLLOWUP_20261125.md).
+
+### 2026-11-25 — C02 승인 예정 입고 읽기 전용 API
+
+**Git**
+- 시작 Commit [`7ed160f`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/7ed160fe19b11774fffe76f666e529798a44d2a6), 브랜치 `main`.
+- 완료 Commit 조회: `git log main -1 --format=%H --fixed-strings --grep='feat: expose approved scheduled receipt ledger'`.
+
+**작업 목적**
+- 데이터셋별 승인 입고의 기준일 스냅샷·상태·잔량·원본 근거를 화면에서 조회할 수 있게 한다.
+
+**구현 내용**
+- `backend/app/api/scheduled_receipts.py`, `backend/app/batches/receipt_reader.py`와 공개 DTO를 추가했다. 계획 reader와 승인·효력일 SQL을 공유하고, 최신 개정 선택 뒤 발주·자재·상태 필터를 적용한다.
+- 저장 상태와 표시 상태를 구분하고 정밀한 수량 문자열, 배치·시트·행 SHA 출처와 안정적인 페이지를 제공한다. OpenAPI·JSON Schema·합성 응답 예시 3개를 갱신했다.
+
+**검증 결과**
+- 2026-11-25 보조 PC에서 집중 검사 43건 통과·1건 건너뜀, 전체 비DB 1,404건 통과·69건 건너뜀. 기준일·개정·출처·데이터셋·빈 원장/미연결·오류 응답과 생성 계약을 검증했다.
+- 이번 변경 22개 파일 보안 검사에서 발견 0건. 기존 로컬 구현 계획의 SHA를 작업 전후 대조했다.
+- 0010 PostgreSQL 테스트에 실제 GET 검증을 추가했다. Docker·실DB·migration·외부 AI 호출은 미실행.
+- 커밋 전 최종 재검증에서 전체 비DB 1,404건 통과·69건 건너뜀, 배치 승인·계획·C02 및 계약 집중 검사 192건 통과·1건 건너뜀. 구현 계획을 포함한 커밋 대상 23개 파일 보안 검사에서 발견 0건.
+
+**기술적 결정**
+- 스코프가 고정된 읽기 전용 `REPEATABLE READ`에서 건수와 목록을 조회한다. 0009 원장 미연결과 0010 정상 빈 원장을 구분한다. 계획 실행과 What-if에는 기존 공급·부모 스냅샷 규칙을 적용한다.
+
+**남은 문제**
+- 메인 PC에서 0009 조회의 읽기 전용 검증과, 별도 승인 후 0010 지정 회귀 테스트를 수행한다. 나미님에게 `source_state` 분기와 조건 변경 시 첫 페이지 조회를 인계한다.
+
+**관련 자료**
+- [조회 계약·예시](FRONTEND_BACKEND_CONTRACT_FOLLOWUP_20261125.md#c02-승인-입고-원장-읽기-api-설계) · [메인 PC 실DB 절차](PLANNING_POSTGRESQL_INTEGRATION_VERIFICATION_20261124.md#c02-읽기-api--메인-pc-실db-검증).

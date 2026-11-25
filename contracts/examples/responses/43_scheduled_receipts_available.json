@@ -1,0 +1,51 @@
+{
+  "_note": "합성 CSV 로 생성한 응답 형식 예시. /batches 계열은 테스트 전용 인메모리 저장소 결과이며 영구 저장 동작을 증명하지 않는다.",
+  "request": {
+    "method": "GET",
+    "path": "/scheduled-receipts",
+    "query": {
+      "dataset_id": "CHUNGPAMO-2027",
+      "as_of_date": "2027-01-05",
+      "limit": 50,
+      "offset": 0
+    }
+  },
+  "status": 200,
+  "response": {
+    "dataset_id": "CHUNGPAMO-2027",
+    "as_of_date": "2027-01-05",
+    "limit": 50,
+    "offset": 0,
+    "source_state": "AVAILABLE",
+    "reason_code": null,
+    "items": [
+      {
+        "receipt_key": "PO-SAMPLE--01",
+        "po_id": "PO-SAMPLE",
+        "po_line_id": "01",
+        "revision": 2,
+        "material_id": "MR-N3",
+        "unit": "KG",
+        "ordered_qty": "1000.000000",
+        "received_qty": "400.000000",
+        "open_qty": "600.000000",
+        "ledger_status": "OPEN",
+        "state": "PARTIALLY_RECEIVED",
+        "expected_date": "2027-01-12",
+        "effective_date": "2027-01-04",
+        "source": {
+          "batch_id": "00000000-0000-0000-0000-000000000007",
+          "filename": "synthetic-receipts.csv",
+          "source_sha256": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "result_digest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "approved_at": "2027-01-04T01:30:00Z",
+          "source_sheet": "CSV",
+          "source_row_no": 2,
+          "source_row_sha256": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc"
+        }
+      }
+    ],
+    "total": 1
+  },
+  "_receipt_note": "합성 원장 조회 대역으로 만든 응답 예시. 실제 PostgreSQL 검증 전."
+}
