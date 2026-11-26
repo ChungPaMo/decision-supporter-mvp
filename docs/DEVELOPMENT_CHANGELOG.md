@@ -1675,3 +1675,28 @@
 
 **관련 자료**
 - [48개 API, E2E, 실DB 무결성, 성능 및 시연](BACKEND_STABILIZATION_VERIFICATION_20261125.md)
+
+### 2026-11-26 — 충파모 합성 데이터 수요예측 백테스트 (planning_engine)
+
+**Git**
+- 시작 Commit [`3a45033`](https://github.com/ChungPaMo/decision-supporter-mvp/commit/3a450335a2cf2010190a2687e7e0b02776d48c84). 브랜치 `main`.
+- 완료 Commit은 `git log main -1 --format=%H --fixed-strings --grep='docs: backtest forecast methods on CHUNGPAMO synthetic data'`로 확인한다.
+
+**작업 목적**
+- P50=MA12, P80·P90=LightGBM 분위수 결정은 Kaggle 공개 데이터로 내렸다. 같은 절차를 팀 데모 데이터(CHUNGPAMO-2027)에도 적용해 결과가 같은지 확인한다.
+
+**구현 내용**
+- `modules/planning_engine/synthetic/forecast_backtest.py`: 기준 월마다 그 달까지의 승인 수요로 실제 `engine.forecast.run`(MA12, LGBM_L1)을 실행하는 rolling-origin 백테스트. 기준선 ma6·ma3·snaive·naive, WAPE·Bias·P80/P90 커버리지·pinball. 출력 JSON은 git 제외 `synthetic/data/forecast/`.
+- 결과 기록 `synthetic/FORECAST_BACKTEST_20261126.md`, `synthetic/README.md`에 요약·링크. 엔진 코드 변경 없음.
+
+**검증 결과**
+- 2026-11-26 보조 PC, 비DB. h=2 검증 WAPE MA12 0.0723 / LightGBM 0.0644(+10.9%, Bias −1.0%) → 사전 규칙 형식상 통과. 테스트 0.0770 / 0.0768(+0.3%).
+- CP-GIFT-12 제외 시 검증 0.0568 / 0.0569, 테스트 0.0629 / 0.0678(MA12 7.8% 우위). LightGBM 우위는 선물세트 비수기(MA12 약 2.5배 과대) 때문이며 명절 달은 두 방식 모두 놓친다.
+- P80 커버리지 검증 0.77~0.81 / 테스트 0.71, P90 0.89~0.92 / 0.80~0.83.
+- `pytest modules/planning_engine` **112 passed**, `ruff check` 통과.
+
+**결정**
+- 합성 데이터는 생성 규칙을 넣어 만든 자료라 모델 선택 근거로 쓰지 않는다. P50 기본값 MA12 유지. 명절 제품·분위수 폭은 개선 후보로만 기록(멘토·팀 논의).
+
+**관련 자료**
+- [백테스트 기록](../modules/planning_engine/synthetic/FORECAST_BACKTEST_20261126.md)
